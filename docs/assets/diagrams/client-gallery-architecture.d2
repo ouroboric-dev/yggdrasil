@@ -1,0 +1,23 @@
+vars: {
+  d2-config: {
+    theme-id: 1
+  }
+}
+direction: down
+users: "Photographer and client\n(browser makes thumbnails and zips)" {shape: person}
+vercel: "Vercel (production)" {
+  web: "web: React static build"
+  api: "api: Go net/http"
+  web -> api: "JSON API"
+}
+neon: "Neon Postgres\ngalleries, favourites, activity" {shape: cylinder}
+r2: "Cloudflare R2\noriginals and web sizes" {shape: cylinder}
+preview: "Preview deployments" {
+  style.stroke-dash: 4
+  pdb: "Neon preview branch"
+  pbucket: "separate R2 bucket"
+}
+users -> vercel.web: "uses"
+vercel.api -> neon: "metadata"
+vercel.api -> r2: "signs short-lived URLs"
+users -> r2: "photo bytes go direct (presigned)" {style.stroke: "#FF4F00"; style.stroke-width: 3}

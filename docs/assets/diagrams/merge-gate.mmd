@@ -1,0 +1,9 @@
+flowchart TD
+  A[Branch passed its loop] --> L[Lock the target]
+  L --> U[Merge the latest base into the branch]
+  U --> C{Checks pass again?<br/>rungs 1-5, plus umbrella<br/>acceptance for pointers}
+  C -- no --> BACK[Back to the loop]
+  C -- yes --> H{Head is still the<br/>reviewed commit?}
+  H -- no --> BACK
+  H -- yes --> M[Merge pinned to the reviewed commit]
+  M --> UN[Unlock and record in the ledger]

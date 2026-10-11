@@ -48,6 +48,9 @@ umbrella** (L0, §3) that pins a Yggdrasil version and lists their projects.
 
 ## 2. Architecture
 
+<!-- diagram: assets/diagrams/architecture.d2 -->
+![Yggdrasil architecture: the ygg CLI, factory.yaml and the web realm feed Odin; Odin drives Jormungandr and Gleipnir's agent adapters and devcontainer driver; adapters load skills from Havamal; Odin is the only writer of the instance tree; every component implements Gungnir](../../assets/diagrams/rendered/architecture.svg)
+
 ```
                  ygg CLI  (run · resume · approve · reject · status · board · report · metrics · doctor)
                                    │
@@ -100,6 +103,9 @@ The implementation plan settles the exact method sets. This section sets only th
 ## 3. Repository topology and isolation
 
 ### 3.1 The instance tree
+
+<!-- diagram: assets/diagrams/instance-tree.d2 -->
+![Instance tree: on the host, Odin writes the L0 and L1 umbrellas and the api leaf; the agent sandbox mounts only the web leaf's working tree, with its git directory read-only; pointers record validated SHAs](../../assets/diagrams/rendered/instance-tree.svg)
 
 The operator's instance is a **tree of nodes**. Each node is either:
 
@@ -180,6 +186,9 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 
 ### 4.2 The web realm graph
 
+<!-- diagram: assets/diagrams/web-realm-graph.mmd -->
+![Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report](../../assets/diagrams/rendered/web-realm-graph.svg)
+
 ```
 design ─► [gate: design] ─► spec ─► conformance review ─► [gate: spec] ─► plan + reuse review ─► DoR check
 agent                       agent    agent (read-only)                    agent + Ponytail       exec
@@ -230,6 +239,9 @@ from its read-only `features.json`, and the routing summary (§8). Nothing depen
 session memory. This is what makes it possible to swap models mid-run.
 
 ### 4.5 The merge gate
+
+<!-- diagram: assets/diagrams/merge-gate.mmd -->
+![Merge gate: lock, merge the latest base into the branch, re-run checks, confirm the head is still the reviewed commit, merge pinned to it, unlock; any failure returns to the loop](../../assets/diagrams/rendered/merge-gate.svg)
 
 A branch can pass every check and then stop building after `main` moves underneath it. So every
 `merge` and every pointer move MUST go through a merge gate. The gate is borrowed from super-board's
@@ -326,6 +338,9 @@ privacy: standard   # strict → only providers with no training and no retentio
   through their L0 instance configuration. `run.json` records these private skills.
 
 ## 6. Sandbox (Gleipnir devcontainer driver)
+
+<!-- diagram: assets/diagrams/sandbox-boundary.d2 -->
+![Sandbox boundary: Odin on the host runs the agent through podman exec with a hardened config that is never mounted; the container holds the pinned agent, one leaf and a revocable model token; egress is allowed only to model APIs and registries; host secrets and the Podman socket are never mounted](../../assets/diagrams/rendered/sandbox-boundary.svg)
 
 ### 6.1 How it works
 
@@ -480,6 +495,9 @@ runs it as a read-only service in `web`'s sandbox.
 
 ### 9.3 Infrastructure target
 
+<!-- diagram: assets/diagrams/client-gallery-architecture.d2 -->
+![Client gallery production architecture: users use the React site on Vercel, which calls the Go API; the API stores metadata in Neon and signs short-lived R2 URLs; photo bytes go directly between browser and R2; previews use a separate Neon branch and R2 bucket](../../assets/diagrams/rendered/client-gallery-architecture.svg)
+
 | Concern | Development (in the sandbox) | Production target (deployment is outside v0) |
 |---|---|---|
 | Web | Vite dev server | Vercel (static build) |
@@ -515,6 +533,9 @@ realm-web/
 ```
 
 ### 9.5 The check ladder
+
+<!-- diagram: assets/diagrams/check-ladder.mmd -->
+![Check ladder: seven rungs from static checks to the hidden suite; rungs 1 to 6 send typed findings back to the implementer; the hidden suite runs in a separate grader and sends only a score to the ledger](../../assets/diagrams/rendered/check-ladder.svg)
 
 The rungs run from fast to slow. Each rung's failure output goes back to the implementer.
 
@@ -830,6 +851,10 @@ The first implementation task is a throwaway spike that answers:
    and project MCP servers well enough?
 3. Which OpenRouter data-policy settings implement `privacy: strict`?
 4. Humanizer's upstream and licence, before it is vendored.
+5. Is the container engine rootless? On the operator's machine (2026-10-11), `podman` is a client of a
+   Podman Desktop machine through its **rootful** socket (`podman-root.sock`). The design assumes
+   rootless containers: with a rootful engine, a container escape lands as root inside that machine.
+   The spike MUST either confirm a rootless setup or record the risk and its mitigation.
 
 If (1) fails, the fallback is a plain Podman sandbox driver behind the same interface.
 

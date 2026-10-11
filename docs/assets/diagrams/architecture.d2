@@ -1,0 +1,26 @@
+vars: {
+  d2-config: {
+    theme-id: 1
+  }
+}
+direction: down
+cli: "ygg CLI\nrun, resume, approve, status, metrics"
+config: "factory.yaml\nmode, caps, roles, privacy"
+realm: "realm-web\ngraph, prompts, checks, templates"
+odin: "Odin\ngraph engine: exec, agent, loop, gate nodes"
+jorm: "Jormungandr\nbuild, check, fix loop"
+gleipnir: "Gleipnir (harness)" {
+  agents: "agent adapters\nclaude-code, opencode, scripted"
+  sandbox: "devcontainer driver\nPodman"
+}
+havamal: "Havamal\nvendored and own skills"
+tree: "instance tree\numbrellas, leaves, ledger, gates"
+gungnir: "Gungnir\nthe contract every component implements" {style.stroke-dash: 4}
+cli -> odin
+config -> odin
+realm -> odin
+odin -> jorm
+jorm -> gleipnir.agents
+odin -> gleipnir.sandbox
+gleipnir.agents -> havamal: "loads skills"
+odin -> tree: "only writer"

@@ -1,0 +1,24 @@
+flowchart TB
+  subgraph DIRS["1. Direction and spec"]
+    direction LR
+    D[Design doc] --> GD{{approval: design}} --> S[Spec] --> CR[Conformance review] --> GS{{spec: stops on deviation}}
+  end
+  subgraph PLAN["2. Plan"]
+    direction LR
+    P[Plan and reuse review] --> DOR[DoR check] --> I[Init leaves] --> GP{{plan}}
+  end
+  subgraph LOOP["3. For each ready task"]
+    direction LR
+    IM[Implement] --> LAD[Check ladder and reviewers]
+    LAD -- "findings" --> IM
+    LAD --> MG[Merge gate] --> PM[Pointer move]
+  end
+  subgraph FIN["4. Finish"]
+    direction LR
+    H[Hidden acceptance suite] --> R[Living spec and report]
+  end
+  DIRS --> PLAN --> LOOP --> FIN
+  classDef gate fill:#FF4F00,color:#FFFFFF,stroke:#0B0D12
+  classDef cond fill:#FFFFFF,color:#0B0D12,stroke:#FF4F00,stroke-width:2px,stroke-dasharray:5 3
+  class GD gate
+  class GS cond

@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph PH["Photographer"]
+    P1[Sign up] --> P2[Create gallery] --> P3[Upload photos] --> P4[Set password and PIN] --> P5[Share private link]
+  end
+  subgraph CL["Client"]
+    C1[Open link] --> C2[Enter password] --> C3[Browse grid and viewer] --> C4[Favourite] --> C5[Download photo or zip]
+  end
+  P5 --> C1
+  C4 --> DASH[Dashboard: favourites and download activity]
+  C5 --> DASH

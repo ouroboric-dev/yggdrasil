@@ -1,0 +1,21 @@
+vars: {
+  d2-config: {
+    theme-id: 1
+  }
+}
+direction: down
+host: "Host: Odin is the only writer" {
+  l0: "L0 instance umbrella (private)\npinned factory, hidden benchmarks, projects"
+  l1: "L1 project umbrella\nspec, tasks, REPOS.md, .factory/ ledger and gates"
+  api: "leaf: api"
+  l0 -> l1: "submodule pointer"
+  l1 -> api: "pointer = validated SHA"
+}
+box: "Agent sandbox: mounts one leaf" {
+  style.stroke: "#FF4F00"
+  style.stroke-width: 3
+  agent: "agent"
+  web: "leaf: web\nworking tree (git dir read-only)"
+  agent -> web: "edits"
+}
+host.l1 -> box.web: "pointer = validated SHA"
