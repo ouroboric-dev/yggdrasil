@@ -266,6 +266,45 @@ Every agent session starts clean and reads `AGENTS.md`, `progress.md`, the curre
 read-only `features.json` and the routing summary (§11). Nothing depends on one vendor's session
 memory, which is what makes swapping models mid-run possible.
 
+### 7.5 The merge gate
+
+A branch can pass every check, then stop building once `main` has moved underneath it. Every `merge`
+and every pointer move therefore goes through a merge gate (borrowed from super-board's merge-gate
+script and Gas Town's Refinery):
+
+1. **Lock** the target (a per-repo lock in `L1/.factory/locks/`; it matters for human edits now and for
+   parallel agents later).
+2. **Bring the branch up to date:** merge the current base into the branch.
+3. **Re-run the checks** on the result: ladder rungs 1–5 for a leaf merge, plus the umbrella's
+   acceptance tests for a pointer move.
+4. **Merge pinned to the reviewed commit:** proceed only if the branch head is still the commit that
+   was checked (locally, compare SHAs before the fast-forward; on GitHub, `--match-head-commit`).
+   Anything else aborts and returns to the loop.
+5. **Unlock**, and record the gate result in the ledger.
+
+A bisecting merge queue (for batches of branches) comes with parallel agents.
+
+### 7.6 Typed findings
+
+Checks and reviewers report **findings**, a Gungnir type, not free text:
+
+| Field | Meaning |
+|---|---|
+| `id` | stable across fix attempts: the same problem keeps the same id |
+| `source` | which rung or reviewer raised it |
+| `severity` | blocker, major, minor |
+| `location` | file and line(s) |
+| `claim` | what is wrong |
+| `status` | open, fixed, disputed |
+| `proof` | for `fixed`: the file:line evidence and the check run that confirms it |
+
+- Jormungandr feeds the open findings to the next implementer attempt. A finding closes only when its
+  source confirms the fix with proof; the implementer saying "fixed" is not enough.
+- **Missing or malformed data is never defaulted.** A reviewer output that doesn't parse, or a finding
+  without a location, is retried once as an agent failure; if it is still malformed, the loop stops and
+  escalates. It never counts as a pass.
+- The ledger records findings per task, how many reopen, and how many attempts each took to close.
+
 ## 8. Agent adapters (Gleipnir)
 
 v0 ships three adapters:
@@ -275,6 +314,11 @@ v0 ships three adapters:
 | `claude-code` | `claude -p` with streaming JSON output | read-only roles get read/search tools only |
 | `opencode` | `opencode run` | OpenRouter models; proves the swap |
 | `scripted` | replays canned actions | tests only (§16) |
+
+Adapters use each tool's **native headless protocol** (`claude -p` stream-json, `opencode run` /
+`opencode serve`), never screen-scraping a terminal UI; coder/agentapi took the screen-scraping route
+and was deprecated. Planned next adapters: `codex` (through `codex app-server`) and a generic **ACP**
+(Agent Client Protocol) adapter, so any ACP-speaking agent plugs in without custom code.
 
 Roles map to agents in `factory.yaml`:
 
@@ -397,7 +441,15 @@ Following marola's
 | doc↔code | which code implements which task or acceptance criterion, and the reverse | spec-compliance reviewer |
 | decisions | `**Decided …**` lines from spec and plan, ranked by BM25 (`route why`) | planner, implementer |
 
-Symbol and meaning indexes come later, each only if it beats the bench.
+Every edge in every index is tagged **`extracted`** (read directly from source, config or
+contracts) or **`inferred`** (guessed, e.g. by name matching or a model), following graphify. v0's
+generators are deterministic, so their edges are `extracted`; the impact index reports anything else
+separately, and Odin only treats a pointer move as `pointer-contract` on `extracted` evidence or on
+`oasdiff`.
+
+Symbol and meaning indexes come later, each only if it beats the bench. Cross-service HTTP-call and
+infrastructure-as-code wiring for impact analysis (as in codebase-memory-mcp) comes with multi-service
+products.
 
 ### 11.3 Measurement and guards
 
@@ -494,8 +546,9 @@ Fast to slow; each rung's failure output goes back to the implementer.
    the implementer, visible to it).
 6. **Reviewers** (read-only agents): spec compliance (using doc↔code and `tasks.md`), then code
    quality.
-7. **Final acceptance at L1:** the hidden benchmark suite (§14), run by Odin, results to the ledger
-   only, never to agents. It includes gallery ID enumeration attempts.
+7. **Final acceptance at L1:** the hidden benchmark suite (§14), run by Odin in a **separate grader
+   container started after the agent containers stop**, results to the ledger only, never to agents.
+   It includes gallery ID enumeration attempts.
 
 ### 12.6 Dependency policy (all realms)
 
@@ -591,14 +644,26 @@ and the future content component that turns them into posts is **Bragi**, the go
 
 ## 14. Benchmark format (full kit in spec 3)
 
+The format follows **Harbor's task layout** (used by Terminal-Bench 2) wherever it fits, so other
+factories' tasks can run on Yggdrasil and ours on theirs. Exact field names are checked against
+Harbor's documentation during implementation.
+
 ```
-benchmarks/<brief-id>/
-  benchmark.yaml   id, version, budget and time limits, scoring weights
-  brief.md         frozen; any change is a new version
-  hidden/          black-box Playwright suite + fixtures, run against a URL
-  rubric.md        optional human-judged items
+benchmarks/<task-id>/
+  instruction.md   the brief, frozen; any change is a new version
+  task.toml        id, version, budget and time limits, scoring weights, grader settings
+  environment/     Dockerfile for the grader environment
+  tests/           hidden black-box suite (Playwright + fixtures), run against a URL
+  solution/        optional reference ("oracle") solution, proving the tests are passable
+  rubric.md        optional human-judged items (Yggdrasil extension)
 ```
 
+- **Scoring, SWE-bench style:** tests that must start passing ("fail to pass") and tests that must
+  stay green ("pass to pass"), reported separately. A whole-product brief like client gallery lite has
+  mostly fail-to-pass tests; feature-level tasks on an existing product use both.
+- **Grading is isolated:** graders run in their own container after the agent containers have
+  stopped, against the built app. Agents never share a container, filesystem or network with the
+  grader, so they can't observe the suite.
 - Black-box only: hidden tests use what the brief describes (UI and public API), so any factory's
   output can be scored.
 - Output: `score.json` (pass/fail per scenario, by category) joined with the run's metrics.
@@ -626,7 +691,9 @@ containers and processes.
 
 - **Unit tests** (Go): graph traversal; the mode × approval-point table; config validation rejecting
   hard-gate overrides; pointer propagation over tree fixtures, including the deeper-tree fixture; DoR
-  check; shrink guard; ledger hash chain.
+  check; shrink guard; ledger hash chain; the merge gate (a branch that passed against an old base but
+fails against the new one must not merge; a head that moved after review must abort); typed findings
+(a malformed reviewer output stops the loop and never counts as a pass).
 - **Deterministic end-to-end:** the `scripted` adapter runs whole graphs with zero model cost; this is
   what CI runs.
 - **Escape-attempt tests:** a scripted agent tries to write `.git/hooks/pre-commit`, add
@@ -652,6 +719,8 @@ The adversaries are named in the [naming record](../naming-and-mythology.md#the-
 | Data leak that passes tests | endpoint returns other tenants' data | mechanical two-tenant authorisation harness |
 | Leaked secrets in history | `.env` with a live key committed | `gitleaks` before every checkpoint commit |
 | Cascade through pointers (Ragnarok) | a bad contract change certified at every level | one level per move, `pointer-contract` approval point, no auto-merge |
+| Stale-green merge | a branch passed yesterday, `main` moved, it lands broken and every later branch builds on it | merge gate: update, re-check, merge pinned to the reviewed commit |
+| Silent pass on bad data | a reviewer's output fails to parse and the loop treats it as "no findings" | typed findings; malformed data stops the loop, never defaults |
 | Cascade through generated files | a buggy generator empties an index, every move merges the loss | shrink guard |
 | Cascade through previews | an unreviewed branch's preview runs a migration on the production DB | preview/production separation of secrets, DB and bucket |
 | Quota burn | a flaky check loops the implementer overnight | hard budget cap |
@@ -723,6 +792,18 @@ Fallback if (1) fails: a plain Podman sandbox driver behind the same interface.
 | container-use | candidate future sandbox driver |
 | OpenHands | candidate future agent adapter |
 | marola (MIP-0063, 0070, 0076, 0084, 0085) | umbrella and polyrepo, pointer discipline, issue standard and DoR, routing bundles and index family, shrink guard |
+| super-board | the merge gate (lock, update, re-check, merge pinned to the reviewed commit); typed review findings |
+| Gas Town Refinery | bisecting merge queue (with parallel agents) |
+| Harbor / Terminal-Bench 2 | benchmark task layout, isolated grading |
+| graphify, codebase-memory-mcp | `extracted` vs `inferred` edges; cross-service wiring for impact |
+| openai/codex | `app-server` headless protocol; sandbox and exec-policy design to study |
+
+The full curated source list is [`docs/research/curation.md`](../research/curation.md).
+
+**Licence rule:** we read these projects, we don't copy their code unless the licence allows it.
+Copyleft (AGPL, GPL), source-available (BSL, SSPL, FSL, ELv2, Commons Clause) and unlicensed repos are
+read-only for us: copying even a helper from an AGPL project would oblige anyone hosting Yggdrasil to
+publish their source, which would make the factory unusable for most companies.
 
 ## 21. Decision log
 
@@ -743,3 +824,7 @@ Fallback if (1) fails: a plain Podman sandbox driver behind the same interface.
 | Factory repo layout | umbrella from day one | one repo first |
 | Names | Norse set (Yggdrasil, Odin, Gleipnir, Jormungandr, Gungnir) | Greek set |
 | Journey records | journal of challenges, solutions and measured results from v0; posting later | start records when promotion begins |
+| Merge safety | merge gate on every merge and pointer move | merge when checks were green once |
+| Review feedback | typed findings with stable ids and proof | free-text reviewer comments |
+| Benchmark format | Harbor-compatible tasks, isolated grader container | own format only |
+| Agent integration | native headless protocols; codex and ACP adapters next | terminal screen-scraping |

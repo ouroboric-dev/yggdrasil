@@ -26,6 +26,7 @@ considered, what we chose, and the measured result. In the naming story these en
 | 2026-10-11 | [routing needs a bench](2026-10-11-routing-needs-a-bench.md) | routing, measurement | open | yes |
 | 2026-10-11 | [umbrella tree and git hooks](2026-10-11-umbrella-tree-and-git-hooks.md) | graph, topology, security, validation | open | yes |
 | 2026-10-11 | [web stack react go vs nextjs](2026-10-11-web-stack-react-go-vs-nextjs.md) | stack, web, security, benchmark | open | yes |
+| 2026-10-11 | [curating sources and borrowed ideas](2026-10-11-curating-sources-and-borrowed-ideas.md) | research, prior-art, merge, benchmark, routing, licensing | open | yes |
 
 ## When to write an entry
 
