@@ -294,6 +294,19 @@ privacy: standard   # strict → only providers with no training and no retentio
   retention through OpenRouter's provider data-policy settings (exact options verified when the
   adapter is built). Policy tightens only, going down: factory defaults → L0 → L1 → leaf.
 
+
+### 5.1 Skills and writing styles
+
+- Gleipnir's context assembly loads skills **explicitly** per task: the realm's reviewer and planning
+  strategies (e.g. Ponytail), and the writing style of any document the task writes, resolved by the
+  rules in [writing styles](../../4-ways-of-working/writing-styles.md).
+- Every skill is **vendored**: pinned copies in Gleipnir with a `skills.lock` (upstream, path, commit,
+  licence, per-file hashes). A check fails on drift; updates are reviewed pull requests; the skill set's
+  hash goes into `run.json`. Agents in sandboxes never see host-installed skills.
+- Only skills with redistributable licences, vendored from public upstreams, may be included;
+  organisation-internal skills never are. Operators can add private skills through their L0 instance
+  configuration, recorded in `run.json`.
+
 ## 6. Sandbox (Gleipnir devcontainer driver)
 
 ### 6.1 How it works
@@ -480,7 +493,7 @@ realm-web/
 Fast to slow; each rung's failure output goes back to the implementer.
 
 1. **Static:** gofmt, golangci-lint, go vet; eslint, tsc; **docs** (front matter, naming, required
-   sections per node type, broken links; the strict site build joins once the Zensical integration lands
+   sections per node type, broken links, Vale prose rules per writing style; the strict site build joins once the Zensical integration lands
    in iteration 2: see the
    [docs standard](../../4-ways-of-working/docs-standard.md#6-docs-are-checked-like-code)).
 2. **Unit tests + TDD check:** new tests must fail on the parent commit.
@@ -752,6 +765,7 @@ The first implementation task is a throwaway spike that answers:
 2. Does `claude -p --bare` work with subscription auth? If not, do managed settings block repo hooks
    and project MCP servers well enough?
 3. Which OpenRouter data-policy settings implement `privacy: strict`?
+4. Humanizer's upstream and licence, before it is vendored.
 
 Fallback if (1) fails: a plain Podman sandbox driver behind the same interface.
 
@@ -810,3 +824,5 @@ publish their source, which would make the factory unusable for most companies.
 | Simplicity | Ponytail as an explicit, vendored reuse/simplicity reviewer, benchmarked | rely on auto-triggered skills |
 | Self-hosting | milestone right after v0, never building in place | part of v0; unscheduled |
 | Docs | one template for factory and products, Zensical renderer | separate templates; Material for MkDocs (maintenance mode) |
+| Writing styles | 13 style ids per section, skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
+| Skills | all vendored with `skills.lock`, public upstreams with redistributable licences | rely on host-installed skills |

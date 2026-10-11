@@ -101,6 +101,7 @@ Folders without content yet hold a short `README.md` saying what belongs there.
   status: draft | accepted | implemented | superseded
   date: YYYY-MM-DD
   related: [relative links]
+  style: <style id>            # optional; see writing-styles.md
   ---
   ```
 
@@ -111,7 +112,9 @@ Folders without content yet hold a short `README.md` saying what belongs there.
 - **Links:** relative within a repo; absolute URLs across repos.
 - **Generated files** (`REPOS.md` wiring blocks, doc↔code, decisions indexes) say so at the top and
   have a `--check` mode that fails when they're stale.
-- **Writing style:** short sentences, active voice, concrete examples, no undefined jargon.
+- **Writing style:** every document has a style (legal, spec, procedure, marketing and others), set
+  per section with overrides per folder or document. See [writing styles](writing-styles.md).
+  Everywhere: short sentences, active voice, concrete examples, no undefined jargon.
 - **Diagrams:** Mermaid or ASCII in Markdown, so they diff and render anywhere.
 
 ## 6. Docs are checked like code
@@ -121,6 +124,7 @@ A docs rung in every realm's check ladder:
 - front matter present and valid;
 - file naming and required sections per node type (§3);
 - no broken links;
+- prose rules for the document's style, checked by Vale ([writing styles §4](writing-styles.md#4-enforcement));
 - a strict site build (once the renderer integration is in place).
 
 As marola puts it, writing a doc is a deploy.

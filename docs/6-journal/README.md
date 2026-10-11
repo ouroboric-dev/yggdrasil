@@ -29,6 +29,7 @@ considered, what we chose, and the measured result. In the naming story these en
 | 2026-10-11 | [curating sources and borrowed ideas](2026-10-11-curating-sources-and-borrowed-ideas.md) | research, prior-art, merge, benchmark, routing, licensing | open | yes |
 | 2026-10-11 | [sdd process and docs standard](2026-10-11-sdd-process-and-docs-standard.md) | process, spec-driven, docs, self-hosting, simplicity | open | yes |
 | 2026-10-11 | [kickstart and the charter](2026-10-11-kickstart-and-the-charter.md) | process, kickstart, charter, docs | resolved | yes |
+| 2026-10-11 | [writing styles and vendored skills](2026-10-11-writing-styles-and-vendored-skills.md) | docs, writing, skills, supply-chain | open | yes |
 
 ## When to write an entry
 

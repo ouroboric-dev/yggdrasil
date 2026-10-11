@@ -183,8 +183,9 @@ Rules for third-party strategies:
 
 - **Invoke explicitly, never rely on auto-triggering.** In an independent JetBrains test, Ponytail
   activated on its own in zero of ten sessions.
-- **Vendor a pinned, reviewed copy.** Feed the skill's instructions to the agent as part of its prompt;
-  don't install plugin hooks. A compromised upstream update would otherwise run inside every session of
+- **Vendor a pinned, reviewed copy** (recorded in `skills.lock`; see
+  [writing styles §5](writing-styles.md#5-vendored-skills)). Feed the skill's instructions to the agent as
+  part of its prompt; don't install plugin hooks. A compromised upstream update would otherwise run inside every session of
   every run.
 - **Benchmark every strategy.** Same brief with and without it; compare the hidden score, lines of
   code, tokens and cost.
