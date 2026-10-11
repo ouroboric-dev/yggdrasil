@@ -14,7 +14,7 @@ related: [../charter.md, ../roadmap.md, ../../2-engineering/specs/2026-10-11-ygg
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from brainstorming sessions held 2026-10-10 and 2026-10-11 |
 | **Within** | the [charter](../charter.md); milestone 1 of the [roadmap](../roadmap.md) |
 | **Engineering spec** | [2026-10-11-yggdrasil-v0-spec.md](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md) |
-| **Process** | tier 3, [spec-driven development](../../4-ways-of-working/spec-driven-development.md) |
+| **Process** | tier 3, [spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md) |
 
 ## 1. Summary
 

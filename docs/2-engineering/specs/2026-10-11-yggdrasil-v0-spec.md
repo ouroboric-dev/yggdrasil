@@ -2,7 +2,7 @@
 title: Yggdrasil v0 — engineering spec
 status: draft
 date: 2026-10-11
-related: [../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../1-product/charter.md, ../../4-ways-of-working/spec-driven-development.md]
+related: [../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../1-product/charter.md, https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md]
 ---
 
 # Yggdrasil v0 — engineering spec
@@ -15,13 +15,13 @@ related: [../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../1-prod
 | **Implements** | [v0 design doc](../../1-product/design/2026-10-11-yggdrasil-v0-design.md), within the [charter](../../1-product/charter.md) |
 | **Scope** | the factory core, the web realm and metrics. The game realm and the benchmark kit (Mimir) get their own design docs and specs |
 | **Deviations from the design doc** | none |
-| **Research** | [`docs/5-research/`](../../5-research/): harness engineering, loops/graphs/factories, orchestrator stack, web stack, hosting, curated sources |
-| **Naming** | [`naming-and-mythology.md`](../../7-branding/story/naming-and-mythology.md) |
-| **Process** | [spec-driven development](../../4-ways-of-working/spec-driven-development.md), [docs standard](../../4-ways-of-working/docs-standard.md) |
+| **Research** | [`docs/5-research/`](../../5-research): harness engineering, loops/graphs/factories, orchestrator stack, web stack, hosting, curated sources |
+| **Naming** | [`naming-and-mythology.md`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/story/naming-and-mythology.md) |
+| **Process** | [spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md), [docs standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md) |
 
 ## 1. Naming and repository layout
 
-Names follow [`naming-and-mythology.md`](../../7-branding/story/naming-and-mythology.md). The factory's source code is an
+Names follow [`naming-and-mythology.md`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/story/naming-and-mythology.md). The factory's source code is an
 umbrella of repos in the `ouroboric-dev` GitHub org:
 
 | Repo | Role |
@@ -33,6 +33,10 @@ umbrella of repos in the `ouroboric-dev` GitHub org:
 | `jormungandr` | the loop: build→check→fix semantics, attempts, backoff, budgets, feedback, escalation |
 | `realm-web` | the web realm: graph, prompts, devcontainer stack layer, templates, checks |
 | `havamal` | the skill library: vendored third-party skills with `skills.lock` and licences, our own skills with their evals, and the vendor/check/update tooling |
+
+Yggdrasil is one product of the [Ouroboric](https://github.com/ouroboric-dev/ouroboric) company
+umbrella, which holds the company charter, the shared standards, the journal and the branding. Its
+sibling product **Asgard**, the company factory, runs on Odin as direction realms.
 
 All modules are developed together through a Go workspace (`go.work`) in the umbrella. Versions are
 tagged only when an interface settles. Interfaces live only in `gungnir`, so an interface change is
@@ -184,7 +188,7 @@ agent                       agent    agent (read-only)                    agent 
 ```
 
 The stages and approval rules are defined in
-[spec-driven development](../../4-ways-of-working/spec-driven-development.md); this graph is the web
+[spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md); this graph is the web
 realm's implementation of them.
 
 - **design** (agent, with the operator): turns the brief into a design doc (what, for whom, why,
@@ -300,7 +304,7 @@ privacy: standard   # strict → only providers with no training and no retentio
 
 - Gleipnir's context assembly loads skills **explicitly** per task: the realm's reviewer and planning
   strategies (e.g. Ponytail), and the writing style of any document the task writes, resolved by the
-  rules in [writing styles](../../4-ways-of-working/writing-styles.md).
+  rules in [writing styles](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/writing-styles.md).
 - Every skill is **vendored** in **Havamal**, the skill library: pinned copies with a `skills.lock`
   (upstream, path, commit, licence, per-file hashes). Gleipnir loads skills from Havamal at a pinned
   version. Our own skills live there too, and each ships only with an eval showing it measurably
@@ -499,7 +503,7 @@ Fast to slow; each rung's failure output goes back to the implementer.
 1. **Static:** gofmt, golangci-lint, go vet; eslint, tsc; **docs** (front matter, naming, required
    sections per node type, broken links, Vale prose rules per writing style; the strict site build joins once the Zensical integration lands
    in iteration 2: see the
-   [docs standard](../../4-ways-of-working/docs-standard.md#6-docs-are-checked-like-code)).
+   [docs standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md#6-docs-are-checked-like-code)).
 2. **Unit tests + TDD check:** new tests must fail on the parent commit.
 3. **Contract:** OpenAPI lint; generated client up to date; `oasdiff` breaking-change detection
    (feeds the impact index and `pointer-contract`).
@@ -679,7 +683,7 @@ fails against the new one must not merge; a head that moved after review must ab
 
 ## 14. Security model
 
-The adversaries are named in the [naming record](../../7-branding/story/naming-and-mythology.md#the-adversaries):
+The adversaries are named in the [naming record](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/story/naming-and-mythology.md#the-adversaries):
 **Loki** (prompt injection), **Nidhogg** (entropy), **Ragnarok** (the cascade).
 
 | Threat | Example | Control |
@@ -743,7 +747,7 @@ if added, accepts only the operator's account (author association), never commen
 ### 15.4 Self-hosting
 
 Yggdrasil builds itself in stages (details in
-[spec-driven development §7](../../4-ways-of-working/spec-driven-development.md#10-self-hosting)):
+[spec-driven development §7](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md#10-self-hosting)):
 stage 0 is this hand-built v0; **stage 1, the milestone right after v0**, is Yggdrasil building one of
 its own features through the change graph and the Go realm, with the `yggdrasil` source umbrella as a
 project in the operator's L0; stage 2 is Yggdrasil improving itself from benchmark results. Guardrails:
@@ -753,7 +757,7 @@ that regresses on benchmarks.
 
 ### 15.5 Documentation
 
-Every umbrella and leaf follows the [docs standard](../../4-ways-of-working/docs-standard.md): one
+Every umbrella and leaf follows the [docs standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md): one
 numbered template shared by the factory and its products, with product-specific optional sections
 (`1-product/legal/`, required before `deploy-prod`; `3-using/operations/`), rendered with Zensical and
 aggregated recursively down the tree at pinned SHAs. Realm templates scaffold it; the docs rung checks
