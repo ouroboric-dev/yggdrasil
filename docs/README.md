@@ -2,12 +2,12 @@
 
 Yggdrasil is an open-source software factory by [Ouroboric](https://github.com/ouroboric-dev): a
 Go orchestrator that turns a written brief into verified software by running coding agents in
-sandboxes, through loops and human approval points. Start with the [vision](1-product/vision.md) and
+sandboxes, through loops and human approval points. Start with the [charter](1-product/charter.md) and
 the [v0 design doc](1-product/design/2026-10-11-yggdrasil-v0-design.md).
 
 | Folder | What's there |
 |---|---|
-| [`1-product/`](1-product/vision.md) | direction: vision, users, roadmap, design docs |
+| [`1-product/`](1-product/charter.md) | direction: vision, users, roadmap, design docs |
 | [`2-engineering/`](2-engineering/specs/README.md) | living spec, specs, change proposals, plans |
 | [`3-using/`](3-using/README.md) | for operators (Diátaxis) and runbooks |
 | [`4-ways-of-working/`](4-ways-of-working/spec-driven-development.md) | [spec-driven development](4-ways-of-working/spec-driven-development.md) and the [docs standard](4-ways-of-working/docs-standard.md) |

@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [security, github, open-source]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#181-github-remote-and-identities]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#151-github-remote-and-identities]
 ---
 ## Challenge
 Full autonomy means bots pushing and merging, with branch protection, possibly on open-source

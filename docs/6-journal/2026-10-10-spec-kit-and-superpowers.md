@@ -3,7 +3,7 @@ date: 2026-10-10
 tags: [graph, spec-driven, measurement]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#72-the-web-realm-graph]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#42-the-web-realm-graph]
 ---
 ## Challenge
 The operator already ran a Spec Kit + Superpowers setup (Spec Kit plans, Superpowers executes with

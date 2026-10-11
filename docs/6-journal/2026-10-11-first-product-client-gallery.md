@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [product, benchmark, security]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#121-benchmark-brief-1-client-gallery-lite]
+evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#4-the-demonstration-product-client-gallery-lite]
 ---
 ## Challenge
 Pick the first product the factory builds and is benchmarked on.

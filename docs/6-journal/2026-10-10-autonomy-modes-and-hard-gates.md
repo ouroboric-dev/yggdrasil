@@ -3,7 +3,7 @@ date: 2026-10-10
 tags: [graph, gates, safety, cost]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#10-approval-points-and-autonomy-modes]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#7-approval-points-and-autonomy-modes]
 ---
 ## Challenge
 How hands-on should the human be while the factory runs?

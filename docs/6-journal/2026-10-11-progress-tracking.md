@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [observability, tracking]
 status: open
 post-candidate: no
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#13-observability-packages-in-odin-future-module-norns, "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0063-github-issue-tracking-standard.md"]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#10-observability-packages-in-odin-future-module-norns, "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0063-github-issue-tracking-standard.md"]
 ---
 ## Challenge
 How does the operator see progress? Should there be issue tracking?

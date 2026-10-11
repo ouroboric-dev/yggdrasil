@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [research, prior-art, merge, benchmark, routing, licensing]
 status: open
 post-candidate: yes
-evidence: [../5-research/curation.md, ../1-product/design/2026-10-11-yggdrasil-v0-design.md#75-the-merge-gate, ../1-product/design/2026-10-11-yggdrasil-v0-design.md#76-typed-findings, ../1-product/design/2026-10-11-yggdrasil-v0-design.md#14-benchmark-format-full-kit-in-spec-3]
+evidence: [../5-research/curation.md, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#45-the-merge-gate, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#46-typed-findings, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#11-benchmark-format-full-kit-later-as-mimir]
 ---
 ## Challenge
 Build a curated list of learning sources, mainly open source, and find ideas worth bringing into

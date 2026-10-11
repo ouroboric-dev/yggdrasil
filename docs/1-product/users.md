@@ -2,7 +2,7 @@
 title: Users
 status: accepted
 date: 2026-10-11
-related: [vision.md]
+related: [charter.md]
 ---
 
 # Users

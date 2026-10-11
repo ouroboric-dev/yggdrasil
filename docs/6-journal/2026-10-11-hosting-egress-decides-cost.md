@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [infra, cost, security]
 status: open
 post-candidate: yes
-evidence: [../5-research/research-hosting.md, ../1-product/design/2026-10-11-yggdrasil-v0-design.md#123-infrastructure-target]
+evidence: [../5-research/research-hosting.md, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#93-infrastructure-target]
 ---
 ## Challenge
 A Postgres server seemed expensive for a product with one user at first. What is cost-friendly?

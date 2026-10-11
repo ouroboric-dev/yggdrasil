@@ -19,7 +19,8 @@ Every umbrella (the factory's `yggdrasil`, each product's project umbrella) uses
 docs/
   README.md                landing page: what this is, and a map of the folders
   1-product/               DIRECTION (human-approved)
-    vision.md, users.md, roadmap.md
+    charter.md             vision, mission, principles, north star, boundaries
+    users.md, roadmap.md
     design/                design docs, dated
     legal/                 products: privacy, terms, data map, deletion process
   2-engineering/           HANDOVER AND BUILD
@@ -63,7 +64,7 @@ Direction, journal and branding live in the umbrella above the leaf.
 | Section | Factory umbrella | Product umbrella | Leaf |
 |---|---|---|---|
 | `README.md` | required | required | required |
-| `1-product/vision.md`, `design/` | required | required | — |
+| `1-product/charter.md`, `roadmap.md`, `design/` | required | required | — |
 | `1-product/legal/` | optional (licence, contribution terms) | optional while in development; **required before `deploy-prod`** | — |
 | `2-engineering/*` | required | required | — |
 | `3-using/` | required once there are users | required once there are users | `how-to/`, `reference/` |
@@ -78,7 +79,7 @@ Folders without content yet hold a short `README.md` saying what belongs there.
 
 ## 4. How products differ
 
-- **`1-product/`** describes the product's vision, users and competitors.
+- **`1-product/`** holds the product's charter (from the tier 0 kickstart), users and competitors.
 - **`1-product/legal/`** holds the privacy policy, terms, **data map** (every place personal data
   lives: database rows, object storage originals and derivatives, zips, preview databases, backups)
   and the deletion process. A product that stores people's photos or emails handles personal data;

@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [routing, measurement]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#11-routing-package-in-odin-future-module-ratatoskr, "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0084-zero-setup-routing.md", "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0085-routing-index-family.md"]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#8-routing-package-in-odin-future-module-ratatoskr, "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0084-zero-setup-routing.md", "https://github.com/marola-dev/marola/blob/main/docs/MIPs/MIP-0085-routing-index-family.md"]
 ---
 ## Challenge
 As the tree grows, agents and the orchestrator need help finding where work belongs. marola already

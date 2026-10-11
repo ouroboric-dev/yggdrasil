@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [harness, sandbox, security]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#9-sandbox-gleipnir-devcontainer-driver]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#6-sandbox-gleipnir-devcontainer-driver]
 ---
 ## Challenge
 Products with different stacks shouldn't install dependencies on the host. Could agents run inside

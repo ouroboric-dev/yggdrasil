@@ -3,7 +3,7 @@ date: 2026-10-10
 tags: [graph, architecture, frameworks]
 status: open
 post-candidate: yes
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#21-decision-log, ../5-research/research-stack.md]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#18-decision-log, ../5-research/research-stack.md]
 ---
 ## Challenge
 Build the orchestrator ourselves, or build on an existing framework?

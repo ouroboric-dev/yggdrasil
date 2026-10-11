@@ -22,13 +22,18 @@ prompts are interchangeable ways of producing the artifacts it defines.
 5. **Checks, not promises.** Readiness, conformance, test-first and drift are checked mechanically
    wherever possible.
 
-## 2. The three layers
+## 2. The layers
 
 | Layer | Question it answers | Typical author | Approval |
 |---|---|---|---|
+| **Charter** (once per product) | *Where* are we going and by which rules? Vision, mission, principles, users and problems, north-star measures, boundaries | the operator, brainstorming with an agent | **a human, in every mode by default** (override: `gates: { charter: auto }`) |
 | **Design doc** (like a PRD) | *What* are we building, for *whom*, and *why*? Scope, success criteria, non-goals | the product role: a human brainstorming with an agent | **a human, in every mode by default.** It decides what gets built. Overriding this needs an explicit `gates: { design: auto }` |
 | **Spec** (like an RFC) | *How* will engineering deliver the design? Architecture, contracts, data model, acceptance criteria per feature, decisions | an engineering agent | **automatic if it conforms to the design doc.** A design-conformance reviewer checks it; a deviation stops the run. Key-points mode may be set to always stop (`spec: stop`) |
 | **Plan and tasks** | In what order, in which repo, proven by which tests? | an engineering agent | automatic in every mode except step-by-step |
+
+The charter bounds every design doc; a **charter-conformance check** stops a design doc that drifts
+from it (for example, a design doc for payments when the charter says "not commercial yet"). Its
+principles also become `AGENTS.md` invariants in every repo of the product.
 
 The design doc is the handover from product to engineering. The spec must stay within it. When
 engineering finds the design is wrong or incomplete, the run stops at `design` with a proposed
@@ -38,6 +43,7 @@ amendment rather than quietly building something else.
 
 | Tier | Example | Artifacts | Human approval |
 |---|---|---|---|
+| **0: kickstart** | a new product | charter, shape, brand seed, roadmap, then milestone 1's design doc (§3.1) | `charter`, then `design` |
 | **1: fix or chore** | a bug, a dependency bump, a docs fix | one task: acceptance criterion and a **failing test that reproduces it** | none beyond approving the issue itself (it is the direction) |
 | **2: small change** | a new gallery setting | a **change proposal** (acts as a mini design doc, §5) and 1–3 tasks | `design` |
 | **3: initiative** | a new product, a new realm, payments | design doc → spec → plan → tasks | `design` |
@@ -45,10 +51,28 @@ amendment rather than quietly building something else.
 When in doubt, use the higher tier. If hidden complexity shows up during the work, move up a tier and
 stop at the matching approval point.
 
+### 3.1 Tier 0: kickstarting a product
+
+Every product starts here, once. (In the naming story, every realm begins in **Ginnungagap**, the
+void before creation.)
+
+| Step | Produces | Approval |
+|---|---|---|
+| 1. Intent and research | brainstorm notes; research briefs in `docs/5-research/` | — |
+| 2. Charter | `docs/1-product/charter.md` | `charter` (human) |
+| 3. Shape | realm(s), the repo tree (umbrella and leaves), org, visibility and hosting target, recorded in the charter's boundaries; the umbrella scaffolded to the [docs standard](docs-standard.md), with `AGENTS.md` invariants derived from the principles | — |
+| 4. Brand seed | name and story theme in `docs/7-branding/story/` | `charter` (approved together) |
+| 5. Roadmap | `docs/1-product/roadmap.md`: ordered milestones | `charter` (approved together) |
+| 6. First design doc | milestone 1's design doc; from here the regular tier-3 flow | `design` |
+
+**Benchmark runs skip tier 0:** a frozen benchmark brief stands in for charter and design intent, so
+runs stay comparable.
+
 ## 4. Stages and approval points
 
 ```
-intent ─► design doc ─► [design] ─► spec ─► conformance review ─► [spec] ─► plan + reuse review
+(tier 0 once: intent ─► charter ─► [charter] ─► shape, brand seed, roadmap)
+intent ─► design doc ─► charter-conformance check ─► [design] ─► spec ─► conformance review ─► [spec] ─► plan + reuse review
        ─► tasks + DoR check ─► [plan] ─► implement (TDD, fresh session per task)
        ─► check ladder + reviewers (typed findings) ─► [feature] ─► merge gate ─► [merge]
        ─► pointer move ─► [pointer | pointer-contract] ─► update living spec ─► journal
@@ -56,6 +80,7 @@ intent ─► design doc ─► [design] ─► spec ─► conformance review �
 
 | Approval point | step-by-step | key-points (default) | unattended |
 |---|---|---|---|
+| `charter` | stop | stop | stop (default; explicit override only) |
 | `design` | stop | stop | stop (default; explicit override only) |
 | `spec` | stop | auto, stop on deviation (option: `spec: stop`) | auto, stop on deviation |
 | `plan`, `feature`, `merge`, `pointer` | stop | auto | auto |
@@ -72,10 +97,17 @@ merge pinned to the reviewed commit) run on every merge whether or not a human a
 These are part of the Gungnir contract. Every planning strategy must produce them; Odin rejects output
 that doesn't conform.
 
+### Charter — `docs/1-product/charter.md`
+
+One per product. Sections: vision; mission; principles; users and problems (may link `users.md`);
+north-star measures; boundaries (product-level non-goals and constraints: budget, compliance, realm,
+hosting). Changes rarely, and only through the `charter` approval point.
+
 ### Design doc — `docs/1-product/design/YYYY-MM-DD-<slug>.md`
 
-Front matter (`title`, `status`, `date`, `related`) and sections: intent; users; problems; scope and
-non-goals; success criteria; constraints; open questions; decisions (`**Decided YYYY-MM-DD:** …`).
+Links the charter in `related`. Front matter (`title`, `status`, `date`, `related`) and sections:
+summary; goals, non-goals and success criteria; context and constraints; the product or feature
+described at user level; decisions (`**Decided YYYY-MM-DD:** …`); open questions.
 
 ### Spec — `docs/2-engineering/specs/YYYY-MM-DD-<slug>.md`
 
@@ -161,13 +193,18 @@ Rules for third-party strategies:
 
 Until Yggdrasil can build itself, humans and an interactive agent follow the same process by hand:
 
-1. Brainstorm the design doc together (this is what the 2026-10-10/11 sessions produced:
-   [`2026-10-11-yggdrasil-v0-design.md`](../1-product/design/2026-10-11-yggdrasil-v0-design.md)).
-   For v0 the design doc also carries the engineering decisions, because it was written by hand in one
-   pass; from the first change proposal on, design and spec are separate documents.
-2. Write the implementation plan and tasks into `docs/2-engineering/plans/`.
-3. Implement test-first, one task per session, with reviews and the same commit conventions.
-4. Record challenges in the journal.
+1. Kickstart (tier 0) by brainstorming together. For Yggdrasil this was done in the 2026-10-10/11
+   sessions and recorded retroactively: the [charter](../1-product/charter.md), the
+   [roadmap](../1-product/roadmap.md) and the [naming story](../7-branding/story/naming-and-mythology.md).
+2. Write milestone 1's design doc and its engineering spec as separate documents:
+   [v0 design doc](../1-product/design/2026-10-11-yggdrasil-v0-design.md) and
+   [v0 spec](../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md).
+3. Write the implementation plan and tasks into `docs/2-engineering/plans/`.
+4. Implement test-first, one task per session, with reviews and the same commit conventions.
+5. Record challenges in the journal.
+
+No document is exempt: the factory's own founding documents follow the same structure as any
+product's.
 
 ## 10. Self-hosting
 

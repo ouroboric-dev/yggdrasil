@@ -3,7 +3,7 @@ date: 2026-10-11
 tags: [process, promotion]
 status: resolved
 post-candidate: no
-evidence: [../1-product/design/2026-10-11-yggdrasil-v0-design.md#135-journey-journal]
+evidence: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#105-journey-journal]
 ---
 ## Challenge
 The project will be promoted later through a blog or a series of posts about the journey. Posting

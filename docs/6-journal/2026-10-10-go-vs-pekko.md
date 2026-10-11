@@ -3,7 +3,7 @@ date: 2026-10-10
 tags: [stack, cloud, architecture]
 status: open
 post-candidate: yes
-evidence: [../5-research/research-stack.md, ../1-product/design/2026-10-11-yggdrasil-v0-design.md#5-architecture]
+evidence: [../5-research/research-stack.md, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#2-architecture]
 ---
 ## Challenge
 Which language and runtime for the factory itself?

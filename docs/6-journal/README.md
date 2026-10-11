@@ -3,7 +3,7 @@
 The journey journal: one entry per challenge met while building Yggdrasil, with the options we
 considered, what we chose, and the measured result. In the naming story these entries are the
 **sagas**; a future content component (**Bragi**) will turn them into blog posts. Spec:
-[§13.5](../1-product/design/2026-10-11-yggdrasil-v0-design.md#135-journey-journal).
+[§13.5](../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#105-journey-journal).
 
 ## Entries
 
@@ -28,6 +28,7 @@ considered, what we chose, and the measured result. In the naming story these en
 | 2026-10-11 | [web stack react go vs nextjs](2026-10-11-web-stack-react-go-vs-nextjs.md) | stack, web, security, benchmark | open | yes |
 | 2026-10-11 | [curating sources and borrowed ideas](2026-10-11-curating-sources-and-borrowed-ideas.md) | research, prior-art, merge, benchmark, routing, licensing | open | yes |
 | 2026-10-11 | [sdd process and docs standard](2026-10-11-sdd-process-and-docs-standard.md) | process, spec-driven, docs, self-hosting, simplicity | open | yes |
+| 2026-10-11 | [kickstart and the charter](2026-10-11-kickstart-and-the-charter.md) | process, kickstart, charter, docs | resolved | yes |
 
 ## When to write an entry
 

@@ -76,7 +76,7 @@ Naming the threats makes them easier to discuss in designs, docs and incident no
 | **realms** | packs: domain recipes such as web or game. A generic word, not a module | v0 (web realm) |
 | **Ratatoskr** | routing: per-umbrella index bundles, hierarchical descent | later as a module (v0 ships it as a package) |
 | **Norns** | observability: ledger, metrics, reports, live status | later as a module |
-| **Mimir** | benchmarks: kit, frozen briefs, hidden suites, scoring | later (spec 3) |
+| **Mimir** | benchmarks: kit, frozen briefs, hidden suites, scoring | later (its own milestone) |
 | **Heimdall** | approval points, as a sub-component of Odin | optional name |
 | **Bifrost** | integrations: Remote, Tracker, deploy targets | optional name |
 | **Fenrir** | the model and agents themselves: the bound power | story only, not a module |
