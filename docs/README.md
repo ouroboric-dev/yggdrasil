@@ -1,7 +1,7 @@
 # Yggdrasil docs
 
-Yggdrasil is an open-source software factory by [Ouroboric](https://github.com/ouroboric-dev): a
-Go orchestrator that turns a written brief into verified software by running coding agents in
+Yggdrasil is an open-source software factory by [Ouroboric](https://github.com/ouroboric-dev). It's
+a Go orchestrator that turns a written brief into verified software. It runs coding agents in
 sandboxes, through loops and human approval points. Start with the [charter](1-product/charter.md) and
 the [v0 design doc](1-product/design/2026-10-11-yggdrasil-v0-design.md).
 
@@ -15,5 +15,5 @@ the [v0 design doc](1-product/design/2026-10-11-yggdrasil-v0-design.md).
 | [`6-journal/`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/6-journal/README.md) | the journey: challenges, solutions, results |
 | [`7-branding/`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/README.md) | story, identity, voice, prompts, assets |
 
-This repo follows its own [documentation standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md), the same one
-every product built by Yggdrasil uses.
+This repo follows its own [documentation standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md).
+Every product that Yggdrasil builds uses the same standard.

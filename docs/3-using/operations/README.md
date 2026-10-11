@@ -1,3 +1,4 @@
 # Operations
 
-Runbooks for operating Yggdrasil: install, upgrade, `ygg doctor`, recovery. Empty until v0 is usable.
+This folder contains the runbooks to operate Yggdrasil: install, upgrade, `ygg doctor` and recovery.
+This folder is empty until you can use v0.

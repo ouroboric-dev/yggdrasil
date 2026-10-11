@@ -8,9 +8,9 @@ style: research
 
 # Yggdrasil learning sources: curated list
 
-> Accessed 2026-10-11. Stars, push dates, licences and archive flags come from the GitHub REST API (`gh api repos/<owner>/<repo>`) on that day. "Pushed" is the last push to any branch. "Rel" is the latest GitHub release, where one exists. Repos that moved show their new home; GitHub redirects the old URL.
+> Accessed 2026-10-11. Stars, push dates, licences and archive flags come from the GitHub REST API (`gh api repos/<owner>/<repo>`) on that day. "Pushed" is the last push to any branch. "Rel" is the latest GitHub release, where one exists. Repos that moved show their new home; GitHub redirects the old URL. Items marked **[ANALYSIS]** are the author's judgement, recommendations or inferences, not sourced facts.
 >
-> **A note on stars.** In 2026, star counts for agent tooling are inflated and tell you little about quality. `obra/superpowers` has about 297k, `mattpocock/skills` about 285k, and `Graphify-Labs/graphify` gained about 125k in six months. Use stars to judge reach. To judge substance, look at code, tests and evals, release cadence and issue hygiene. Treat any README claim like "120x fewer tokens" as marketing until you can reproduce it.
+> **A note on stars [ANALYSIS].** In 2026, star counts for agent tooling are inflated and tell you little about quality. `obra/superpowers` has about 297k, `mattpocock/skills` about 285k, and `Graphify-Labs/graphify` gained about 125k in six months. Use stars to judge reach. To judge substance, look at code, tests and evals, release cadence and issue hygiene. Treat any README claim like "120x fewer tokens" as marketing until you can reproduce it.
 
 Yggdrasil layer key: **Odin** (graph engine), **Gleipnir** (harness: adapters, sandbox, policies, checks), **Jormungandr** (build→check→fix loop with caps), **Gates** (approval gates and autonomy modes), **Tree** (umbrella/leaf submodule tree and routing indexes), **Ledger** (hash-chained JSONL metrics), **Bench** (hidden black-box Playwright suites), **Spec** (Spec Kit artifacts), **Tracker** (GitHub issue projection), **Realms** (web, games, mobile).
 
@@ -27,10 +27,10 @@ Yggdrasil layer key: **Odin** (graph engine), **Gleipnir** (harness: adapters, s
 | Activity | Last push 2026-10-08. Last release v3.0.4 (2026-10-04); the README says v3.1.1. Three releases in 2 days in early October. |
 | Licence | MIT |
 | Archived | No |
-| Contributors | `EricTechService` (26) and `EricTechPro` (23). In practice this is **one author with two accounts**. |
+| Contributors | `EricTechService` (26) and `EricTechPro` (23). In practice this is **one author with two accounts** **[ANALYSIS]**. |
 | Shape | Bash and Python scripts plus Markdown skills. GitHub calls it "HTML" because of the docs site. It ships behavioural evals in `evals/`, run with `claude plugin eval`. |
 
-**Maturity verdict: a thoughtful single-author project. It is young, not popular, and not something to depend on. It is still worth reading closely, because several files hold hard-won operational lessons, written down with dates and incident numbers.** Much of it is prompt contract (SKILL.md and references) rather than code. The model ladder in the README (Haiku → Sonnet → Opus, plus Codex models) will go stale fast.
+**Maturity verdict [ANALYSIS]: a thoughtful single-author project. It is young, not popular, and not something to depend on. It is still worth reading closely, because several files hold operational lessons, written down with dates and incident numbers.** Much of it is prompt contract (SKILL.md and references) rather than code. The model ladder in the README (Haiku → Sonnet → Opus, plus Codex models) will go stale fast **[ANALYSIS]**.
 
 ### Ideas worth borrowing (concrete)
 
@@ -40,31 +40,31 @@ Yggdrasil layer key: **Odin** (graph engine), **Gleipnir** (harness: adapters, s
    - runs `verify_commands`;
    - merges with `gh pr merge --match-head-commit <reviewed sha>`.
 
-   → **Gleipnir checks and the Gates merge node.** This is a Bors-style "not rocket science" rule. Gas Town's Refinery does the same with a bisecting queue.
-2. **One worker per lane, downstream first.** At most one Builder, one Tester and one Reviewer run at a time. Review is dispatched before QA, and QA before Build, so finished work closes before new work starts. Thirty Ready cards do not start thirty agents. → **Odin scheduling policy.** It is a simple, defensible default for concurrency caps.
-3. **"Review remembers."** The reviewer loads its last `<!-- super-review:report -->` PR comment. It re-checks each finding by stable ID (R1, R2…) with file:line proof before its own fresh pass. It forms its own hypotheses *before* reading the builder's summary, to resist anchoring. → **Jormungandr fix loop.** Persist structured findings between iterations and require proof of closure, so the loop cannot "resolve" a thread without a fix.
-4. **Fail closed on missing evidence.** `super-board-github-read.py` retries a read at most twice, then exits with code 79 and pauses the run. The rule is "never substitute an empty board, OPEN issue, full quota, or empty diff". Mutations are never blindly retried, because a lost response may hide a write that succeeded. → **Gleipnir adapters and Tracker projection.** Make missing data a typed error, never a default value.
-5. **Behavioural evals for the harness itself.** Each case has `case.yaml`, `seed.sh` and `graders/` (code checks plus an LLM judge), with stubbed `gh` and `git` that log calls. A grader can then assert, for example, "never called `pr merge`". → **Bench**, applied to the factory rather than the product. Write regression evals for Yggdrasil's own agents.
-6. **Preflight guards that come from incidents.** For example: "orphan-worker scan (added 2026-05-22 after #381 worker storm)", a production auto-merge refusal, a GraphQL rate-limit guard, and a DB-reach check before a wave. → **Gates.** Each guard is a testable precondition with an exact halt message.
-7. **A cheap router grades difficulty.** A small model labels each card easy, medium or hard, and that label picks the model tier. → **Odin node config and Ledger.** Record the cost and outcome for each tier.
+   → **[ANALYSIS]** **Gleipnir checks and the Gates merge node.** This is a Bors-style "not rocket science" rule. Gas Town's Refinery does the same with a bisecting queue.
+2. **One worker per lane, downstream first.** At most one Builder, one Tester and one Reviewer run at a time. Review is dispatched before QA, and QA before Build, so finished work closes before new work starts. Thirty Ready cards do not start thirty agents. → **[ANALYSIS]** **Odin scheduling policy.** It is a simple, defensible default for concurrency caps.
+3. **"Review remembers."** The reviewer loads its last `<!-- super-review:report -->` PR comment. It re-checks each finding by stable ID (R1, R2…) with file:line proof before its own fresh pass. It forms its own hypotheses *before* reading the builder's summary, to resist anchoring. → **[ANALYSIS]** **Jormungandr fix loop.** Persist structured findings between iterations and require proof of closure, so the loop cannot "resolve" a thread without a fix.
+4. **Fail closed on missing evidence.** `super-board-github-read.py` retries a read at most twice, then exits with code 79 and pauses the run. The rule is "never substitute an empty board, OPEN issue, full quota, or empty diff". Mutations are never blindly retried, because a lost response may hide a write that succeeded. → **[ANALYSIS]** **Gleipnir adapters and Tracker projection.** Make missing data a typed error, never a default value.
+5. **Behavioural evals for the harness itself.** Each case has `case.yaml`, `seed.sh` and `graders/` (code checks plus an LLM judge), with stubbed `gh` and `git` that log calls. A grader can then assert, for example, "never called `pr merge`". → **[ANALYSIS]** **Bench**, applied to the factory rather than the product. Write regression evals for Yggdrasil's own agents.
+6. **Preflight guards that come from incidents.** For example: "orphan-worker scan (added 2026-05-22 after #381 worker storm)", a production auto-merge refusal, a GraphQL rate-limit guard, and a DB-reach check before a wave. → **[ANALYSIS]** **Gates.** Each guard is a testable precondition with an exact halt message.
+7. **A cheap router grades difficulty.** A small model labels each card easy, medium or hard, and that label picks the model tier. → **[ANALYSIS]** **Odin node config and Ledger.** Record the cost and outcome for each tier.
 
 ### Risks
 
-- **Maintenance (bus factor of 1).** It moves fast (major v2→v3 in about 4 months, with a migration script), and has 16 open issues. Pin a commit if you copy anything.
-- **Licence.** MIT, so copying is fine. It credits `obra/superpowers`, `mattpocock/skills`, `BuilderIO/skills` and `tt-a1i/archify`, and `skills/visual/THIRD_PARTY_NOTICES.md` exists. Check those notices before you copy the `visual` skill.
+- **Maintenance (bus factor of 1).** It moves fast (major v2→v3 in about 4 months, with a migration script), and has 16 open issues. Pin a commit if you copy anything **[ANALYSIS]**.
+- **Licence.** MIT, so copying is fine. It credits `obra/superpowers`, `mattpocock/skills`, `BuilderIO/skills` and `tt-a1i/archify`, and `skills/visual/THIRD_PARTY_NOTICES.md` exists. Check those notices before you copy the `visual` skill **[ANALYSIS]**.
 - **Security: what can go wrong.**
-  - *`curl … get.sh | bash` install.* If the repo or the author's account is compromised, every new install runs the attacker's script with your user rights. That includes your `gh` token, which has `repo` and `project` scopes. The plugin route is no safer if you do not read the skills; a skill is code that runs with your permissions.
-  - *Autonomous merge.* The README pitch is "add tasks, walk away, get merged PRs". One bad card or poisoned issue body can put an agent-written change on your base branch. This cascades: every lane after it rebases onto the broken base, and the board keeps draining. super-board defends against this with a production-merge guard and an opt-in `guard-protected-push`. Yggdrasil's Gates should make human approval the default for production branches.
-  - *Prompt injection through intake.* `/super-collect` turns Sentry, PostHog and issue text into Backlog cards. An attacker who can write an issue or trigger an error message can plant instructions that a later Build agent reads. For example: "also add this webhook URL to the config". Treat intake text as untrusted data.
-  - *Hooks are guardrails, not a sandbox.* `guard-secrets.py` pattern-matches commands. An agent can still read `.env` through a path or tool the regex does not expect. Yggdrasil's rootless Podman sandbox is the real boundary; hooks are a second layer.
+  - *`curl … get.sh | bash` install.* If the repo or the author's account is compromised, every new install runs the attacker's script with your user rights. That includes your `gh` token, which has `repo` and `project` scopes. The plugin route is no safer if you do not read the skills; a skill is code that runs with your permissions **[ANALYSIS]**.
+  - *Autonomous merge.* The README pitch is "add tasks, walk away, get merged PRs". One bad card or poisoned issue body can put an agent-written change on your base branch. This cascades: every lane after it rebases onto the broken base, and the board keeps draining. super-board defends against this with a production-merge guard and an opt-in `guard-protected-push`. Yggdrasil's Gates should make human approval the default for production branches **[ANALYSIS]**.
+  - *Prompt injection through intake.* `/super-collect` turns Sentry, PostHog and issue text into Backlog cards. An attacker who can write an issue or trigger an error message can plant instructions that a later Build agent reads. For example: "also add this webhook URL to the config". Treat intake text as untrusted data **[ANALYSIS]**.
+  - *Hooks are guardrails, not a sandbox.* `guard-secrets.py` pattern-matches commands. An agent can still read `.env` through a path or tool the regex does not expect. Yggdrasil's rootless Podman sandbox is the real boundary; hooks are a second layer **[ANALYSIS]**.
 
-**Tier: worth watching, and a must-read for 4 files:** `scripts/super-board-merge-gate.sh`, `skills/super-board/references/run.md`, `skills/super-review/SKILL.md` and `evals/README.md`. Do not adopt it as a dependency.
+**Tier [ANALYSIS]: worth watching, and a must-read for 4 files:** `scripts/super-board-merge-gate.sh`, `skills/super-board/references/run.md`, `skills/super-review/SKILL.md` and `evals/README.md`. Do not adopt it as a dependency.
 
 ---
 
 ## 2. Curated list by category
 
-Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check back later. **SKIP** = not worth your time, with the reason given.
+Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check back later. **SKIP** = not worth your time, with the reason given. The Tier and "Informs → what to borrow" columns are **[ANALYSIS]**; stars, activity and licence come from the GitHub API as described above.
 
 ### 2.1 Agent orchestrators over CLIs and multi-agent coding
 
@@ -154,7 +154,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 | [daytonaio/daytona](https://github.com/daytonaio/daytona) | Agent sandbox infra | 71.6k | **ARCHIVED** (core moved private, June 2026) | AGPL-3.0 at v0.190.0 | Closed now. | SKIP |
 | [abshkbh/arrakis](https://github.com/abshkbh/arrakis) | Self-hosted microVM sandbox | 886 | push 2025-06-02 (dormant) | AGPL-3.0 | Dormant. | SKIP |
 
-**Security: why two layers.** Rootless Podman stops a container escape from becoming root on the host. It does *not* stop an agent with network access from sending the repo's `.env` to a paste site after reading a prompt-injected README. That is a single `curl` call, and the container allows it. Add an egress allowlist (srt proxy or Podman `--network=none` plus a proxy) and do not mount host credentials. Then a poisoned dependency README cannot quietly turn every leaf repo build into a credential leak.
+**Security: why two layers.** Rootless Podman stops a container escape from becoming root on the host. It does *not* stop an agent with network access from sending the repo's `.env` to a paste site after reading a prompt-injected README. That is a single `curl` call, and the container allows it. **[ANALYSIS]** Add an egress allowlist (srt proxy or Podman `--network=none` plus a proxy) and do not mount host credentials. Then a poisoned dependency README cannot quietly turn every leaf repo build into a credential leak.
 
 ### 2.5 Evals and benchmarks
 
@@ -174,7 +174,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 | [openai/SWELancer-Benchmark](https://github.com/openai/SWELancer-Benchmark) | Freelance-task benchmark with E2E tests | 1.4k | **ARCHIVED** | none | Its idea of grading with **end-to-end browser tests written by engineers** matches your hidden Playwright suites. Read the paper only. | SKIP (lesson only) |
 | [microsoft/playwright](https://github.com/microsoft/playwright) / [playwright-mcp](https://github.com/microsoft/playwright-mcp) | Browser automation; MCP for agents | 97.5k / 38.0k | push 2026-10-10 / 10-08 | Apache-2.0 | **Bench and Jormungandr.** Hidden suites use Playwright test. Agents use playwright-mcp for *visible* self-checks. Keep the two strictly separate so agents cannot see the grader. | MUST |
 
-**Security: protecting hidden suites.** If the hidden Playwright suite is mounted anywhere the agent's container can read, or its results leak into the agent's context, the agent will learn to pass the test rather than build the feature. A real example from Anthropic's eval write-up: an agent read git history from earlier trials. Run graders in a separate container after the agent's container has stopped, and only give back pass/fail plus coarse failure categories.
+**Security: protecting hidden suites.** If the hidden Playwright suite is mounted anywhere the agent's container can read, or its results leak into the agent's context, the agent will learn to pass the test rather than build the feature **[ANALYSIS]**. A real example from Anthropic's eval write-up: an agent read git history from earlier trials. Run graders in a separate container after the agent's container has stopped, and only give back pass/fail plus coarse failure categories **[ANALYSIS]**.
 
 ### 2.6 Observability and tracing for agents
 
@@ -190,7 +190,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 | [disler/claude-code-hooks-multi-agent-observability](https://github.com/disler/claude-code-hooks-multi-agent-observability) | Hook events → server → live dashboard | 1.5k | push 2026-02-08 | none stated | **Ledger.** The hook-to-event-stream pattern for CLIs that lack native OTel. Read only. | WATCH |
 | [gastownhall/gascity-otel](https://github.com/gastownhall/gascity-otel) | OTel stack for Gas City (VictoriaMetrics, VictoriaLogs, Grafana) | 6 | push 2026-03-13 | Apache-2.0 | A worked example of an orchestrator emitting OTel. | WATCH |
 
-Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `otel` crates). Gleipnir can turn that on per run and ingest it into the ledger, so you need less custom parsing.
+Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `otel` crates). Gleipnir can turn that on per run and ingest it into the ledger, so you need less custom parsing **[ANALYSIS]**.
 
 ### 2.7 Code-graph routing and context
 
@@ -255,6 +255,8 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 
 ## 3. Start here: top 10, in order
 
+**[ANALYSIS]** This ordering is the author's recommendation.
+
 1. **walkinglabs/learn-harness-engineering (L13 and L14 plus the Claude Code and Codex breakdowns).** It gives you the vocabulary (instructions, tools, environment, state, feedback; loop → graph) to check Odin, Gleipnir and Jormungandr against.
 2. **Anthropic, "Effective harnesses for long-running agents" and "Harness design for long-running application development"** (non-OSS but essential). The planner → generator → Playwright-evaluator pattern *is* your web-realm loop. The feature-list JSON where only `passes` can change is the model for loop caps and honesty.
 3. **mini-swe-agent.** Read all of it in an hour, then make it Bench's control baseline, so every Odin graph has to beat it.
@@ -269,6 +271,8 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 ---
 
 ## 4. Key non-OSS reading (8)
+
+The "Why it matters" column is **[ANALYSIS]**.
 
 | # | Reading | Date | Why it matters to the OSS list |
 |---|---|---|---|
@@ -285,10 +289,12 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 
 ## 5. Licence quick-reference (borrowing ideas vs code)
 
+**[ANALYSIS]** This grouping is the author's reading of each licence.
+
 - **Safe to copy code (permissive):** MIT, Apache-2.0, CC0. This covers most entries.
 - **Read only. Copying code makes your project inherit the terms:** claude-squad (AGPL-3.0), serena app (GPL-3.0+), cmux (GPL-3.0+), Daytona (AGPL-3.0).
 - **Source-available. Do not embed in an OSS factory others may host:** crush (FSL-1.1, converts to MIT after 2 years), Phoenix (ELv2), Restate (BSL 1.1), Inngest (SSPL), claude-task-master (Commons Clause), langfuse `ee/` folders.
 - **No licence, so all rights reserved (read only):** anthropics/claude-code, disler repos, polyglot-benchmark, Gut (no SPDX detected; check the file).
 - **Content you may not adapt:** awesome-claude-code (CC BY-NC-ND).
 
-What goes wrong if you ignore this: copy a 200-line AGPL helper from claude-squad into Gleipnir, and anyone who runs Yggdrasil as a hosted service must publish their full source under AGPL. That can block every company that would otherwise adopt it, and removing the code later means a clean-room rewrite plus a history audit.
+**What goes wrong if you ignore this [ANALYSIS]:** copy a 200-line AGPL helper from claude-squad into Gleipnir, and anyone who runs Yggdrasil as a hosted service must publish their full source under AGPL. That can block every company that would otherwise adopt it. Removing the code later means a clean-room rewrite plus a history audit.

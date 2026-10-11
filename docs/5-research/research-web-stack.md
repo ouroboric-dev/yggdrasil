@@ -50,7 +50,7 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 - **Stack Overflow 2026:** PostgreSQL 57.9% ([SO 2026](https://survey.stackoverflow.co/2026/technology)). I could not find framework percentages for 2026 **[UNVERIFIED]**.
 - **Agent-driven deploys:** Vercel reports that coding agents triggered fewer than 3% of deploys a year ago and now trigger a majority **[UNVERIFIED, vendor claim via press]** ([IT Brief](https://itbrief.co.uk/story/vercel-unveils-agent-tools-as-deployments-turn-ai-led)). I found no Vercel or Netlify report that breaks agent sites down by framework.
 
-**Takeaway:** React + TS + Tailwind + shadcn/ui + Postgres is the consensus "agent dialect". Next.js is the most common full-stack shell. The momentum among builders is toward TanStack (Lovable) and toward framework-agnostic auth (Better Auth).
+**Takeaway [ANALYSIS]:** React + TS + Tailwind + shadcn/ui + Postgres is the consensus "agent dialect". Next.js is the most common full-stack shell. The momentum among builders is toward TanStack (Lovable) and toward framework-agnostic auth (Better Auth).
 
 ---
 
@@ -66,7 +66,7 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 | **shadcn/ui (all React options)** | — | shadcn MCP server to browse, search and install from registries in `components.json` ([shadcn MCP](https://ui.shadcn.com/docs/mcp)). |
 | **General web-dev quality** | LMArena WebDev, now Code Arena, enforces React + TS + Tailwind in its stack ([AI Wiki](https://www.aiwiki.ai/wiki/webdev_arena)), so it measures models, not frameworks. Current standings **[UNVERIFIED]** ([leaderboard](https://lmarena.ai/leaderboard/webdev)). | |
 
-**Takeaway:** Next.js is the only framework with a public, maintained agent benchmark and first-party agent runtime tooling. React SPA code is in the training data at huge volume (React is 44.7% in SO 2025), but nobody publishes evals for it. Go is the factory language; I did not research agent benchmarks for Go specifically.
+**Takeaway [ANALYSIS]:** Next.js is the only framework with a public, maintained agent benchmark and first-party agent runtime tooling. React SPA code is widespread in the training data (React is 44.7% in SO 2025), but nobody publishes evals for it. Go is the factory language; I did not research agent benchmarks for Go specifically.
 
 ---
 
@@ -106,12 +106,12 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Multi-instance self-hosting needs a shared cache handler, a shared `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `deploymentId` and `refreshTags` coordination ([self-hosting guide](https://nextjs.org/docs/app/guides/self-hosting)). Agents often miss this **[ANALYSIS]**.
   - Version churn: 15.0 shipped 2024-10-21, 16.0 on 2025-10-22, 16.3 on 2026-08-03 and 16.4 on 2026-10-06 (npm registry timestamps).
   - The security record is in section 5.
-  - Drizzle's npm `latest` is still 0.45.4 while 1.0 sits in RC (npm dist-tags), so another migration is coming.
-  - Better Auth is now Vercel-owned ([post](https://better-auth.com/blog/better-auth-joins-vercel)). That is not lock-in by itself, but it is worth noting.
-- **Image specifics:** Do not route user uploads through `/_next/image`. Use a custom loader pointing at imgproxy, or pre-generated renditions. This is also how Netlify avoided the AVIF RCE: it rewrites `/_next/image` to its own image CDN ([Netlify changelog](https://www.netlify.com/changelog/2026-08-25-nextjs-security-vulnerabilities.md)).
+  - Drizzle's npm `latest` is still 0.45.4 while 1.0 sits in RC (npm dist-tags), so another migration is coming **[ANALYSIS]**.
+  - Better Auth is now Vercel-owned ([post](https://better-auth.com/blog/better-auth-joins-vercel)). That is not lock-in by itself, but it is worth noting **[ANALYSIS]**.
+- **Image specifics:** Do not route user uploads through `/_next/image`. Use a custom loader pointing at imgproxy, or pre-generated renditions **[ANALYSIS]**. This is also how Netlify avoided the AVIF RCE: it rewrites `/_next/image` to its own image CDN ([Netlify changelog](https://www.netlify.com/changelog/2026-08-25-nextjs-security-vulnerabilities.md)).
 
 **(b) Next.js frontend + Go API**
-- **Pros:** Go owns data, auth, presigning, ZIP streaming and image workers, which suits the factory's language.
+- **Pros:** Go owns data, auth, presigning, ZIP streaming and image workers, which suits the factory's language **[ANALYSIS]**.
 - **Cons [ANALYSIS]:** You inherit Next.js's patch treadmill while using little of its server value. Auth spans two runtimes, so cookie and session sharing becomes a source of bugs. There are two test harnesses. If Next.js is only a BFF/SSR shell, its compromise is less catastrophic as long as it holds no DB credentials. React2Shell still gave RCE on the Next.js box ([Next.js advisory](https://nextjs.org/blog/CVE-2025-66478)).
 
 **(c) React 19 + Vite SPA (TanStack Router/Query) + Go API**
@@ -123,7 +123,7 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Go streams uploads, ZIPs and image processing natively. Static SPA plus a Go binary is the easiest thing to self-host **[ANALYSIS]**.
   - Client galleries are private links, so SSR and SEO add almost nothing **[ANALYSIS]**.
 - **Cons:**
-  - No first-party agent runtime tool like `/_next/mcp`. Mitigate with Playwright, TanStack MCP and shadcn MCP.
+  - No first-party agent runtime tool like `/_next/mcp`. Mitigate with Playwright, TanStack MCP and shadcn MCP **[ANALYSIS]**.
   - The API contract must be kept in sync. Use OpenAPI codegen on both sides **[ANALYSIS]**.
   - Better Auth is TS-only, so Go needs its own session code. This is small for this product: photographer accounts plus gallery tokens **[ANALYSIS]**.
   - Marketing/SEO pages, if needed, can be a separate static site **[ANALYSIS]**.
@@ -135,14 +135,14 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Deploys on any JS host.
   - RSC is not shipped in v1 ([TanStack v1 RC post](https://tanstack.com/blog/announcing-tanstack-start-v1)).
 - **Cons:**
-  - The v1.0 RC was announced 2025-09-23 and **no GA post** has been found. npm `latest` is 1.168.61 (2026-10-10), so the minor-version churn is high.
+  - The v1.0 RC was announced 2025-09-23 and **no GA post** has been found. npm `latest` is 1.168.61 (2026-10-10), so the minor-version churn is high **[ANALYSIS]**.
   - Critical reflected XSS in server-function responses: CVE-2026-102989, fixed in react-start 1.168.60 ([TanStack advisory](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)).
-  - Less training data than Next.js.
+  - Less training data than Next.js **[ANALYSIS]**.
 
 **(e) SvelteKit**
 - **Pros:** Official MCP with an autofixer loop ([svelte docs](https://svelte.dev/docs/ai/tools)). Small bundles. Adapters for many hosts.
 - **Cons:**
-  - **SvelteKit 3.0 shipped 2026-10-01** (npm) after an August RC. It moves config into `vite.config`, changes `$lib`→`#lib`, and requires Node 22.17 and TS 6 ([RC post](https://svelte.dev/blog/sveltekit-3-release-candidate)). Agents' training data is mostly SvelteKit 2 / Svelte 4–5.
+  - **SvelteKit 3.0 shipped 2026-10-01** (npm) after an August RC. It moves config into `vite.config`, changes `$lib`→`#lib`, and requires Node 22.17 and TS 6 ([RC post](https://svelte.dev/blog/sveltekit-3-release-candidate)). Agents' training data is mostly SvelteKit 2 / Svelte 4–5 **[ANALYSIS]**.
   - Five CVEs in January 2026: devalue DoS, kit SSRF/DoS, svelte XSS ([Svelte blog](https://svelte.dev/blog/cves-affecting-the-svelte-ecosystem), [Netlify](https://www.netlify.com/changelog/2026-01-15-sveltekit-security-vulnerabilities/)).
   - Smallest usage share of the JS options (SO 7.2%).
 
@@ -154,10 +154,10 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
 - **Cons:**
   - A third language, unrelated to Go and TS.
   - Lower agent-PR volume.
-  - Active Storage controllers are "publicly accessible by default", and redirect URLs are "permanent" signed IDs ([Rails guide](https://guides.rubyonrails.org/active_storage_overview.html)). Exactly the wrong default for private galleries unless overridden.
+  - Active Storage controllers are "publicly accessible by default", and redirect URLs are "permanent" signed IDs ([Rails guide](https://guides.rubyonrails.org/active_storage_overview.html)). That is the wrong default for private galleries unless overridden **[ANALYSIS]**.
 
 **(f2) Supabase-as-backend (Lovable-style)**
-- **Pros:** The fastest path to auth + Postgres + storage. A common builder default.
+- **Pros:** The fastest path to auth + Postgres + storage **[ANALYSIS]**. A common builder default.
 - **Cons:**
   - Image transformations require Pro, cost $5 per 1,000 origin images beyond 100, cap at 25 MB and 50 MP, and resize up to 2,500 px ([Supabase docs](https://supabase.com/docs/guides/storage/serving/image-transformations)). High-resolution cameras routinely exceed 50 MP **[ANALYSIS / general knowledge]**, so this is a poor fit for a photographer product.
   - Security footgun: CVE-2025-48757. A researcher found 170 of 1,645 Lovable showcase apps with Supabase tables readable or writable via the public anon key because RLS was off ([Superblocks](https://www.superblocks.com/blog/lovable-rls-breach), [CVE record](https://cvemon.intruder.io/cves/CVE-2025-48757)). Lovable disputes it as customer responsibility.
@@ -169,11 +169,11 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
 ### 4.1 Uploads
 
 - Photographers upload many large JPEGs, possibly RAW files. Pixieset mentions RAW sharing ([Pixieset](https://pixieset.com/client-gallery/)).
-- Use **browser-direct presigned multipart uploads**:
+- Use **browser-direct presigned multipart uploads** **[ANALYSIS]**:
   - **Uppy AwsS3** with a `signRequest` endpoint signs PutObject, CreateMultipartUpload, UploadPart, ListParts, CompleteMultipartUpload and AbortMultipartUpload.
   - Multipart is the default above 100 MiB and resumes interrupted uploads.
   - The bucket CORS must expose `ETag` and allow GET and DELETE ([Uppy docs](https://uppy.io/docs/aws-s3/)).
-- **Security example:** if the signer signs any `key` the client asks for, photographer A can overwrite photographer B's originals by requesting `galleries/B/IMG_001.jpg` ([Uppy docs](https://uppy.io/docs/aws-s3/)). The server must derive the key from the authenticated user and gallery, never from client input.
+- **Security example:** if the signer signs any `key` the client asks for, photographer A can overwrite photographer B's originals by requesting `galleries/B/IMG_001.jpg` ([Uppy docs](https://uppy.io/docs/aws-s3/)). The server must derive the key from the authenticated user and gallery, never from client input **[ANALYSIS]**.
 
 ### 4.2 Thumbnails and responsive serving
 
@@ -181,16 +181,16 @@ Two viable patterns **[ANALYSIS]**:
 1. **Pre-generate a fixed set of renditions.** For example, long edge 400 / 1200 / 2048 in WebP, plus a JPEG fallback and watermarked variants. A Go worker built on libvips does this, triggered after the upload completes. Bindings: [vipsgen](https://github.com/cshum/vipsgen) or the maintained [govips fork](https://pkg.go.dev/github.com/getshuttle/govips/v2). Benefit: predictable cost, CDN-friendly immutable URLs, and no public transform endpoint.
 2. **On-the-fly with imgproxy** behind a CDN. [imgproxy](https://github.com/imgproxy/imgproxy) is Apache-2.0, written in Go and uses libvips. It offers **signed URLs**, image-bomb protection (it checks real dimensions before decoding), source restriction and watermarking in OSS.
 
-Recommendation [ANALYSIS]: use imgproxy, with signed URLs only and source restricted to your bucket, behind a CDN. Optionally pre-warm the 2–3 gallery sizes at upload time. This works the same for every option (a)–(e) and keeps image decoding out of the web-app process.
+**Recommendation [ANALYSIS]:** use imgproxy, with signed URLs only and source restricted to your bucket, behind a CDN. Optionally pre-warm the 2–3 gallery sizes at upload time. This works the same for every option (a)–(e) and keeps image decoding out of the web-app process.
 
-**Avoid `next/image`'s built-in optimizer for user content.** Its history includes:
+**Avoid `next/image`'s built-in optimizer for user content** **[ANALYSIS]**. Its history includes:
 - An AVIF/libheif RCE (GHSA-2xp9-vwfh-vxw4, CVSS 9.5).
 - SSRF via `remotePatterns`, where DNS changes on an allow-listed host lead to internal requests (CVE-2026-94483).
 - An SVG DoS (CVE-2026-64644) ([advisories](https://github.com/vercel/next.js/security/advisories), [July release](https://nextjs.org/blog/july-2026-security-release)).
 
-**The decoder risk applies to every libvips-based tool, Go included.** The August 2026 bug was in **libheif**, which sharp bundles: CVE-2026-84383, a heap overflow and possible RCE on glibc Linux, fixed in sharp 0.35.4 / libheif 1.23.2 ([sharp advisory](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c)). sharp also had libvips CVEs in July 2026 and a librsvg CVE in Sep 2026 ([sharp advisories](https://github.com/lovell/sharp/security/advisories)).
+**The decoder risk applies to every libvips-based tool, Go included** **[ANALYSIS]**. The August 2026 bug was in **libheif**, which sharp bundles: CVE-2026-84383, a heap overflow and possible RCE on glibc Linux, fixed in sharp 0.35.4 / libheif 1.23.2 ([sharp advisory](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c)). sharp also had libvips CVEs in July 2026 and a librsvg CVE in Sep 2026 ([sharp advisories](https://github.com/lovell/sharp/security/advisories)).
 
-Mitigations [ANALYSIS]:
+**Mitigations [ANALYSIS]:**
 - Run the image worker or imgproxy in its own container with no DB credentials. Give it read access to originals and write access to derivatives only, and no egress.
 - Allow-list input formats; for example, block HEIF/AVIF/SVG decoding unless needed. sharp's own workaround is `sharp.block({ operation: ["VipsForeignLoadHeif"] })`.
 - Cap pixel count.
@@ -200,15 +200,17 @@ Mitigations [ANALYSIS]:
 
 ### 4.3 "Download all"
 
-[ANALYSIS] Stream a ZIP from Go: read objects from S3 and write `archive/zip` entries with the Store method, since JPEGs are already compressed. For very large galleries, build the ZIP asynchronously into S3 and email a short-lived presigned GET link.
+**[ANALYSIS]** Stream a ZIP from Go: read objects from S3 and write `archive/zip` entries with the Store method, since JPEGs are already compressed. For very large galleries, build the ZIP asynchronously into S3 and email a short-lived presigned GET link.
 
-Gallery access [ANALYSIS]:
+**Gallery access [ANALYSIS]:**
 - An unguessable slug plus an optional password hashed with argon2id.
 - A short-lived, signed, HttpOnly gallery cookie scoped to that gallery.
 - Every image and download URL is a short-lived presigned or signed URL.
 - Enforce the check in the data layer or handler, **not only in middleware or proxy**; see CVE-2025-29927 in section 5.
 
 ### 4.4 Local S3 in the devcontainer
+
+The Verdict column is **[ANALYSIS]**.
 
 | Option | Status / license | S3 features relevant here | Verdict |
 |---|---|---|---|
@@ -218,7 +220,7 @@ Gallery access [ANALYSIS]:
 | **RustFS** | Apache-2.0. 1.0 GA reported 2026-09-16 **[UNVERIFIED, secondary]** ([linuxiac](https://linuxiac.com/?p=219580)). Default creds `rustfsadmin` ([skills.sh](https://skills.sh/mikkelkrogsholm/dev-skills/rustfs)) | S3 API; some interop features still in preview | Watch |
 | **LocalStack** | Since 2026-03-23, latest images **require an account and auth token**, including in CI. A free Hobby plan exists for non-commercial use ([LocalStack blog](https://blog.localstack.cloud/localstack-single-image-next-steps/), [release notes](https://blog.localstack.cloud/localstack-for-aws-release-2026-03-0/)) | Broad AWS emulation | Not worth the token friction for S3-only |
 
-Production [ANALYSIS]: use any S3-compatible service, such as AWS S3, Cloudflare R2 or Backblaze B2. Keep code to the portable S3 subset: presign, multipart, CORS, GET/PUT/HEAD/DELETE, and lifecycle Expiration. This keeps SeaweedFS-in-dev equal to the cloud in prod.
+**Production [ANALYSIS]:** use any S3-compatible service, such as AWS S3, Cloudflare R2 or Backblaze B2. Keep code to the portable S3 subset: presign, multipart, CORS, GET/PUT/HEAD/DELETE, and lifecycle Expiration. This keeps SeaweedFS-in-dev equal to the cloud in prod.
 
 ---
 
@@ -238,7 +240,7 @@ Production [ANALYSIS]: use any S3-compatible service, such as AWS S3, Cloudflare
 
 **Gallery example:** if "is this visitor allowed into `/g/smith-wedding`?" lives only in `middleware.ts`, one curl with that header returns the private gallery, with no password and no PIN.
 
-**The recurrence:** the same class came back as CVE-2026-64642, a middleware/proxy bypass with Turbopack and a single i18n locale, fixed in 16.2.11 / 15.5.21 ([Next.js July 2026 release](https://nextjs.org/blog/july-2026-security-release)). Lesson for agents: never let middleware or proxy be the only authorization layer.
+**The recurrence:** the same class came back as CVE-2026-64642, a middleware/proxy bypass with Turbopack and a single i18n locale, fixed in 16.2.11 / 15.5.21 ([Next.js July 2026 release](https://nextjs.org/blog/july-2026-security-release)). **Lesson for agents [ANALYSIS]:** never let middleware or proxy be the only authorization layer.
 
 ### 5.2 CVE-2025-55182 "React2Shell" (React) / CVE-2025-66478 (Next.js): unauthenticated RCE (verified)
 

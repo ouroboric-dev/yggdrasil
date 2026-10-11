@@ -19,7 +19,7 @@ related: [../charter.md, ../roadmap.md, ../../2-engineering/specs/2026-10-11-ygg
 ## 1. Summary
 
 v0 is the first working Yggdrasil: a factory that turns a written brief into working, verified
-software by running coding agents inside sandboxes, through loops that check and fix their work and
+software. It runs coding agents inside sandboxes, in loops that check and fix their work, with
 approval points where a human decides direction.
 
 v0 delivers the core (orchestration, harness, loop, contract), one domain recipe (web SaaS), and the
@@ -30,7 +30,7 @@ one-page brief, at least once with a different model or agent tool.
 
 ### 2.1 Goals
 
-v0 serves the charter's principles. Specifically, it must:
+To serve the charter's principles, v0 must:
 
 - **Prove the loop works end to end:** brief → design → spec → plan → build → verified product, with
   humans approving direction only.
@@ -53,10 +53,10 @@ v0 serves the charter's principles. Specifically, it must:
 
 1. The factory builds **client gallery lite** from its frozen brief, and the result passes rungs 1–6
    of the check ladder ([spec §9.5](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#95-the-check-ladder)).
-   The hidden suite (rung 7) is run and its score recorded; v0 sets no pass threshold, because the
-   score is a benchmark result, not a gate.
-2. The same brief is built at least once with a different agent tool or model for at least one role,
-   for example the implementer on OpenCode with an OpenRouter model.
+   The factory runs the hidden suite (rung 7) and records its score. v0 sets no pass threshold,
+   because the score is a benchmark result, not a gate.
+2. The factory builds the same brief at least once with a different agent tool or model for at least
+   one role, for example the implementer on OpenCode with an OpenRouter model.
 3. Every run produces a complete, hash-chained ledger, and `ygg metrics` reports the metrics in
    [spec §10.2](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#102-metrics-ygg-metrics-runrange),
    including the hidden acceptance score.
@@ -72,7 +72,7 @@ v0 serves the charter's principles. Specifically, it must:
 
 ## 3. Context and constraints
 
-From the charter's boundaries, the ones that shape v0:
+These constraints, mostly from the charter's boundaries, shape v0:
 
 - **Targets:** web SaaS first (this milestone); browser games next; mobile later.
 - **Models:** start on a Claude subscription; other providers (including OpenRouter) through the same
@@ -85,7 +85,10 @@ From the charter's boundaries, the ones that shape v0:
 
 ## 4. The demonstration product: client gallery lite
 
-The first product Yggdrasil builds, and benchmark brief #1. A Pixieset Client Gallery–style SaaS.
+Client gallery lite is the first product Yggdrasil builds and benchmark brief #1: a SaaS in the
+style of Pixieset Client Gallery. We chose it over a simpler task tracker because it carries
+real-world traps that agents often get wrong, which make it a better benchmark: guessable gallery
+links, public storage buckets, GPS data in photos, oversized images, and unthrottled PINs.
 
 - **Photographer:** sign up and log in; create galleries; upload many large photos (resumable, sent
   straight to storage); thumbnails and web sizes; cover photo; per-gallery password, download PIN and
@@ -97,10 +100,6 @@ The first product Yggdrasil builds, and benchmark brief #1. A Pixieset Client Ga
   when).
 - **Out of scope:** watermarks, comments, branding themes, video, translations, Lightroom sync, print
   store and payments, email campaigns.
-
-It was chosen over a simpler task tracker because it carries real-world traps that agents often get
-wrong, which make it a better benchmark: guessable gallery links, public storage buckets, GPS data in
-photos, oversized images, and unthrottled PINs.
 
 ## 5. Decisions
 
@@ -115,9 +114,9 @@ photos, oversized images, and unthrottled PINs.
   v0 uses local git only.
 - **Decided 2026-10-11:** v0 keeps a journal from day one; promotion comes later.
 
-Engineering decisions are in the [spec's decision log](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#18-decision-log).
+The [spec's decision log](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#18-decision-log) records engineering decisions.
 
 ## 6. Open questions
 
-None at the design level. Engineering open items (the first spike) are in
-[spec §16](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#16-open-items-and-first-spike).
+None at the design level. [Spec §16](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#16-open-items-and-first-spike)
+lists the engineering open items (the first spike).

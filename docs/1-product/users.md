@@ -1,11 +1,13 @@
 ---
 title: Users
-status: accepted
+status: draft
 date: 2026-10-11
 related: [charter.md]
 ---
 
 # Users
+
+Yggdrasil has three kinds of user. The operator comes first.
 
 - **The operator:** someone who runs their own Yggdrasil instance to build products. First, the
   project's author, building web SaaS and games to learn the discipline. Later, anyone using the
