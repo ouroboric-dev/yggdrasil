@@ -855,6 +855,14 @@ The first implementation task is a throwaway spike that answers:
    Podman Desktop machine through its **rootful** socket (`podman-root.sock`). The design assumes
    rootless containers: with a rootful engine, a container escape lands as root inside that machine.
    The spike MUST either confirm a rootless setup or record the risk and its mitigation.
+6. Can the sandbox mount the leaf? On the operator's machine (2026-10-11), Podman runs in a Podman
+   Desktop VM that can't see WSL paths: mounting `/home/...` fails with `statfs: no such file or
+   directory`. The devcontainer driver mounts the leaf's working tree, so the spike MUST find a
+   working approach, for example rootless Podman running natively inside WSL, workspaces on a path the
+   VM can see, or copying the leaf into the container and back (as the secret scan did with `tar`).
+7. Registry credentials. The host's container configuration invoked a gcloud credential helper even for
+   public Docker Hub images. The sandbox driver MUST pull images with an isolated, empty auth
+   configuration, so that host credentials never reach image pulls.
 
 If (1) fails, the fallback is a plain Podman sandbox driver behind the same interface.
 
