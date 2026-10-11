@@ -1,8 +1,3 @@
-vars: {
-  d2-config: {
-    theme-id: 1
-  }
-}
 direction: down
 host: "Host: Odin is the only writer" {
   l0: "L0 instance umbrella (private)\npinned factory, hidden benchmarks, projects"
@@ -12,7 +7,7 @@ host: "Host: Odin is the only writer" {
   l1 -> api: "pointer = validated SHA"
 }
 box: "Agent sandbox: mounts one leaf" {
-  style.stroke: "#FF4F00"
+  style.stroke: ${accent}
   style.stroke-width: 3
   agent: "agent"
   web: "leaf: web\nworking tree (git dir read-only)"

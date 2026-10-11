@@ -86,7 +86,10 @@ These constraints, mostly from the charter's boundaries, shape v0:
 ## 4. The demonstration product: client gallery lite
 
 <!-- diagram: assets/diagrams/client-gallery-journeys.mmd -->
-![Client gallery journeys: the photographer signs up, creates a gallery, uploads photos, sets a password and PIN and shares a private link; the client opens it, enters the password, browses, favourites and downloads; favourites and downloads appear on the photographer's dashboard](../../assets/diagrams/rendered/client-gallery-journeys.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/client-gallery-journeys.dark.svg">
+  <img alt="Client gallery journeys: the photographer signs up, creates a gallery, uploads photos, sets a password and PIN and shares a private link; the client opens it, enters the password, browses, favourites and downloads; favourites and downloads appear on the photographer&#x27;s dashboard" src="../../assets/diagrams/rendered/client-gallery-journeys.svg">
+</picture>
 
 Client gallery lite is the first product Yggdrasil builds and benchmark brief #1: a SaaS in the
 style of Pixieset Client Gallery. We chose it over a simpler task tracker because it carries
