@@ -26,6 +26,9 @@ prose linter.
 - **Humanizer** runs last and only on text published for people, never on specs or agent-facing text.
 - **Every skill is vendored** with a `skills.lock`, from public upstreams with redistributable
   licences.
+- **The skill library is its own module, Havamal** (Odin's "Sayings of the High One", which ends with
+  the charms he knows), from v0. Our own skills will live there, each shipping only with an eval that
+  shows it measurably helps.
 
 ## Result
 Pending: Vale findings per style once the docs rung runs.

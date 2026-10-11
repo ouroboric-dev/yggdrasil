@@ -48,6 +48,10 @@ it costs.
 **approval points**, and the Bifrost is the **integrations** that carry work outward: git remotes,
 trackers, hosting and production.
 
+Odin's wisdom is gathered in the **Havamal**, the Sayings of the High One: advice for living well,
+ending with the list of charms Odin knows. Havamal is the **skill library**, and each skill is one of
+Odin's charms: guidance an agent follows. A charm is only kept if it proves it works.
+
 A rule over all of it: **Gungnir**, Odin's spear. Oaths were sworn on its point, and it never
 misses. Gungnir is the **component contract**, the interfaces and schemas every component must honour
 to plug into the tree. A component "sworn on Gungnir" respects the contract, which is what makes
@@ -74,6 +78,7 @@ Naming the threats makes them easier to discuss in designs, docs and incident no
 | **Jormungandr** | loop layer: build→check→fix semantics, attempts, backoff, budgets, feedback, escalation | v0 |
 | **Ouroboros** | the brand symbol and org (`ouroboric-dev`): self-improvement. Not a module | brand |
 | **realms** | packs: domain recipes such as web or game. A generic word, not a module | v0 (web realm) |
+| **Havamal** | the skill library: vendored and own skills, `skills.lock`, evals. Each skill is one of Odin's charms | v0 |
 | **Ratatoskr** | routing: per-umbrella index bundles, hierarchical descent | later as a module (v0 ships it as a package) |
 | **Norns** | observability: ledger, metrics, reports, live status | later as a module |
 | **Mimir** | benchmarks: kit, frozen briefs, hidden suites, scoring | later (its own milestone) |

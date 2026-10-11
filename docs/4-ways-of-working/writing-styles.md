@@ -86,6 +86,7 @@ whatever happens to be installed on a machine and never fetched live.
 - **Why:** agents run in sandboxes that don't see the host's skills; other operators have different
   skills or none; benchmarks are only comparable with the same skills; and a skill is instructions an
   agent follows with full permissions, so changes must arrive as reviewed diffs.
+- **Where:** in **Havamal**, the skill library module, together with our own skills and their evals.
 - **How:** a `skills.lock` (following marola's MIP-0080) records each skill's upstream repository,
   path, commit and licence, with a hash per file. A check fails when a vendored file differs from its
   lock entry. Updates arrive as pull requests whose diffs a human reviews. The skill set's hash is

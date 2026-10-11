@@ -32,6 +32,7 @@ umbrella of repos in the `ouroboric-dev` GitHub org:
 | `gleipnir` | the harness: agent adapters, the devcontainer sandbox driver, policies, the check runner |
 | `jormungandr` | the loop: build→check→fix semantics, attempts, backoff, budgets, feedback, escalation |
 | `realm-web` | the web realm: graph, prompts, devcontainer stack layer, templates, checks |
+| `havamal` | the skill library: vendored third-party skills with `skills.lock` and licences, our own skills with their evals, and the vendor/check/update tooling |
 
 All modules are developed together through a Go workspace (`go.work`) in the umbrella. Versions are
 tagged only when an interface settles. Interfaces live only in `gungnir`, so an interface change is
@@ -300,8 +301,11 @@ privacy: standard   # strict → only providers with no training and no retentio
 - Gleipnir's context assembly loads skills **explicitly** per task: the realm's reviewer and planning
   strategies (e.g. Ponytail), and the writing style of any document the task writes, resolved by the
   rules in [writing styles](../../4-ways-of-working/writing-styles.md).
-- Every skill is **vendored**: pinned copies in Gleipnir with a `skills.lock` (upstream, path, commit,
-  licence, per-file hashes). A check fails on drift; updates are reviewed pull requests; the skill set's
+- Every skill is **vendored** in **Havamal**, the skill library: pinned copies with a `skills.lock`
+  (upstream, path, commit, licence, per-file hashes). Gleipnir loads skills from Havamal at a pinned
+  version. Our own skills live there too, and each ships only with an eval showing it measurably
+  improves agent behaviour (same tasks with and without the skill). Havamal releases are tagged, since
+  other operators may vendor our skills in turn. A check fails on drift; updates are reviewed pull requests; the skill set's
   hash goes into `run.json`. Agents in sandboxes never see host-installed skills.
 - Only skills with redistributable licences, vendored from public upstreams, may be included;
   organisation-internal skills never are. Operators can add private skills through their L0 instance
@@ -826,3 +830,4 @@ publish their source, which would make the factory unusable for most companies.
 | Docs | one template for factory and products, Zensical renderer | separate templates; Material for MkDocs (maintenance mode) |
 | Writing styles | 13 style ids per section, skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
 | Skills | all vendored with `skills.lock`, public upstreams with redistributable licences | rely on host-installed skills |
+| Skill library | its own module, Havamal, from v0; own skills ship only with evals | vendored skills inside Gleipnir |
