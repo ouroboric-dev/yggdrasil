@@ -1,3 +1,11 @@
+---
+title: Research: low-cost hosting
+status: draft
+date: 2026-10-11
+related: []
+style: research
+---
+
 # Hosting research: client-gallery SaaS (Go API + React/Vite + DB + S3 photos)
 
 Research date: **2026-10-11**. All URLs below were accessed on 2026-10-11 unless noted.

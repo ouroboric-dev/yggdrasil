@@ -832,6 +832,6 @@ publish their source, which would make the factory unusable for most companies.
 | Simplicity | Ponytail as an explicit, vendored reuse/simplicity reviewer, benchmarked | rely on auto-triggered skills |
 | Self-hosting | milestone right after v0, never building in place | part of v0; unscheduled |
 | Docs | one template for factory and products, Zensical renderer | separate templates; Material for MkDocs (maintenance mode) |
-| Writing styles | 13 style ids per section, skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
+| Writing styles | 14 style ids per section (incl. `prompt`), skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
 | Skills | all vendored with `skills.lock`, public upstreams with redistributable licences | rely on host-installed skills |
 | Skill library | its own module, Havamal, from v0; own skills ship only with evals | vendored skills inside Gleipnir |

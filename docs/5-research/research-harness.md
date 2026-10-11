@@ -1,3 +1,11 @@
+---
+title: Research: harness engineering
+status: draft
+date: 2026-10-10
+related: []
+style: research
+---
+
 # Harness engineering for long-running coding agents: research brief
 
 Compiled 2026-10-10 for an "AI software factory" (games, SaaS web apps, later mobile) built on Claude Code and the Claude Agent SDK. I fetched every source below during this research. Paraphrases are mine. Short quotes are the sources' words.

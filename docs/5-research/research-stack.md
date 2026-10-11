@@ -1,3 +1,11 @@
+---
+title: Research: orchestrator language and stack
+status: draft
+date: 2026-10-10
+related: []
+style: research
+---
+
 # Stack options for a local AI "software factory" orchestrator
 
 Research date: 2026-10-10. Repo languages come from the GitHub REST API (`language` field) unless noted otherwise. Where the API was rate-limited, the language was confirmed from the manifest file in the repo (`go.mod`, `Cargo.toml`, `mix.exs`, `package.json`). Star counts and versions are as of the research date.

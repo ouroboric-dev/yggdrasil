@@ -1,3 +1,11 @@
+---
+title: Curated open-source learning sources
+status: draft
+date: 2026-10-11
+related: []
+style: research
+---
+
 # Yggdrasil learning sources: curated list
 
 > Accessed 2026-10-11. Stars, push dates, licences and archive flags come from the GitHub REST API (`gh api repos/<owner>/<repo>`) on that day. "Pushed" is the last push to any branch. "Rel" is the latest GitHub release, where one exists. Repos that moved show their new home; GitHub redirects the old URL.

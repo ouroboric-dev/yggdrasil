@@ -1,3 +1,11 @@
+---
+title: Research: web SaaS stack for the web realm
+status: draft
+date: 2026-10-11
+related: []
+style: research
+---
+
 # Web stack brief for the software-factory "pack": Pixieset Client Gallery clone-lite
 
 Research date: 2026-10-11. Every factual claim has a source link. Items marked **[UNVERIFIED]** came only from secondary sources or could not be confirmed. Items marked **[ANALYSIS]** are my own reasoning, not sourced facts.

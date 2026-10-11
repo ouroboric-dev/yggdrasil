@@ -1,3 +1,11 @@
+---
+title: Research: loop and graph engineering, software factories
+status: draft
+date: 2026-10-10
+related: []
+style: research
+---
+
 # Research brief: loop engineering, graph engineering, and AI software factories
 
 Prepared 2026-10-10 for someone planning an AI "software factory" (Claude Code / Claude Agent SDK) that builds games, SaaS web apps, and later mobile apps.
