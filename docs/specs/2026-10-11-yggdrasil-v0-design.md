@@ -33,6 +33,10 @@ Pixieset-style SaaS, from a one-page brief, at least once with a different model
   factories.
 - Safe by default: agents run sandboxed with no access to secrets they don't need, and a few
   approval points can never be switched off.
+- Shareable journey: the project will eventually be promoted through a blog or a series of posts
+  that walks readers through the learning journey and the factory-building process. From v0 on, the
+  factory keeps the raw material for that: a journal of challenges, the solutions tried and their
+  measured results (§13.5).
 
 ### 2.2 Non-goals for v0
 
@@ -42,6 +46,8 @@ Pixieset-style SaaS, from a one-page brief, at least once with a different model
 - Production deployment (the web realm is deploy-ready; deploying is outside v0).
 - The game realm (spec 2) and the full benchmark kit (spec 3).
 - Mobile.
+- Promotion and content: no posts, no blog, no content-generation component (future module Bragi).
+  v0 only keeps the journal those will be written from.
 
 ### 2.3 v0 success criteria
 
@@ -55,6 +61,8 @@ Pixieset-style SaaS, from a one-page brief, at least once with a different model
 4. All three autonomy modes (§10) complete a run with the `scripted` adapter, and at least one
    real-agent run completes in key-points mode.
 5. The escape-attempt tests (§16) pass.
+6. Every significant challenge met during v0 has a journal entry (§13.5) with its evidence links, and
+   every factory change made in response to a run cites before/after runs from `ygg metrics --compare`.
 
 ## 3. Context and constraints
 
@@ -516,6 +524,11 @@ average loop attempts; reviewer veto rate; interventions; escalations and blocke
 acceptance score; escaped defects (hidden tests failing where visible tests passed); routing usage and
 bench right-first score.
 
+`ygg metrics --compare <runA> <runB>` prints the deltas between two runs, along with what differed
+between them (factory version, config hash, agents and models per role, realm version). This is the
+"result" evidence for journal entries. Every run report records the factory version and config hash,
+so any number quoted later can be traced back to the exact setup that produced it.
+
 ### 13.3 Progress views
 
 - **Live:** `ygg status --watch` (current node, loop attempt, cost so far).
@@ -536,6 +549,45 @@ The `Tracker` interface projects factory state one way, following marola's
 - boards are per product org; the factory's own org board tracks improving the factory itself.
 
 v0 ships the `local` tracker (the views above). The `github` tracker is iteration 2 (§18).
+
+### 13.5 Journey journal
+
+The journal is the source material for later promotion. In the story, its entries are the **sagas**,
+and the future content component that turns them into posts is **Bragi**, the god of poetry.
+
+- **Where:** `docs/journal/` in the `yggdrasil` umbrella for the factory's own journey, with an index
+  in `docs/journal/README.md`. Lessons from private product runs are recorded in the private L0
+  instance first, and only distilled, anonymised versions move to the public journal.
+- **One entry per challenge:** `docs/journal/YYYY-MM-DD-<slug>.md`, from a template:
+
+  ```markdown
+  ---
+  date: 2026-10-11
+  tags: [harness, loop, graph, routing, security, cost, naming, …]
+  status: open | resolved | abandoned
+  post-candidate: yes | no
+  evidence: [run ids, commits, spec sections, research briefs]
+  ---
+  ## Challenge      what went wrong or what had to be decided
+  ## Context        what we knew, constraints
+  ## Options        what we considered, with trade-offs
+  ## Decision       what we chose and why
+  ## Result         measured outcome: metrics deltas (`ygg metrics --compare`), or "pending"
+  ## Lessons        what we would tell someone building their own factory
+  ```
+
+- **When:** at every design decision, every surprising failure, every harness change made in
+  response to a run, and every benchmark milestone. Entries with `status: open` are updated when the
+  result arrives; a decision whose result is still pending is worth recording at once.
+- **Seed:** the first entries come from the design sessions of 2026-10-10 and 2026-10-11 (the decision
+  log in §21 and the research briefs), with results marked pending.
+- **Scrubbing before anything is public:** the journal lives in a repo that will be public, and a
+  blog post is effectively permanent (search engines and archives keep copies). Entries never include
+  secrets, private product names or code, client data, or raw transcripts and ledger excerpts from
+  private runs. Example: a pasted ledger line that shows an OpenRouter key, or a client's private
+  gallery URL, would stay readable in archives long after the post is edited. Private evidence is
+  linked from L0, and only aggregate numbers are quoted publicly. `gitleaks` runs on the umbrella like
+  any other repo.
 
 ## 14. Benchmark format (full kit in spec 3)
 
@@ -690,3 +742,4 @@ Fallback if (1) fails: a plain Podman sandbox driver behind the same interface.
 | GitHub + identities | iteration 2 | in v0 |
 | Factory repo layout | umbrella from day one | one repo first |
 | Names | Norse set (Yggdrasil, Odin, Gleipnir, Jormungandr, Gungnir) | Greek set |
+| Journey records | journal of challenges, solutions and measured results from v0; posting later | start records when promotion begins |

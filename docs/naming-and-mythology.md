@@ -36,6 +36,10 @@ At the roots, the three **Norns** carve fate into the tree. Urd keeps what was, 
 and Skuld what shall be. They are **observability**: the ledger (past), live status (present), and
 metrics, benchmarks and forecasts (future).
 
+The deeds of the tree are kept as **sagas**: the journal of every challenge met, the solution tried,
+and what came of it. One day **Bragi**, the god of poetry, will turn the sagas into stories for others
+to read: the blog and the posts that share the journey.
+
 Beside them is **Mimir's** well of wisdom. Odin gave an eye to drink from it, so its knowledge has
 a real, measurable price. It is the **benchmarks**: what we learn about factories, and what learning
 it costs.
@@ -76,6 +80,8 @@ Naming the threats makes them easier to discuss in designs, docs and incident no
 | **Heimdall** | approval points, as a sub-component of Odin | optional name |
 | **Bifrost** | integrations: Remote, Tracker, deploy targets | optional name |
 | **Fenrir** | the model and agents themselves: the bound power | story only, not a module |
+| **sagas** | journal entries: challenges, solutions, measured results (`docs/journal/`) | v0 (as documents) |
+| **Bragi** | content: turns the sagas into blog posts and series | later |
 
 Names not yet used, kept for later:
 - **Huginn and Muninn:** Odin's ravens, thought and memory, who fly over the worlds and report back. Fit scout or research agents, or planner and memory roles.
