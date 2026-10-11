@@ -49,7 +49,10 @@ umbrella** (L0, §3) that pins a Yggdrasil version and lists their projects.
 ## 2. Architecture
 
 <!-- diagram: assets/diagrams/architecture.d2 -->
-![Yggdrasil architecture: the ygg CLI, factory.yaml and the web realm feed Odin; Odin drives Jormungandr and Gleipnir's agent adapters and devcontainer driver; adapters load skills from Havamal; Odin is the only writer of the instance tree; every component implements Gungnir](../../assets/diagrams/rendered/architecture.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/architecture.dark.svg">
+  <img alt="Yggdrasil architecture: the ygg CLI, factory.yaml and the web realm feed Odin; Odin drives Jormungandr and Gleipnir&#x27;s agent adapters and devcontainer driver; adapters load skills from Havamal; Odin is the only writer of the instance tree; every component implements Gungnir" src="../../assets/diagrams/rendered/architecture.svg">
+</picture>
 
 ```
                  ygg CLI  (run · resume · approve · reject · status · board · report · metrics · doctor)
@@ -105,7 +108,10 @@ The implementation plan settles the exact method sets. This section sets only th
 ### 3.1 The instance tree
 
 <!-- diagram: assets/diagrams/instance-tree.d2 -->
-![Instance tree: on the host, Odin writes the L0 and L1 umbrellas and the api leaf; the agent sandbox mounts only the web leaf's working tree, with its git directory read-only; pointers record validated SHAs](../../assets/diagrams/rendered/instance-tree.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/instance-tree.dark.svg">
+  <img alt="Instance tree: on the host, Odin writes the L0 and L1 umbrellas and the api leaf; the agent sandbox mounts only the web leaf&#x27;s working tree, with its git directory read-only; pointers record validated SHAs" src="../../assets/diagrams/rendered/instance-tree.svg">
+</picture>
 
 The operator's instance is a **tree of nodes**. Each node is either:
 
@@ -187,7 +193,10 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 ### 4.2 The web realm graph
 
 <!-- diagram: assets/diagrams/web-realm-graph.mmd -->
-![Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report](../../assets/diagrams/rendered/web-realm-graph.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/web-realm-graph.dark.svg">
+  <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report" src="../../assets/diagrams/rendered/web-realm-graph.svg">
+</picture>
 
 ```
 design ─► [gate: design] ─► spec ─► conformance review ─► [gate: spec] ─► plan + reuse review ─► DoR check
@@ -241,7 +250,10 @@ session memory. This is what makes it possible to swap models mid-run.
 ### 4.5 The merge gate
 
 <!-- diagram: assets/diagrams/merge-gate.mmd -->
-![Merge gate: lock, merge the latest base into the branch, re-run checks, confirm the head is still the reviewed commit, merge pinned to it, unlock; any failure returns to the loop](../../assets/diagrams/rendered/merge-gate.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/merge-gate.dark.svg">
+  <img alt="Merge gate: lock, merge the latest base into the branch, re-run checks, confirm the head is still the reviewed commit, merge pinned to it, unlock; any failure returns to the loop" src="../../assets/diagrams/rendered/merge-gate.svg">
+</picture>
 
 A branch can pass every check and then stop building after `main` moves underneath it. So every
 `merge` and every pointer move MUST go through a merge gate. The gate is borrowed from super-board's
@@ -340,7 +352,10 @@ privacy: standard   # strict → only providers with no training and no retentio
 ## 6. Sandbox (Gleipnir devcontainer driver)
 
 <!-- diagram: assets/diagrams/sandbox-boundary.d2 -->
-![Sandbox boundary: Odin on the host runs the agent through podman exec with a hardened config that is never mounted; the container holds the pinned agent, one leaf and a revocable model token; egress is allowed only to model APIs and registries; host secrets and the Podman socket are never mounted](../../assets/diagrams/rendered/sandbox-boundary.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/sandbox-boundary.dark.svg">
+  <img alt="Sandbox boundary: Odin on the host runs the agent through podman exec with a hardened config that is never mounted; the container holds the pinned agent, one leaf and a revocable model token; egress is allowed only to model APIs and registries; host secrets and the Podman socket are never mounted" src="../../assets/diagrams/rendered/sandbox-boundary.svg">
+</picture>
 
 ### 6.1 How it works
 
@@ -496,7 +511,10 @@ runs it as a read-only service in `web`'s sandbox.
 ### 9.3 Infrastructure target
 
 <!-- diagram: assets/diagrams/client-gallery-architecture.d2 -->
-![Client gallery production architecture: users use the React site on Vercel, which calls the Go API; the API stores metadata in Neon and signs short-lived R2 URLs; photo bytes go directly between browser and R2; previews use a separate Neon branch and R2 bucket](../../assets/diagrams/rendered/client-gallery-architecture.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/client-gallery-architecture.dark.svg">
+  <img alt="Client gallery production architecture: users use the React site on Vercel, which calls the Go API; the API stores metadata in Neon and signs short-lived R2 URLs; photo bytes go directly between browser and R2; previews use a separate Neon branch and R2 bucket" src="../../assets/diagrams/rendered/client-gallery-architecture.svg">
+</picture>
 
 | Concern | Development (in the sandbox) | Production target (deployment is outside v0) |
 |---|---|---|
@@ -535,7 +553,10 @@ realm-web/
 ### 9.5 The check ladder
 
 <!-- diagram: assets/diagrams/check-ladder.mmd -->
-![Check ladder: seven rungs from static checks to the hidden suite; rungs 1 to 6 send typed findings back to the implementer; the hidden suite runs in a separate grader and sends only a score to the ledger](../../assets/diagrams/rendered/check-ladder.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/check-ladder.dark.svg">
+  <img alt="Check ladder: seven rungs from static checks to the hidden suite; rungs 1 to 6 send typed findings back to the implementer; the hidden suite runs in a separate grader and sends only a score to the ledger" src="../../assets/diagrams/rendered/check-ladder.svg">
+</picture>
 
 The rungs run from fast to slow. Each rung's failure output goes back to the implementer.
 

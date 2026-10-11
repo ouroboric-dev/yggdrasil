@@ -1,8 +1,3 @@
-vars: {
-  d2-config: {
-    theme-id: 1
-  }
-}
 direction: right
 host: "Host" {
   ygg: "ygg (Odin)\ngit operations happen here"
@@ -10,7 +5,7 @@ host: "Host" {
   secrets: "~/.ssh, ~/.aws, git credentials,\nPodman socket"
 }
 sandbox: "Agent container: non-root user" {
-  style.stroke: "#FF4F00"
+  style.stroke: ${accent}
   style.stroke-width: 3
   agent: "agent CLI (pinned)"
   leaf: "one leaf working tree"
@@ -23,5 +18,5 @@ net: "Internet" {
 host.ygg -> sandbox.agent: "podman exec"
 host.config -> sandbox: "--config, never mounted"
 sandbox.agent -> net.allowed: "egress allowed"
-sandbox.agent -> net.other: "blocked" {style.stroke: "#FF4F00"; style.stroke-dash: 4}
-sandbox -> host.secrets: "never mounted" {style.stroke: "#FF4F00"; style.stroke-dash: 4}
+sandbox.agent -> net.other: "blocked" {style.stroke: ${accent}; style.stroke-dash: 4}
+sandbox -> host.secrets: "never mounted" {style.stroke: ${accent}; style.stroke-dash: 4}

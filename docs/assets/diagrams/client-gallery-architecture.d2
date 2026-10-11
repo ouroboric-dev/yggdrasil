@@ -1,8 +1,3 @@
-vars: {
-  d2-config: {
-    theme-id: 1
-  }
-}
 direction: down
 users: "Photographer and client\n(browser makes thumbnails and zips)" {shape: person}
 vercel: "Vercel (production)" {
@@ -20,4 +15,4 @@ preview: "Preview deployments" {
 users -> vercel.web: "uses"
 vercel.api -> neon: "metadata"
 vercel.api -> r2: "signs short-lived URLs"
-users -> r2: "photo bytes go direct (presigned)" {style.stroke: "#FF4F00"; style.stroke-width: 3}
+users -> r2: "photo bytes go direct (presigned)" {style.stroke: ${accent}; style.stroke-width: 3}
