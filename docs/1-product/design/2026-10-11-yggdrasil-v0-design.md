@@ -1,16 +1,15 @@
 ---
-title: Yggdrasil v0 — design doc
-status: draft
-date: 2026-10-11
+title: Yggdrasil v0 design doc
+status: accepted
+date: 2026-10-12
 related: [../charter.md, ../roadmap.md, ../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md]
+style: direction
 ---
 
-# Yggdrasil v0 — design doc
+# Yggdrasil v0 design doc
 
 | | |
 |---|---|
-| **Status** | Draft for review |
-| **Date** | 2026-10-11 |
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from brainstorming sessions held 2026-10-10 and 2026-10-11 |
 | **Within** | the [charter](../charter.md); milestone 1 of the [roadmap](../roadmap.md) |
 | **Engineering spec** | [2026-10-11-yggdrasil-v0-spec.md](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md) |
@@ -36,6 +35,8 @@ To serve the charter's principles, v0 must:
   humans approving direction only.
 - **Prove no lock-in:** at least one role runs on a different agent tool or model.
 - **Prove it can be measured:** every run produces metrics usable as benchmarks.
+- **Prove it improves itself:** the factory changes in response to its own runs, and the change shows
+  in the metrics.
 - **Prove it is safe by default:** agents sandboxed, no unnecessary secrets, hard approval points.
 - **Start the record:** keep the journal that later promotion will be written from.
 
@@ -69,6 +70,9 @@ To serve the charter's principles, v0 must:
    ([spec §10.5](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#105-journey-journal)) with
    its evidence links, and every factory change made in response to a run cites before/after runs from
    `ygg metrics --compare`.
+7. At least one factory change, made in response to a run, improves a metric (first-pass rate, cost
+   per task or human interventions) without lowering the hidden acceptance score, shown by
+   `ygg metrics --compare`.
 
 ## 3. Context and constraints
 
@@ -78,8 +82,8 @@ These constraints, mostly from the charter's boundaries, shape v0:
 - **Models:** start on a Claude subscription; other providers (including OpenRouter) through the same
   adapters.
 - **Runtime:** local first (WSL2, rootless Podman); cloud later.
-- **Open source:** the factory will become open source; products may be public or private, at the
-  operator's choice.
+- **Open source:** AGPL-3.0 for the factory, MIT for templates copied into products; products may be
+  public or private, at the operator's choice.
 - **Built by hand:** v0 is built by a human with an interactive agent following the SDD process
   (self-hosting stage 0).
 
@@ -111,6 +115,7 @@ links, public storage buckets, GPS data in photos, oversized images, and unthrot
 
 - **Decided 2026-10-10:** narrow first, extract the generic core later; web SaaS and browser games
   side by side, mobile later.
+- **Refined 2026-10-11:** web SaaS first (v0); browser games next, in their own design doc.
 - **Decided 2026-10-10:** v0 success is two kinds of evidence: a working product, and factory metrics
   that work as benchmarks.
 - **Decided 2026-10-10:** autonomy is configurable (step-by-step, key-points by default, unattended);
@@ -119,6 +124,8 @@ links, public storage buckets, GPS data in photos, oversized images, and unthrot
 - **Decided 2026-10-11:** GitHub integration, bot identities and the GitHub tracker come in iteration 2;
   v0 uses local git only.
 - **Decided 2026-10-11:** v0 keeps a journal from day one; promotion comes later.
+- **Decided 2026-10-12:** v0 must show at least one measured self-improvement (§2.3, criterion 7), so
+  the factory is ouroboric from its first milestone.
 
 The [spec's decision log](../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md#18-decision-log) records engineering decisions.
 
