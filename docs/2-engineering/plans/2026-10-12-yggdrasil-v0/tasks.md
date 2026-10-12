@@ -38,13 +38,15 @@ hidden suite, which an agent must never do or see.
     call in these tasks runs this way: `as-bot.sh --read all scripts/check-repos.sh …`.
   - No other GitHub login exists in the agent environment: no `GITHUB_TOKEN`, no stored `gh` login,
     and no SSH key that reaches GitHub.
-- Only the founder runs `setup-repo.sh`, with a short-lived admin token in `GH_TOKEN`.
+- Only the founder runs `create-repo.sh` and `setup-repo.sh`, with a short-lived admin token in
+  `GH_TOKEN` (Administration and Contents read and write).
 - No secret, token or key is printed, pasted, logged or committed. Agents never open
   `~/.config/ouroboric/`; steps that need a key are founder steps. The one exception is `as-bot.sh`,
   which reads the bot's key in `~/.config/ouroboric/pr-bot/` and never prints a token. Checks report
   only counts and file permissions.
-- Every change lands through a pull request the founder merges. The only exception is the first
-  commit of a brand-new empty repo (v0-T007 to v0-T012), which holds only licence files.
+- Every change lands through a pull request the founder merges. The only exception is a new repo's
+  first commit, which holds only licence files; `create-repo.sh` makes it, run by the founder
+  (v0-H04).
 - Commits stage explicit paths, never `git add -A`; read `git status --short` before each commit.
   Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; no session
   links in commits or PR descriptions.
@@ -60,9 +62,8 @@ hidden suite, which an agent must never do or see.
 
 ## Review focus
 
-1. **A repo created with GitHub's "initialize" options.** It has an initial commit that conflicts
-   with the scaffold. GitHub's `size` field updates late, so the component repo procedure checks
-   `git ls-remote` prints nothing and stops otherwise.
+1. **A component repo that already exists.** It may hold commits that conflict with the scaffold.
+   `create-repo.sh` checks every named repo first, and if any exists, it creates none of them.
 2. **`git commit --no-verify` skips the `gitleaks` hook.** The server-side backstop is GitHub push
    protection, which v0-T004's `security` check asserts on every repo.
 3. **The spike passes on the wrong path or the wrong git layout.** v0-T001 runs every probe on a
@@ -105,8 +106,9 @@ also read them.
       all its repos (so the six from v0-H04 are covered when they're created), with Contents and Pull
       requests read and write, Administration read and Metadata read. No other permissions.
 - [ ] The SSH key can't reach GitHub from an agent session.
-- [ ] A separate admin token (Administration read and write on `ouroboric-dev` repos) exists, expires
-      within seven days, and is stored only in the password manager.
+- [ ] The founder can make a short-lived admin token when one is needed: fine-grained, owner
+      `ouroboric-dev`, all repos, Administration and Contents read and write, expiring within a day.
+      It lives only in the shell that runs `create-repo.sh` or `setup-repo.sh`, and is deleted after.
 
 **Named test (agent-run), in a new shell:**
 - `[ -z "${GITHUB_TOKEN:-}" ] && echo unset` prints `unset`.
@@ -128,7 +130,7 @@ scripts, merged.
 - [ ] **Step 3:** cut the SSH key off from agent sessions. Either remove it from the GitHub account
       (Settings → SSH and GPG keys) and use HTTPS, or add a passphrase
       (`ssh-keygen -p -f ~/.ssh/<key>`) and keep it out of any `ssh-agent` that agent sessions can use.
-- [ ] **Step 4:** create the admin token; store it only in the password manager.
+- [ ] **Step 4:** check you can create the admin token when needed; don't keep one.
 - [ ] **Step 5:** ask an agent to run the named test.
 
 ---
@@ -213,15 +215,39 @@ agent token can read the new repo).
 
 ### Task v0-H04 (founder): create the component repos
 
+One command creates all six, with `ouroboric/scripts/create-repo.sh`. Each repo gets a first commit
+with only the licence files, then `setup-repo.sh`'s settings and ruleset, so agents only ever see a
+protected repo. The script moves into Yggdrasil later (`remote-creates-repos-T002`).
+
 **Acceptance criteria:**
-- [ ] Six public repos exist with **no commits**: `gungnir`, `odin`, `gleipnir`, `jormungandr`,
-      `realm-web`, `havamal` (all "initialize" options off).
+- [ ] Six public repos exist: `gungnir`, `odin`, `gleipnir`, `jormungandr`, `realm-web`, `havamal`,
+      each with its job sentence (table below) as its description.
+- [ ] Each `main` holds one commit: `LICENSE`, `LICENSES/AGPL-3.0-only.txt`,
+      `LICENSES/CC-BY-4.0.txt` and `REUSE.toml`.
+- [ ] Each repo passes the `settings`, `security` and `ruleset` checks.
 - [ ] The pr-bot reaches all six. It is installed on all repos (v0-H03), so this needs no step.
 
-**Named test (agent-run):** for each repo,
-`git ls-remote https://github.com/ouroboric-dev/<repo>.git | wc -l` prints `0`, and
-`as-bot.sh <repo> gh api repos/ouroboric-dev/<repo> -q .visibility` prints `public`.
+**Named test (agent-run):**
+`as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset gungnir odin gleipnir jormungandr realm-web havamal`
+exits 0, and for each repo,
+`git ls-remote https://github.com/ouroboric-dev/<repo>.git refs/heads/main | wc -l` prints `1`.
 **Layer:** GitHub org. **Size:** S. **Depends on:** v0-H03.
+
+- [ ] **Step 1:** create a short-lived admin token (v0-H03), then run, in `ouroboric`:
+
+```bash
+read -rs "GH_TOKEN?Admin token: " && echo && export GH_TOKEN
+scripts/create-repo.sh \
+  gungnir "The contract: Go interface types and JSON schemas for ledger events, graph.yaml, pack.yaml and factory.yaml." \
+  odin "The orchestrator: the graph engine and the ygg CLI, with routing and the ledger as packages." \
+  gleipnir "The harness: agent adapters, the devcontainer sandbox driver, policies and the check runner." \
+  jormungandr "The loop: build, check and fix with attempts, backoff, budgets, feedback and escalation." \
+  realm-web "The web realm: graph, prompts, devcontainer stack layer, templates and checks." \
+  havamal "The skill library: vendored skills with skills.lock and licences, our own skills with their evals, and the tooling."
+unset GH_TOKEN
+```
+
+- [ ] **Step 2:** delete the token; ask an agent to run the named test.
 
 ---
 
@@ -693,46 +719,17 @@ these.
 ### The component repo procedure (used by v0-T007 to v0-T012)
 
 Each of the six tasks below applies this procedure to one repo `<r>` with job sentence `<job>`.
+v0-H04 already created `<r>`, protected, with its licence commit. Its `REUSE.toml` makes `docs/**`,
+`README.md` and `AGENTS.md` CC-BY-4.0 and everything else AGPL-3.0-only.
 
-1. **Refuse a non-empty repo** (review focus 1):
-
-```bash
-[ "$(git ls-remote "https://github.com/ouroboric-dev/<r>.git" | wc -l)" = 0 ] || { echo "STOP: <r> has commits; ask the founder"; exit 1; }
-```
-
-2. **First commit, licence files only,** pushed straight to the empty repo's `main` (the one allowed
-   exception), from a scratch clone. The bot can push there only because the repo has no ruleset yet;
-   step 3 adds it:
+1. **Clone** into a scratch directory, and create a branch:
 
 ```bash
 S="$(mktemp -d /tmp/claude-1000/-home-brunogbv-brunogbv/f88e5d74-7aed-40b9-9087-76dd6ccfdbce/scratchpad/<r>.XXXX)"
-git clone -q "https://github.com/ouroboric-dev/<r>.git" "$S/<r>" && cd "$S/<r>"
-mkdir LICENSES
-cp /home/brunogbv/brunogbv/ouroboric/ouroboric/LICENSES/AGPL-3.0-only.txt LICENSES/
-cp /home/brunogbv/brunogbv/ouroboric/ouroboric/LICENSES/CC-BY-4.0.txt LICENSES/
-cp LICENSES/AGPL-3.0-only.txt LICENSE
-cat > REUSE.toml <<'EOF'
-version = 1
-
-[[annotations]]
-path = ["**"]
-precedence = "closest"
-SPDX-FileCopyrightText = "2026 Bruno Guilhermo de Barros Valério"
-SPDX-License-Identifier = "AGPL-3.0-only"
-
-[[annotations]]
-path = ["docs/**", "README.md"]
-precedence = "closest"
-SPDX-FileCopyrightText = "2026 Bruno Guilhermo de Barros Valério"
-SPDX-License-Identifier = "CC-BY-4.0"
-EOF
-git add LICENSE LICENSES/AGPL-3.0-only.txt LICENSES/CC-BY-4.0.txt REUSE.toml
-git status --short && git commit -qm "Licences" && as-bot.sh <r> git push -q origin main
+git clone -q "https://github.com/ouroboric-dev/<r>.git" "$S/<r>" && cd "$S/<r>" && git switch -c scaffold
 ```
 
-3. **founder:** `read -rs GH_TOKEN && export GH_TOKEN && scripts/setup-repo.sh <r>; unset GH_TOKEN`.
-4. **Scaffold on a branch** in the same scratch clone, then push it and open a PR through
-   `as-bot.sh <r>`:
+2. **Scaffold** on that branch, then push it and open a PR through `as-bot.sh <r>`:
    - `go.mod`: `module github.com/ouroboric-dev/<r>` and `go 1.26`;
    - `README.md` (what the repo is, how to build, where the docs are);
    - `AGENTS.md`:
@@ -758,9 +755,9 @@ This file only adds rules for this repo.
    - `.devcontainer/devcontainer.json` with the Go image pinned by digest
      (`podman image inspect docker.io/library/golang:1.26 --format '{{.Digest}}'` after pulling);
    - `.gitignore`.
-5. **Check:** `scripts/check-repos.sh --check settings --check security --check ruleset <r>` passes
-   now; `--check reuse --check agents <r>` passes once the submodule exists (v0-T013) and the PR has
-   merged.
+3. **Check:** `as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset <r>`
+   passes now; `--check reuse --check agents <r>` passes once the submodule exists (v0-T013) and the
+   PR has merged.
 
 | Task | `<r>` | `<job>` |
 |---|---|---|
@@ -774,17 +771,17 @@ This file only adds rules for this repo.
 ### Tasks v0-T007 to v0-T012: one component repo each
 
 **For each task:**
-- **Files:** the files in step 2 (first commit) and step 4 (scaffold PR) of the procedure, in repo
-  `<r>`. `realm-web` (v0-T011) also adds `templates/README.md`, `LICENSES/MIT.txt` (copied from
+- **Files:** the files in step 2 (scaffold PR) of the procedure, in repo `<r>`. `realm-web`
+  (v0-T011) also adds `templates/README.md`, `LICENSES/MIT.txt` (copied from
   `asgard/LICENSES/MIT.txt`), and a third `REUSE.toml` annotation making `templates/**` MIT.
 - **Interfaces:** produces the module path `github.com/ouroboric-dev/<r>`.
 - **Acceptance criteria:**
-  - [ ] The repo had no commits before step 2 (review focus 1).
-  - [ ] Its `main` is protected by the standard ruleset before the scaffold PR opens.
+  - [ ] The scaffold PR builds on v0-H04's licence commit, and nothing else is on `main`.
   - [ ] The scaffold PR has `go.mod`, `README.md`, `AGENTS.md`, `docs/architecture.md`,
         `.devcontainer/devcontainer.json` and `.gitignore`, and `go mod tidy` leaves `go.mod` unchanged.
-- **Named test:** `scripts/check-repos.sh --check settings --check security --check ruleset <r>`
-  exits 0 after step 3, and `--check reuse --check agents <r>` exits 0 after v0-T013.
+- **Named test:**
+  `as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset <r>`
+  exits 0 before the scaffold PR opens, and `--check reuse --check agents <r>` exits 0 after v0-T013.
 - **Layer:** `<r>`. **Size:** S. **Depends on:** v0-H04, v0-T004, v0-T006.
 
 ---
