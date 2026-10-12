@@ -1,8 +1,9 @@
 ---
 title: Charter
-status: draft
-date: 2026-10-11
+status: accepted
+date: 2026-10-12
 related: [users.md, roadmap.md, design/2026-10-11-yggdrasil-v0-design.md]
+style: direction
 ---
 
 # Yggdrasil product charter
@@ -19,8 +20,8 @@ steer.
 
 ## Mission
 
-Build an open, modular and measurable software factory, and document every lesson of building it, so
-others can build their own.
+Build an open, modular software factory that measurably improves with every run, and document every
+lesson of building it, so anyone can run, adapt and trust their own.
 
 ## Principles
 
@@ -55,8 +56,8 @@ ground for comparing factories.
 
 - **Learning first** (from the Ouroboric charter); we measure success by shipping products and
   benchmarking.
-- **Open source.** The factory will become open source. Products it builds may be public or private, and
-  hosted anywhere, at each operator's choice.
+- **Open source.** AGPL-3.0 for the factory code, MIT for templates copied into the products it builds.
+  Products may be public or private, and hosted anywhere, at each operator's choice.
 - **Narrow first.** Grow from specific realms (web SaaS, then games, then mobile) and extract what is
   truly shared; no "one factory for everything" up front.
 - **Cost-conscious.** Start on a Claude subscription and free tiers; hard budget caps on every run.
