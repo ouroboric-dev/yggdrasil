@@ -151,6 +151,71 @@ Pending option 1:
 - **Mount method:** `mount` if option 1 works; otherwise `copy`, because the paths the machine can see
   are either temporary or slow.
 
+## Spike B: `claude -p --bare` and project hooks (item 2)
+
+Task v0-T002. Claude Code `2.1.284` (released 2026-09-28) in `node:22-bookworm-slim`, with
+`DISABLE_AUTOUPDATER=1`, run as uid 1000. The leaf holds two traps: `.claude/settings.json` with a
+`SessionStart` and a `PreToolUse` hook, plus `enableAllProjectMcpServers: true`, and `.mcp.json` with
+a server. Each writes a marker file when it runs.
+
+`claude --help` for this version says of `--bare`: "Anthropic auth is strictly ANTHROPIC_API_KEY or
+apiKeyHelper via --settings (OAuth and keychain are never read)."
+
+**Dry run without any token** (the session fails to authenticate, so no tool runs):
+
+| Mode | Flags | Markers | Exit |
+|---|---|---|---|
+| `control` | none | `.hook-session`, `.mcp-ran` | 1 |
+| `protected` | `--bare` | none | 0 |
+| `flags` | `--setting-sources user --strict-mcp-config` | none | 0 |
+
+[ANALYSIS] The control run shows how early a hostile repo gets in: its `SessionStart` hook and MCP
+server ran **before authentication**, in a session that then failed. Blocking them can't wait for the
+first tool call.
+
+**Finding: the plan's marker check passed a partial hit.** `ls a b c && exit 1 || exit 0` exits 0 when
+only some markers exist, because `ls` fails on the missing one. The first dry run found two markers
+and still exited 0. The script now checks each marker.
+
+**Still to run (founder, with the token):** all three modes with `CLAUDE_CODE_OAUTH_TOKEN`, to see
+whether `--bare` authenticates with it, to catch the `PreToolUse` marker, and to record a real result
+event.
+
+The result event (`type: result`) carries `usage.input_tokens`, `usage.output_tokens`,
+`usage.cache_creation_input_tokens`, `usage.cache_read_input_tokens`, `num_turns`, `total_cost_usd`,
+`duration_ms` and `duration_api_ms` (field names from the dry run; values come from the founder run).
+
+## Spike C: OpenRouter and `privacy: strict` (item 3)
+
+Task v0-T003. OpenRouter's [provider routing documentation](https://openrouter.ai/docs/features/provider-routing)
+names two settings in the request's `provider` object:
+
+- `data_collection`: `"allow"` (default) or `"deny"`: "Control whether to use providers that may store
+  data."
+- `zdr`: `true`: "Restrict routing to only ZDR (Zero Data Retention) endpoints." Account-wide ZDR and
+  guardrails still apply; the request flag can only add to them.
+
+Both can also be set account-wide in OpenRouter's privacy settings. The factory's OpenRouter account
+is dedicated to it (budget doc), so account-wide settings affect nothing else.
+
+**`opencode` passes them, but not for every request.** `opencode-ai@1.18.32` (released 2026-09-21)
+was pointed at a local listener that records request bodies (no real key, nothing sent to
+OpenRouter). With `options.provider` set on the model:
+
+| Requests | Model | `provider` sent |
+|---|---|---|
+| 6 | `openai/gpt-4o-mini` (the configured model) | `{"data_collection":"deny","zdr":true,"allow_fallbacks":false}` |
+| 3 | `google/gemini-nano-banana-2.1` (opencode's small model, for titles) | **none**, and the body holds the user's prompt |
+
+With `"small_model": "openrouter/openai/gpt-4o-mini"` added, all 9 requests carried the settings.
+
+[ANALYSIS] Without `small_model`, a run marked `privacy: strict` would still send the prompt to a
+provider chosen with no privacy filter. The adapter must set it, and must check that every model the
+tool may call has the settings.
+
+**Still to run (founder, with the key):** `openrouter-strict.sh <model>`, one real request with the
+settings, to record which provider served it and the cost.
+
 ## Appendix: scripts
 
 ### `sandbox-check.sh`
@@ -254,3 +319,73 @@ done
 ```
 
 The Postgres password `spike-only` is a throwaway value for a container that existed for minutes.
+
+### `hook-check.sh` (spike B)
+
+```bash
+#!/usr/bin/env bash
+# hook-check.sh control|protected|flags: exit 1 if any marker appears, 0 if none. Founder-run (uses the token).
+#   control    no protection: the planted hooks and MCP server must run (exit 1)
+#   protected  --bare
+#   flags      --setting-sources user --strict-mcp-config (skips project settings and .mcp.json)
+set -uo pipefail
+rm -f -- /work/.hook-session /work/.hook-tool /work/.mcp-ran
+case "${1:?control|protected|flags}" in
+  control) EXTRA=() ;;
+  protected) EXTRA=(--bare) ;;
+  flags) EXTRA=(--setting-sources user --strict-mcp-config) ;;
+  *) echo "unknown mode $1"; exit 2 ;;
+esac
+claude -p "Use the Bash tool to run: ls /work. Then reply with the output." \
+  --allowedTools "Bash(ls:*)" "${EXTRA[@]}" --output-format stream-json --verbose > "/work/.run-$1.jsonl" 2>"/work/.run-$1.err"
+echo "claude exit: $?"
+tail -1 "/work/.run-$1.jsonl" | head -c 300; echo
+found=0
+for m in /work/.hook-session /work/.hook-tool /work/.mcp-ran; do [ -e "$m" ] && { echo "marker: $m"; found=1; }; done
+exit $found
+```
+
+The image:
+
+```dockerfile
+FROM docker.io/library/node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562
+ENV DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+RUN npm install -g @anthropic-ai/claude-code@2.1.284 && npm cache clean --force
+COPY hook-check.sh /usr/local/bin/hook-check.sh
+```
+
+### `openrouter-strict.sh` (spike C)
+
+```bash
+#!/usr/bin/env bash
+# openrouter-strict.sh <model>: one request with no-training, no-retention settings. Founder-run.
+set -euo pipefail
+set -a; . ~/.config/ouroboric/factory.env; set +a
+MODEL="${1:?a cheap model id from https://openrouter.ai/models}"
+curl -sS --fail-with-body https://openrouter.ai/api/v1/chat/completions \
+  --header @<(printf 'Authorization: Bearer %s\n' "$OPENROUTER_API_KEY") \
+  --header 'Content-Type: application/json' \
+  --data "{\"model\":\"$MODEL\",\"max_tokens\":5,\"messages\":[{\"role\":\"user\",\"content\":\"Reply with OK.\"}],\"provider\":{\"data_collection\":\"deny\",\"zdr\":true,\"allow_fallbacks\":false},\"usage\":{\"include\":true}}" \
+  | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print("provider:", d.get("provider")); print("usage:", d.get("usage"))'
+```
+
+### `opencode.json` for the capture test (spike C)
+
+```json
+{
+  "provider": {
+    "openrouter": {
+      "options": { "baseURL": "http://127.0.0.1:18765/api/v1", "apiKey": "dummy-not-a-key" },
+      "models": {
+        "openai/gpt-4o-mini": {
+          "options": { "provider": { "data_collection": "deny", "zdr": true, "allow_fallbacks": false } }
+        }
+      }
+    }
+  },
+  "small_model": "openrouter/openai/gpt-4o-mini"
+}
+```
+
+Item 7, once more: in a fresh shell, `podman run --pull=never` on a `localhost/` image still called
+the gcloud credential helper. Only the isolated `REGISTRY_AUTH_FILE` and `DOCKER_CONFIG` stopped it.
