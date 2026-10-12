@@ -1,6 +1,6 @@
 ---
 title: Yggdrasil v0 implementation plan
-status: draft
+status: accepted
 date: 2026-10-12
 related: [tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../changes/2026-10-12-require-budget-caps/proposal.md]
 style: spec
@@ -15,8 +15,9 @@ style: spec
 **Goal:** build v0 of Yggdrasil, the software factory that turns a frozen brief into verified
 software, and prove it by building client gallery lite (design doc §2.3, criteria 1–7).
 
-**Architecture:** seven Go modules in the `ouroboric-dev` org, developed together through a
-`go.work` in the `yggdrasil` umbrella (spec §1). Odin walks realm graphs and is the only writer of the
+**Architecture:** six Go modules (`gungnir`, `odin`, `gleipnir`, `jormungandr`, `realm-web`,
+`havamal`) in the `ouroboric-dev` org, developed together through a `go.work` in the `yggdrasil`
+umbrella, which holds them as submodules (spec §1). Odin walks realm graphs and is the only writer of the
 instance tree; Gleipnir runs agents in hardened devcontainers; Jormungandr runs bounded fix loops;
 Gungnir holds every interface and schema (spec §2).
 
@@ -42,16 +43,19 @@ done. Two reasons:
 **Decided 2026-10-12:** phases get detailed tasks just in time; this plan fixes their order,
 scope, dependencies and exit criteria now.
 
+**Status:** this plan is `accepted` when the founder merges the pull request that adds it. The merge
+is the `plan` approval; no agent changes the status.
+
 ## Phases
 
 | Phase | Builds | Repos | Exit criterion |
 |---|---|---|---|
-| **0. Readiness** | the spike, component repos, `AGENTS.md` invariants, `gitleaks`, and the founder's accounts and hidden suite | all | **the readiness gate below** |
-| **1. Contract and walking skeleton** | Gungnir types and schemas (`factory.yaml` with required caps, `graph.yaml`, `pack.yaml`, ledger events, findings); Odin's graph engine with exec and gate nodes, the mode × approval-point table, config validation, `run.json`, the hash-chained ledger; `ygg run`, `resume`, `approve`, `reject`, `status`, `doctor` | `gungnir`, `odin` | a scripted toy graph runs end to end in all three modes, stops at gates, resumes, and refuses to run without complete caps |
-| **2. Instance tree and git** | the tree walker (any depth), path-only checkout, host git with hooks off, checkpoints and resume, one-level pointer moves, the merge gate with locks, the shrink guard, the warning when a public L0 lists private projects (spec §3.1) | `odin` | tree fixtures (including the deeper one) pass; both merge-gate tests from spec §13 pass; the git escape tests pass |
-| **3. Harness and sandbox** | the sandbox driver chosen by the spike, config validation before every `up`, mounts, the egress firewall, managed settings; the `claude-code`, `opencode` and `scripted` adapters with usage and cost capture; privacy policy; Havamal with `skills.lock`, drift check and explicit loading | `gleipnir`, `havamal` | the sandbox escape tests pass; one real `claude-code` session and one `opencode` session run in a sandbox and report usage |
+| **0. Readiness** | the spike; repo checks; the existing repos brought to standard; `AGENTS.md` invariants; the component repos; `gitleaks`; the founder's tokens, accounts and hidden suite | all | **the readiness gate below** |
+| **1. Contract and walking skeleton** | Gungnir types and schemas (`factory.yaml`, `graph.yaml`, `pack.yaml`, ledger events with OpenTelemetry `gen_ai.*` field names, findings); the `Agent` interface and the `scripted` adapter; Odin's graph engine with exec, agent and gate nodes, the mode × approval-point table, config validation, `run.json`, the hash-chained ledger; `ygg run`, `resume`, `approve`, `reject`, `status`, `doctor`; change task `require-budget-caps-T001` (all its cases: per-run and per-day caps, the spend limit for paid-API roles, refusing `resume`, the `doctor` error); CI that runs the deterministic end-to-end tests, made a required check in each ruleset | `gungnir`, `odin`, `gleipnir` | a scripted toy graph runs end to end in all three modes, stops at gates, resumes, and refuses to run without complete caps; CI is green and required |
+| **2. Instance tree and git** | the tree walker (any depth), path-only checkout, host git with hooks off, checkpoints and resume, one-level pointer moves, the merge gate with locks, the shrink guard, the warning when a public L0 lists private projects (spec §3.1); the founder creates the private L0 instance umbrella with the pinned `yggdrasil` and the private benchmarks repo as submodules (spec §3.1, §11) | `odin`; L0 | tree fixtures (including the deeper one) pass; both merge-gate tests from spec §13 pass; the git escape tests pass with the `scripted` adapter |
+| **3. Harness and sandbox** | the sandbox driver chosen by the spike, config validation before every `up`, mounts, the egress firewall, managed settings; the `claude-code` and `opencode` adapters with usage and cost capture; privacy policy; Havamal with `skills.lock`, drift check, explicit loading, and the eval harness our own skills must pass before they ship (spec §5.1) | `gleipnir`, `havamal` | the sandbox escape tests pass; one real `claude-code` session and one `opencode` session run in a sandbox and report usage |
 | **4. Loop, findings and caps** | Jormungandr's bounded loop, typed findings with proof, escalation per mode, budget caps as a hard approval point, the check runner, error handling (spec §12: retries with backoff, quota pause, infra stop, policy-violation quarantine) | `jormungandr`, `gleipnir`, `odin` | a malformed reviewer output stops the loop; a run that hits a cap stops resumable; findings close only with proof |
-| **5. Web realm** | `realm-web`: `pack.yaml`, `graph.yaml`, prompts, stack layer, templates, check ladder rungs 1–7 (with the two-tenant harness), the isolated grader for the hidden suite, routing indexes and bench | `realm-web`, `odin` | the realm builds a one-feature smoke brief end to end with real agents |
+| **5. Web realm** | `realm-web`: `pack.yaml`, `graph.yaml`, prompts, stack layer, templates (with each leaf's clean `.devcontainer/`), check ladder rungs 1–7 (with the two-tenant harness), the isolated grader writing `score.json` with fail-to-pass and pass-to-pass results reported separately (spec §11), routing indexes and bench; the dependency policy: pinned minor lines, `govulncheck` and OSV gating, canary-first bumps (spec §9.6) | `realm-web`, `odin` | the realm builds a one-feature smoke brief end to end with real agents |
 | **6. Metrics and proof runs** | `ygg metrics` and `--compare`, `ygg board`, `ygg report`, the local tracker; then the runs that meet the design doc's success criteria | `odin`; runs in L0 | design doc criteria 1–7 met (table below) |
 
 Dependencies: each phase depends on the one before it. Phase 3 can start once Phase 1 is done, in
@@ -65,15 +69,15 @@ met**. Phase 0 closes the open ones:
 
 | Item | Closed by |
 |---|---|
-| RB-05 `AGENTS.md` invariants | v0-T005 |
-| RB-12 component repos | v0-T004 |
+| RB-05 `AGENTS.md` invariants | v0-T006 |
+| RB-12 component repos | v0-H04 (founder creates them), v0-T005, v0-T007 to v0-T013 |
 | RB-13 budget and caps | v0-H01 (founder) |
-| RB-14 credentials and secret scanning | v0-H01 (token, founder) and v0-T006 (`gitleaks`) |
-| RB-18 implementation plan | this plan, once accepted |
+| RB-14 credentials and secret scanning | v0-H01 and v0-H03 (tokens, founder) and v0-T014 (`gitleaks`) |
+| RB-18 implementation plan | the founder's merge of this plan |
 | RB-19 technical risks tested first | v0-T001 to v0-T003 (the spike) |
 | RB-20 success measure fixed in advance | v0-H02 (founder: frozen brief and hidden suite) |
 
-v0-T007 re-runs the assessment and records the gate.
+v0-T015 re-runs the assessment and records the gate.
 
 ## Success criteria → phases
 
@@ -95,7 +99,9 @@ v0-T007 re-runs the assessment and records the gate.
 | The Podman VM can't mount WSL paths (§16, item 6) | the sandbox can't see the leaf | v0-T001 tests native Podman in WSL, a VM-visible path, and copy-in with `podman cp` (shown to work on 2026-10-12) |
 | `claude -p --bare` doesn't work with a subscription token (§16, item 2) | repo hooks and project MCP servers must be blocked another way | v0-T002 tests managed settings as the fallback |
 | OpenRouter's privacy settings don't map to `privacy: strict` (§16, item 3) | strict privacy can't be promised | v0-T003 records what exists; the adapter refuses `strict` if it can't enforce it |
-| The hidden suite leaks to the factory-building agent | the benchmark measures nothing | v0-H02 is written by the founder or a separate session, in a private repo this work never reads |
+| The hidden suite leaks to the factory-building agent | the benchmark measures nothing | v0-H02 keeps it in a private repo under the founder's personal account; v0-H03 revokes the classic token (it had `repo` scope) and limits the agents' token to `ouroboric-dev` repos, so no token in the agent environment can read it |
+| An agent session (buggy or hijacked by prompt injection) changes repo guardrails | rulesets, push protection or whole repos lost, repeated across the org | v0-H03: the agents' token has no Administration write; the founder runs `setup-repo.sh` with a short-lived admin token |
+| The agents' token can still merge through the founder's admin bypass | an unreviewed change lands on `main` | the founder merges; agents never merge (invariants); the founder's merge hook; a separate merge bot identity in iteration 2 (spec §15.1) closes it |
 | Building the factory uses up the founder's quota | work stalls | the dedicated subscription (budget doc) and per-run caps from Phase 1 on |
 | Scope creep inside phases | v0 never finishes | iteration 2 items (spec §15) stay out; a phase's tasks change only through a reviewed update of its `tasks.md` |
 
