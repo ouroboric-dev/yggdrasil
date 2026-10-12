@@ -1,11 +1,19 @@
 ---
 title: v0 spec wording review (style pass)
-status: draft
-date: 2026-10-11
+status: superseded
+date: 2026-10-12
 related: [2026-10-11-yggdrasil-v0-spec.md]
 style: spec
 ---
 
+> **Resolved 2026-10-12; kept as a record.** The founder confirmed items 1–19, 21–28, 30–36, 38, 39 and
+> 41–58 as written, confirmed the readings of #3 (SHOULD), #14 (a pointer move runs rungs 1–5 and the
+> umbrella's acceptance tests) and #40 ("later" means iteration 2), and decided three changes in the
+> spec: #20, an own skill's eval MUST show a gain; #29, only `extracted` or `oasdiff` evidence
+> triggers `pointer-contract`, with acceptance tests catching the rest; #37, a bump MUST NOT roll out
+> if the canary's suite fails. Both factual slips listed in (c) were already fixed. The spec is
+> accepted.
+>
 > Review aid from the 2026-10-11 style pass. The spec's requirements were rewritten with RFC 2119 keywords and ASD-STE100 sentences. This list shows every requirement whose meaning might have shifted, so a human can confirm each one. Archive or delete this file once the spec is accepted.
 
 # Style pass: `spec` (yggdrasil/docs/2-engineering)
