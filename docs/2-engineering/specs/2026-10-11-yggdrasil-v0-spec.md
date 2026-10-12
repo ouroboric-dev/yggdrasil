@@ -1,16 +1,14 @@
 ---
-title: Yggdrasil v0 — engineering spec
-status: draft
-date: 2026-10-11
+title: Yggdrasil v0 engineering spec
+status: accepted
+date: 2026-10-12
 related: [../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../1-product/charter.md, https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md]
 ---
 
-# Yggdrasil v0 — engineering spec
+# Yggdrasil v0 engineering spec
 
 | | |
 |---|---|
-| **Status** | Draft for review |
-| **Date** | 2026-10-11 |
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from brainstorming sessions held 2026-10-10 and 2026-10-11 |
 | **Implements** | [v0 design doc](../../1-product/design/2026-10-11-yggdrasil-v0-design.md), within the [charter](../../1-product/charter.md) |
 | **Scope** | the factory core, the web realm and metrics. The game realm and the benchmark kit (Mimir) get their own design docs and specs |
@@ -263,7 +261,7 @@ merge-gate script and Gas Town's Refinery:
    now and for parallel agents later.
 2. **Bring the branch up to date:** merge the current base into the branch.
 3. **Re-run the checks** on the result. For a leaf merge, run ladder rungs 1–5. For a pointer move,
-   add the umbrella's acceptance tests.
+   run rungs 1–5 and the umbrella's acceptance tests.
 4. **Merge pinned to the reviewed commit:** proceed only if the branch head is still the commit that
    was checked. Locally, compare SHAs before the fast-forward. On GitHub, use `--match-head-commit`.
    Otherwise, abort and return to the loop.
@@ -340,7 +338,7 @@ privacy: standard   # strict → only providers with no training and no retentio
 - Every skill MUST be **vendored** in **Havamal**, the skill library. Havamal holds pinned copies with
   a `skills.lock` (upstream, path, commit, licence, per-file hashes). Gleipnir MUST load skills from
   Havamal at a pinned version. Our own skills live there too. Each of our own skills MUST ship with an
-  eval. The eval shows that the skill measurably improves agent behaviour (same tasks with and
+  eval. The eval MUST show that the skill measurably improves agent behaviour (same tasks with and
   without the skill).
   Havamal releases are tagged, because other operators may vendor our skills in turn. A check MUST
   fail on drift. Updates MUST be reviewed pull requests. The skill set's hash MUST go into
@@ -472,7 +470,8 @@ Following graphify, every edge in every index MUST be tagged **`extracted`** or 
 `extracted` means read directly from source, config or contracts. `inferred` means guessed, e.g. by
 name matching or a model. v0's generators are deterministic, so their edges are `extracted`. The
 impact index MUST report any other edge separately. Odin MUST treat a pointer move as
-`pointer-contract` only on `extracted` evidence or on `oasdiff`.
+`pointer-contract` only on `extracted` evidence or on `oasdiff`. Every pointer move also runs the
+umbrella's acceptance tests (§4.5), so a break that only an `inferred` edge noticed is still caught.
 
 Symbol and meaning indexes come later. Each one ships only if it beats the bench. Cross-service
 HTTP-call and infrastructure-as-code wiring for impact analysis (as in codebase-memory-mcp) comes with
@@ -592,8 +591,8 @@ The rungs run from fast to slow. Each rung's failure output goes back to the imp
 
 - A dependency MUST pin the minor version line, with a minimum patched version.
 - Dependencies MUST be gated on `govulncheck` and OSV.
-- A version bump MUST roll to one canary product first. After the canary's suite runs, the bump
-  rolls out in batches.
+- A version bump MUST roll to one canary product first. If the canary's suite fails, the bump MUST NOT
+  roll out. After the canary passes, the bump rolls out in batches.
 - Authorisation MUST NOT rely on middleware alone.
 
 ## 10. Observability (packages in Odin; future module Norns)
@@ -649,7 +648,7 @@ The `Tracker` interface projects factory state one way, following marola's
 - issues own status, and files own the plan; Odin MUST be the only writer; agents MUST NOT touch
   issues;
 - the tracker MUST read back only these inputs: human-approved work (through `external-input`) and,
-  later, approvals;
+  from iteration 2, approvals;
 - board views: Needs you, Now, Agent queue, Blocked, Triage;
 - boards are per product org; the factory's own org board tracks improving the factory itself.
 
@@ -660,7 +659,7 @@ v0 ships the `local` tracker (the views above). The `github` tracker is iteratio
 The journal is the source material for later promotion. In the story, its entries are the **sagas**.
 **Bragi**, the god of poetry, is the future content component that turns them into posts.
 
-- **Where:** `docs/6-journal/` in the `yggdrasil` umbrella for the factory's own journey, with an index
+- **Where:** `docs/6-journal/` in the `ouroboric` company umbrella for the factory's own journey, with an index
   in `docs/6-journal/README.md`. Lessons from private product runs MUST be recorded in the private L0
   instance first. A lesson MUST be distilled and anonymised before it moves to the public journal.
 - **One entry per challenge:** `docs/6-journal/YYYY-MM-DD-<slug>.md`, from a template:
@@ -686,7 +685,7 @@ The journal is the source material for later promotion. In the story, its entrie
   result arrives. A decision SHOULD be recorded at once, even if its result is still pending.
 - **Seed:** the first entries come from the design sessions of 2026-10-10 and 2026-10-11 (the decision
   log in §18 and the research briefs), with results marked pending.
-- **Scrubbing before anything is public:** the journal lives in a repo that will be public. A blog
+- **Scrubbing before anything is public:** the journal lives in a public repo. A blog
   post is effectively permanent, because search engines and archives keep copies. Entries MUST NOT
   include secrets, private product names or code, client data, or raw transcripts and ledger excerpts
   from private runs. For example, a pasted ledger line that shows an OpenRouter key would stay
@@ -881,6 +880,8 @@ The first implementation task is a throwaway spike that answers:
    directory`. The devcontainer driver mounts the leaf's working tree, so the spike MUST find a
    working approach, for example rootless Podman running natively inside WSL, workspaces on a path the
    VM can see, or copying the leaf into the container and back (as the secret scan did with `tar`).
+   On 2026-10-12, `podman cp` copied files from WSL into running containers without problems (the
+   diagram script installs fonts into the Kroki pod this way), which supports the copy-in approach.
 7. Registry credentials. The host's container configuration invoked a gcloud credential helper even for
    public Docker Hub images. The sandbox driver MUST pull images with an isolated, empty auth
    configuration, so that host credentials never reach image pulls.
@@ -945,3 +946,6 @@ Yggdrasil to publish their source. That would make the factory unusable for most
 | Writing styles | 14 style ids per section (incl. `prompt`), skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
 | Skills | all vendored with `skills.lock`, public upstreams with redistributable licences | rely on host-installed skills |
 | Skill library | its own module, Havamal, from v0; own skills ship only with evals | vendored skills inside Gleipnir |
+| Contract-change stops (2026-10-12) | only `extracted` or `oasdiff` evidence triggers `pointer-contract`; acceptance tests on every pointer move catch the rest | `inferred` edges also stop (alarm fatigue) |
+| Own-skill evals (2026-10-12) | an eval MUST show a measurable gain before a skill ships | eval required, result informational |
+| Dependency rollout (2026-10-12) | a bump that fails the canary suite MUST NOT roll out | canary runs without a pass requirement |
