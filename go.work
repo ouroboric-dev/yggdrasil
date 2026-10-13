@@ -1,0 +1,10 @@
+go 1.26
+
+use (
+	./gleipnir
+	./gungnir
+	./havamal
+	./jormungandr
+	./odin
+	./realm-web
+)

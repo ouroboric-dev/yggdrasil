@@ -2,7 +2,7 @@
 title: Yggdrasil v0 implementation plan
 status: accepted
 date: 2026-10-12
-related: [tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../changes/2026-10-12-require-budget-caps/proposal.md]
+related: [tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../changes/2026-10-12-require-budget-caps/proposal.md, ../../changes/2026-10-12-remote-creates-repos/proposal.md]
 style: spec
 ---
 
@@ -52,7 +52,7 @@ is the `plan` approval; no agent changes the status.
 |---|---|---|---|
 | **0. Readiness** | the spike; repo checks; the existing repos brought to standard; `AGENTS.md` invariants; the component repos; `gitleaks`; the founder's tokens, accounts and hidden suite | all | **the readiness gate below** |
 | **1. Contract and walking skeleton** | Gungnir types and schemas (`factory.yaml`, `graph.yaml`, `pack.yaml`, ledger events with OpenTelemetry `gen_ai.*` field names, findings); the `Agent` interface and the `scripted` adapter; Odin's graph engine with exec, agent and gate nodes, the mode × approval-point table, config validation, `run.json`, the hash-chained ledger; `ygg run`, `resume`, `approve`, `reject`, `status`, `doctor`; change task `require-budget-caps-T001` (all its cases: per-run and per-day caps, the spend limit for paid-API roles, refusing `resume`, the `doctor` error); CI that runs the deterministic end-to-end tests, made a required check in each ruleset | `gungnir`, `odin`, `gleipnir` | a scripted toy graph runs end to end in all three modes, stops at gates, resumes, and refuses to run without complete caps; CI is green and required |
-| **2. Instance tree and git** | the tree walker (any depth), path-only checkout, host git with hooks off, checkpoints and resume, one-level pointer moves, the merge gate with locks, the shrink guard, the warning when a public L0 lists private projects (spec §3.1); the founder creates the private L0 instance umbrella with the pinned `yggdrasil` and the private benchmarks repo as submodules (spec §3.1, §11) | `odin`; L0 | tree fixtures (including the deeper one) pass; both merge-gate tests from spec §13 pass; the git escape tests pass with the `scripted` adapter |
+| **2. Instance tree and git** | the tree walker (any depth), path-only checkout, host git with hooks off, checkpoints and resume, one-level pointer moves, the merge gate with locks, the shrink guard, the warning when a public L0 lists private projects (spec §3.1); change task `remote-creates-repos-T001` (the local remote creates leaves; the `repo-admin` approval point); the founder creates the private L0 instance umbrella with the pinned `yggdrasil` and the private benchmarks repo as submodules (spec §3.1, §11) | `odin`; L0 | tree fixtures (including the deeper one) pass; both merge-gate tests from spec §13 pass; the git escape tests pass with the `scripted` adapter |
 | **3. Harness and sandbox** | the sandbox driver chosen by the spike, config validation before every `up`, mounts, the egress firewall, managed settings; the `claude-code` and `opencode` adapters with usage and cost capture; privacy policy; Havamal with `skills.lock`, drift check, explicit loading, and the eval harness our own skills must pass before they ship (spec §5.1) | `gleipnir`, `havamal` | the sandbox escape tests pass; one real `claude-code` session and one `opencode` session run in a sandbox and report usage |
 | **4. Loop, findings and caps** | Jormungandr's bounded loop, typed findings with proof, escalation per mode, budget caps as a hard approval point, the check runner, error handling (spec §12: retries with backoff, quota pause, infra stop, policy-violation quarantine) | `jormungandr`, `gleipnir`, `odin` | a malformed reviewer output stops the loop; a run that hits a cap stops resumable; findings close only with proof |
 | **5. Web realm** | `realm-web`: `pack.yaml`, `graph.yaml`, prompts, stack layer, templates (with each leaf's clean `.devcontainer/`), check ladder rungs 1–7 (with the two-tenant harness), the isolated grader writing `score.json` with fail-to-pass and pass-to-pass results reported separately (spec §11), routing indexes and bench; the dependency policy: pinned minor lines, `govulncheck` and OSV gating, canary-first bumps (spec §9.6) | `realm-web`, `odin` | the realm builds a one-feature smoke brief end to end with real agents |
@@ -91,6 +91,18 @@ v0-T015 re-runs the assessment and records the gate.
 | 6. journal entries with evidence; factory changes cite `--compare` | throughout; checked in Phase 6 |
 | 7. one factory change improves a metric without lowering the hidden score | Phase 6 improvement run |
 
+## Carried beyond v0
+
+Work that v0 sets up but can't finish, because it needs iteration 2 (spec §15). Each item names the
+task that closes it, so it isn't lost when v0 ends. Reusable tooling lives in `ouroboric/scripts/`,
+with a test, until a row here moves it.
+
+| Item | Why it waits | Closed by |
+|---|---|---|
+| Move repo creation and protection from `ouroboric/scripts/create-repo.sh` and `setup-repo.sh` into the `github` remote, then delete the scripts | the `github` remote is iteration 2 (spec §15.1) | `remote-creates-repos-T002` |
+| Require the founder's review on every PR, with `CODEOWNERS` and `require_code_owner_review`, so a bot's approval never counts | the pr-bot can approve PRs other people open; external contributions are rare in v0 | a reviewed change to `setup-repo.sh`, before the first external contribution is accepted |
+| Move the component scaffold from `ouroboric/scripts/scaffold-component.sh` and `scripts/templates/go-component/` into Odin's `init`, as a Go component template set, then delete the script | `init` scaffolds leaves from realm templates (spec §4.2); scaffolding Yggdrasil's own components with it is self-hosting (spec §15.4) | a task in the first self-hosting stage's plan, which passes `scaffold-component.test.sh`'s cases |
+
 ## Risks
 
 | Risk | Effect | Mitigation |
@@ -99,10 +111,10 @@ v0-T015 re-runs the assessment and records the gate.
 | The Podman VM can't mount WSL paths (§16, item 6) | the sandbox can't see the leaf | v0-T001 tests native Podman in WSL, a VM-visible path, and copy-in with `podman cp` (shown to work on 2026-10-12) |
 | `claude -p --bare` doesn't work with a subscription token (§16, item 2) | repo hooks and project MCP servers must be blocked another way | v0-T002 tests managed settings as the fallback |
 | OpenRouter's privacy settings don't map to `privacy: strict` (§16, item 3) | strict privacy can't be promised | v0-T003 records what exists; the adapter refuses `strict` if it can't enforce it |
-| The hidden suite leaks to the factory-building agent | the benchmark measures nothing | v0-H02 keeps it in a private repo under the founder's personal account; v0-H03 revokes the classic token (it had `repo` scope) and limits the agents' token to `ouroboric-dev` repos, so no token in the agent environment can read it |
-| An agent session (buggy or hijacked by prompt injection) changes repo guardrails | rulesets, push protection or whole repos lost, repeated across the org | v0-H03: the agents' token has no Administration write; the founder runs `setup-repo.sh` with a short-lived admin token |
-| The agents' token can still merge through the founder's admin bypass | an unreviewed change lands on `main` | the founder merges; agents never merge (invariants); the founder's merge hook; a separate merge bot identity in iteration 2 (spec §15.1) closes it |
-| Building the factory uses up the founder's quota | work stalls | the dedicated subscription (budget doc) and per-run caps from Phase 1 on |
+| The hidden suite leaks to the factory-building agent | the benchmark measures nothing | v0-H02 keeps it in a private repo under the founder's personal account; v0-H03 removes every GitHub login and SSH key from the agent environment, and agents reach GitHub only as `ouroboric-pr-bot`, an App private to `ouroboric-dev` |
+| An agent session (buggy or hijacked by prompt injection) changes repo guardrails | rulesets, push protection or whole repos lost, repeated across the org | v0-H03: the pr-bot has no Administration write; the founder runs `setup-repo.sh` with a short-lived admin token |
+| The pr-bot merges, or pushes after the founder approves | an unreviewed change lands on `main` | the bot isn't in the ruleset's bypass list, so it can merge only an approved PR; the ruleset dismisses approvals on push and requires approval of the last push; agents never merge (invariants); the founder's merge hook. A separate merge bot in iteration 2 (spec §15.1) takes merging off the founder |
+| Building the factory uses up the founder's quota | work stalls | building and factory runs share the Ouroboric subscription (budget doc, 2026-10-13), so the per-run and per-day caps apply from Phase 1 on; cheap roles run on open-weight models through OpenRouter |
 | Scope creep inside phases | v0 never finishes | iteration 2 items (spec §15) stay out; a phase's tasks change only through a reviewed update of its `tasks.md` |
 
 Deferred, not a v0 risk: spec §16 item 4 (humanizer's upstream and licence) matters only for

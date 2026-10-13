@@ -1,0 +1,18 @@
+[submodule "gungnir"]
+	path = gungnir
+	url = https://github.com/ouroboric-dev/gungnir.git
+[submodule "odin"]
+	path = odin
+	url = https://github.com/ouroboric-dev/odin.git
+[submodule "gleipnir"]
+	path = gleipnir
+	url = https://github.com/ouroboric-dev/gleipnir.git
+[submodule "jormungandr"]
+	path = jormungandr
+	url = https://github.com/ouroboric-dev/jormungandr.git
+[submodule "realm-web"]
+	path = realm-web
+	url = https://github.com/ouroboric-dev/realm-web.git
+[submodule "havamal"]
+	path = havamal
+	url = https://github.com/ouroboric-dev/havamal.git
