@@ -147,18 +147,20 @@ Closes RB-13 and part of RB-14. Follows `ouroboric/docs/1-company/budget.md`.
   `OPENROUTER_API_KEY`. Only founder-run steps read it; agents never open it.
 
 **Acceptance criteria:**
-- [ ] A dedicated Claude subscription exists on a personal email, used only by the factory.
+- [ ] The factory uses the founder's personal Claude subscription started for Ouroboric, never an
+      employer's account (budget doc, decided 2026-10-13).
 - [ ] `claude setup-token` was run signed in to that subscription; the token is in the env file.
 - [ ] An OpenRouter key named `yggdrasil-factory` exists with a $25 credit limit (monthly reset if
-      offered); the key is in the env file.
+      offered); the key is in the env file. It runs open-weight models only; Claude never goes
+      through it.
 - [ ] The env file is mode `0600`, and the password manager holds both values.
 
 **Named test (founder-run):** `stat -c %a ~/.config/ouroboric/factory.env` prints `600`, and
 `grep -c -E '^(CLAUDE_CODE_OAUTH_TOKEN|OPENROUTER_API_KEY)=.+' ~/.config/ouroboric/factory.env`
 prints `2`. **Layer:** operator machine. **Size:** S. **Depends on:** none.
 
-- [ ] **Step 1:** buy the subscription; sign in to `claude` with it in a separate terminal profile;
-      run `claude setup-token`.
+- [ ] **Step 1:** signed in to `claude` with the Ouroboric subscription, run `claude setup-token`.
+      The token is for the factory only, so it can be revoked without touching your own sessions.
 - [ ] **Step 2:** create the file without echoing secrets:
 
 ```bash
