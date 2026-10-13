@@ -159,7 +159,15 @@ Task v0-T002. Claude Code `2.1.284` (released 2026-09-28) in `node:22-bookworm-s
 a server. Each writes a marker file when it runs.
 
 `claude --help` for this version says of `--bare`: "Anthropic auth is strictly ANTHROPIC_API_KEY or
-apiKeyHelper via --settings (OAuth and keychain are never read)."
+apiKeyHelper via --settings (OAuth and keychain are never read)." Claude Code's
+[authentication docs](https://code.claude.com/docs/en/authentication) (read 2026-10-13) confirm it:
+"Bare mode does not read `CLAUDE_CODE_OAUTH_TOKEN`. If your script passes `--bare`, authenticate with
+`ANTHROPIC_API_KEY` or an `apiKeyHelper` instead." The same page says `ANTHROPIC_API_KEY` outranks
+`CLAUDE_CODE_OAUTH_TOKEN`, and that in `-p` mode "the key is always used when present".
+
+[ANALYSIS] The factory runs on the founder's subscription (budget doc, 2026-10-13), so `--bare` is
+out. The `flags` mode below is the protection to confirm. A sandbox must never carry
+`ANTHROPIC_API_KEY`: if it did, runs would bill per token, silently.
 
 **Dry run without any token** (the session fails to authenticate, so no tool runs):
 
@@ -177,9 +185,9 @@ first tool call.
 only some markers exist, because `ls` fails on the missing one. The first dry run found two markers
 and still exited 0. The script now checks each marker.
 
-**Still to run (founder, with the token):** all three modes with `CLAUDE_CODE_OAUTH_TOKEN`, to see
-whether `--bare` authenticates with it, to catch the `PreToolUse` marker, and to record a real result
-event.
+**Still to run (founder, with the token):** `control` and `flags` with `CLAUDE_CODE_OAUTH_TOKEN`, to
+catch the `PreToolUse` marker in an authenticated session and to record a real result event.
+`protected` (`--bare`) runs once more only to record that it fails to authenticate with the token.
 
 The result event (`type: result`) carries `usage.input_tokens`, `usage.output_tokens`,
 `usage.cache_creation_input_tokens`, `usage.cache_read_input_tokens`, `num_turns`, `total_cost_usd`,
@@ -195,8 +203,8 @@ names two settings in the request's `provider` object:
 - `zdr`: `true`: "Restrict routing to only ZDR (Zero Data Retention) endpoints." Account-wide ZDR and
   guardrails still apply; the request flag can only add to them.
 
-Both can also be set account-wide in OpenRouter's privacy settings. The factory's OpenRouter account
-is dedicated to it (budget doc), so account-wide settings affect nothing else.
+Both can also be set account-wide in OpenRouter's privacy settings, where they apply to every key on
+the account. The factory's `yggdrasil-factory` key is the account's only key so far (budget doc).
 
 **`opencode` passes them, but not for every request.** `opencode-ai@1.18.32` (released 2026-09-21)
 was pointed at a local listener that records request bodies (no real key, nothing sent to
@@ -213,8 +221,26 @@ With `"small_model": "openrouter/openai/gpt-4o-mini"` added, all 9 requests carr
 provider chosen with no privacy filter. The adapter must set it, and must check that every model the
 tool may call has the settings.
 
-**Still to run (founder, with the key):** `openrouter-strict.sh <model>`, one real request with the
-settings, to record which provider served it and the cost.
+**Founder run, 2026-10-14:** `openrouter-strict.sh deepseek/deepseek-v4-flash`. The account's ZDR
+toggles were set to "Zero retention only" for every model group.
+
+| Field | Value |
+|---|---|
+| Provider | OpenInference, on OpenRouter's ZDR endpoint list for `deepseek-v4-flash-20260423` |
+| Tokens | 87 prompt (80 of them cached by the provider), 5 completion (all 5 reasoning) |
+| Cost | $0.0000069 (`is_byok: false`) |
+
+DeepSeek's own API isn't on the ZDR list for this model, and it didn't serve the request.
+
+[ANALYSIS] 80 cached tokens on a first request means the provider reuses computed prompt prefixes
+(the endpoint lists `supports_implicit_caching`). Cached tokens bill at a lower rate, so the adapter's
+usage capture must keep `cached_tokens` separate from other prompt tokens.
+
+**Decided 2026-10-14:** `privacy: strict` means
+`provider: {"data_collection": "deny", "zdr": true, "allow_fallbacks": false}` on every OpenRouter
+request, including `opencode`'s `small_model`. The account-wide "Zero retention only" setting is the
+floor that no request can lower. The adapter refuses `strict` when it can't set these on every model
+the tool may call.
 
 ## Appendix: scripts
 
