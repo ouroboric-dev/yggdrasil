@@ -18,6 +18,10 @@ the [v0 design doc](docs/1-product/design/2026-10-11-yggdrasil-v0-design.md).
 This repo follows its own [documentation standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md).
 Every product that Yggdrasil builds uses the same standard.
 
+## Contributing
+
+Run `uvx pre-commit install` once after cloning, so `gitleaks` checks each commit for secrets.
+
 ## Licence
 
 - **Code:** [AGPL-3.0](LICENSE). Anyone may use, change and share it. Anyone who distributes a
