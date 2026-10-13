@@ -114,7 +114,7 @@ with a test, until a row here moves it.
 | The hidden suite leaks to the factory-building agent | the benchmark measures nothing | v0-H02 keeps it in a private repo under the founder's personal account; v0-H03 removes every GitHub login and SSH key from the agent environment, and agents reach GitHub only as `ouroboric-pr-bot`, an App private to `ouroboric-dev` |
 | An agent session (buggy or hijacked by prompt injection) changes repo guardrails | rulesets, push protection or whole repos lost, repeated across the org | v0-H03: the pr-bot has no Administration write; the founder runs `setup-repo.sh` with a short-lived admin token |
 | The pr-bot merges, or pushes after the founder approves | an unreviewed change lands on `main` | the bot isn't in the ruleset's bypass list, so it can merge only an approved PR; the ruleset dismisses approvals on push and requires approval of the last push; agents never merge (invariants); the founder's merge hook. A separate merge bot in iteration 2 (spec §15.1) takes merging off the founder |
-| Building the factory uses up the founder's quota | work stalls | the dedicated subscription (budget doc) and per-run caps from Phase 1 on |
+| Building the factory uses up the founder's quota | work stalls | building and factory runs share the Ouroboric subscription (budget doc, 2026-10-13), so the per-run and per-day caps apply from Phase 1 on; cheap roles run on open-weight models through OpenRouter |
 | Scope creep inside phases | v0 never finishes | iteration 2 items (spec §15) stay out; a phase's tasks change only through a reviewed update of its `tasks.md` |
 
 Deferred, not a v0 risk: spec §16 item 4 (humanizer's upstream and licence) matters only for
