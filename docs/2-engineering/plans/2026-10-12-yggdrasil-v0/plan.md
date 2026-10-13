@@ -94,12 +94,14 @@ v0-T015 re-runs the assessment and records the gate.
 ## Carried beyond v0
 
 Work that v0 sets up but can't finish, because it needs iteration 2 (spec §15). Each item names the
-task that closes it, so it isn't lost when v0 ends.
+task that closes it, so it isn't lost when v0 ends. Reusable tooling lives in `ouroboric/scripts/`,
+with a test, until a row here moves it.
 
 | Item | Why it waits | Closed by |
 |---|---|---|
 | Move repo creation and protection from `ouroboric/scripts/create-repo.sh` and `setup-repo.sh` into the `github` remote, then delete the scripts | the `github` remote is iteration 2 (spec §15.1) | `remote-creates-repos-T002` |
 | Require the founder's review on every PR, with `CODEOWNERS` and `require_code_owner_review`, so a bot's approval never counts | the pr-bot can approve PRs other people open; external contributions are rare in v0 | a reviewed change to `setup-repo.sh`, before the first external contribution is accepted |
+| Move the component scaffold from `ouroboric/scripts/scaffold-component.sh` and `scripts/templates/go-component/` into Odin's `init`, as a Go component template set, then delete the script | `init` scaffolds leaves from realm templates (spec §4.2); scaffolding Yggdrasil's own components with it is self-hosting (spec §15.4) | a task in the first self-hosting stage's plan, which passes `scaffold-component.test.sh`'s cases |
 
 ## Risks
 
