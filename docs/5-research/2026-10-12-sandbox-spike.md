@@ -185,13 +185,36 @@ first tool call.
 only some markers exist, because `ls` fails on the missing one. The first dry run found two markers
 and still exited 0. The script now checks each marker.
 
-**Still to run (founder, with the token):** `control` and `flags` with `CLAUDE_CODE_OAUTH_TOKEN`, to
-catch the `PreToolUse` marker in an authenticated session and to record a real result event.
-`protected` (`--bare`) runs once more only to record that it fails to authenticate with the token.
+**Founder run, 2026-10-14,** with only `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token` on the
+Ouroboric subscription) passed into the container:
 
-The result event (`type: result`) carries `usage.input_tokens`, `usage.output_tokens`,
-`usage.cache_creation_input_tokens`, `usage.cache_read_input_tokens`, `num_turns`, `total_cost_usd`,
-`duration_ms` and `duration_api_ms` (field names from the dry run; values come from the founder run).
+| Mode | Flags | `claude` exit | Markers | Script exit |
+|---|---|---|---|---|
+| `control` | none | 0 | `.hook-session`, `.hook-tool`, `.mcp-ran` | 1 |
+| `protected` | `--bare` | 1 (no credential: 0 API time, $0) | none | 0 |
+| `flags` | `--setting-sources user --strict-mcp-config` | 0 | none | 0 |
+
+[ANALYSIS] In an authenticated session, the hostile repo's `PreToolUse` hook (`.hook-tool`) runs in
+`control` and doesn't in `flags`. So the flags block all three traps, and the session still works on
+the subscription. `--bare` can't authenticate with the token, as the docs say.
+
+The result events (model `claude-sonnet-5-5`, Claude Code's default; 2 turns each):
+
+| Mode | `input_tokens` | `cache_creation_input_tokens` | `cache_read_input_tokens` | `output_tokens` | `total_cost_usd` | `duration_ms` |
+|---|---|---|---|---|---|---|
+| `control` | 4 | 5,104 | 25,176 | 94 | 0.0264 | 2,926 |
+| `flags` | 4 | 3,134 | 26,776 | 97 | 0.0189 | 2,523 |
+
+[ANALYSIS] On the subscription nothing is billed per token, but the event still reports
+`total_cost_usd`, which the adapter can record as the run's API-equivalent cost (spec §5: "On a subscription, the
+reported cost is what the run would cost on the API"). The event
+also has `modelUsage` (cost per model), `num_turns`, `duration_api_ms`, `is_error`, `api_error_status`
+and `permission_denials`, for the ledger and for error handling.
+
+**Decided 2026-10-14:** the `claude-code` adapter authenticates with `CLAUDE_CODE_OAUTH_TOKEN` only,
+and runs every session with `--setting-sources user --strict-mcp-config`, not `--bare`. The sandbox's
+environment never carries `ANTHROPIC_API_KEY`, and Gleipnir's config validation fails a sandbox that
+would. Usage and cost come from the `result` event.
 
 ## Spike C: OpenRouter and `privacy: strict` (item 3)
 
