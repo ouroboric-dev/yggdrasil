@@ -38,6 +38,9 @@ hidden suite, which an agent must never do or see.
     call in these tasks runs this way: `as-bot.sh --read all scripts/check-repos.sh …`.
   - No other GitHub login exists in the agent environment: no `GITHUB_TOKEN`, no stored `gh` login,
     and no SSH key that reaches GitHub.
+  - The pr-bot is installed on selected repos: every public `ouroboric-dev` repo, and never the
+    private `huldra`. The founder adds each new public repo, as `create-repo.sh` says, and
+    `check-repos.sh`'s `bot` check verifies both.
 - Only the founder runs `create-repo.sh` and `setup-repo.sh`, with a short-lived admin token in
   `GH_TOKEN` (Administration and Contents read and write).
 - No secret, token or key is printed, pasted, logged or committed. Agents never open
@@ -58,7 +61,8 @@ hidden suite, which an agent must never do or see.
   pinned.
 - Spike code is throwaway, but its scripts are copied into the spike report's appendix so they can be
   re-run.
-- No agent reads the private benchmarks repo (spec §11).
+- No agent reads `ouroboric-dev/huldra`, the private hidden suite (spec §11, change
+  `2026-10-14-benchmark-split`), or its local clone, which lives outside `~/brunogbv/ouroboric/`.
 
 ## Review focus
 
@@ -68,9 +72,10 @@ hidden suite, which an agent must never do or see.
    protection, which v0-T004's `security` check asserts on every repo.
 3. **The spike passes on the wrong path or the wrong git layout.** v0-T001 runs every probe on a
    leaf under the WSL home directory, and as a real submodule, whose `.git` is a file.
-4. **The hidden suite reaches an agent.** v0-H02 keeps it in the founder's personal private repo;
-   v0-H03 removes every token and SSH key in the agent environment that could read it, and the
-   pr-bot is private to `ouroboric-dev`; v0-T015 records only its hash and scenario count.
+4. **The hidden suite reaches an agent.** v0-H02 keeps it in the private `huldra`, with the pr-bot
+   never installed on it, and the `bot` check failing closed if it ever is. v0-H03 removes every
+   other token and SSH key in the agent environment that could read it. v0-T015 records only the
+   brief's hash and the scenario count.
 5. **A leaf `AGENTS.md` loosens an umbrella invariant.** A check can't judge meaning, so v0-T004's
    `agents` check enforces the structure: every leaf links the umbrella invariants, stays short, and
    defines no `## Invariants` section of its own. Reviewers read each leaf's additions.
@@ -103,8 +108,10 @@ also read them.
 - [ ] No GitHub login is left in the agent environment: the classic token and the GitHub CLI's
       OAuth grant are revoked, `gh` holds no stored login, and `GITHUB_TOKEN` is unset.
 - [ ] `ouroboric-pr-bot` exists, created from `pr-bot.json`: private to `ouroboric-dev`, installed on
-      all its repos (so the six from v0-H04 are covered when they're created), with Contents and Pull
-      requests read and write, Administration read and Metadata read. No other permissions.
+      selected repos (every public repo, never `huldra`), with Contents and Pull requests read and
+      write, Administration read and Metadata read. No other permissions. (**Changed 2026-10-14:**
+      first installed on all repos; moved to selected repos for `huldra`, change
+      `2026-10-14-benchmark-split`.)
 - [ ] The SSH key can't reach GitHub from an agent session.
 - [ ] The founder can make a short-lived admin token when one is needed: fine-grained, owner
       `ouroboric-dev`, all repos, Administration and Contents read and write, expiring within a day.
@@ -118,6 +125,8 @@ also read them.
   prints `ouroboric-dev`: the bot reaches no other account.
 - `as-bot.sh ouroboric gh api -X PATCH repos/ouroboric-dev/ouroboric -F has_wiki=false` fails with
   HTTP 403: the bot can't change settings. (Wiki is already off, so the request changes nothing.)
+- `as-bot.sh --read all scripts/check-repos.sh --check bot` exits 0: every public repo is on the
+  installation, and `huldra hidden` passes.
 
 **Layer:** GitHub account and org. **Size:** S. **Depends on:** the `ouroboric` PR that adds the
 scripts, merged.
@@ -126,7 +135,8 @@ scripts, merged.
       Apps → GitHub CLI → Revoke), then run `gh auth logout -h github.com`.
 - [ ] **Step 2:** run `ouroboric/scripts/create-pr-bot.sh`. Open `http://localhost:8719/` in a browser
       signed in as an owner of `ouroboric-dev`, and create the App. Then open the install link the
-      script prints, and install it on `ouroboric-dev` for **All repositories**.
+      script prints, and install it on `ouroboric-dev` for **Only select repositories**: every
+      public repo, never `huldra`.
 - [ ] **Step 3:** cut the SSH key off from agent sessions. Either remove it from the GitHub account
       (Settings → SSH and GPG keys) and use HTTPS, or add a passphrase
       (`ssh-keygen -p -f ~/.ssh/<key>`) and keep it out of any `ssh-agent` that agent sessions can use.
@@ -177,18 +187,24 @@ unset T K; chmod 600 ~/.config/ouroboric/factory.env
 ### Task v0-H02 (founder): frozen brief and hidden suite
 
 Closes RB-20. Spec §11: the operator writes the hidden suite from the brief alone, before the first
-factory run. **No agent working on the factory may read this repo.** If an agent session helps, it is
-a separate session, started with no access to the factory repos, that gets only the brief.
+factory run. **No agent working on the factory may read `huldra`.** If an agent session helps, it is
+a separate session, started outside the factory repos, that gets only the brief. The handoff for
+that session is `~/ygg-h02-handoff.md`.
 
-**Files (in a new private repo under the founder's personal account, `<founder>/ygg-benchmarks`;
-never in `ouroboric-dev`):**
+The benchmark is split (change `2026-10-14-benchmark-split`):
+
+**Files in `ouroboric-dev/mimir`** (public, a standard repo, on the pr-bot's installation):
 - Create: `client-gallery-lite/instruction.md` (the frozen one-page brief)
 - Create: `client-gallery-lite/task.toml`, `client-gallery-lite/environment/Dockerfile`
-- Create: `client-gallery-lite/tests/` (Playwright, black-box, against a URL)
+
+**Files in `ouroboric-dev/huldra`** (private, never on the pr-bot's installation; cloned to
+`~/huldra`, outside `~/brunogbv/ouroboric/`):
+- Create: `client-gallery-lite/v1/tests/` (Playwright, black-box, against a URL)
 
 **Interfaces:**
-- Produces: the brief's SHA-256 and the scenario count, which v0-T015 records publicly. Nothing else
-  leaves the repo. In Phase 2 the repo becomes a private submodule of the L0 instance (spec §11).
+- Produces: the brief's SHA-256 and the scenario count, which v0-T015 records publicly. Nothing from
+  `huldra` leaves it. In Phase 2 both repos become submodules of the L0 instance (spec §11).
+- `mimir`'s licences are set in its scaffold PR.
 
 **Acceptance criteria:**
 - [ ] `instruction.md` restates design doc §4 as a brief: the photographer, client and dashboard
@@ -199,19 +215,35 @@ never in `ouroboric-dev`):**
 - [ ] Tests use only what the brief describes: the UI and the public API (spec §11).
 - [ ] Against an empty app, every test fails ("fail to pass").
 
-**Named test (founder-run, in the private repo):**
-`npx playwright test --list | tail -1` shows the scenario count; with an empty server at the base
-URL, `npx playwright test --reporter=json | python3 -c 'import json,sys; s=json.load(sys.stdin)["stats"]; print(s["expected"], s["unexpected"])'`
-prints `0` and the scenario count (no test passes); `sha256sum client-gallery-lite/instruction.md`
-gives the frozen hash. **Layer:** private benchmarks repo. **Size:** M. **Depends on:** v0-H03 (so no
-agent token can read the new repo).
+**Named test:**
+- **Founder-run, in `~/huldra`:**
+  - `npx playwright test --list | tail -1` shows the scenario count.
+  - With an empty server at the base URL,
+    `npx playwright test --reporter=json | python3 -c 'import json,sys; s=json.load(sys.stdin)["stats"]; print(s["expected"], s["unexpected"])'`
+    prints `0` and the scenario count (no test passes).
+  - `sha256sum` of the brief gives the frozen hash.
+- **Agent-run:**
+  - `as-bot.sh --read all scripts/check-repos.sh --check bot` exits 0, including `PASS huldra hidden`
+    and `PASS mimir bot`.
+  - `as-bot.sh --read all gh api repos/ouroboric-dev/huldra` fails with HTTP 404: the pr-bot can't
+    see it.
 
-- [ ] **Step 1:** create the private repo under the personal account. The pr-bot can't be installed
-      there, because it is private to `ouroboric-dev`.
-- [ ] **Step 2:** write `instruction.md`, then freeze it: any later change is a new version.
-- [ ] **Step 3:** write the tests and the grader `Dockerfile`; run the named test against an empty
+**Layer:** `mimir` and `huldra`. **Size:** M. **Depends on:** v0-H03, and the `ouroboric` PR that
+adds `create-repo.sh --private` and the `bot` check.
+
+- [ ] **Step 1:** switch the pr-bot's installation to **Only select repositories**, with every
+      existing public repo selected.
+- [ ] **Step 2:** with a short-lived admin token, run
+      `create-repo.sh mimir "<description>"`, then `create-repo.sh --private huldra "<description>"`.
+      Add `mimir` to the pr-bot's installation; never add `huldra`.
+- [ ] **Step 3:** clone `huldra` to `~/huldra`. Start the separate session there with the handoff.
+      Write the brief, then freeze it: any later change is a new version.
+- [ ] **Step 4:** write the tests and the grader `Dockerfile`; run the named test against an empty
       server.
-- [ ] **Step 4:** give v0-T015 the hash and the count only.
+- [ ] **Step 5:** give a factory session the public files: the brief, `task.toml` and
+      `environment/`. It adds them to `mimir` with the scaffold in a PR. The tests never leave
+      `huldra`.
+- [ ] **Step 6:** give v0-T015 the hash and the count only.
 
 ---
 
@@ -227,7 +259,8 @@ protected repo. The script moves into Yggdrasil later (`remote-creates-repos-T00
 - [ ] Each `main` holds one commit: `LICENSE`, `LICENSES/AGPL-3.0-only.txt`,
       `LICENSES/CC-BY-4.0.txt` and `REUSE.toml`.
 - [ ] Each repo passes the `settings`, `security` and `ruleset` checks.
-- [ ] The pr-bot reaches all six. It is installed on all repos (v0-H03), so this needs no step.
+- [ ] The pr-bot reaches all six. When they were created it was installed on all repos (v0-H03);
+      since 2026-10-14 they stay on its selected list.
 
 **Named test (agent-run):**
 `as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset gungnir odin gleipnir jormungandr realm-web havamal`
