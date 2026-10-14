@@ -20,7 +20,7 @@ are the named tests for the setup tasks; the founder handles tokens, accounts, r
 hidden suite, which an agent must never do or see.
 
 **Tech stack:** Bash, the GitHub CLI (`gh`), Podman, the devcontainer CLI, `uv`, `reuse`,
-`gitleaks`, `pre-commit`.
+`gitleaks`, `pre-commit`; Python and Harbor for the bench adapter.
 
 **Spec:** [v0 engineering spec](../../specs/2026-10-11-yggdrasil-v0-spec.md) §1, §3.1, §6, §11, §13,
 §16; [plan](plan.md).
@@ -198,7 +198,7 @@ The benchmark is split (change `2026-10-14-benchmark-split`):
 - Create: `client-gallery-lite/task.toml`, `client-gallery-lite/environment/Dockerfile`
 
 **Files in `ouroboric-dev/huldra`** (private, never on the pr-bot's installation; cloned to
-`~/huldra`, outside `~/brunogbv/ouroboric/`):
+`~/brunogbv/ouroboric-private/huldra`, outside `~/brunogbv/ouroboric/`):
 - Create: `client-gallery-lite/v1/tests/` (Playwright, black-box, against a URL)
 
 **Interfaces:**
@@ -216,7 +216,7 @@ The benchmark is split (change `2026-10-14-benchmark-split`):
 - [ ] Against an empty app, every test fails ("fail to pass").
 
 **Named test:**
-- **Founder-run, in `~/huldra`:**
+- **Founder-run, in the `huldra` clone:**
   - `npx playwright test --list | tail -1` shows the scenario count.
   - With an empty server at the base URL,
     `npx playwright test --reporter=json | python3 -c 'import json,sys; s=json.load(sys.stdin)["stats"]; print(s["expected"], s["unexpected"])'`
@@ -236,12 +236,13 @@ adds `create-repo.sh --private` and the `bot` check.
 - [ ] **Step 2:** with a short-lived admin token, run
       `create-repo.sh mimir "<description>"`, then `create-repo.sh --private huldra "<description>"`.
       Add `mimir` to the pr-bot's installation; never add `huldra`.
-- [ ] **Step 3:** clone `huldra` to `~/huldra`. Start the separate session there with the handoff.
-      Write the brief, then freeze it: any later change is a new version.
+- [ ] **Step 3:** clone `huldra` to `~/brunogbv/ouroboric-private/huldra`. Start the separate
+      session there with the handoff. Write the brief, then freeze it: any later change is a new
+      version.
 - [ ] **Step 4:** write the tests and the grader `Dockerfile`; run the named test against an empty
       server.
-- [ ] **Step 5:** give a factory session the public files: the brief, `task.toml` and
-      `environment/`. It adds them to `mimir` with the scaffold in a PR. The tests never leave
+- [ ] **Step 5:** add the public files to `mimir` in a PR: the brief, `task.toml` and
+      `environment/` (the founder did, in `mimir` #1, task version 4.0.0). The tests never leave
       `huldra`.
 - [ ] **Step 6:** give v0-T015 the hash and the count only.
 
@@ -926,3 +927,175 @@ on:** v0-T001 to v0-T014, v0-H01 to v0-H04.
 - [ ] **Step 2:** update each row with its evidence; update the summary and table.
 - [ ] **Step 3:** run the named test; expect `21` and exit 0. Commit; open a PR. When the founder
       merges it, the gate is passed and Phase 1's `tasks.md` can be written.
+
+---
+
+## The Harbor bench (added 2026-10-14)
+
+The benchmark task `mimir/client-gallery-lite` (task version 4.0.0) uses Harbor's task format
+(spec §11). The founder runs graded builds with Harbor and the private suite, outside agent sessions.
+These tasks give the founder what those runs need: Harbor working on this machine's Podman, and an
+agent adapter that lets Yggdrasil build the task. They don't gate readiness (v0-T015).
+
+Shared by all four tasks:
+
+- **Location:** `yggdrasil/bench/harbor/`, a `uv` project pinning `harbor==0.24.0`. The adapter is
+  importable as `ygg_harbor.agent:YggdrasilAgent` through `uv run --project bench/harbor`.
+- **The brief's hash** is checked before every run. A copy whose `instruction.md` hashes to anything
+  but the expected value is a different task version, and nothing runs against it.
+- **The task in `mimir` is never changed.** Each run uses a throwaway copy outside every repo.
+- **Podman commands run outside Claude Code's sandbox**, which blocks the Podman socket. The founder
+  approves each of them.
+- **Pins:** `harbor==0.24.0` (released 2026-10-05) breaks the two-week rule; the founder proved this
+  version with Podman on this machine and chose it. Docker Compose v5.5.1 was released 2026-09-03.
+- **The hidden suite is never read.** Smoke runs use a trivial `tests/test.sh` written into the
+  throwaway copy; it is never committed.
+
+### Task v0-T016: Harbor on Podman
+
+Harbor drives `docker compose`. Compose v5 builds images with `buildx`, which Podman lacks. So the
+task image is built with `podman build`, and Compose only runs it.
+
+**Files:**
+- Create: `bench/harbor/harbor-podman.sh`, `bench/harbor/tests/harbor-podman.test.sh`
+
+**Interfaces:**
+- `harbor-podman.sh setup`: creates the tools folder `${YGG_HARBOR_HOME:-~/.cache/yggdrasil-harbor}`
+  with `bin/docker-compose` (Docker Compose v5.5.1, SHA-256
+  `db1889184726840f75c4f9c001048430d4f25b3be3cb084d3ddd762bc0aed576`; any other hash is refused
+  and nothing is installed), the shim `bin/docker` (`docker compose …` runs `bin/docker-compose`;
+  anything else runs `podman …`), and `config/config.json` and `config/auth.json`, both
+  `{"auths":{}}`.
+- `harbor-podman.sh prepare <task dir> <copy dir> <brief sha256>`: refuses on a brief hash
+  mismatch; builds `localhost/<task>:<task version>` from `<task>/environment` with `podman build`;
+  copies the task to `<copy dir>`, and adds `docker_image = "localhost/<task>:<task version>"` under
+  `[environment]` in the copy's `task.toml`, so Compose never builds. Prints the image name.
+- `harbor-podman.sh exec <command…>`: re-checks the Compose binary's hash, then runs the command with
+  `PATH` starting with the tools `bin/`, `DOCKER_CONFIG` set to the tools `config/`,
+  `REGISTRY_AUTH_FILE` set to `config/auth.json`, and `DOCKER_HOST` (default
+  `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock`, overridable) also given
+  to `podman` as `CONTAINER_HOST`. It refuses a `harbor` jobs folder (`-o`) outside `/mnt/wsl`,
+  because the Podman machine can't see the distro's `/tmp`.
+- The founder's `~/.docker` and Podman configuration are never read or changed.
+
+**Acceptance criteria:**
+- [ ] A Compose download with the wrong hash is refused, and `bin/docker-compose` doesn't exist
+      afterwards.
+- [ ] `exec` refuses when the installed Compose binary's hash is wrong.
+- [ ] The shim sends `compose` to `bin/docker-compose` and everything else to `podman`.
+- [ ] `prepare` refuses a brief hash mismatch without building; on a match, the copy's `task.toml`
+      has the `docker_image` line under `[environment]` and the original is unchanged.
+- [ ] `exec` sets the environment above and refuses `-o` outside `/mnt/wsl`.
+
+**Named test:** `bash bench/harbor/tests/harbor-podman.test.sh` passes with fake `podman` and Compose
+binaries; with `YGG_TEST_ONLINE=1` it also downloads the real Compose binary and passes the hash
+check. **Layer:** `yggdrasil`. **Size:** M. **Depends on:** v0-H02 (the task in `mimir`).
+
+- [ ] **Step 1:** write the test; run it; expect failures (no script yet).
+- [ ] **Step 2:** write `harbor-podman.sh`; run the test; expect it to pass, online too.
+- [ ] **Step 3:** commit; open the PR with v0-T017 to v0-T019.
+
+### Task v0-T017: the self-check
+
+Brief §6: grading copies `/app` onto a fresh copy of the machine and runs `/app/start.sh` there, as
+the unprivileged user `app`, with a clean environment. A build checks itself the same way before it
+finishes.
+
+**Files:**
+- Create: `bench/harbor/selfcheck.sh`, `bench/harbor/tests/selfcheck.test.sh`
+
+**Interfaces:**
+- `selfcheck.sh <image> <app dir>`: starts a fresh container from `<image>` (never pulling), copies
+  in only `<app dir>` as `/app`, runs `chown -R app:app /app`, and runs `/app/start.sh` as `app`
+  with `env -i` plus `HOME`, `USER`, a UTF-8 locale and the standard `PATH`. It passes when port
+  3000 answers HTTP on the container's own network address (not only on loopback) within
+  `${SELFCHECK_TIMEOUT:-120}` seconds, and the container's filesystem shows no change outside
+  `/app` and the temporary folders. It prints `PASS` or `FAIL <reason>`, exits 0 or 1, and
+  always removes its container.
+
+**Acceptance criteria:**
+- [ ] An app that serves on `0.0.0.0:3000` passes.
+- [ ] Each of these fails, with its reason: `start.sh` missing or not executable; the server bound
+      to `127.0.0.1` only; a dependency installed outside `/app` during the build; a write outside
+      `/app` and the temporary folders (for example in `$HOME`); `start.sh` exiting non-zero.
+- [ ] No container is left behind, pass or fail.
+
+**Named test:** `bash bench/harbor/tests/selfcheck.test.sh <image>` against the task image that
+`harbor-podman.sh prepare` built; run outside the sandbox. **Layer:** `yggdrasil`. **Size:** M.
+**Depends on:** v0-T016.
+
+- [ ] **Step 1:** write the test with one fixture app per case; run it; expect failures.
+- [ ] **Step 2:** write `selfcheck.sh`; run the test; expect it to pass.
+- [ ] **Step 3:** commit.
+
+### Task v0-T018: the Harbor agent adapter
+
+Keep it thin: the adapter hands the brief to Yggdrasil and carries out what Yggdrasil asks in the
+task environment. All factory logic stays in Yggdrasil.
+
+**Files:**
+- Create: `bench/harbor/pyproject.toml`, `bench/harbor/uv.lock`, `bench/harbor/ygg_harbor/__init__.py`,
+  `bench/harbor/ygg_harbor/agent.py`, `bench/harbor/tests/test_agent.py`,
+  `bench/harbor/tests/fake_factory.py`
+
+**Interfaces:**
+- Produces: `ygg_harbor.agent:YggdrasilAgent`, a `harbor.agents.base.BaseAgent`. Options (`--ak`):
+  `command` (required: the factory command, run on the host), `budget_usd` (default 100, from the
+  task's `[metadata] budget_usd`), `secret_env` (names of host variables whose values must never
+  reach the task environment; default `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`,
+  `OPENROUTER_API_KEY`).
+- The bridge: JSON lines over the factory process's standard input and output.
+  - Adapter → factory, first line: `{"type":"start","instruction":…,"workdir":"/app","budget_usd":…}`.
+  - Factory → adapter: `{"id":…,"op":…}` with `op` one of `exec` (`command`, `cwd`, `env`,
+    `timeout_sec`, `user`), `upload_file`, `upload_dir`, `download_file`, `download_dir` (`source`,
+    `target`), `selfcheck`, `spend` (`usd`: the run's total so far), `done`.
+  - Adapter → factory, per request: `{"id":…,"ok":true,…}` (for `exec`: `return_code`, `stdout`,
+    `stderr`) or `{"id":…,"ok":false,"error":…}`.
+- Consumes: a factory command that speaks the bridge. Yggdrasil's own side is built with the
+  benchmark runs (plan Phase 6); until then, `tests/fake_factory.py` speaks it.
+
+**Acceptance criteria:**
+- [ ] Each `op` reaches the environment with its arguments, and its reply carries the result.
+- [ ] `done` ends the run: the adapter runs a final self-check (v0-T017) on the downloaded `/app`,
+      records the result, and stops the factory process.
+- [ ] Budget: Harbor enforces the agent timeout but not `budget_usd`. Yggdrasil stops itself at the
+      budget; as a backstop, a `spend` report above `budget_usd` stops the factory process. The last
+      reported spend is `context.cost_usd`, and the stop reason (`done`, `budget`) is in
+      `context.metadata`.
+- [ ] Secrets stay on the host: an `exec` whose command or environment, or an upload whose files,
+      contain the value of a `secret_env` variable is refused; a final `/app` holding such a value
+      fails the run.
+- [ ] A factory that exits without `done` fails the run; a timeout (Harbor cancels `run`) kills the
+      factory process.
+- [ ] The factory's stderr and a log of every request (op, command, return code; never environment
+      values) go to the agent's `logs_dir`.
+
+**Named test:** `uv run --project bench/harbor pytest bench/harbor/tests`. **Layer:** `yggdrasil`.
+**Size:** M. **Depends on:** v0-T017.
+
+- [ ] **Step 1:** write `test_agent.py` against a fake environment and `fake_factory.py`; run it;
+      expect failures.
+- [ ] **Step 2:** write `agent.py`; run the tests; expect them to pass.
+- [ ] **Step 3:** commit.
+
+### Task v0-T019: smoke runs through Harbor
+
+**Files:**
+- Create: `bench/harbor/tests/smoke.sh`
+
+**Acceptance criteria:**
+- [ ] `smoke.sh <task dir> <brief sha256>` prepares a throwaway copy with `harbor-podman.sh prepare`,
+      adds a trivial `tests/test.sh` that only checks `/app/start.sh` answers on port 3000 and writes
+      `{"reward": 1}` (or 0) to `/logs/verifier/reward.json`, and runs Harbor twice with a fresh jobs
+      folder under `/mnt/wsl`.
+- [ ] `-a nop` gives reward 0.
+- [ ] The adapter with `fake_factory.py` (which writes a small server as `/app/start.sh`) gives
+      reward 1, with no exception in the trial result.
+- [ ] It deletes the copy and the jobs folder it made, pass or fail.
+
+**Named test:** `bench/harbor/tests/smoke.sh ../mimir/client-gallery-lite bd4b2c7aaf532d51acb3a7edfd5b193d368db8445093b7a24cd80b7ee24d8319`
+prints `nop 0` and `yggdrasil 1`; run outside the sandbox. **Layer:** `yggdrasil`. **Size:** S.
+**Depends on:** v0-T016 to v0-T018.
+
+- [ ] **Step 1:** write `smoke.sh`; run it; expect `nop 0`, `yggdrasil 1`.
+- [ ] **Step 2:** commit; the PR holds v0-T016 to v0-T019.
