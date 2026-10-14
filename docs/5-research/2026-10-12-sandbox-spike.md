@@ -1,6 +1,6 @@
 ---
 title: Sandbox spike
-status: draft
+status: accepted
 date: 2026-10-12
 related: [../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md, ../2-engineering/plans/2026-10-12-yggdrasil-v0/tasks.md]
 style: research
@@ -9,11 +9,11 @@ style: research
 # Sandbox spike
 
 Task v0-T001 of the [v0 plan](../2-engineering/plans/2026-10-12-yggdrasil-v0/tasks.md). It answers
-spec §16 items 1, 5, 6 and 7 on the operator's machine. Every result below was run on 2026-10-12;
-the commands are in the appendix. Items marked **[ANALYSIS]** are reasoning, not results.
+spec §16 items 1, 5, 6 and 7 on the operator's machine. The first results were run on 2026-10-12,
+and the rootless results on 2026-10-14; the commands are in the appendix. Items marked
+**[ANALYSIS]** are reasoning, not results.
 
-**Status:** option 1 (native rootless Podman) still has to be tried; it needs `sudo`, so it is a
-founder step. The decision at the end is a proposal until then.
+**Status:** complete. The decision is at the end of the T001 part, after the rootless results.
 
 ## Starting point
 
@@ -56,10 +56,11 @@ runs `podman` itself, so it must inherit the same environment.
 | Option | Result |
 |---|---|
 | Leaf under the WSL home, mounted into the machine | `Error: statfs /home/brunogbv/ygg-spike/umbrella/.git/modules/leaf: no such file or directory` (as expected) |
-| 1. Native rootless Podman in WSL | **not tried yet** (founder step; see below) |
+| 1. Native rootless Podman in WSL | not taken (see the rootless results below) |
 | 2a. Umbrella on `/mnt/wsl` (shared between WSL distros) | the mount works; `/mnt/wsl` is a 7.6 GB **tmpfs**, emptied when WSL shuts down |
 | 2b. Umbrella on `/mnt/c` (the Windows drive) | the mount works; drvfs shows every file as owned by uid 1000 |
 | 3. Copy in and out (`--mode copy`) | `PASS copy-roundtrip`, exit 0 |
+| 4. Umbrella in the WSL home, bind-mounted into `/mnt/wsl`; the machine's rootless engine (2026-10-14) | all six mount probes pass, including file ownership |
 
 [ANALYSIS] Option 2a can't hold the instance tree, because it doesn't survive a WSL restart. Option
 2b is durable, but git over drvfs is slow and its permissions are fake. Neither is a good home for
@@ -80,6 +81,9 @@ The engine is rootful. Two consequences showed up in the probes:
   with `--user 1000:1000` (and `HOME=/tmp`) fixed both: files are owned by 1000, git works.
 - **A container escape lands as root in the Podman machine.** That machine is a WSL distro on the
   same kernel as the host distro, and it can reach `/mnt/wsl` and the Windows drive.
+
+Both results are about the **root** socket that WSL's `CONTAINER_HOST` points at. The same machine
+also has a rootless socket; the rootless results below replace this item's risk.
 
 ### Item 1: devcontainer CLI, compose, `NET_ADMIN`, egress
 
@@ -121,7 +125,9 @@ example-still-blocked
 it. The allowlist resolves names to IP addresses when it is applied (`api.anthropic.com` resolved to
 one address), so a long run needs it re-applied, or a published IP range.
 
-## Option 1, for the founder
+## Rootless results (2026-10-14)
+
+### Option 1: native rootless Podman in Ubuntu
 
 Native rootless Podman inside WSL removes both the rootful risk and the mount problem. On this
 distro it is blocked by two things:
@@ -135,21 +141,84 @@ distro it is blocked by two things:
 
 The root mount is also `private` (Podman warns that `/` is not a shared mount).
 
-[ANALYSIS] Two ways to get there: a second WSL distro with a current Podman (Fedora ships Podman 5
-with `netavark`), holding the instance tree in its home; or `uidmap` here plus one pod per sandbox,
-with no compose network. The first keeps compose as designed.
+With `uidmap`, Ubuntu's systemd already delegates `memory` and `pids` to the user, so rootless
+containers here could have memory and process limits. A container escape would land as the
+operator's own user, with the whole home directory, including `~/.config/ouroboric`.
 
-## Proposed decision
+### Option D: the Podman machine's rootless engine
 
-Pending option 1:
+On Windows, the founder's default Podman connection is the machine's **rootless** engine
+(`ssh://user@…/run/user/1000/podman/podman.sock`). WSL's `CONTAINER_HOST` points at the machine's
+root socket instead, which is why item 5 found a rootful engine. The machine also exposes its
+rootless socket to WSL, owned by the operator:
+`/mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock`.
 
-- **Driver:** `devcontainer` (CLI 0.89.0), because it passed items 1 and 7 with a live mount, with
-  these rules: mirror the umbrella layout in the mounts; run as the operator's uid; firewall in a
-  sidecar; isolated auth and `--pull=never` for every engine call.
-- **Engine:** rootless Podman in WSL if option 1 works; otherwise the rootful machine with the
-  mitigations above, recorded as an accepted risk.
-- **Mount method:** `mount` if option 1 works; otherwise `copy`, because the paths the machine can see
-  are either temporary or slow.
+| Probe, rootless socket | Result |
+|---|---|
+| `podman info` | rootless, Podman 5.7.1, cgroup v2, network backend `netavark`, `pasta` |
+| `sandbox-check.sh --mode copy` | `registry-isolated`, `rootless`, `copy-roundtrip`: all PASS |
+| `--mode mount`, leaf on `/mnt/wsl` | all six PASS, including `keep-id-ownership`, which needs no `--user` workaround here |
+| `--mode mount`, leaf in the WSL home | `Error: statfs /home/brunogbv/ygg-spike/umbrella/leaf: no such file or directory` |
+| `--mode mount`, umbrella bind-mounted into `/mnt/wsl` | all six PASS |
+
+The bind mount, run by the founder in Ubuntu, makes the WSL-home umbrella visible to the machine.
+`/mnt/wsl` has `shared` propagation, so the mount appears in every WSL distro:
+
+```bash
+sudo mkdir -p /mnt/wsl/ygg-bind
+sudo mount --bind /home/brunogbv/ygg-spike/umbrella /mnt/wsl/ygg-bind
+```
+
+**Item 1 again, rootless,** with the bind-mounted umbrella and the component repos' pinned Go image
+(`golang:1.26.7-bookworm@sha256:e8c859f5…`). `devcontainer up` returned `"outcome":"success"`. `fw`
+and `work` both need `userns_mode: keep-id`, because a container can join only the network namespace
+of a container in the same user namespace. After root in `fw` applied the egress rules:
+
+```
+CapEff: 0000000000000000          # the agent (uid 1000) in work
+example-blocked
+anthropic-http-404
+db-reachable
+s3-reachable
+git-ok spike                      # git log through the submodule layout
+probe-written uid=1000            # owned by brunogbv in the WSL home
+CapEff: 00000000800405fb          # root in work: no NET_ADMIN
+root-cannot-install
+example-still-blocked
+```
+
+**Finding: the machine's rootless engine can't set resource limits.** `--memory 64m --pids-limit 50`
+stops the container from starting: `crun: open 'memory.max' for writing: No such file or directory`.
+The engine lists no cgroup controllers (`CgroupControllers=[]`, manager `cgroupfs`). The machine is a
+Fedora 43 container image whose first process is WSL's `init`, not systemd, so there is no user
+service to delegate controllers to. A container sees the whole WSL VM (16 CPUs, 15.9 GB). The
+machine's own 8-CPU, 2-GiB settings aren't enforced, because all WSL distros share one VM.
+
+[ANALYSIS] Option D keeps compose with named networks and needs no package installs. A container
+escape lands as the machine's user, which can reach the Windows drive, `/mnt/wsl` and the
+bind-mounted tree, but not the operator's WSL home and its keys. The cost is per-container resource
+limits.
+
+## Decision
+
+**Decided 2026-10-14** (founder, option D):
+
+- **Driver:** `devcontainer` (CLI 0.89.0), with `podman-compose` 1.6.0.
+- **Engine:** the Podman machine's **rootless** engine, through
+  `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock`. The factory sets it in its
+  own configuration, and never relies on the shell's `CONTAINER_HOST`, which points at the root
+  socket.
+- **Mount method:** `mount`. The instance tree lives in the WSL home, and is bind-mounted into
+  `/mnt/wsl` (shared propagation) at boot. The sandbox mounts only the leaf, and its git directory
+  read-only, mirroring the umbrella layout.
+- **Sandbox rules:**
+  - every container uses `userns_mode: keep-id`;
+  - the agent runs as the operator's uid, with no added capabilities;
+  - the firewall lives in a sidecar that owns the network namespace;
+  - every engine call uses the isolated auth and `--pull=never`.
+- **Accepted gap for v0:** no per-container resource limits. The spec doesn't require them (§6.2).
+  Every run has hard token and turn caps (§7.4), and a memory and processor limit in `.wslconfig`
+  caps WSL as a whole. Tracked in the v0 plan's "Carried beyond v0" table.
 
 ## Spike B: `claude -p --bare` and project hooks (item 2)
 
@@ -317,22 +386,27 @@ exit $fail
 }
 ```
 
+The rootless version that passed on 2026-10-14 (the rootful run used the spike-only Go image
+`cf7e928c…`, paths under `/mnt/wsl/ygg-spike/umbrella`, and no `userns_mode`):
+
 ```yaml
 services:
   fw:
-    image: docker.io/library/golang@sha256:cf7e928cb9edc2ed8b3cc6fe77ee1ee30b9fea28149564c8840097321a7600ea
+    image: docker.io/library/golang@sha256:e8c859f5632dcfde7b32d2012b4351728f6437930887c2f6a91ea242459e5514
     command: ["sleep", "infinity"]
+    userns_mode: "keep-id"
     cap_add: [NET_ADMIN]
   work:
-    image: docker.io/library/golang@sha256:cf7e928cb9edc2ed8b3cc6fe77ee1ee30b9fea28149564c8840097321a7600ea
+    image: docker.io/library/golang@sha256:e8c859f5632dcfde7b32d2012b4351728f6437930887c2f6a91ea242459e5514
     command: ["sleep", "infinity"]
     user: "1000:1000"
+    userns_mode: "keep-id"
     environment: { HOME: /tmp }
     network_mode: "service:fw"
     depends_on: [fw]
     volumes:
-      - /mnt/wsl/ygg-spike/umbrella/leaf:/u/leaf:Z
-      - /mnt/wsl/ygg-spike/umbrella/.git/modules/leaf:/u/.git/modules/leaf:ro,Z
+      - /mnt/wsl/ygg-bind/leaf:/u/leaf:Z
+      - /mnt/wsl/ygg-bind/.git/modules/leaf:/u/.git/modules/leaf:ro,Z
   db:
     image: docker.io/library/postgres@sha256:aa90e97ee862e558111d34cfb8b2c4bec768c2b039fb791341686928560263b3
     environment: { POSTGRES_PASSWORD: spike-only }
@@ -341,11 +415,27 @@ services:
     command: ["server", "-s3"]
 ```
 
-Run with `REGISTRY_AUTH_FILE` and `DOCKER_CONFIG` set to the empty auth directory:
+Run with `REGISTRY_AUTH_FILE` and `DOCKER_CONFIG` set to the empty auth directory, and
+`CONTAINER_HOST` set to the rootless socket:
 
 ```bash
+export CONTAINER_HOST=unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
 npx -y @devcontainers/cli@0.89.0 up --docker-path podman --docker-compose-path podman-compose \
-  --workspace-folder /mnt/wsl/ygg-spike/umbrella/leaf --config "$SPIKE/dc/devcontainer.json"
+  --workspace-folder /mnt/wsl/ygg-bind/leaf --config "$SPIKE/dc/devcontainer.json"
+```
+
+### `probe.sh` (item 1, run in `work` with `podman exec -i dc_work_1 bash < probe.sh`)
+
+```bash
+#!/bin/bash
+# Egress and access probes, run inside the work container.
+echo "CapEff: $(awk '/^CapEff/{print $2}' /proc/self/status)"
+curl -s -m 5 -o /dev/null http://example.com && echo example-REACHED || echo example-blocked
+code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -I https://api.anthropic.com) ; echo "anthropic-http-$code"
+(exec 3<>/dev/tcp/db/5432) 2>/dev/null && echo db-reachable || echo db-UNREACHABLE
+(exec 3<>/dev/tcp/s3/8333) 2>/dev/null && echo s3-reachable || echo s3-UNREACHABLE
+cd /u/leaf && git log -1 --format='git-ok %s' 2>&1
+touch /u/leaf/.owner-probe && echo "probe-written uid=$(stat -c %u /u/leaf/.owner-probe)"
 ```
 
 The spike installed `iptables` in `fw` at run time. A real image would ship it.
