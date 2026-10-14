@@ -102,6 +102,7 @@ with a test, until a row here moves it.
 | Move repo creation and protection from `ouroboric/scripts/create-repo.sh` and `setup-repo.sh` into the `github` remote, then delete the scripts | the `github` remote is iteration 2 (spec §15.1) | `remote-creates-repos-T002` |
 | Require the founder's review on every PR, with `CODEOWNERS` and `require_code_owner_review`, so a bot's approval never counts | the pr-bot can approve PRs other people open; external contributions are rare in v0 | a reviewed change to `setup-repo.sh`, before the first external contribution is accepted |
 | Move the component scaffold from `ouroboric/scripts/scaffold-component.sh` and `scripts/templates/go-component/` into Odin's `init`, as a Go component template set, then delete the script | `init` scaffolds leaves from realm templates (spec §4.2); scaffolding Yggdrasil's own components with it is self-hosting (spec §15.4) | a task in the first self-hosting stage's plan, which passes `scaffold-component.test.sh`'s cases |
+| Per-container resource limits (memory, processes, CPU) in the sandbox | the Podman machine's rootless engine has no cgroup controllers, because the machine runs without systemd (sandbox spike, decided 2026-10-14); v0 relies on the token and turn caps, plus a `.wslconfig` limit for WSL as a whole | the sandbox driver's move to a host with systemd or Kubernetes (spec §2: "k8s, hosted later"), with a test that a run over its memory limit is stopped |
 
 ## Risks
 
