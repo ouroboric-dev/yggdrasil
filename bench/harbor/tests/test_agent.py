@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 from harbor.agents.factory import AgentFactory
+from harbor.agents.installed.base import NonZeroAgentExitCodeError
 from harbor.environments.base import ExecResult
 from harbor.models.agent.context import AgentContext
 
@@ -67,8 +68,9 @@ def world(tmp_path, monkeypatch):
 def make_agent(world, script, **options):
     (world.tmp / "script.json").write_text(json.dumps(script))
     command = f"{sys.executable} {FAKE_FACTORY} {world.tmp / 'script.json'} {world.tmp / 'transcript.jsonl'}"
-    logs = world.tmp / "logs"
-    logs.mkdir(exist_ok=True)
+    # Harbor's layout: logs_dir is <trial>/agent, which the task container mounts at /logs/agent.
+    logs = world.tmp / "trial" / "agent"
+    logs.mkdir(parents=True, exist_ok=True)
     return AgentFactory.create_agent_from_import_path(
         "ygg_harbor.agent:YggdrasilAgent", logs_dir=logs, command=command, **options
     )
@@ -243,7 +245,7 @@ def test_a_secret_in_the_final_app_fails_the_run(world, monkeypatch):
 
 def test_a_factory_that_exits_without_done_fails_the_run(world):
     agent = make_agent(world, [{"op": "exec", "command": "ls"}, {"exit": 3}])
-    with pytest.raises(RuntimeError, match="exited with 3"):
+    with pytest.raises(NonZeroAgentExitCodeError, match="exited with 3"):
         asyncio.run(agent.run("brief", world.env, AgentContext()))
 
 
@@ -264,9 +266,75 @@ def test_an_unknown_op_gets_an_error_reply_and_the_run_goes_on(world):
 def test_the_log_records_each_request_but_no_environment_values(world):
     script = [{"op": "exec", "command": "npm test", "env": {"DB_PASSWORD": "hunter2"}}, {"op": "done"}]
     agent, _ = run(world, script)
-    log = (agent.logs_dir / "bridge.jsonl").read_text()
+    log = (agent.logs_dir.parent / "yggdrasil" / "bridge.jsonl").read_text()
     entries = [json.loads(l) for l in log.splitlines()]
     assert [e["op"] for e in entries] == ["exec", "done"]
     assert entries[0]["command"] == "npm test" and entries[0]["return_code"] == 7
     assert "hunter2" not in log
-    assert (agent.logs_dir / "factory.stderr.log").exists()
+    assert (agent.logs_dir.parent / "yggdrasil" / "factory.stderr.log").exists()
+
+
+def all_text(folder: Path) -> str:
+    return "".join(f.read_text(errors="replace") for f in folder.rglob("*") if f.is_file())
+
+
+def test_a_refused_secret_reaches_no_log_and_the_container_mounted_folder_holds_no_log(world, monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", SECRET)
+    script = [{"op": "exec", "command": f"echo {SECRET} > /app/.env"}, {"stderr": f"key is {SECRET}"}, {"op": "done"}]
+    agent, _ = run(world, script)
+    assert list(agent.logs_dir.iterdir()) == []
+    host = agent.logs_dir.parent / "yggdrasil"
+    assert SECRET not in all_text(host)
+    assert "[redacted OPENROUTER_API_KEY]" in (host / "factory.stderr.log").read_text()
+
+
+def test_the_factory_s_children_die_with_it_on_a_timeout(world):
+    with pytest.raises(TimeoutError):
+        run(world, [{"spawn": 60}, {"sleep": 60}, {"op": "done"}], timeout=3)
+    lines = [json.loads(l) for l in (world.tmp / "transcript.jsonl").read_text().splitlines()]
+    child = next(l["child"] for l in lines if "child" in l)
+    assert not alive(child)
+
+
+def test_a_cancelled_run_kills_a_running_selfcheck(world, monkeypatch):
+    slow = world.tmp / "slow.sh"
+    slow.write_text(f"#!/bin/sh\necho $$ > {world.tmp}/selfcheck-pid\nexec sleep 60\n")
+    slow.chmod(0o755)
+    monkeypatch.setattr(agent_module, "SELFCHECK", str(slow))
+    with pytest.raises(TimeoutError):
+        run(world, [{"op": "selfcheck"}, {"op": "done"}], timeout=3)
+    assert not alive(int((world.tmp / "selfcheck-pid").read_text()))
+
+
+def test_a_line_that_is_not_a_request_gets_an_error_reply_and_the_run_goes_on(world):
+    _, context = run(world, [{"raw": "npm WARN deprecated"}, {"raw": "[1, 2]"}, {"op": "done"}])
+    _, _, replies = transcript(world)
+    assert replies[0]["ok"] is False and replies[1]["ok"] is False
+    assert context.metadata["stop_reason"] == "done"
+
+
+def test_done_ends_the_run_even_when_the_final_download_fails(world):
+    async def broken(source_dir, target_dir):
+        raise OSError("container is gone")
+
+    world.env.download_dir = broken
+    _, context = run(world, [{"op": "done"}])
+    assert context.metadata["stop_reason"] == "done"
+    assert context.metadata["selfcheck"]["passed"] is False
+    assert "container is gone" in context.metadata["selfcheck"]["detail"]
+
+
+def test_the_factory_gets_the_callers_container_settings_not_harbors(world, monkeypatch):
+    monkeypatch.setenv("DOCKER_HOST", "unix:///root.sock")
+    monkeypatch.setenv("CONTAINER_HOST", "unix:///root.sock")
+    monkeypatch.setenv("DOCKER_CONFIG", "/tools/config")
+    monkeypatch.setenv("REGISTRY_AUTH_FILE", "/tools/config/auth.json")
+    monkeypatch.setenv("PATH", "/tools/bin:/usr/bin:/bin")
+    monkeypatch.setenv("YGG_HARBOR_ORIG_ENV", json.dumps({
+        "DOCKER_HOST": None, "CONTAINER_HOST": "unix:///user.sock", "DOCKER_CONFIG": None,
+        "REGISTRY_AUTH_FILE": None, "PATH": "/usr/bin:/bin",
+    }))
+    run(world, [{"op": "done"}])
+    env = json.loads((world.tmp / "transcript.jsonl").read_text().splitlines()[0])["env"]
+    assert env == {"DOCKER_HOST": None, "CONTAINER_HOST": "unix:///user.sock", "DOCKER_CONFIG": None,
+                   "REGISTRY_AUTH_FILE": None, "PATH": "/usr/bin:/bin", "YGG_HARBOR_ORIG_ENV": None}

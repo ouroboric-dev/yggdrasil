@@ -27,6 +27,16 @@ bench/harbor/harbor-podman.sh exec uv run --project bench/harbor harbor run -p "
 The jobs folder must be under `/mnt/wsl`, where the Podman machine can see it. Containers write it
 as root, so empty it with a container before deleting it (see `tests/smoke.sh`).
 
+- **Logs:** the adapter writes `bridge.jsonl` and `factory.stderr.log` to `<trial>/yggdrasil/`, with
+  secret values redacted. It never writes to `<trial>/agent/`, which the task container mounts.
+- **The factory's environment:** the host's, with the caller's own `DOCKER_HOST`, `CONTAINER_HOST`,
+  `DOCKER_CONFIG`, `REGISTRY_AUTH_FILE` and `PATH` restored, so its sandboxes don't use the root
+  socket Harbor runs on.
+- **Hidden tests on the host:** during a graded run, the task copy's `tests/` folder (and any local
+  clone of the hidden suite) can be read by every process running as your user, the factory
+  included. The factory must run its agents sandboxed (plan Phase 3) before a graded run means
+  anything.
+
 ## Tests
 
 From the `yggdrasil` checkout:

@@ -40,7 +40,9 @@ baseline="$(podman diff "$NAME" | sort)"
 
 podman exec -u app -w /app "$NAME" "${CLEAN_ENV[@]}" /app/start.sh > "$LOG" 2>&1 &
 pid=$!
-answers() { [ "$(in_ctr curl -s -o /dev/null -m 3 -w '%{http_code}' "http://$1:3000/")" != 000 ]; }
+answers() { # any HTTP status counts; a probe that didn't run (no curl, an engine error) doesn't
+  [[ "$(in_ctr curl -s -o /dev/null -m 3 -w '%{http_code}' "http://$1:3000/" 2>/dev/null)" =~ ^[1-5][0-9][0-9]$ ]]
+}
 deadline=$((SECONDS + TIMEOUT)) served=false
 while [ $SECONDS -lt $deadline ]; do
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then

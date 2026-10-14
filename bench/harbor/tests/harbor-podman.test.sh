@@ -92,6 +92,10 @@ if [ "${YGG_TEST_ONLINE:-0}" = 1 ]; then
   DOCKER_HOST=unix:///run/other.sock "$HP" exec env > "$T/env" 2>&1
   check "online: an explicit DOCKER_HOST is kept and given to podman" \
     bash -c "grep -qx 'DOCKER_HOST=unix:///run/other.sock' '$T/env' && grep -qx 'CONTAINER_HOST=unix:///run/other.sock' '$T/env'"
+  env -u DOCKER_HOST CONTAINER_HOST=unix:///user.sock "$HP" exec python3 -c \
+    'import json, os; print(json.dumps(json.loads(os.environ["YGG_HARBOR_ORIG_ENV"]), sort_keys=True))' > "$T/orig" 2>&1
+  check "online: exec records the caller's container settings for the factory" \
+    python3 -c "import json,os,sys; o=json.load(open('$T/orig')); sys.exit(not (o['DOCKER_HOST'] is None and o['CONTAINER_HOST']=='unix:///user.sock' and o['PATH']==os.environ['PATH'] and set(o)=={'DOCKER_HOST','CONTAINER_HOST','DOCKER_CONFIG','REGISTRY_AUTH_FILE','PATH'}))"
   "$HP" exec harbor run -p x -o /mnt/wsl/ygg-test-jobs > "$T/out" 2>&1; rc=$?
   check "online: a jobs folder under /mnt/wsl passes the check" bash -c "! grep -q 'must be under /mnt/wsl' '$T/out'"
 fi

@@ -67,6 +67,13 @@ app slow "sleep 30; $serve"
 run slow 5
 check "nothing on port 3000 within the timeout fails" bash -c "[ $rc = 1 ] && grep -q '^FAIL.*3000' '$T/out'"
 
+# A probe that never runs (curl missing, an engine error) must not count as an answer.
+mkdir -p "$T/nocurl-bin"
+printf '#!/bin/bash\nfor a in "$@"; do [ "$a" = curl ] && exit 127; done\nexec %s "$@"\n' "$(command -v podman)" \
+  > "$T/nocurl-bin/podman" && chmod +x "$T/nocurl-bin/podman"
+PATH="$T/nocurl-bin:$PATH" SELFCHECK_TIMEOUT=10 "$SC" "$IMAGE" "$T/good" > "$T/out" 2>&1; rc=$?
+check "a probe that can't run fails instead of passing" bash -c "[ $rc = 1 ] && grep -q '^FAIL' '$T/out'"
+
 "$SC" "$IMAGE" "$T/does-not-exist" > "$T/out" 2>&1; rc=$?
 check "a missing app folder is a usage error" bash -c "[ $rc = 2 ]"
 

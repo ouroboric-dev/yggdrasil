@@ -107,6 +107,11 @@ run_exec() {
   fi
   [ -f "$TOOLS/bin/docker-compose" ] || die 1 "no Compose in $TOOLS/bin; run harbor-podman.sh setup"
   check_compose "$TOOLS/bin/docker-compose"
+  # The caller's own settings, so the Harbor adapter gives them back to the factory: its sandboxes
+  # must not land on the root socket Harbor uses (ygg_harbor/agent.py, ORIG_ENV).
+  YGG_HARBOR_ORIG_ENV="$(python3 -c 'import json, os
+print(json.dumps({k: os.environ.get(k) for k in ["DOCKER_HOST", "CONTAINER_HOST", "DOCKER_CONFIG", "REGISTRY_AUTH_FILE", "PATH"]}))')"
+  export YGG_HARBOR_ORIG_ENV
   tool_env
   exec "$@"
 }
