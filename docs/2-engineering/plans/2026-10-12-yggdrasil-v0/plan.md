@@ -32,7 +32,8 @@ Gungnir holds every interface and schema (spec §2).
 
 The plan is split into phases. **Phase 0's tasks are written in full in [tasks.md](tasks.md).** Each
 later phase gets its own `tasks.md` (in a dated folder next to this one) when the phase before it is
-done. Two reasons:
+done: Phase 1's is [2026-10-15-yggdrasil-v0-phase-1/tasks.md](../2026-10-15-yggdrasil-v0-phase-1/tasks.md).
+Two reasons:
 
 - **The spike can change the design.** Phase 0 answers the open items of spec §16. If the
   devcontainer driver fails on rootless Podman, the fallback is a plain Podman driver (spec §16), and
