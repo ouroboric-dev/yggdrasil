@@ -2,7 +2,7 @@
 title: Yggdrasil v0 implementation plan
 status: accepted
 date: 2026-10-12
-related: [tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../changes/2026-10-12-require-budget-caps/proposal.md, ../../changes/2026-10-12-remote-creates-repos/proposal.md, ../../changes/2026-10-14-benchmark-split/proposal.md]
+related: [tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../changes/2026-10-12-require-budget-caps/proposal.md, ../../changes/2026-10-12-remote-creates-repos/proposal.md, ../../changes/2026-10-14-benchmark-split/proposal.md, ../../changes/2026-10-15-factory-issues/proposal.md]
 style: spec
 ---
 

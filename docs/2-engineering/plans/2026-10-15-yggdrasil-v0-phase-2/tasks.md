@@ -31,7 +31,9 @@ drives it end to end, and a scripted agent tries the git escapes.
 **Spec:** [v0 engineering spec](../../specs/2026-10-11-yggdrasil-v0-spec.md) §2.2, §3, §4.1, §4.3,
 §4.5, §7, §8.3, §12, §13, §14, and the accepted change
 [remote creates repos](../../changes/2026-10-12-remote-creates-repos/tasks.md), whose
-`remote-creates-repos-T001` is done here, in v0-T039, v0-T046 and v0-T053.
+`remote-creates-repos-T001` is done here, in v0-T039, v0-T046 and v0-T053, and the change
+[factory issues](../../changes/2026-10-15-factory-issues/proposal.md), whose rules about operators'
+projects this phase follows (decision 19).
 
 **Status:** accepted when the founder merges the pull request that adds this file.
 
@@ -72,10 +74,11 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
    requests and merges when it exists.
 5. **The local remote creates a leaf in place**, in its parent umbrella: a new repo whose one commit
    holds the realm's first-commit files, added as a submodule with a relative URL, its git dir moved
-   into the parent's `.git/modules/`, and recorded in `umbrella.yaml`, with one parent commit. A clone
-   of the parent elsewhere can't fetch it: the local remote keeps repos on this host only. `Protect`
-   reports that it doesn't apply. The local remote needs no admin rights, so no `repo-admin` stop
-   (as the change proposal says).
+   into the parent's `.git/modules/`, and recorded in `umbrella.yaml`, with one parent commit. The
+   submodule's URL is the relative path, so an operator who pushes the tree (decision 19) first
+   creates the leaf's own repo and points the submodule at it with `git submodule set-url`; the
+   `github` remote (iteration 2) will do both itself. `Protect` reports that it doesn't apply. The
+   local remote needs no admin rights, so no `repo-admin` stop (as the change proposal says).
 6. **A run creates the leaves its project lacks when it starts** (spec §4.1 step 1), through `Remote`,
    before any node runs. A pack declares its leaves:
    `leaves: { <path>: { description, template, first_commit } }`. The web realm's `init` node (Phase 5)
@@ -124,8 +127,9 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
     comes with the sandbox in Phase 3. Until then only the `scripted` adapter makes checkpoints, in
     tests.
 15. **L0** (v0-H06) is the founder's private repo `ouroboric-dev/instance`, which the pr-bot is never
-    installed on, with its local clone at `/home/brunogbv/brunogbv/ouroboric-instance`, outside
-    `~/brunogbv/ouroboric`, which agents search. Its `benchmarks/` submodule (huldra) is a pin only:
+    installed on; hosting it on GitHub is the founder's own choice as an operator (decision 19). Its
+    local clone is at `/home/brunogbv/brunogbv/ouroboric-instance`, outside `~/brunogbv/ouroboric`,
+    which agents search. Its `benchmarks/` submodule (huldra) is a pin only:
     it is never checked out on this host, and the grader (Phase 5) reads huldra from its own clone.
     **For the founder to confirm the name and place.**
 16. **Phase 1 follow-ups**, from its ledger, fold in here:
@@ -146,6 +150,13 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 17. **Sizes count insertions**, as git reports them.
 18. **odin's Phase 2 pull request pins `gungnir` in its first commit**, v0-T043, once gungnir's Phase 2
     pull request is merged (Phase 1 decision 2).
+19. **Operators' projects stay theirs** (change factory-issues). Odin writes only to the operator's
+    instance tree: L0, its projects and their leaves. `yggdrasil` and its components keep no
+    reference to an operator's projects, and no run ever commits, pushes or opens a pull request
+    against them. The tree uses git as usual by default, with its repos hosted where the operator
+    chooses; keeping a project on one host is the operator's choice. In v0 Odin commits locally only,
+    and an operator pushes the tree with git; Odin pushing and opening pull requests come with the
+    `github` remote (spec §15.1, iteration 2).
 
 ## Global constraints
 
@@ -230,7 +241,8 @@ The `github` remote, its `repo-admin` stop and the move of `create-repo.sh` and 
 checkpoints, and `doctor`'s container and process checks (Phase 3); loops, retries and findings
 (Phase 4); routing bundles, `REPOS.md` and its generator, the impact index and `pointer-contract`
 decisions, the planner's scratch directory, `init` scaffolding and `features.json` (Phase 5); moving
-pointers more than one level in a step, which spec §3.4 lets the operator allow explicitly (later).
+pointers more than one level in a step, which spec §3.4 lets the operator allow explicitly (later);
+the issue forms and settings of the change factory-issues, which aren't tied to a phase.
 
 ## How each task lands
 
