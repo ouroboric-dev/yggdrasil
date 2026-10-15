@@ -28,6 +28,9 @@ that holds products, which is the shape Asgard's company trees have, is the nest
 
 - **The default tree is a project**: the project umbrella is the root, its leaves below it. A company
   umbrella above projects is allowed, for Asgard and for any operator who wants one.
+- **A project MAY hold sub-projects.** Company-shaped work, many products under one roof, is better
+  done with Asgard, and the docs say so. Nesting stays open anyway, because people exploring it may
+  teach the factory something.
 - **What L0 held goes elsewhere:**
   - **The factory version** a project runs with is recorded on every run's report (spec §10.2), and
     pinned at the project's root once there are releases to pin. A version, not a `yggdrasil`

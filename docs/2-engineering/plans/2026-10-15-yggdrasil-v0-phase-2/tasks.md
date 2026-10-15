@@ -132,7 +132,9 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 15. **A project is its own tree** (change project-is-its-own-tree). An operator has no L0 above
     their projects: by default a project umbrella is the tree's root, with its leaves below. A company
     umbrella holding products, Asgard's shape, is the nested case, and the code walks it the same
-    way. So Phase 2 creates no L0, and the plan's earlier founder task for one is dropped; the client
+    way. A project MAY also hold sub-projects: company-shaped work is better done with Asgard, but
+    nesting stays open, because exploring it may teach something (a run in a sub-project is tested in
+    v0-T051). So Phase 2 creates no L0, and the plan's earlier founder task for one is dropped; the client
     gallery's project is created in Phase 5. What L0 held goes elsewhere: the factory version a
     project runs with is recorded on each run's report (Phase 6) and pinned at the project's root once
     there are releases; the benchmarks belong to the bench (`mimir`, `huldra`), never to an operator's
@@ -1803,7 +1805,7 @@ test: each node a repo with its own bare remote, the root cloned without submodu
 - [ ] A submodule URL that runs a command (`ext::sh -c …`) is refused before git sees it; the command
       never runs.
 
-**Named test:** `go test ./internal/tree/`. **Layer:** `odin`. **Size:** M (397). **Depends on:**
+**Named test:** `go test ./internal/tree/`. **Layer:** `odin`. **Size:** M (399). **Depends on:**
 v0-T043.
 
 - [ ] **Step 1:** write `internal/tree/treetest/treetest.go`:
@@ -2243,7 +2245,7 @@ fixture proves the walker has no fixed depth (spec §3.1).
       none of them and checks nothing out; a public project's private leaf shows in `Leaks`.
 - [ ] A child an umbrella lists but `.gitmodules` lacks is refused.
 
-**Named test:** `go test ./internal/tree/`. **Layer:** `odin`. **Size:** M (106). **Depends on:**
+**Named test:** `go test ./internal/tree/`. **Layer:** `odin`. **Size:** M (107). **Depends on:**
 v0-T044.
 
 - [ ] **Step 1:** apply to `internal/tree/treetest/treetest.go`:
@@ -3912,7 +3914,8 @@ A run's project is an umbrella of an instance tree, and every node that does wor
   `Repos map[string]tree.Node` and `Leaves() []string`; `run.Run` gains `RepoDir(repo) string`,
   `Leaf(repo) (*leaf.Leaf, error)` and `Home() string`, and loses `Workspace()`; `run.State` gains
   `Root` and `ProjectPath`, and `run.StateSchema` is `ygg.run/v2`;
-  `treetest.Project(t, leaves ...string) string`: a project that is its own tree's root (decision 15).
+  `treetest.Project(t, leaves ...string) string`: a project that is its own tree's root (decision 15);
+  `treetest.SubProject(t, leaves ...string) (root, sub string)`: a project holding a sub-project.
 
 **Acceptance criteria:**
 - [ ] A run starts only in a project umbrella inside an instance tree; outside one it is refused with
@@ -3920,18 +3923,19 @@ A run's project is an umbrella of an instance tree, and every node that does wor
 - [ ] Prepare resolves each node's repo, checking out only those, and refuses a node with no repo, an
       agent in an umbrella, a repo the project lacks, and a check the pack doesn't define.
 - [ ] Exec and agent nodes work in their repo, and an exec node's `HOME` is the run's `home/`.
-- [ ] `run.json` records the root and the project's path.
+- [ ] `run.json` records the root and the project's path, and a run in a sub-project finds the root
+      above it and works in the sub-project's own leaves.
 - [ ] The toy realm's nodes name `repos/app`, and every Phase 1 test passes on tree fixtures.
 
 **Named test:** `go test ./internal/run/ ./internal/engine/ ./internal/cli/`. **Layer:** `odin`.
-**Size:** M (327; most of the 104 deleted lines are the tests' project setup, rewritten).
+**Size:** M (355; most of the deleted lines are the tests' project setup, rewritten).
 **Depends on:** v0-T045.
 
 - [ ] **Step 1:** apply to `internal/tree/treetest/treetest.go`:
 
 ```diff
 diff --git a/internal/tree/treetest/treetest.go b/internal/tree/treetest/treetest.go
-index 9de5827..5ae1f4d 100644
+index 9de5827..345c2c2 100644
 --- a/internal/tree/treetest/treetest.go
 +++ b/internal/tree/treetest/treetest.go
 @@ -47,6 +47,17 @@ func Deep() Node {
@@ -3952,6 +3956,24 @@ index 9de5827..5ae1f4d 100644
  // Build makes the tree's repos and returns the path of a fresh clone of the root, with no
  // submodule initialised.
  func Build(t *testing.T, root Node) string {
+@@ -112,3 +123,17 @@ func write(t *testing.T, path, body string) {
+ 		t.Fatal(err)
+ 	}
+ }
++
++// SubProject builds a project that holds a sub-project, projects/sub, with the given leaves, and
++// returns the root and the sub-project's directory, checked out. A project MAY hold sub-projects
++// (change project-is-its-own-tree), though company-shaped work belongs in Asgard.
++func SubProject(t *testing.T, leaves ...string) (root, sub string) {
++	t.Helper()
++	child := Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{}}
++	for _, l := range leaves {
++		child.Children[l] = Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Leaf: true}
++	}
++	root = Build(t, Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{"projects/sub": child}})
++	run(t, context.Background(), root, "submodule", "update", "--init", "--", "projects/sub")
++	return root, filepath.Join(root, "projects", "sub")
++}
 ```
 
 write `internal/run/tree_test.go`:
@@ -4050,6 +4072,23 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: Prepare() = %v, want an error containing %q", name, err, c.want)
 		}
+	}
+}
+
+// A project MAY hold sub-projects (change project-is-its-own-tree): a run in one finds the root
+// above it, and works in the sub-project's own leaves.
+func TestARunWorksInASubProject(t *testing.T) {
+	root, sub := treetest.SubProject(t, "repos/app")
+	r, err := Start(ctx, Options{Project: sub, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
+	if err != nil {
+		t.Fatalf("Start() in a sub-project = %v", err)
+	}
+	defer r.Close()
+	if r.State.Root != root || r.State.ProjectPath != "projects/sub" {
+		t.Errorf("run.json places the run at %q in %s, want projects/sub in %s", r.State.ProjectPath, r.State.Root, root)
+	}
+	if got := r.RepoDir("repos/app"); got != filepath.Join(sub, "repos", "app") {
+		t.Errorf("the run works in %s, want the sub-project's own leaf", got)
 	}
 }
 ```
@@ -4957,7 +4996,7 @@ recorded as failed (decision 16).
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index 9e74aaa..e5c27e6 100644
+index b84fef7..45b9a1e 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -8,6 +8,7 @@ import (
@@ -4998,11 +5037,10 @@ index 9e74aaa..e5c27e6 100644
  	if s.Root != project || s.ProjectPath != "" {
  		t.Errorf("run.json places the run at %s in %s", s.ProjectPath, s.Root)
  	}
-@@ -93,3 +98,23 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
- 		}
+@@ -94,6 +99,26 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
  	}
  }
-+
+ 
 +func TestAFailureAfterTheRunStartedIsRecorded(t *testing.T) {
 +	project := treetest.Project(t, "repos/app")
 +	nodes, err := tree.Resolve(ctx, project, "repos/app")
@@ -5022,6 +5060,10 @@ index 9e74aaa..e5c27e6 100644
 +		t.Errorf("run.json = %+v, %v; want the run recorded as failed, with why", s, err)
 +	}
 +}
++
+ // A project MAY hold sub-projects (change project-is-its-own-tree): a run in one finds the root
+ // above it, and works in the sub-project's own leaves.
+ func TestARunWorksInASubProject(t *testing.T) {
 ```
 
 - [ ] **Step 2:** run `go test ./internal/run/`; expect a build failure:
@@ -5186,7 +5228,7 @@ The Odin half of `remote-creates-repos-T001`, its `init` criterion (decision 6).
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index e5c27e6..6beea19 100644
+index 45b9a1e..c5e753a 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -74,7 +74,7 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
@@ -5198,11 +5240,10 @@ index e5c27e6..6beea19 100644
  		"a check the pack lacks":    {"  - { id: m, kind: merge, repo: repos/app, checks: [lint] }\n", "doesn't define"},
  		"a pointer for an umbrella": {"  - { id: p, kind: pointer, repo: repos/app }\n  - { id: q, kind: pointer, repo: sub }\n", "the project lacks"},
  	}
-@@ -118,3 +118,35 @@ func TestAFailureAfterTheRunStartedIsRecorded(t *testing.T) {
- 		t.Errorf("run.json = %+v, %v; want the run recorded as failed, with why", s, err)
+@@ -119,6 +119,38 @@ func TestAFailureAfterTheRunStartedIsRecorded(t *testing.T) {
  	}
  }
-+
+ 
 +func TestTheRealmCreatesTheLeavesAProjectLacks(t *testing.T) {
 +	project := treetest.Project(t) // no leaves yet
 +	commits, _ := git.Run(ctx, project, "rev-list", "--count", "HEAD")
@@ -5234,6 +5275,10 @@ index e5c27e6..6beea19 100644
 +		t.Error("the second run created the leaf again")
 +	}
 +}
++
+ // A project MAY hold sub-projects (change project-is-its-own-tree): a run in one finds the root
+ // above it, and works in the sub-project's own leaves.
+ func TestARunWorksInASubProject(t *testing.T) {
 ```
 
 - [ ] **Step 2:** run the named test; expect `TestTheRealmCreatesTheLeavesAProjectLacks` to fail with
@@ -5445,7 +5490,7 @@ Phase 1 follow-ups: `run.json` is checked when a run opens, and `status` no long
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index 6beea19..a834a90 100644
+index c5e753a..95d1592 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -8,6 +8,7 @@ import (
@@ -5456,11 +5501,10 @@ index 6beea19..a834a90 100644
  	"github.com/ouroboric-dev/odin/internal/git"
  	"github.com/ouroboric-dev/odin/internal/tree"
  	"github.com/ouroboric-dev/odin/internal/tree/treetest"
-@@ -150,3 +151,46 @@ func TestTheRealmCreatesTheLeavesAProjectLacks(t *testing.T) {
- 		t.Error("the second run created the leaf again")
+@@ -151,6 +152,49 @@ func TestTheRealmCreatesTheLeavesAProjectLacks(t *testing.T) {
  	}
  }
-+
+ 
 +func TestOneRunAdvancesAProjectAtATime(t *testing.T) {
 +	r := startToyRun(t, scriptedRoles+fullCaps)
 +	defer r.Close()
@@ -5503,6 +5547,10 @@ index 6beea19..a834a90 100644
 +		t.Error("Open() discarded a person's change")
 +	}
 +}
++
+ // A project MAY hold sub-projects (change project-is-its-own-tree): a run in one finds the root
+ // above it, and works in the sub-project's own leaves.
+ func TestARunWorksInASubProject(t *testing.T) {
 ```
 
 and to `internal/engine/engine_test.go`:
@@ -5981,14 +6029,13 @@ Two of decision 16's items.
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index a834a90..7f8e0f6 100644
+index 95d1592..ea1b776 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
-@@ -194,3 +194,37 @@ func TestOpenPutsLeavesBackAtTheirCheckpoints(t *testing.T) {
- 		t.Error("Open() discarded a person's change")
+@@ -195,6 +195,40 @@ func TestOpenPutsLeavesBackAtTheirCheckpoints(t *testing.T) {
  	}
  }
-+
+ 
 +func TestAStricterModeSwitchIsAllowed(t *testing.T) {
 +	r := startToyRun(t, "mode: unattended\ngates: { design: auto }\n"+scriptedRoles+fullCaps)
 +	id, project := r.State.ID, r.Project
@@ -6022,6 +6069,10 @@ index a834a90..7f8e0f6 100644
 +		t.Errorf("run.json records the planner's model as %q after the config changed, want other", got)
 +	}
 +}
++
+ // A project MAY hold sub-projects (change project-is-its-own-tree): a run in one finds the root
+ // above it, and works in the sub-project's own leaves.
+ func TestARunWorksInASubProject(t *testing.T) {
 ```
 
 - [ ] **Step 2:** run the named test; expect `TestAStricterModeSwitchIsAllowed` to fail with
@@ -7038,7 +7089,7 @@ leaves.
 - [ ] The README's Usage gives `--root` and how a run lives in the tree.
 
 **Named test:** `go test ./internal/cli/ -run 'TestDoctor|TestRunStopsAndApproveContinues'`.
-**Layer:** `odin`. **Size:** M (118). **Depends on:** v0-T057.
+**Layer:** `odin`. **Size:** M (119). **Depends on:** v0-T057.
 
 - [ ] **Step 1:** apply to `internal/cli/doctor_test.go`:
 

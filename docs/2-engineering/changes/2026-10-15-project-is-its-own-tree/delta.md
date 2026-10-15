@@ -11,7 +11,8 @@ style: spec
 ## Added
 
 - §3.1: a tree's root is the umbrella whose `umbrella.yaml` sets `root: true`. By default it is a
-  project umbrella. A company umbrella MAY hold projects; the engine walks either the same way.
+  project umbrella. A company umbrella MAY hold projects, and a project MAY hold sub-projects; the
+  engine walks every shape the same way. For company-shaped work the docs SHOULD point to Asgard.
 - §3.1: the list of an operator's projects, for `ygg board --all`, is local configuration on the
   operator's machine, not a repo.
 - §10.2: a run's report records the factory version it ran with (already required), and a project's

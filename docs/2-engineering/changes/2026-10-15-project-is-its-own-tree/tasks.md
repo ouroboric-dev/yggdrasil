@@ -14,6 +14,7 @@ style: spec
   - [ ] A project umbrella with `root: true` is a tree on its own: a run starts in it, and its leaves
         resolve below it.
   - [ ] A company umbrella above projects, and a deeper tree, still walk.
+  - [ ] A run in a sub-project finds the root above it and works in its own leaves.
   - [ ] No task creates an operator L0.
 - **Named test:** the Phase 2 plan's run tests (v0-T051 to v0-T055) on `treetest.Project`, a project
   that is its own root, and its tree tests (v0-T044, v0-T045) on a company umbrella.
