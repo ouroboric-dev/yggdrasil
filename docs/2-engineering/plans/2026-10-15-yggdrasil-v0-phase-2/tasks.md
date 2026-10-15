@@ -33,7 +33,9 @@ drives it end to end, and a scripted agent tries the git escapes.
 [remote creates repos](../../changes/2026-10-12-remote-creates-repos/tasks.md), whose
 `remote-creates-repos-T001` is done here, in v0-T039, v0-T046 and v0-T053, and the change
 [factory issues](../../changes/2026-10-15-factory-issues/proposal.md), whose rules about operators'
-projects this phase follows (decision 19).
+projects this phase follows (decision 19), and the change
+[a project is its own tree](../../changes/2026-10-15-project-is-its-own-tree/proposal.md), which
+replaces the operator's L0 (decision 15).
 
 **Status:** accepted when the founder merges the pull request that adds this file.
 
@@ -51,16 +53,16 @@ start with `+` are added, lines with `-` removed.
 
 Each line is **Decided 2026-10-15** when the founder merges this plan.
 
-1. **Tree metadata is `umbrella.yaml`.** Every umbrella (L0, a project, any deeper one) has an
-   `umbrella.yaml`, with a Gungnir schema: `root` (L0 only), `owner`, `visibility`, and its child
-   nodes by path, each `{ kind: umbrella | leaf, owner, visibility }`. Spec §3.1 says every node
-   records its owner and visibility; a node's record is in its parent, the root's in itself. A child
-   must also be a submodule at the same path. A submodule the umbrella doesn't list, such as L0's
-   `yggdrasil/` and `benchmarks/`, is not a node, and the walker never touches it. Odin writes the
-   file.
+1. **Tree metadata is `umbrella.yaml`.** Every umbrella (a project, a company umbrella above
+   projects, any deeper one) has an `umbrella.yaml`, with a Gungnir schema: `root` (the tree's top
+   only), `owner`, `visibility`, and its child nodes by path, each
+   `{ kind: umbrella | leaf, owner, visibility }`. Spec §3.1 says every node records its owner and
+   visibility; a node's record is in its parent, the root's in itself. A child must also be a
+   submodule at the same path. A submodule the umbrella doesn't list is not a node, and the walker
+   never touches it. Odin writes the file.
 2. **The visibility warning covers every umbrella.** Spec §3.1 names a public L0 that lists private
-   projects. A public umbrella at any level leaks its private children's names through `.gitmodules`
-   the same way, so `ygg doctor` warns for each one.
+   projects. A public umbrella at any level, a company umbrella or a project, leaks its private
+   children's names through `.gitmodules` the same way, so `ygg doctor` warns for each one.
 3. **Host git goes through one wrapper**, `odin/internal/git`. It runs with hooks and fsmonitor off;
    it ignores the operator's global and system git config and every `GIT_*` variable, so their
    hooks, URL rewrites and commit signing never apply; it allows only the https, ssh and file
@@ -84,9 +86,10 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
    `leaves: { <path>: { description, template, first_commit } }`. The web realm's `init` node (Phase 5)
    scaffolds into a leaf that exists, which meets remote-creates-repos-T001's "init creates each new
    leaf through Remote before scaffolding it".
-7. **A run lives in the instance tree.** `--project` must be an umbrella inside a tree: every umbrella
-   above it lists the one below, up to the one with `root: true`. Odin refuses anything outside the
-   tree (spec §4.3), because a resume resets leaves. Every exec and agent node names its `repo`, a
+7. **A run lives in the instance tree.** `--project` names a project umbrella. A project is usually
+   its own tree, its `umbrella.yaml` setting `root: true` (decision 15); inside a company umbrella,
+   every umbrella above it lists the one below, up to the one with `root: true`. Odin refuses
+   anything outside a tree (spec §4.3), because a resume resets leaves. Every exec and agent node names its `repo`, a
    path from the project (`.` is the project itself). Odin requires it; Gungnir keeps it optional,
    so odin's Phase 1 graphs still parse until odin's Phase 2 code lands. Agent, merge and pointer
    nodes work only in a leaf (spec §3.3 rule 1); an exec node may run in an umbrella, for Odin's own
@@ -126,12 +129,15 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 14. **Secret scanning before checkpoint commits** (spec §14, `gitleaks`) needs a container, so it
     comes with the sandbox in Phase 3. Until then only the `scripted` adapter makes checkpoints, in
     tests.
-15. **L0** (v0-H06) is the founder's own operator instance, so it lives outside `ouroboric-dev`, which
-    holds the company's factories and products: the private repo `brunogbv/l0`, on the founder's
-    account, which the pr-bot is never installed on. Hosting it on GitHub is the founder's choice as
-    an operator (decision 19). Its local clone is at `/home/brunogbv/brunogbv/l0`, outside
-    `~/brunogbv/ouroboric`, which agents search. Its `benchmarks/` submodule (huldra) is a pin only:
-    it is never checked out on this host, and the grader (Phase 5) reads huldra from its own clone.
+15. **A project is its own tree** (change project-is-its-own-tree). An operator has no L0 above
+    their projects: by default a project umbrella is the tree's root, with its leaves below. A company
+    umbrella holding products, Asgard's shape, is the nested case, and the code walks it the same
+    way. So Phase 2 creates no L0, and the plan's earlier founder task for one is dropped; the client
+    gallery's project is created in Phase 5. What L0 held goes elsewhere: the factory version a
+    project runs with is recorded on each run's report (Phase 6) and pinned at the project's root once
+    there are releases; the benchmarks belong to the bench (`mimir`, `huldra`), never to an operator's
+    tree; the list of an operator's projects, for `ygg board --all`, is local configuration
+    (Phase 6).
 16. **Phase 1 follow-ups**, from its ledger, fold in here:
     - a rejection always re-runs an agent: by default the nearest agent node before the gate, and an
       explicit `reruns` must name one, so the reason is never dropped;
@@ -151,7 +157,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 18. **odin's Phase 2 pull request pins `gungnir` in its first commit**, v0-T043, once gungnir's Phase 2
     pull request is merged (Phase 1 decision 2).
 19. **Operators' projects stay theirs** (change factory-issues). Odin writes only to the operator's
-    instance tree: L0, its projects and their leaves. `yggdrasil` and its components keep no
+    tree: the project, its leaves, and any umbrella the operator keeps above it. `yggdrasil` and its components keep no
     reference to an operator's projects, and no run ever commits, pushes or opens a pull request
     against them. The tree uses git as usual by default, with its repos hosted where the operator
     chooses; keeping a project on one host is the operator's choice. In v0 Odin commits locally only,
@@ -180,7 +186,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
   (2026-08-11).
 - **Licences.** `reuse lint` (`reuse==5.0.2`) passes in every repo a task touches.
 - **The hidden suite.** No agent reads, lists or searches `ouroboric-dev/huldra` or its clone under
-  `~/brunogbv/ouroboric-private/`, and no agent initialises L0's `benchmarks/`.
+  `~/brunogbv/ouroboric-private/`.
 - **Deletions** (`rm`, `git branch -D`) are asked for first, one per command, after a read-only check.
 
 ## Review focus
@@ -229,7 +235,6 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 | v0-T058 the command line | `odin` | M | v0-T057 |
 | v0-T059 the toy graph and the escape tests | `odin` | M | v0-T058 |
 | v0-T060 pointers and the exit check | `yggdrasil` | S | all above, merged |
-| v0-H06 (founder) the L0 instance umbrella | L0 | S | v0-T060 merged |
 
 Gungnir's four tasks go up as one pull request, one commit per task; odin's seventeen as one, opened
 once gungnir's is merged and pinned. Inside a repo the tasks stack on one branch.
@@ -242,7 +247,9 @@ checkpoints, and `doctor`'s container and process checks (Phase 3); loops, retri
 (Phase 4); routing bundles, `REPOS.md` and its generator, the impact index and `pointer-contract`
 decisions, the planner's scratch directory, `init` scaffolding and `features.json` (Phase 5); moving
 pointers more than one level in a step, which spec §3.4 lets the operator allow explicitly (later);
-the issue forms and settings of the change factory-issues, which aren't tied to a phase.
+the issue forms and settings of the change factory-issues, which aren't tied to a phase; pinning
+the factory version at a project's root, which waits for releases, and the local list of an
+operator's projects (Phase 6).
 
 ## How each task lands
 
@@ -567,7 +574,7 @@ import (
 	"github.com/ouroboric-dev/gungnir"
 )
 
-const l0 = `
+const company = `
 root: true
 owner: brunogbv
 visibility: private
@@ -577,7 +584,7 @@ children:
 `
 
 func TestParseUmbrella(t *testing.T) {
-	u, err := ParseUmbrella("umbrella.yaml", []byte(l0))
+	u, err := ParseUmbrella("umbrella.yaml", []byte(company))
 	if err != nil {
 		t.Fatalf("ParseUmbrella() = %v", err)
 	}
@@ -599,7 +606,7 @@ func TestParseUmbrella(t *testing.T) {
 }
 
 func TestUmbrellaLeaksPrivateChildrenOfAPublicUmbrella(t *testing.T) {
-	u, err := ParseUmbrella("umbrella.yaml", []byte(strings.Replace(l0, "visibility: private\nchildren", "visibility: public\nchildren", 1)))
+	u, err := ParseUmbrella("umbrella.yaml", []byte(strings.Replace(company, "visibility: private\nchildren", "visibility: public\nchildren", 1)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -632,7 +639,7 @@ func TestParseUmbrellaRefuses(t *testing.T) {
 
 func TestUmbrellaRoundTrips(t *testing.T) {
 	dir := t.TempDir()
-	u, err := ParseUmbrella("umbrella.yaml", []byte(l0))
+	u, err := ParseUmbrella("umbrella.yaml", []byte(company))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -661,7 +668,7 @@ func TestUmbrellaRoundTrips(t *testing.T) {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/ouroboric-dev/gungnir/schema/umbrella.schema.json",
   "title": "umbrella.yaml",
-  "description": "An umbrella of the instance tree: who owns it, who can see it, and its child nodes (spec §3.1). Only L0 sets root. Submodules not listed under children are not nodes.",
+  "description": "An umbrella of the instance tree: who owns it, who can see it, and its child nodes (spec §3.1). Only the top of the tree sets root: a project, or a company umbrella holding projects. Submodules not listed under children are not nodes.",
   "type": "object",
   "additionalProperties": false,
   "required": ["owner", "visibility"],
@@ -710,7 +717,7 @@ import (
 // Umbrella is an umbrella's umbrella.yaml (spec §3.1): who owns it, who can see it, and its child
 // nodes. Odin is its only writer.
 type Umbrella struct {
-	Root       bool               `yaml:"root,omitempty"` // L0, the top of the instance tree
+	Root       bool               `yaml:"root,omitempty"` // the top of the tree: a project, or a company umbrella holding projects
 	Owner      string             `yaml:"owner"`
 	Visibility gungnir.Visibility `yaml:"visibility"`
 	Children   map[string]Child   `yaml:"children,omitempty"` // path relative to the umbrella: child
@@ -1787,9 +1794,9 @@ test: each node a repo with its own bare remote, the root cloned without submodu
 
 **Acceptance criteria:**
 - [ ] `Resolve` checks out the path to its target and nothing else: not the sibling project, not the
-      sibling leaf, not `yggdrasil/` or `benchmarks/`.
+      sibling leaf, not the submodules that aren't nodes (`assets/`, `tools/`).
 - [ ] A leaf's git dir is its parent's `.git/modules/<name>`.
-- [ ] `FindRoot` finds L0 from a project, and refuses a directory outside any tree and one no
+- [ ] `FindRoot` finds the root from a project, and refuses a directory outside any tree and one no
       umbrella lists.
 - [ ] `Resolve` refuses a path no umbrella lists, a submodule that isn't a node, a path through a
       leaf, and a path that isn't clean.
@@ -1804,7 +1811,7 @@ v0-T043.
 ```go
 // Package treetest builds instance trees for tests: every node is a repo with its own bare
 // "remote" in a temporary directory, and the root is cloned without its submodules, as an operator
-// would clone L0.
+// would clone a project.
 package treetest
 
 import (
@@ -1825,14 +1832,15 @@ type Node struct {
 	Visibility gungnir.Visibility
 	Leaf       bool            // a leaf holds a README; an umbrella holds umbrella.yaml
 	Children   map[string]Node // path relative to this umbrella: child node
-	Plain      []string        // submodules that are not nodes, such as yggdrasil/ and benchmarks/ in L0
+	Plain      []string        // submodules that are not nodes, such as shared assets an umbrella vendors
 }
 
-// Standard is L0 → L1 → L2: two projects, one public with a private leaf, and the factory and
-// benchmarks submodules, which are not nodes.
+// Standard is a company umbrella over two projects and their leaves, the shape Asgard's company
+// trees have: one project is public with a private leaf, and assets/ and tools/ are submodules
+// that are not nodes.
 func Standard() Node {
 	leaf := func(v gungnir.Visibility) Node { return Node{Owner: "ouroboric-dev", Visibility: v, Leaf: true} }
-	return Node{Owner: "brunogbv", Visibility: gungnir.VisibilityPrivate, Plain: []string{"yggdrasil", "benchmarks"},
+	return Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Plain: []string{"assets", "tools"},
 		Children: map[string]Node{
 			"projects/gallery": {Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{
 				"repos/api": leaf(gungnir.VisibilityPrivate), "repos/web": leaf(gungnir.VisibilityPrivate)}},
@@ -1961,7 +1969,7 @@ func TestResolveChecksOutOnlyThePath(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(leaf.Dir, "README.md")); err != nil {
 		t.Errorf("the leaf isn't checked out: %v", err)
 	}
-	for _, s := range [][2]string{{root, "projects/site"}, {root, "benchmarks"}, {root, "yggdrasil"},
+	for _, s := range [][2]string{{root, "projects/site"}, {root, "assets"}, {root, "tools"},
 		{filepath.Join(root, "projects/gallery"), "repos/web"}} {
 		if initialised(t, s[0], s[1]) {
 			t.Errorf("%s was initialised; only the path to the target may be (spec §3.3 rule 6)", s[1])
@@ -1978,7 +1986,7 @@ func TestFindRoot(t *testing.T) {
 		t.Errorf("FindRoot(L1) = %q, %q, %v", got, rel, err)
 	}
 	if got, rel, err := FindRoot(ctx, root); err != nil || got != root || rel != "" {
-		t.Errorf("FindRoot(L0) = %q, %q, %v", got, rel, err)
+		t.Errorf("FindRoot(root) = %q, %q, %v", got, rel, err)
 	}
 	outside := t.TempDir()
 	if _, _, err := FindRoot(ctx, outside); err == nil || !strings.Contains(err.Error(), "not inside an instance tree") {
@@ -1997,7 +2005,7 @@ func TestResolveRefuses(t *testing.T) {
 	root := treetest.Build(t, treetest.Standard())
 	cases := map[string]struct{ path, want string }{
 		"a path no umbrella lists":   {"projects/blog", "lists no child"},
-		"a submodule that's no node": {"benchmarks", "lists no child"},
+		"a submodule that's no node": {"assets", "lists no child"},
 		"a path through a leaf":      {"projects/gallery/repos/api/vendor/x", "is a leaf"},
 		"a path that climbs":         {"projects/../projects/gallery", "not a clean path"},
 	}
@@ -2006,8 +2014,8 @@ func TestResolveRefuses(t *testing.T) {
 			t.Errorf("%s: Resolve(%q) = %v, want an error containing %q", name, c.path, err, c.want)
 		}
 	}
-	if initialised(t, root, "benchmarks") {
-		t.Error("a refused Resolve initialised benchmarks/")
+	if initialised(t, root, "assets") {
+		t.Error("a refused Resolve initialised assets/")
 	}
 }
 
@@ -2035,8 +2043,9 @@ func TestResolveRefusesAMaliciousSubmoduleURL(t *testing.T) {
 ```go
 // Package tree walks the instance tree (spec §3.1): umbrellas, which list their child nodes in
 // umbrella.yaml, and leaves. It walks any depth, and checks out only the submodules on the path to
-// the node it is asked for (spec §3.3 rule 6). Submodules an umbrella doesn't list as children,
-// such as L0's yggdrasil/ and benchmarks/, are never touched.
+// the node it is asked for (spec §3.3 rule 6). Submodules an umbrella doesn't list as children
+// are not nodes, and are never touched. A tree's root is the umbrella with root: true: a project,
+// or a company umbrella holding projects.
 package tree
 
 import (
@@ -2228,8 +2237,8 @@ fixture proves the walker has no fixed depth (spec §3.1).
 - Produces: `tree.Walk(ctx, root, fn func(Node) error) error`, and `treetest.Deep()`.
 
 **Acceptance criteria:**
-- [ ] `Resolve` walks the deeper fixture, L0 → project → `services/backend` → `repos/api`, and
-      `FindRoot` finds L0 from that leaf.
+- [ ] `Resolve` walks the deeper fixture, a company umbrella → project → `services/backend` →
+      `repos/api`, and `FindRoot` finds the root from that leaf.
 - [ ] `Walk` visits checked-out nodes in path order, reports the others with `Present` false, enters
       none of them and checks nothing out; a public project's private leaf shows in `Leaks`.
 - [ ] A child an umbrella lists but `.gitmodules` lacks is refused.
@@ -2241,16 +2250,17 @@ v0-T044.
 
 ```diff
 diff --git a/internal/tree/treetest/treetest.go b/internal/tree/treetest/treetest.go
-index 7e82b57..b78c301 100644
+index da6385d..9de5827 100644
 --- a/internal/tree/treetest/treetest.go
 +++ b/internal/tree/treetest/treetest.go
-@@ -37,6 +37,14 @@ func Standard() Node {
+@@ -38,6 +38,15 @@ func Standard() Node {
  		}}
  }
  
-+// Deep has an extra umbrella level: L0 → projects/gallery → services/backend → repos/api (spec §3.1).
++// Deep has an extra umbrella level: company → projects/gallery → services/backend → repos/api
++// (spec §3.1).
 +func Deep() Node {
-+	return Node{Owner: "brunogbv", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{
++	return Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{
 +		"projects/gallery": {Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{
 +			"services/backend": {Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{
 +				"repos/api": {Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Leaf: true}}}}}}}
@@ -2265,7 +2275,7 @@ and to `internal/tree/tree_test.go`:
 
 ```diff
 diff --git a/internal/tree/tree_test.go b/internal/tree/tree_test.go
-index 287b3b2..e94bda6 100644
+index c29b302..a6f3975 100644
 --- a/internal/tree/tree_test.go
 +++ b/internal/tree/tree_test.go
 @@ -56,6 +56,24 @@ func TestResolveChecksOutOnlyThePath(t *testing.T) {
@@ -2355,10 +2365,10 @@ index 287b3b2..e94bda6 100644
 
 ```diff
 diff --git a/internal/tree/tree.go b/internal/tree/tree.go
-index 9f994e0..8309ada 100644
+index 567df1f..2bd7eed 100644
 --- a/internal/tree/tree.go
 +++ b/internal/tree/tree.go
-@@ -104,6 +104,35 @@ func Resolve(ctx context.Context, root, rel string) ([]Node, error) {
+@@ -105,6 +105,35 @@ func Resolve(ctx context.Context, root, rel string) ([]Node, error) {
  	return nodes, nil
  }
  
@@ -3595,7 +3605,7 @@ Spec §3.4 and decision 13: one level, under the parent's lock.
   is empty when the pointer was already there), and `pointer.Refused{Why string; Err error}`.
 
 **Acceptance criteria:**
-- [ ] A move commits in the parent only, with the given message; L0 gets no commit (one level); a
+- [ ] A move commits in the parent only, with the given message; the root gets no commit (one level); a
       second move to the same commit commits nothing.
 - [ ] Failing leaf checks or acceptance checks refuse the move, and the pointer stays.
 - [ ] A generated file under half its rows is a `*shrink.Error` and nothing moves; with `SkipShrink`
@@ -3692,7 +3702,7 @@ func TestMoveCommitsOneLevelOnly(t *testing.T) {
 		t.Errorf("commit message = %q", msg)
 	}
 	if count(t, root) != rootCommits {
-		t.Error("the move committed in L0 too; a move spans one level (spec §3.4)")
+		t.Error("the move committed in the root too; a move spans one level (spec §3.4)")
 	}
 	if again, err := Move(ctx, spec); err != nil || again.Commit != "" {
 		t.Errorf("a second Move() to the same commit = %+v, %v; want no commit", again, err)
@@ -3902,7 +3912,7 @@ A run's project is an umbrella of an instance tree, and every node that does wor
   `Repos map[string]tree.Node` and `Leaves() []string`; `run.Run` gains `RepoDir(repo) string`,
   `Leaf(repo) (*leaf.Leaf, error)` and `Home() string`, and loses `Workspace()`; `run.State` gains
   `Root` and `ProjectPath`, and `run.StateSchema` is `ygg.run/v2`;
-  `treetest.Project(t, leaves ...string) (root, project string)`.
+  `treetest.Project(t, leaves ...string) string`: a project that is its own tree's root (decision 15).
 
 **Acceptance criteria:**
 - [ ] A run starts only in a project umbrella inside an instance tree; outside one it is refused with
@@ -3921,25 +3931,22 @@ A run's project is an umbrella of an instance tree, and every node that does wor
 
 ```diff
 diff --git a/internal/tree/treetest/treetest.go b/internal/tree/treetest/treetest.go
-index b78c301..824572f 100644
+index 9de5827..5ae1f4d 100644
 --- a/internal/tree/treetest/treetest.go
 +++ b/internal/tree/treetest/treetest.go
-@@ -45,6 +45,20 @@ func Deep() Node {
+@@ -47,6 +47,17 @@ func Deep() Node {
  				"repos/api": {Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Leaf: true}}}}}}}
  }
  
-+// Project builds L0 with one project umbrella, projects/toy, which has the given leaves (path from
-+// the project), checks the project out, and returns the root and the project's directory. The
-+// leaves stay unchecked-out, as in a fresh clone.
-+func Project(t *testing.T, leaves ...string) (root, project string) {
++// Project builds a project umbrella that is its own tree's root, with the given leaves (path from
++// the project), and returns its fresh clone. The leaves stay unchecked-out, as in a fresh clone.
++func Project(t *testing.T, leaves ...string) string {
 +	t.Helper()
-+	toy := Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{}}
++	project := Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{}}
 +	for _, l := range leaves {
-+		toy.Children[l] = Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Leaf: true}
++		project.Children[l] = Node{Owner: "ouroboric-dev", Visibility: gungnir.VisibilityPrivate, Leaf: true}
 +	}
-+	root = Build(t, Node{Owner: "brunogbv", Visibility: gungnir.VisibilityPrivate, Children: map[string]Node{"projects/toy": toy}})
-+	run(t, context.Background(), root, "submodule", "update", "--init", "--", "projects/toy")
-+	return root, filepath.Join(root, "projects", "toy")
++	return Build(t, project)
 +}
 +
  // Build makes the tree's repos and returns the path of a fresh clone of the root, with no
@@ -3967,7 +3974,7 @@ import (
 // startToyRun starts a toy run in a fresh project and returns it, open.
 func startToyRun(t *testing.T, config string) *Run {
 	t.Helper()
-	_, project := treetest.Project(t, "repos/app")
+	project := treetest.Project(t, "repos/app")
 	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), config), Realm: toy(t)})
 	if err != nil {
 		t.Fatalf("Start() = %v", err)
@@ -3976,25 +3983,25 @@ func startToyRun(t *testing.T, config string) *Run {
 }
 
 func TestARunFindsItsProjectAndReposInTheTree(t *testing.T) {
-	root, project := treetest.Project(t, "repos/app")
+	project := treetest.Project(t, "repos/app")
 	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
 	if err != nil {
 		t.Fatalf("Start() = %v", err)
 	}
 	id := r.State.ID
 	r.Close()
-	nodes, err := tree.Resolve(ctx, root, "projects/toy/repos/app")
+	nodes, err := tree.Resolve(ctx, project, "repos/app")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.RepoDir("repos/app") != nodes[2].Dir || r.RepoDir(".") != project {
+	if r.RepoDir("repos/app") != nodes[1].Dir || r.RepoDir(".") != project {
 		t.Errorf("the run's repos are %s and %s", r.RepoDir("repos/app"), r.RepoDir("."))
 	}
 	s, err := LoadState(Dir(project, id))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Root != root || s.ProjectPath != "projects/toy" {
+	if s.Root != project || s.ProjectPath != "" {
 		t.Errorf("run.json places the run at %s in %s", s.ProjectPath, s.Root)
 	}
 }
@@ -4017,7 +4024,7 @@ func TestStartRefusesAProjectOutsideTheTree(t *testing.T) {
 }
 
 func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
-	_, project := treetest.Project(t, "repos/app")
+	project := treetest.Project(t, "repos/app")
 	cases := map[string]struct{ nodes, want string }{
 		"a node with no repo":       {"  - { id: a, kind: exec, run: [echo] }\n", "names no repo"},
 		"an agent in the umbrella":  {"  - { id: a, kind: agent, role: planner, prompt: p.md, repo: . }\n", "is an umbrella"},
@@ -4051,7 +4058,7 @@ and move the tests that start runs onto the fixture. Apply to `internal/run/caps
 
 ```diff
 diff --git a/internal/run/caps_test.go b/internal/run/caps_test.go
-index f217b50..4ab8332 100644
+index f217b50..0477269 100644
 --- a/internal/run/caps_test.go
 +++ b/internal/run/caps_test.go
 @@ -1,6 +1,7 @@
@@ -4080,7 +4087,7 @@ index f217b50..4ab8332 100644
  		t.Run(c.name, func(t *testing.T) {
 -			project := t.TempDir()
 -			_, err := Start(Options{Project: project, Config: writeConfig(t, t.TempDir(), c.config), Realm: toy(t)})
-+			_, project := treetest.Project(t, "repos/app")
++			project := treetest.Project(t, "repos/app")
 +			_, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), c.config), Realm: toy(t)})
  			var ce *schema.CapsError
  			if !errors.As(err, &ce) {
@@ -4091,7 +4098,7 @@ index f217b50..4ab8332 100644
  	t.Run("resume refuses in the same cases", func(t *testing.T) {
 -		project, cfgDir := t.TempDir(), t.TempDir()
 -		r, err := Start(Options{Project: project, Config: writeConfig(t, cfgDir, scriptedRoles+fullCaps), Realm: toy(t)})
-+		_, project := treetest.Project(t, "repos/app")
++		project := treetest.Project(t, "repos/app")
 +		cfgDir := t.TempDir()
 +		r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, cfgDir, scriptedRoles+fullCaps), Realm: toy(t)})
  		if err != nil {
@@ -4110,7 +4117,7 @@ index f217b50..4ab8332 100644
  	t.Run("complete caps start a run", func(t *testing.T) {
 -		project := t.TempDir()
 -		r, err := Start(Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
-+		_, project := treetest.Project(t, "repos/app")
++		project := treetest.Project(t, "repos/app")
 +		r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
  		if err != nil {
  			t.Fatalf("Start() = %v", err)
@@ -4121,7 +4128,7 @@ to `internal/run/open_test.go`:
 
 ```diff
 diff --git a/internal/run/open_test.go b/internal/run/open_test.go
-index b9eccb7..4c5a4d0 100644
+index b9eccb7..e27e7ef 100644
 --- a/internal/run/open_test.go
 +++ b/internal/run/open_test.go
 @@ -8,15 +8,17 @@ import (
@@ -4134,7 +4141,7 @@ index b9eccb7..4c5a4d0 100644
  func TestOpenRefusesWhatWouldMisleadARun(t *testing.T) {
  	start := func(t *testing.T) (project, id, realm string) {
 -		project, realm = t.TempDir(), t.TempDir()
-+		_, project = treetest.Project(t, "repos/app")
++		project = treetest.Project(t, "repos/app")
 +		realm = t.TempDir()
  		if err := os.CopyFS(realm, os.DirFS(toy(t))); err != nil {
  			t.Fatal(err)
@@ -4198,7 +4205,7 @@ to `internal/run/leftover_test.go`:
 
 ```diff
 diff --git a/internal/run/leftover_test.go b/internal/run/leftover_test.go
-index b0af974..b4ba4e7 100644
+index b0af974..640511e 100644
 --- a/internal/run/leftover_test.go
 +++ b/internal/run/leftover_test.go
 @@ -9,6 +9,8 @@ import (
@@ -4216,7 +4223,7 @@ index b0af974..b4ba4e7 100644
  	t.Helper()
 -	project = t.TempDir()
 -	r, err := Start(Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
-+	_, project = treetest.Project(t, "repos/app")
++	project = treetest.Project(t, "repos/app")
 +	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
  	if err != nil {
  		t.Fatal(err)
@@ -4245,7 +4252,7 @@ to `internal/engine/engine_test.go`:
 
 ```diff
 diff --git a/internal/engine/engine_test.go b/internal/engine/engine_test.go
-index 3d24ddb..30bda32 100644
+index 3d24ddb..f6a953b 100644
 --- a/internal/engine/engine_test.go
 +++ b/internal/engine/engine_test.go
 @@ -10,13 +10,15 @@ import (
@@ -4262,7 +4269,7 @@ index 3d24ddb..30bda32 100644
  	t.Helper()
 -	realm, cfg, project := t.TempDir(), t.TempDir(), t.TempDir()
 +	realm, cfg := t.TempDir(), t.TempDir()
-+	_, project := treetest.Project(t, "repos/app")
++	project := treetest.Project(t, "repos/app")
  	files := map[string]string{
  		filepath.Join(realm, "pack.yaml"):  "name: test\nversion: 0.1.0\ngraph: graph.yaml\n",
  		filepath.Join(realm, "graph.yaml"): "name: test\nversion: 1.0.0\nnodes:\n" + nodes,
@@ -4383,7 +4390,7 @@ to `internal/cli/cli_test.go`:
 
 ```diff
 diff --git a/internal/cli/cli_test.go b/internal/cli/cli_test.go
-index 6bf5dd4..8afe92b 100644
+index 6bf5dd4..13b047c 100644
 --- a/internal/cli/cli_test.go
 +++ b/internal/cli/cli_test.go
 @@ -7,6 +7,8 @@ import (
@@ -4411,7 +4418,7 @@ index 6bf5dd4..8afe92b 100644
  	}
 -	dir = t.TempDir()
 -	config = filepath.Join(dir, "factory.yaml")
-+	_, dir = treetest.Project(t, "repos/app")
++	dir = treetest.Project(t, "repos/app")
 +	config = filepath.Join(t.TempDir(), "factory.yaml")
  	s := filepath.Join(toy, script)
  	body := extra + "roles:\n  planner: { agent: scripted, model: none, script: " + s + " }\n" +
@@ -4484,7 +4491,7 @@ to `internal/run/run.go`:
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index ee8a651..42abc46 100644
+index ee8a651..5a190dd 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -1,24 +1,28 @@
@@ -4522,7 +4529,7 @@ index ee8a651..42abc46 100644
  	Mode         gungnir.Mode
  	Agents       map[string]gungnir.Agent // role: adapter, for every role the graph uses
 +
-+	Root        string               // the instance root, L0
++	Root        string               // the tree's root: the project, or an umbrella above it
 +	ProjectPath string               // the project's path from the root
 +	Project     tree.Node            // the project umbrella
 +	Repos       map[string]tree.Node // every repo the graph names, by path from the project; "." is the project
@@ -4950,7 +4957,7 @@ recorded as failed (decision 16).
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index 42e4570..87381fe 100644
+index 9e74aaa..e5c27e6 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -8,6 +8,7 @@ import (
@@ -4967,17 +4974,17 @@ index 42e4570..87381fe 100644
  
 -func TestARunFindsItsProjectAndReposInTheTree(t *testing.T) {
 +func TestARunWorksInItsProjectsLeaves(t *testing.T) {
- 	root, project := treetest.Project(t, "repos/app")
+ 	project := treetest.Project(t, "repos/app")
  	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
  	if err != nil {
 @@ -35,13 +36,17 @@ func TestARunFindsItsProjectAndReposInTheTree(t *testing.T) {
  	if err != nil {
  		t.Fatal(err)
  	}
--	if r.RepoDir("repos/app") != nodes[2].Dir || r.RepoDir(".") != project {
+-	if r.RepoDir("repos/app") != nodes[1].Dir || r.RepoDir(".") != project {
 -		t.Errorf("the run's repos are %s and %s", r.RepoDir("repos/app"), r.RepoDir("."))
 -	}
-+	app := git.Repo{GitDir: nodes[2].GitDir, WorkTree: nodes[2].Dir}
++	app := git.Repo{GitDir: nodes[1].GitDir, WorkTree: nodes[1].Dir}
  	s, err := LoadState(Dir(project, id))
  	if err != nil {
  		t.Fatal(err)
@@ -4988,7 +4995,7 @@ index 42e4570..87381fe 100644
 +	if rec.Branch != "ygg/"+id || branch != rec.Branch || rec.Base != head || rec.Checkpoint != head {
 +		t.Errorf("leaf record = %+v; the leaf is on %s at %s", rec, branch, head)
 +	}
- 	if s.Root != root || s.ProjectPath != "projects/toy" {
+ 	if s.Root != project || s.ProjectPath != "" {
  		t.Errorf("run.json places the run at %s in %s", s.ProjectPath, s.Root)
  	}
 @@ -93,3 +98,23 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
@@ -4997,12 +5004,12 @@ index 42e4570..87381fe 100644
  }
 +
 +func TestAFailureAfterTheRunStartedIsRecorded(t *testing.T) {
-+	root, project := treetest.Project(t, "repos/app")
-+	nodes, err := tree.Resolve(ctx, root, "projects/toy/repos/app")
++	project := treetest.Project(t, "repos/app")
++	nodes, err := tree.Resolve(ctx, project, "repos/app")
 +	if err != nil {
 +		t.Fatal(err)
 +	}
-+	if err := os.WriteFile(filepath.Join(nodes[2].Dir, "README.md"), []byte("a person's edit\n"), 0o644); err != nil {
++	if err := os.WriteFile(filepath.Join(nodes[1].Dir, "README.md"), []byte("a person's edit\n"), 0o644); err != nil {
 +		t.Fatal(err)
 +	}
 +	_, err = Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
@@ -5064,7 +5071,7 @@ and to `internal/run/run.go`:
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index 42abc46..a71e1d8 100644
+index 5a190dd..9c03e18 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -196,6 +196,9 @@ type Run struct {
@@ -5179,7 +5186,7 @@ The Odin half of `remote-creates-repos-T001`, its `init` criterion (decision 6).
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index 87381fe..f4fce3f 100644
+index e5c27e6..6beea19 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -74,7 +74,7 @@ func TestPrepareRefusesAGraphTheProjectCantRun(t *testing.T) {
@@ -5197,18 +5204,18 @@ index 87381fe..f4fce3f 100644
  }
 +
 +func TestTheRealmCreatesTheLeavesAProjectLacks(t *testing.T) {
-+	root, project := treetest.Project(t) // no leaves yet
++	project := treetest.Project(t) // no leaves yet
 +	commits, _ := git.Run(ctx, project, "rev-list", "--count", "HEAD")
 +	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, t.TempDir(), scriptedRoles+fullCaps), Realm: toy(t)})
 +	if err != nil {
 +		t.Fatalf("Start() = %v", err)
 +	}
 +	r.Close()
-+	nodes, err := tree.Resolve(ctx, root, "projects/toy/repos/app")
++	nodes, err := tree.Resolve(ctx, project, "repos/app")
 +	if err != nil {
 +		t.Fatalf("the toy realm's leaf isn't in the tree: %v", err)
 +	}
-+	app := git.Repo{GitDir: nodes[2].GitDir, WorkTree: nodes[2].Dir}
++	app := git.Repo{GitDir: nodes[1].GitDir, WorkTree: nodes[1].Dir}
 +	if files, _ := app.Run(ctx, "ls-tree", "-r", "--name-only", r.State.Leaves["repos/app"].Base); files != "LICENSE" {
 +		t.Errorf("the leaf's first commit holds %q, want the template's LICENSE only", files)
 +	}
@@ -5236,7 +5243,7 @@ index 87381fe..f4fce3f 100644
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index a71e1d8..70ff9b6 100644
+index 9c03e18..edab2f1 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -17,6 +17,7 @@ import (
@@ -5438,7 +5445,7 @@ Phase 1 follow-ups: `run.json` is checked when a run opens, and `status` no long
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index f4fce3f..9b3aec0 100644
+index 6beea19..a834a90 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -8,6 +8,7 @@ import (
@@ -5502,7 +5509,7 @@ and to `internal/engine/engine_test.go`:
 
 ```diff
 diff --git a/internal/engine/engine_test.go b/internal/engine/engine_test.go
-index 30bda32..703d16a 100644
+index f6a953b..ddc3ac1 100644
 --- a/internal/engine/engine_test.go
 +++ b/internal/engine/engine_test.go
 @@ -192,3 +192,44 @@ func TestRunJSONRecordsTheRunningExecProcess(t *testing.T) {
@@ -5559,7 +5566,7 @@ index 30bda32..703d16a 100644
 
 ```diff
 diff --git a/internal/run/state.go b/internal/run/state.go
-index 98939ff..b11fdd0 100644
+index 98939ff..cd369fb 100644
 --- a/internal/run/state.go
 +++ b/internal/run/state.go
 @@ -13,13 +13,14 @@ import (
@@ -5590,7 +5597,7 @@ index 98939ff..b11fdd0 100644
 -	Pending      string                `json:"pending,omitempty"`   // the node waiting for a decision
 -	Reasons      map[string]string     `json:"reasons,omitempty"`   // node id: rejection reason for its next attempt
 -	Summaries    map[string]string     `json:"summaries,omitempty"` // node id: its last result
-+	Root         string                `json:"root"`                   // the instance root, L0
++	Root         string                `json:"root"`                   // the tree's root: the project, or an umbrella above it
 +	ProjectPath  string                `json:"project"`                // the project's path from the root
 +	Leaves       map[string]LeafRecord `json:"leaves"`                 // leaf path from the project: the run's branch and checkpoint in it
 +	Position     int                   `json:"position"`               // index of the next node to run
@@ -5658,7 +5665,7 @@ to `internal/run/run.go`:
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index 70ff9b6..1362303 100644
+index edab2f1..7904d20 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -6,9 +6,11 @@ import (
@@ -5974,7 +5981,7 @@ Two of decision 16's items.
 
 ```diff
 diff --git a/internal/run/tree_test.go b/internal/run/tree_test.go
-index 9b3aec0..7729ae4 100644
+index a834a90..7f8e0f6 100644
 --- a/internal/run/tree_test.go
 +++ b/internal/run/tree_test.go
 @@ -194,3 +194,37 @@ func TestOpenPutsLeavesBackAtTheirCheckpoints(t *testing.T) {
@@ -5998,7 +6005,7 @@ index 9b3aec0..7729ae4 100644
 +
 +func TestRolesFollowAConfigChange(t *testing.T) {
 +	cfgDir := t.TempDir()
-+	_, project := treetest.Project(t)
++	project := treetest.Project(t)
 +	r, err := Start(ctx, Options{Project: project, Config: writeConfig(t, cfgDir, scriptedRoles+fullCaps), Realm: toy(t)})
 +	if err != nil {
 +		t.Fatal(err)
@@ -6024,7 +6031,7 @@ index 9b3aec0..7729ae4 100644
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index 1362303..45eb255 100644
+index 7904d20..a919e95 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -73,13 +73,12 @@ func Prepare(ctx context.Context, o Options) (*Setup, error) {
@@ -6088,7 +6095,7 @@ project can take `project.lock` while the run holds its own (decision 10).
 
 ```diff
 diff --git a/internal/engine/engine_test.go b/internal/engine/engine_test.go
-index 703d16a..20eeee9 100644
+index ddc3ac1..ff45eab 100644
 --- a/internal/engine/engine_test.go
 +++ b/internal/engine/engine_test.go
 @@ -16,11 +16,17 @@ import (
@@ -6103,7 +6110,7 @@ index 703d16a..20eeee9 100644
 +func startPack(t *testing.T, mode, gates, pack, nodes, script string) *run.Run {
  	t.Helper()
  	realm, cfg := t.TempDir(), t.TempDir()
- 	_, project := treetest.Project(t, "repos/app")
+ 	project := treetest.Project(t, "repos/app")
  	files := map[string]string{
 -		filepath.Join(realm, "pack.yaml"):  "name: test\nversion: 0.1.0\ngraph: graph.yaml\n",
 +		filepath.Join(realm, "pack.yaml"):  "name: test\nversion: 0.1.0\ngraph: graph.yaml\n" + pack,
@@ -6474,7 +6481,7 @@ and apply to `internal/run/run.go`:
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index 45eb255..dfa59fe 100644
+index a919e95..016a000 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -228,7 +228,8 @@ func (r *Run) Home() string { return filepath.Join(r.Dir, "home") }
@@ -6640,7 +6647,7 @@ to `internal/engine/engine_test.go` (its planted-repository test moves to `land_
 
 ```diff
 diff --git a/internal/engine/engine_test.go b/internal/engine/engine_test.go
-index 20eeee9..ca44577 100644
+index ff45eab..43963ea 100644
 --- a/internal/engine/engine_test.go
 +++ b/internal/engine/engine_test.go
 @@ -223,19 +223,3 @@ func TestEveryNodeInALeafEndsWithACheckpoint(t *testing.T) {
@@ -6922,7 +6929,7 @@ to `internal/run/state.go`:
 
 ```diff
 diff --git a/internal/run/state.go b/internal/run/state.go
-index b11fdd0..0887c60 100644
+index cd369fb..20cf6d6 100644
 --- a/internal/run/state.go
 +++ b/internal/run/state.go
 @@ -67,6 +67,7 @@ type State struct {
@@ -6949,7 +6956,7 @@ to `internal/run/run.go`:
 
 ```diff
 diff --git a/internal/run/run.go b/internal/run/run.go
-index dfa59fe..3a5f77b 100644
+index 016a000..724a52d 100644
 --- a/internal/run/run.go
 +++ b/internal/run/run.go
 @@ -365,7 +365,7 @@ func record(project, dir, id string, setup *Setup) (*Run, error) {
@@ -7012,7 +7019,7 @@ index 43467e7..391c287 100644
 
 ### Task v0-T058: the command line
 
-`ygg doctor` checks the instance tree (decision 2), and with `--root` an L0 alone (v0-H06 uses it);
+`ygg doctor` checks the instance tree (decision 2), and with `--root` a tree without a project;
 `approve` takes only `--note` and `reject` only `--reason`; `status` shows the approval point and the
 leaves.
 
@@ -7023,7 +7030,7 @@ leaves.
 **Acceptance criteria:**
 - [ ] In a project, `doctor` prints `OK tree: <root>: <n> nodes, <m> checked out`; outside a tree,
       `ERROR tree:` and exit 1.
-- [ ] `doctor --root <L0>` checks the tree only, with no config, and warns
+- [ ] `doctor --root <dir>` checks the tree only, with no config, and warns
       (`WARN tree:`, exit 0) when a public umbrella lists a private child.
 - [ ] `approve --reason` and `reject --note` exit 2 and decide nothing.
 - [ ] `status` prints `waiting:  <gate> (<approval point>)` and a `leaf:` line per leaf, with its
@@ -7084,7 +7091,7 @@ and to `internal/cli/cli_test.go`:
 
 ```diff
 diff --git a/internal/cli/cli_test.go b/internal/cli/cli_test.go
-index 8afe92b..60134c7 100644
+index 13b047c..1d7fd51 100644
 --- a/internal/cli/cli_test.go
 +++ b/internal/cli/cli_test.go
 @@ -87,9 +87,16 @@ func TestRunStopsAndApproveContinues(t *testing.T) {
@@ -7113,7 +7120,7 @@ index 8afe92b..60134c7 100644
 
 ```diff
 diff --git a/internal/cli/cli.go b/internal/cli/cli.go
-index 391c287..d3a10cc 100644
+index 391c287..f7c020d 100644
 --- a/internal/cli/cli.go
 +++ b/internal/cli/cli.go
 @@ -7,7 +7,9 @@ import (
@@ -7131,7 +7138,7 @@ index 391c287..d3a10cc 100644
    ygg reject  <run-id> <gate> --reason <text> [--project <dir>] [--mode <mode>]
    ygg status  <run-id> [--project <dir>]
 -  ygg doctor  [--project <dir>] [--config <factory.yaml>]
-+  ygg doctor  [--project <dir>] [--config <factory.yaml>] [--root <L0>]
++  ygg doctor  [--project <dir>] [--config <factory.yaml>] [--root <dir>]
  exit codes: 0 done, 1 a node failed, 2 refused, 3 stopped at an approval point
  `
  
@@ -7186,7 +7193,7 @@ to `internal/cli/doctor.go`:
 
 ```diff
 diff --git a/internal/cli/doctor.go b/internal/cli/doctor.go
-index b3ab0cb..666be67 100644
+index b3ab0cb..6e75f43 100644
 --- a/internal/cli/doctor.go
 +++ b/internal/cli/doctor.go
 @@ -11,6 +11,7 @@ import (
@@ -7201,7 +7208,7 @@ index b3ab0cb..666be67 100644
  func (c *command) doctor(args []string) int {
  	f, _, ok := c.parse("doctor", args, 0, func(fs *flag.FlagSet, f *flags) {
  		fs.StringVar(&f.config, "config", "factory.yaml", "the factory config")
-+		fs.StringVar(&f.root, "root", "", "an instance root (L0) to check, without a project")
++		fs.StringVar(&f.root, "root", "", "a tree's root to check, without a project")
  	})
  	if !ok {
  		return ExitRefused
@@ -7295,7 +7302,7 @@ and to `README.md`:
 
 ````diff
 diff --git a/README.md b/README.md
-index 7f5f708..c95e2b6 100644
+index 7f5f708..64c3601 100644
 --- a/README.md
 +++ b/README.md
 @@ -21,7 +21,7 @@ ygg resume  <run-id> [--project <dir>] [--mode <mode>]
@@ -7303,18 +7310,19 @@ index 7f5f708..c95e2b6 100644
  ygg reject  <run-id> <gate> --reason <text> [--project <dir>] [--mode <mode>]
  ygg status  <run-id> [--project <dir>]
 -ygg doctor  [--project <dir>] [--config <factory.yaml>]
-+ygg doctor  [--project <dir>] [--config <factory.yaml>] [--root <L0>]
++ygg doctor  [--project <dir>] [--config <factory.yaml>] [--root <dir>]
  ```
  
  Exit codes: 0 done, 1 a node failed, 2 refused, 3 stopped at an approval point.
-@@ -29,6 +29,11 @@ Exit codes: 0 done, 1 a node failed, 2 refused, 3 stopped at an approval point.
+@@ -29,6 +29,12 @@ Exit codes: 0 done, 1 a node failed, 2 refused, 3 stopped at an approval point.
  `factory.yaml` must set both budget caps, `per_run` and `per_day`, each with `tokens` and `turns`.
  The factory ships no defaults, so a config without them runs nothing.
  
-+`--project` names a project umbrella inside an instance tree: every umbrella above it lists the one
-+below in its `umbrella.yaml`, up to L0, whose `umbrella.yaml` sets `root: true`. A run works on its
++`--project` names a project umbrella. A project is usually its own tree, its `umbrella.yaml` setting
++`root: true`; inside a company umbrella, every umbrella above it lists the one below, up to the one
++that sets `root: true`. A run works on its
 +own branch, `ygg/<run-id>`, in each leaf its graph names, and commits a checkpoint after every node.
-+The realm creates a leaf the project lacks. `ygg doctor --root <L0>` checks a tree without a project.
++The realm creates a leaf the project lacks. `ygg doctor --root <dir>` checks a tree without a project.
 +
  ## Docs
  
@@ -7420,15 +7428,15 @@ and to `internal/cli/cli_test.go`:
 
 ```diff
 diff --git a/internal/cli/cli_test.go b/internal/cli/cli_test.go
-index 60134c7..167ea0f 100644
+index 1d7fd51..9802964 100644
 --- a/internal/cli/cli_test.go
 +++ b/internal/cli/cli_test.go
 @@ -27,7 +27,7 @@ func project(t *testing.T, script, extra string) (dir, config string) {
  	if err != nil {
  		t.Fatal(err)
  	}
--	_, dir = treetest.Project(t, "repos/app")
-+	_, dir = treetest.Project(t) // the toy realm creates its leaf, repos/app
+-	dir = treetest.Project(t, "repos/app")
++	dir = treetest.Project(t) // the toy realm creates its leaf, repos/app
  	config = filepath.Join(t.TempDir(), "factory.yaml")
  	s := filepath.Join(toy, script)
  	body := extra + "roles:\n  planner: { agent: scripted, model: none, script: " + s + " }\n" +
@@ -7695,55 +7703,6 @@ S. **Depends on:** v0-T039 to v0-T059 merged.
       `as-bot.sh --read all gh run list --repo ouroboric-dev/<repo> --branch main --workflow ci --limit 1`.
 - [ ] **Step 3:** stage the two paths; commit (`Move gungnir and odin to Phase 2 (v0-T060)`); push
       and open the PR. Its body records the exit criterion, with the tests' output and the
-      `check-repos.sh` result. When the founder merges it, Phase 2 is done, and v0-H06 can pin it.
+      `check-repos.sh` result. When the founder merges it, Phase 2 is done.
 
 ---
-
-### Task v0-H06 (founder): the L0 instance umbrella
-
-The operator's private instance umbrella (spec §3.1, §11): it pins the factory, and holds the private
-benchmarks repo as a submodule that is never checked out here (decision 15).
-
-**Acceptance criteria:**
-- [ ] `brunogbv/l0` is a private repo on the founder's account, where the pr-bot isn't installed.
-- [ ] Its `umbrella.yaml` sets `root: true`, owner `brunogbv` and visibility `private`, with no
-      children yet; the first project joins it in Phase 5.
-- [ ] `yggdrasil/` is a submodule pinned at the commit v0-T060's merge made.
-- [ ] `benchmarks/` is a submodule entry for `ouroboric-dev/huldra`, at huldra's `main`, and is not
-      checked out.
-
-**Named test (agent-run):** in `odin`,
-`go run ./cmd/ygg doctor --root /home/brunogbv/brunogbv/l0` prints
-`OK    tree: /home/brunogbv/brunogbv/l0: 1 nodes, 1 checked out` and exits 0, and
-`git -C /home/brunogbv/brunogbv/l0 submodule status benchmarks` starts with `-` (not
-checked out). The agent reads nothing under `benchmarks/` and never initialises it. **Layer:** L0.
-**Size:** S. **Depends on:** v0-T060 merged.
-
-- [ ] **Step 1 (founder):** on GitHub, create the private repo `brunogbv/l0` on your own account,
-      empty (no README, no licence). The pr-bot is installed only on `ouroboric-dev`, so it never
-      sees it.
-- [ ] **Step 2 (founder):** make the umbrella. `git submodule add` checks out `yggdrasil/`; the
-      `benchmarks/` entry is written by hand, so huldra is never cloned here:
-
-```bash
-mkdir /home/brunogbv/brunogbv/l0 && cd /home/brunogbv/brunogbv/l0
-git init -b main
-git submodule add https://github.com/ouroboric-dev/yggdrasil.git yggdrasil
-git -C yggdrasil checkout <the commit v0-T060's merge made on yggdrasil's main>
-git config -f .gitmodules submodule.benchmarks.path benchmarks
-git config -f .gitmodules submodule.benchmarks.url git@github.com:ouroboric-dev/huldra.git
-git update-index --add --cacheinfo "160000,$(git ls-remote git@github.com:ouroboric-dev/huldra.git refs/heads/main | cut -f1),benchmarks"
-cat > umbrella.yaml <<'EOF'
-# The instance tree: this umbrella and its child nodes (spec §3.1). Odin writes this file.
-root: true
-owner: brunogbv
-visibility: private
-EOF
-mkdir docs && printf '# L0\n\nMy instance umbrella as a Yggdrasil operator: the pinned factory in `yggdrasil/`, the private\nbenchmarks in `benchmarks/` (never checked out on the factory host), and projects under `projects/`.\n' > docs/README.md
-git add .gitmodules yggdrasil benchmarks umbrella.yaml docs/README.md
-git commit -m "L0: the instance umbrella, with yggdrasil pinned and the benchmarks as a pin"
-git remote add origin git@github.com:brunogbv/l0.git
-git push -u origin main
-```
-
-- [ ] **Step 3 (founder):** ask an agent to run the named test.

@@ -29,7 +29,8 @@ triage process yet.
 
 - **No reference to operators' projects.** `yggdrasil` and its component repos never record an
   operator's projects. A factory run never commits, pushes or opens a pull request against them. Odin
-  writes only to the operator's instance tree: L0, its projects and their leaves.
+  writes only to the operator's own tree: the project, its leaves, and any umbrella the operator
+  keeps above it (change project-is-its-own-tree).
 - **Git as usual is the default** for the instance tree, with each project's repos hosted where the
   operator chooses. In v0 Odin commits locally only. Odin pushing and opening pull requests comes
   with the `github` remote (spec §15.1, iteration 2); until then an operator pushes their tree with
@@ -50,6 +51,5 @@ triage process yet.
 - **Company docs:** the docs standard's §9 and the legal page's "Contributions" section say that
   issues are open on the factories, while outside pull requests stay closed until a contributor
   licence agreement is in place.
-- **Phase 2:** its plan states the no-reference rule and the default, and v0-H06 stays the
-  founder's own choice of hosting for L0.
+- **Phase 2:** its plan states the no-reference rule and the default.
 - **v0 plan:** the tasks below are not tied to a phase.
