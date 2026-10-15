@@ -111,7 +111,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 11. **The approval points `merge` and `pointer` come before the step they approve.** In a realm's
     graph the gate node comes first, then the merge or pointer node, which runs under its lock in one
     go. Spec §4.2's diagram draws them after; a decision before the irreversible step is what §7
-    intends. **For the founder to confirm.**
+    intends.
 12. **The merge gate** (spec §4.5): lock the leaf; merge the current `main` into the run's branch; run
     the node's pack checks on the result; land only if the branch head is still the checked commit,
     moving `main` with `update-ref <new> <old>`, so a `main` that moved meanwhile fails it too. A
@@ -126,12 +126,12 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 14. **Secret scanning before checkpoint commits** (spec §14, `gitleaks`) needs a container, so it
     comes with the sandbox in Phase 3. Until then only the `scripted` adapter makes checkpoints, in
     tests.
-15. **L0** (v0-H06) is the founder's private repo `ouroboric-dev/instance`, which the pr-bot is never
-    installed on; hosting it on GitHub is the founder's own choice as an operator (decision 19). Its
-    local clone is at `/home/brunogbv/brunogbv/ouroboric-instance`, outside `~/brunogbv/ouroboric`,
-    which agents search. Its `benchmarks/` submodule (huldra) is a pin only:
+15. **L0** (v0-H06) is the founder's own operator instance, so it lives outside `ouroboric-dev`, which
+    holds the company's factories and products: the private repo `brunogbv/l0`, on the founder's
+    account, which the pr-bot is never installed on. Hosting it on GitHub is the founder's choice as
+    an operator (decision 19). Its local clone is at `/home/brunogbv/brunogbv/l0`, outside
+    `~/brunogbv/ouroboric`, which agents search. Its `benchmarks/` submodule (huldra) is a pin only:
     it is never checked out on this host, and the grader (Phase 5) reads huldra from its own clone.
-    **For the founder to confirm the name and place.**
 16. **Phase 1 follow-ups**, from its ledger, fold in here:
     - a rejection always re-runs an agent: by default the nearest agent node before the gate, and an
       explicit `reruns` must name one, so the reason is never dropped;
@@ -7705,27 +7705,28 @@ The operator's private instance umbrella (spec §3.1, §11): it pins the factory
 benchmarks repo as a submodule that is never checked out here (decision 15).
 
 **Acceptance criteria:**
-- [ ] `ouroboric-dev/instance` is a private repo, and the pr-bot's installation doesn't include it.
-- [ ] Its `umbrella.yaml` sets `root: true`, owner `ouroboric-dev` and visibility `private`, with no
+- [ ] `brunogbv/l0` is a private repo on the founder's account, where the pr-bot isn't installed.
+- [ ] Its `umbrella.yaml` sets `root: true`, owner `brunogbv` and visibility `private`, with no
       children yet; the first project joins it in Phase 5.
 - [ ] `yggdrasil/` is a submodule pinned at the commit v0-T060's merge made.
 - [ ] `benchmarks/` is a submodule entry for `ouroboric-dev/huldra`, at huldra's `main`, and is not
       checked out.
 
 **Named test (agent-run):** in `odin`,
-`go run ./cmd/ygg doctor --root /home/brunogbv/brunogbv/ouroboric-instance` prints
-`OK    tree: /home/brunogbv/brunogbv/ouroboric-instance: 1 nodes, 1 checked out` and exits 0, and
-`git -C /home/brunogbv/brunogbv/ouroboric-instance submodule status benchmarks` starts with `-` (not
+`go run ./cmd/ygg doctor --root /home/brunogbv/brunogbv/l0` prints
+`OK    tree: /home/brunogbv/brunogbv/l0: 1 nodes, 1 checked out` and exits 0, and
+`git -C /home/brunogbv/brunogbv/l0 submodule status benchmarks` starts with `-` (not
 checked out). The agent reads nothing under `benchmarks/` and never initialises it. **Layer:** L0.
 **Size:** S. **Depends on:** v0-T060 merged.
 
-- [ ] **Step 1 (founder):** on GitHub, create the private repo `ouroboric-dev/instance`, empty (no
-      README, no licence). Leave it out of the pr-bot's installation.
+- [ ] **Step 1 (founder):** on GitHub, create the private repo `brunogbv/l0` on your own account,
+      empty (no README, no licence). The pr-bot is installed only on `ouroboric-dev`, so it never
+      sees it.
 - [ ] **Step 2 (founder):** make the umbrella. `git submodule add` checks out `yggdrasil/`; the
       `benchmarks/` entry is written by hand, so huldra is never cloned here:
 
 ```bash
-mkdir /home/brunogbv/brunogbv/ouroboric-instance && cd /home/brunogbv/brunogbv/ouroboric-instance
+mkdir /home/brunogbv/brunogbv/l0 && cd /home/brunogbv/brunogbv/l0
 git init -b main
 git submodule add https://github.com/ouroboric-dev/yggdrasil.git yggdrasil
 git -C yggdrasil checkout <the commit v0-T060's merge made on yggdrasil's main>
@@ -7735,13 +7736,13 @@ git update-index --add --cacheinfo "160000,$(git ls-remote git@github.com:ourobo
 cat > umbrella.yaml <<'EOF'
 # The instance tree: this umbrella and its child nodes (spec §3.1). Odin writes this file.
 root: true
-owner: ouroboric-dev
+owner: brunogbv
 visibility: private
 EOF
-mkdir docs && printf '# L0: the Ouroboric instance\n\nThe instance umbrella of the Ouroboric operator: the pinned factory in `yggdrasil/`, the private\nbenchmarks in `benchmarks/` (never checked out on the factory host), and projects under `projects/`.\n' > docs/README.md
+mkdir docs && printf '# L0\n\nMy instance umbrella as a Yggdrasil operator: the pinned factory in `yggdrasil/`, the private\nbenchmarks in `benchmarks/` (never checked out on the factory host), and projects under `projects/`.\n' > docs/README.md
 git add .gitmodules yggdrasil benchmarks umbrella.yaml docs/README.md
 git commit -m "L0: the instance umbrella, with yggdrasil pinned and the benchmarks as a pin"
-git remote add origin git@github.com:ouroboric-dev/instance.git
+git remote add origin git@github.com:brunogbv/l0.git
 git push -u origin main
 ```
 
