@@ -133,15 +133,6 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
 - **Fix:** skip the verify, or print WARN instead, when `run.Locked(dir)` is true.
 - **Status:** reasoned.
 
-### B-012: the output after a hard stop suggests `ygg reject`
-
-- **Where:** `internal/cli/cli.go` (the message for `run.StatusStopped`, line 237).
-- **Problem:** the message always prints both `ygg approve` and `ygg reject`. A hard stop that a node
-  raised (`policy-violation`, `shrink-guard`) refuses `reject`.
-- **Fix:** when the pending approval point is hard, print only `approve`, plus "start a new run to
-  drop the work".
-- **Status:** reasoned from the code. `engine.Reject` does refuse a hard stop.
-
 ### B-013: `lock.Held` can miss a held lock on some filesystems
 
 - **Where:** `internal/lock/lock.go` (`Held`).
@@ -171,48 +162,6 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Where:** `gleipnir/sandbox/config.go, driver.go`.
 - **Problem:** `Project()` and the config folder name collapse punctuation, so `repos/web-app` and `repos/webapp` share a compose project; one leaf's `Up` or `Down` tears down the other's sandbox.
 - **Fix:** Keep punctuation distinct (hash the path). Test: `TestTwoLeavesNeverShareASandboxProject`.
-- **Status:** reasoned.
-
-### B-016: a probe that could not run counts as a closed network
-
-- **Where:** `gleipnir/sandbox/driver.go`.
-- **Problem:** The closed-network check accepts exit 125 (podman or `timeout` could not run the probe) as closed, against decision 5's "or can't be tried".
-- **Fix:** Refuse exit 125. Test: `TestUpRefusesAProbeThatCouldNotRun`.
-- **Status:** reasoned.
-
-### B-017: podman's own failure reads as the command's exit code
-
-- **Where:** `gleipnir/sandbox/driver.go`.
-- **Problem:** Exit 125 from podman comes back as the command's exit code, so an infrastructure failure reads as a check or node failure (spec §12).
-- **Fix:** Return an error for a missing container. Test: `TestExecReportsAMissingContainerAsAnError`.
-- **Status:** reasoned.
-
-### B-018: a read-only role's change to an ignored file is not caught
-
-- **Where:** `odin/internal/engine/engine.go`.
-- **Problem:** The read-only check uses `git status --porcelain` without `--ignored` (decision 11: "any change").
-- **Fix:** Add `--ignored`. Test: `TestAReadOnlyRoleThatWritesAnIgnoredFileIsAHardStop`.
-- **Status:** reasoned.
-
-### B-019: a failed session with tokens and no cost passes as $0
-
-- **Where:** `gleipnir/opencode/opencode.go`.
-- **Problem:** Decision 10's refusal is skipped when the session failed.
-- **Fix:** Refuse it too. Test: `TestAFailedSessionWithTokensAndNoCostIsRefused`.
-- **Status:** reasoned.
-
-### B-020: a session killed by its timeout reports no usage
-
-- **Where:** `gleipnir/claudecode, gleipnir/opencode, odin/internal/engine/engine.go`.
-- **Problem:** The caps never count what a timed-out session spent.
-- **Fix:** Parse the partial stream. Test: `TestATimedOutSessionStillCountsItsUsage`.
-- **Status:** reasoned.
-
-### B-021: session output is buffered in host memory without a bound
-
-- **Where:** `gleipnir/claudecode/claudecode.go, opencode.go`.
-- **Problem:** A chatty session can exhaust the host's memory.
-- **Fix:** Bound the buffer. Test: `TestSessionOutputIsBounded`.
 - **Status:** reasoned.
 
 ### B-022: opencode may download unpinned language servers
@@ -257,13 +206,6 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Fix:** Return a policy violation. Test: `TestAnUnreadableDirectoryInTheLeafIsAPolicyViolation`.
 - **Status:** reasoned.
 
-### B-028: a hung engine hangs `ygg` in `Down`
-
-- **Where:** `gleipnir/sandbox/driver.go, odin/internal/engine/engine.go`.
-- **Problem:** `Down` runs under `context.WithoutCancel` with no timeout.
-- **Fix:** Add a bounded timeout. Test: `TestDownGivesUpOnAHungEngine`.
-- **Status:** reasoned.
-
 ### B-029: the escape test accepts ExitStopped
 
 - **Where:** `odin/internal/cli/sandbox_e2e_test.go`.
@@ -285,6 +227,39 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Fix:** Empty them too, or mount them as tmpfs.
 - **Status:** reasoned.
 
+### B-032: a failed journal append does not stop the run at the cap
+
+- **Where:** `internal/run/run.go` (`Spend`), `internal/engine/session.go`, `internal/cli/doctor.go`.
+- **Problem:** Phase 4's final review (I4) was fixed in part: the usage now counts in the run and `run.json`
+  is saved before the journal error returns. Three parts are left: the run ends with an error instead of
+  stopping at `budget-cap` (the leaf holds uncommitted work after an implementer session, and the gate file's
+  text says to raise the cap); the usage the journal missed is kept nowhere, so the day's cap misses that
+  session; `ygg doctor` checks the journal folder, not whether today's file can be opened for appending.
+- **Fix:** keep a pending entry in `run.json` that the next `Spend` or `Open` appends first; stop at
+  `budget-cap` with `CapJournal` and set the work aside as a gate does; make `doctor` open the file.
+- **Status:** reasoned.
+
+### B-033: a reviewer's id may equal a check's name in the schema
+
+- **Where:** `gungnir/schema/graph.go` (`checkLoop`).
+- **Problem:** Phase 4's final review (I3) was fixed in `jormungandr` (#4): the book guards each finding's
+  source and `Review` refuses the `check-` prefix. The schema still accepts a reviewer id equal to a check name.
+- **Fix:** refuse it in `checkLoop`.
+- **Status:** reasoned.
+
+### B-034: minor findings of Phase 4's final review
+
+- **Where:** the list is in `.superpowers/sdd/tasks-2026-10-16-yggdrasil-v0-phase-4/final-review/review.md`
+  (M1 to M10); it is kept there until the founder consolidates the ledgers.
+- **Problem:** M1 `run.json` saved late after `Spend`; M2 a result that fails `Validate` counts zero usage;
+  M3 a session with no turns left gets no turn bound; M4 a cut-short journal line merges with the next append;
+  M5 a severity downgrade lets a loop pass without proof; M6 approving a read-only violation keeps the ignored
+  file; M7 a check's log and a gate file can be overwritten; M8 `Tidy` resets to HEAD, not to the checkpoint;
+  M9 `Retrier.Do` treats a failed `infra` result with no error as a success; M10 the day's dollar cap counts
+  subscription estimates.
+- **Fix:** each finding's Fix line in that file.
+- **Status:** reasoned.
+
 ## Done
 
 ### B-004: check output in a leaf blocks the next run
@@ -296,3 +271,60 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
   Phase 3's sandbox may change where checks run, so decide there.
 - **Status:** fixed by Phase 3 v0-T090 (the leaf is put back to the checks' commit after a node's checks), [odin#7](https://github.com/ouroboric-dev/odin/pull/7).
 
+### B-012: the output after a hard stop suggests `ygg reject`
+
+- **Where:** `internal/cli/cli.go` (the message for `run.StatusStopped`, line 237).
+- **Problem:** the message always prints both `ygg approve` and `ygg reject`. A hard stop that a node
+  raised (`policy-violation`, `shrink-guard`) refuses `reject`.
+- **Fix:** when the pending approval point is hard, print only `approve`, plus "start a new run to
+  drop the work".
+- **Status:** fixed by Phase 4, [odin#8](https://github.com/ouroboric-dev/odin/pull/8).
+
+### B-016: a probe that could not run counts as a closed network
+
+- **Where:** `gleipnir/sandbox/driver.go`.
+- **Problem:** The closed-network check accepts exit 125 (podman or `timeout` could not run the probe) as closed, against decision 5's "or can't be tried".
+- **Fix:** Refuse exit 125. Test: `TestUpRefusesAProbeThatCouldNotRun`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-017: podman's own failure reads as the command's exit code
+
+- **Where:** `gleipnir/sandbox/driver.go`.
+- **Problem:** Exit 125 from podman comes back as the command's exit code, so an infrastructure failure reads as a check or node failure (spec §12).
+- **Fix:** Return an error for a missing container. Test: `TestExecReportsAMissingContainerAsAnError`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-018: a read-only role's change to an ignored file is not caught
+
+- **Where:** `odin/internal/engine/engine.go`.
+- **Problem:** The read-only check uses `git status --porcelain` without `--ignored` (decision 11: "any change").
+- **Fix:** Add `--ignored`. Test: `TestAReadOnlyRoleThatWritesAnIgnoredFileIsAHardStop`.
+- **Status:** fixed by Phase 4, [odin#8](https://github.com/ouroboric-dev/odin/pull/8).
+
+### B-019: a failed session with tokens and no cost passes as $0
+
+- **Where:** `gleipnir/opencode/opencode.go`.
+- **Problem:** Decision 10's refusal is skipped when the session failed.
+- **Fix:** Refuse it too. Test: `TestAFailedSessionWithTokensAndNoCostIsRefused`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-020: a session killed by its timeout reports no usage
+
+- **Where:** `gleipnir/claudecode, gleipnir/opencode, odin/internal/engine/engine.go`.
+- **Problem:** The caps never count what a timed-out session spent.
+- **Fix:** Parse the partial stream. Test: `TestATimedOutSessionStillCountsItsUsage`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-021: session output is buffered in host memory without a bound
+
+- **Where:** `gleipnir/claudecode/claudecode.go, opencode.go`.
+- **Problem:** A chatty session can exhaust the host's memory.
+- **Fix:** Bound the buffer. Test: `TestSessionOutputIsBounded`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-028: a hung engine hangs `ygg` in `Down`
+
+- **Where:** `gleipnir/sandbox/driver.go, odin/internal/engine/engine.go`.
+- **Problem:** `Down` runs under `context.WithoutCancel` with no timeout.
+- **Fix:** Add a bounded timeout. Test: `TestDownGivesUpOnAHungEngine`.
+- **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
