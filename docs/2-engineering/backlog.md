@@ -65,15 +65,6 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
   remove the module directory. At least, print those steps in the error.
 - **Status:** reasoned.
 
-### B-004: check output in a leaf blocks the next run
-
-- **Where:** `internal/engine/land.go` (`runMerge` and `runPointer` run pack checks in the leaf).
-- **Problem:** nothing checkpoints the leaf after those checks. Any non-ignored file a check writes
-  stays in the leaf. The next run's `StartBranch` then refuses with "uncommitted changes".
-- **Fix:** run `git clean -fd` in the leaf after the checks, or run the checks in a fresh worktree.
-  Phase 3's sandbox may change where checks run, so decide there.
-- **Status:** reasoned.
-
 ### B-005: `Prepare` writes before it takes the project lock
 
 - **Where:** `internal/run/run.go` (`Prepare` calls `findProject`, which calls `tree.Resolve`).
@@ -173,6 +164,135 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
 - **Fix:** change `../.factory` to `../../.factory` in the wait loop.
 - **Status:** proved.
 
+Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fresh Opus reviewer over `gungnir` `8631647..768edab`, `havamal` `0940ffe..e7b4e47`, `gleipnir` `968aee0..7653026` and `odin` `5076219..e10a881`. It found one Critical and five Important issues, all fixed before merge; these are the Minor ones, plus two follow-ups the fixer noted (B-030, B-031). Line numbers are not recorded: search by name.
+
+### B-015: two leaves can share a sandbox
+
+- **Where:** `gleipnir/sandbox/config.go, driver.go`.
+- **Problem:** `Project()` and the config folder name collapse punctuation, so `repos/web-app` and `repos/webapp` share a compose project; one leaf's `Up` or `Down` tears down the other's sandbox.
+- **Fix:** Keep punctuation distinct (hash the path). Test: `TestTwoLeavesNeverShareASandboxProject`.
+- **Status:** reasoned.
+
+### B-016: a probe that could not run counts as a closed network
+
+- **Where:** `gleipnir/sandbox/driver.go`.
+- **Problem:** The closed-network check accepts exit 125 (podman or `timeout` could not run the probe) as closed, against decision 5's "or can't be tried".
+- **Fix:** Refuse exit 125. Test: `TestUpRefusesAProbeThatCouldNotRun`.
+- **Status:** reasoned.
+
+### B-017: podman's own failure reads as the command's exit code
+
+- **Where:** `gleipnir/sandbox/driver.go`.
+- **Problem:** Exit 125 from podman comes back as the command's exit code, so an infrastructure failure reads as a check or node failure (spec §12).
+- **Fix:** Return an error for a missing container. Test: `TestExecReportsAMissingContainerAsAnError`.
+- **Status:** reasoned.
+
+### B-018: a read-only role's change to an ignored file is not caught
+
+- **Where:** `odin/internal/engine/engine.go`.
+- **Problem:** The read-only check uses `git status --porcelain` without `--ignored` (decision 11: "any change").
+- **Fix:** Add `--ignored`. Test: `TestAReadOnlyRoleThatWritesAnIgnoredFileIsAHardStop`.
+- **Status:** reasoned.
+
+### B-019: a failed session with tokens and no cost passes as $0
+
+- **Where:** `gleipnir/opencode/opencode.go`.
+- **Problem:** Decision 10's refusal is skipped when the session failed.
+- **Fix:** Refuse it too. Test: `TestAFailedSessionWithTokensAndNoCostIsRefused`.
+- **Status:** reasoned.
+
+### B-020: a session killed by its timeout reports no usage
+
+- **Where:** `gleipnir/claudecode, gleipnir/opencode, odin/internal/engine/engine.go`.
+- **Problem:** The caps never count what a timed-out session spent.
+- **Fix:** Parse the partial stream. Test: `TestATimedOutSessionStillCountsItsUsage`.
+- **Status:** reasoned.
+
+### B-021: session output is buffered in host memory without a bound
+
+- **Where:** `gleipnir/claudecode/claudecode.go, opencode.go`.
+- **Problem:** A chatty session can exhaust the host's memory.
+- **Fix:** Bound the buffer. Test: `TestSessionOutputIsBounded`.
+- **Status:** reasoned.
+
+### B-022: opencode may download unpinned language servers
+
+- **Where:** `gleipnir/opencode/opencode.go`.
+- **Problem:** `OPENCODE_DISABLE_LSP_DOWNLOAD` is not set, so opencode can fetch language servers through an allowed registry.
+- **Fix:** Set it. Test: `TestTheOpencodeSessionDisablesLSPDownloads`.
+- **Status:** reasoned.
+
+### B-023: the factory layer does not pin npm's transitive dependencies or apt packages
+
+- **Where:** `gleipnir/sandbox/images.go, assets/Containerfile`.
+- **Problem:** The image tag claims to hash every input, but those inputs are not pinned.
+- **Fix:** Pin them (lockfile, snapshot repos). Test: `TestTheFactoryLayerPinsEveryPackage`.
+- **Status:** reasoned.
+
+### B-024: IPv6 is never opened and a missing `ip6tables` is skipped
+
+- **Where:** `gleipnir/sandbox/assets/egress.sh`.
+- **Problem:** Decision 5 says IPv4 and IPv6; a missing `ip6tables` should fail closed.
+- **Fix:** Fail closed without `ip6tables`; open IPv6 for listed hosts. Test: `TestEgressFailsWithoutIp6tables`.
+- **Status:** reasoned.
+
+### B-025: DNS and shared-CDN addresses leave exfiltration channels (accepted risk)
+
+- **Where:** `gleipnir/sandbox/assets/egress.sh`.
+- **Problem:** DNS to the resolver and 443 to shared CDN addresses can carry data out.
+- **Fix:** Record as an accepted risk of decision 5, or tighten with a DNS allowlist.
+- **Status:** reasoned.
+
+### B-026: `CheckEvals` trusts the recorded gain and pass flag
+
+- **Where:** `havamal/eval.go`.
+- **Problem:** It does not recompute them from the arm counts.
+- **Fix:** Recompute. Test: `TestCheckEvalsRecomputesTheGain`.
+- **Status:** reasoned.
+
+### B-027: an unreadable directory in a leaf wedges checkpoint and resume
+
+- **Where:** `odin/internal/leaf/leaf.go`.
+- **Problem:** `checkNested` aborts with a plain error instead of a policy stop.
+- **Fix:** Return a policy violation. Test: `TestAnUnreadableDirectoryInTheLeafIsAPolicyViolation`.
+- **Status:** reasoned.
+
+### B-028: a hung engine hangs `ygg` in `Down`
+
+- **Where:** `gleipnir/sandbox/driver.go, odin/internal/engine/engine.go`.
+- **Problem:** `Down` runs under `context.WithoutCancel` with no timeout.
+- **Fix:** Add a bounded timeout. Test: `TestDownGivesUpOnAHungEngine`.
+- **Status:** reasoned.
+
+### B-029: the escape test accepts ExitStopped
+
+- **Where:** `odin/internal/cli/sandbox_e2e_test.go`.
+- **Problem:** The hostile `devcontainer.json` may never reach `main`, and the `features.json` probe checks a path the agent could not reach anyway.
+- **Fix:** Tighten `TestSandboxEscapes`: assert the merge landed and check probe 5's output.
+- **Status:** reasoned.
+
+### B-030: an inline `gitleaks:allow` comment hides a finding
+
+- **Where:** `gleipnir/scan`.
+- **Problem:** gitleaks 8.30.1 has no flag to turn the comment off.
+- **Fix:** Check for the comment in the file list, or move to a gitleaks version with a switch.
+- **Status:** reasoned.
+
+### B-031: `/tmp` and `/go` survive between commands
+
+- **Where:** `gleipnir/sandbox`.
+- **Problem:** Only HOME and the XDG folders are emptied before each command (final review I4).
+- **Fix:** Empty them too, or mount them as tmpfs.
+- **Status:** reasoned.
+
 ## Done
 
-Nothing yet.
+### B-004: check output in a leaf blocks the next run
+
+- **Where:** `internal/engine/land.go` (`runMerge` and `runPointer` run pack checks in the leaf).
+- **Problem:** nothing checkpoints the leaf after those checks. Any non-ignored file a check writes
+  stays in the leaf. The next run's `StartBranch` then refuses with "uncommitted changes".
+- **Fix:** run `git clean -fd` in the leaf after the checks, or run the checks in a fresh worktree.
+  Phase 3's sandbox may change where checks run, so decide there.
+- **Status:** fixed by Phase 3 v0-T090 (the leaf is put back to the checks' commit after a node's checks), [odin#7](https://github.com/ouroboric-dev/odin/pull/7).
+
