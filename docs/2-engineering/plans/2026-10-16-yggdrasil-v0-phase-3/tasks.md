@@ -42,10 +42,11 @@ where they override the spec (`require-budget-caps`, `remote-creates-repos`, `be
 **Code in this plan was run.** Every Go file, script, schema and test below was built and run in a
 scratch Go workspace on 2026-10-16, one commit per task, with `go test -race` on Go 1.26.4 and on
 1.26.9, CI's version. Each task's end state was also built and tested on its own, and each task's
-first test run was checked to fail as its step says. **The exception is the container code:** its tests
-behind the build tag `sandbox` could not be run when this plan was written, because the Podman machine
-was stopped ("Evidence" says what that leaves open). Copy the code as written; if a step's expected
-result differs, stop and report it, because the plan is wrong.
+first test run was checked to fail as its step says. The container code was also run on a real
+rootless engine on 2026-10-16: the driver's tests behind the build tag `sandbox` and Odin's escape
+tests pass there, and "Evidence" lists the five defects that first run found and the plan now has
+fixed. Real model sessions are the one thing not run (v0-H09: they use the founder's tokens). Copy the
+code as written; if a step's expected result differs, stop and report it, because the plan is wrong.
 
 Code blocks are of two kinds. A new file is shown whole. A change to an existing file is shown as a
 git patch (`diff`); apply it with `git apply` from the repo's folder, or edit by hand: lines that
@@ -76,7 +77,8 @@ Each line is **Decided 2026-10-16** when the founder merges this plan.
 4. **The layout and the containers** follow the spike. The sandbox mirrors the leaf's parent
    umbrella under `/u`: the leaf at `/u/<path>` read-write, its git dir at `/u/.git/modules/<path>`
    read-only, so the leaf's `.git` file still finds it. Two services: `fw`, the firewall sidecar,
-   which alone holds `NET_ADMIN` and owns the network namespace; and `work`, which joins that
+   which alone holds `NET_ADMIN`, owns the network namespace, and runs as root of its own user
+   namespace (`keep-id` alone would run it as the operator, who can't write rules); and `work`, which joins that
    namespace, drops every capability, sets `no-new-privileges`, and runs as the operator's uid and
    gid. Both use `userns_mode: keep-id` and `pull_policy: never`. The agent's `HOME` is an empty
    folder in the image. Every container carries the labels `dev.ouroboric.ygg.run` and
@@ -97,7 +99,9 @@ Each line is **Decided 2026-10-16** when the founder merges this plan.
    `timeout` and `git`; the build fails if it lacks them.
 7. **A sandbox's life.** One sandbox per run and leaf, started the first time something needs it,
    stopped when `Advance` returns, and recorded in `run.json` while it is up. A resume, and `ygg
-   doctor`, stop what a killed `ygg` left. A credential goes to one command, in the environment of
+   doctor`, stop what a killed `ygg` left (`podman rm -f --depend`, because the work container depends on
+   the firewall's; the compose project name is lower-case letters and digits, as the devcontainer CLI
+   makes it). A credential goes to one command, in the environment of
    the `podman exec` client, never on a command line and never into the container's own environment.
    A configuration that breaks a rule is a hard stop; a sandbox that won't start is an infrastructure
    failure: the run stops failed, with no retry loop (spec §12), and a resume tries again.
@@ -3857,7 +3861,7 @@ index 2e7f543..16a5977 100644
 
 ```output
 --- FAIL: TestScriptedRunsCommandsOnlyInTheSandbox (0.00s)
-    scripted_test.go:140: Load() = /tmp/TestScriptedRunsCommandsOnlyInTheSandbox3442244005/001/script.yaml: yaml: unmarshal errors:
+    scripted_test.go:140: Load() = /tmp/TestScriptedRunsCommandsOnlyInTheSandbox3566695524/001/script.yaml: yaml: unmarshal errors:
           line 5: field run not found in type scripted.Action
 FAIL
 ```
@@ -4222,13 +4226,14 @@ say.
 - [ ] The compose file has two services. `work` mounts the leaf read-write and its git dir read-only,
       at the leaf's layout under `/u`, joins `fw`'s network namespace, drops every capability, sets
       `no-new-privileges`, runs as the given uid and gid, and holds no added capability. `fw` alone
-      holds `NET_ADMIN`, and mounts only its own folder, read-only. Both use `keep-id` and never pull.
+      holds `NET_ADMIN`, runs as root of its own namespace (`user: "0:0"`), and mounts only its own folder,
+      read-only. Both use `keep-id`. The compose project name has lower-case letters and digits only.
 - [ ] `devcontainer.json` holds only the compose file, the service, the workspace folder and the
       shutdown action, and no command.
 - [ ] `MapPath` picks the longest mount, and refuses a path outside every mount.
 
 **Named test:** `go test ./sandbox -run 'TestMapPathUsesTheLongestMount|TestGenerateWritesTheMirroredHardenedConfig|TestGenerateRefusesWhatCouldNotBeHardened'`
-in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (278). **Depends on:** v0-T072.
+in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (285). **Depends on:** v0-T072.
 
 - [ ] **Step 1:** write the tests.
 
@@ -4305,8 +4310,11 @@ func TestGenerateWritesTheMirroredHardenedConfig(t *testing.T) {
 		len(work.CapAdd) != 0 || work.CapDrop[0] != "ALL" || fw.CapAdd[0] != "NET_ADMIN" {
 		t.Errorf("work = %+v, fw = %+v; want keep-id on both, no added capability in work, and the firewall in its own sidecar", work, fw)
 	}
-	if cf.Name != "ygg-20261016-101500-a1b2c3-repos-app" || work.Labels[LabelRun] != "20261016-101500-a1b2c3" {
+	if cf.Name != "ygg20261016101500a1b2c3reposapp" || work.Labels[LabelRun] != "20261016-101500-a1b2c3" {
 		t.Errorf("project %q, labels %v", cf.Name, work.Labels)
+	}
+	if fw.User != "0:0" {
+		t.Errorf("the firewall runs as %q; it must be root of its own namespace to write rules", fw.User)
 	}
 	if fw.Volumes[0] != "/mnt/wsl/cfg/sandbox/fw:/etc/ygg-fw:ro,Z" {
 		t.Errorf("fw volumes = %q; the firewall reads only its own folder, read-only", fw.Volumes)
@@ -4362,6 +4370,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/ouroboric-dev/gungnir"
@@ -4425,9 +4434,11 @@ type Generated struct {
 	Hosts        string // the firewall's host list
 }
 
-// Project returns the compose project name of a sandbox: one per run and leaf.
+// Project returns the compose project name of a sandbox: one per run and leaf. It is lower-case letters
+// and digits only, because the devcontainer CLI strips everything else from the name it gives the
+// engine, and Down finds containers by that name (found on a real engine, 2026-10-16).
 func Project(s gungnir.SandboxSpec) string {
-	return "ygg-" + s.Run + "-" + strings.NewReplacer("/", "-", ".", "-", "_", "-").Replace(strings.ToLower(s.Name))
+	return "ygg" + regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(strings.ToLower(s.Run+s.Name), "")
 }
 
 type composeFile struct {
@@ -4484,7 +4495,8 @@ func Generate(dir string, spec gungnir.SandboxSpec, c Config) (Generated, error)
 	cf := composeFile{Name: Project(spec), Services: map[string]service{
 		"fw": {
 			Image: c.Images.Firewall, Command: []string{"sh", "/etc/ygg-fw/egress.sh", "/etc/ygg-fw/hosts"},
-			UsernsMode: "keep-id", CapAdd: []string{"NET_ADMIN"}, Labels: labels,
+			// root of its own user namespace: keep-id alone would run it as the operator, who can't write rules
+			User: "0:0", UsernsMode: "keep-id", CapAdd: []string{"NET_ADMIN"}, Labels: labels,
 			Volumes: []string{fwEngine + ":/etc/ygg-fw:ro,Z"},
 		},
 		"work": {
@@ -4724,10 +4736,10 @@ Apply to `sandbox/config.go`:
 
 ```diff
 diff --git a/sandbox/config.go b/sandbox/config.go
-index fcd9b31..c67efe9 100644
+index 7d7bad3..bb23f15 100644
 --- a/sandbox/config.go
 +++ b/sandbox/config.go
-@@ -99,29 +99,46 @@ type service struct {
+@@ -102,29 +102,46 @@ type service struct {
  // can reach them or change them (spec §6.2). Generate doesn't check its own output; Up does, before
  // every start (see Validate).
  func Generate(dir string, spec gungnir.SandboxSpec, c Config) (Generated, error) {
@@ -4780,7 +4792,7 @@ index fcd9b31..c67efe9 100644
  	}
  	l := spec.Layout()
  	labels := map[string]string{LabelRun: spec.Run, LabelLeaf: spec.Name}
-@@ -147,29 +164,21 @@ func Generate(dir string, spec gungnir.SandboxSpec, c Config) (Generated, error)
+@@ -151,29 +168,21 @@ func Generate(dir string, spec gungnir.SandboxSpec, c Config) (Generated, error)
  		"name": Project(spec), "dockerComposeFile": "compose.yaml", "service": "work",
  		"workspaceFolder": Root + "/" + l.Leaf, "updateRemoteUserUID": false, "shutdownAction": "stopCompose",
  	}
@@ -5057,7 +5069,7 @@ and 7). Every call has `CONTAINER_HOST` set to the socket from `factory.yaml`, a
 
 **Acceptance criteria:**
 - [ ] A network engine such as `tcp://…` is refused.
-- [ ] `Down` removes the project's containers (`rm -f -t 2`) and its `_default` network, twice in a row
+- [ ] `Down` removes the project's containers (`rm -f -t 2 --depend`) and its `_default` network, twice in a row
       without error, and refuses an environment with no project.
 
 **Named test:** `go test ./sandbox -run 'TestNewRefusesAnEngineThatIsNotASocket|TestDownRemovesByLabelAndRepeats'`
@@ -5147,7 +5159,7 @@ func TestDownRemovesByLabelAndRepeats(t *testing.T) {
 		}
 	}
 	got := logOf(t, log)
-	if strings.Count(got, "podman rm -f -t 2 work123 fw456") != 2 || !strings.Contains(got, "network rm -f "+env.Project+"_default") {
+	if strings.Count(got, "podman rm -f -t 2 --depend work123 fw456") != 2 || !strings.Contains(got, "network rm -f "+env.Project+"_default") {
 		t.Errorf("Down didn't remove the containers and the network:\n%s", got)
 	}
 	if err := d.Down(context.Background(), gungnir.Env{}); err == nil {
@@ -5269,7 +5281,7 @@ func (d *Driver) Down(ctx context.Context, env gungnir.Env) error {
 	}
 	var errs []error
 	if f := strings.Fields(string(ids)); len(f) > 0 {
-		if _, err := d.run(ctx, d.Podman, append([]string{"rm", "-f", "-t", "2"}, f...)...); err != nil {
+		if _, err := d.run(ctx, d.Podman, append([]string{"rm", "-f", "-t", "2", "--depend"}, f...)...); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -5324,7 +5336,7 @@ Apply to `sandbox/driver_test.go`:
 
 ```diff
 diff --git a/sandbox/driver_test.go b/sandbox/driver_test.go
-index fdfef45..e723bd1 100644
+index 56c4cf3..dd6b974 100644
 --- a/sandbox/driver_test.go
 +++ b/sandbox/driver_test.go
 @@ -1,7 +1,9 @@
@@ -5397,7 +5409,7 @@ index fdfef45..e723bd1 100644
 +	if err == nil || !strings.Contains(err.Error(), "isn't closing") {
 +		t.Fatalf("Up() = %v, want a refusal: the network is open", err)
 +	}
-+	if !strings.Contains(logOf(t, log), "podman rm -f -t 2 work123 fw456") {
++	if !strings.Contains(logOf(t, log), "podman rm -f -t 2 --depend work123 fw456") {
 +		t.Error("a sandbox that failed its check was left running")
 +	}
 +	t.Setenv("STUB_PROBE_EXIT", "127")
@@ -5481,10 +5493,10 @@ Apply to `sandbox/config.go`:
 
 ```diff
 diff --git a/sandbox/config.go b/sandbox/config.go
-index c67efe9..c0bcc33 100644
+index bb23f15..b842832 100644
 --- a/sandbox/config.go
 +++ b/sandbox/config.go
-@@ -81,6 +81,7 @@ type composeFile struct {
+@@ -84,6 +84,7 @@ type composeFile struct {
  
  type service struct {
  	Image       string            `yaml:"image"`
@@ -5492,13 +5504,14 @@ index c67efe9..c0bcc33 100644
  	Command     []string          `yaml:"command"`
  	User        string            `yaml:"user,omitempty"`
  	UsernsMode  string            `yaml:"userns_mode"`
-@@ -144,12 +145,12 @@ func render(dir string, spec gungnir.SandboxSpec, c Config) (map[string][]byte,
+@@ -147,13 +148,13 @@ func render(dir string, spec gungnir.SandboxSpec, c Config) (map[string][]byte,
  	labels := map[string]string{LabelRun: spec.Run, LabelLeaf: spec.Name}
  	cf := composeFile{Name: Project(spec), Services: map[string]service{
  		"fw": {
 -			Image: c.Images.Firewall, Command: []string{"sh", "/etc/ygg-fw/egress.sh", "/etc/ygg-fw/hosts"},
 +			Image: c.Images.Firewall, PullPolicy: "never", Command: []string{"sh", "/etc/ygg-fw/egress.sh", "/etc/ygg-fw/hosts"},
- 			UsernsMode: "keep-id", CapAdd: []string{"NET_ADMIN"}, Labels: labels,
+ 			// root of its own user namespace: keep-id alone would run it as the operator, who can't write rules
+ 			User: "0:0", UsernsMode: "keep-id", CapAdd: []string{"NET_ADMIN"}, Labels: labels,
  			Volumes: []string{fwEngine + ":/etc/ygg-fw:ro,Z"},
  		},
  		"work": {
@@ -5513,7 +5526,7 @@ Apply to `sandbox/driver.go`:
 
 ```diff
 diff --git a/sandbox/driver.go b/sandbox/driver.go
-index 094f204..d4cc94c 100644
+index 98a4bf3..1819cda 100644
 --- a/sandbox/driver.go
 +++ b/sandbox/driver.go
 @@ -3,6 +3,7 @@ package sandbox
@@ -5721,12 +5734,13 @@ repository hooks and project MCP servers whatever flags a session gets.
       and the same firewall tag.
 - [ ] The Containerfile pins its base by digest, checks the gitleaks archive's SHA-256, installs the CLIs
       at exact versions, turns auto-update off, and fails the build for a stack lacking `bash`, `timeout`
-      or `git`. The managed settings set `allowManagedHooksOnly` and `allowManagedMcpServersOnly`.
+      or `git`. The managed settings set `allowManagedHooksOnly`, `allowManagedMcpServersOnly` and an empty
+      `allowedMcpServers`.
 - [ ] `Build` pulls the Node image and the stack with `--authfile`, then builds both targets with
       `--pull=never`, and never builds before it has pulled.
 
 **Named test:** `go test ./sandbox -run 'TestImageTagsFollowEveryInput|TestTheFactoryLayerIsPinned|TestBuildPullsWithIsolatedAuthThenBuildsNeverPulling'`
-in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (183). **Depends on:** v0-T076.
+in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (184). **Depends on:** v0-T076.
 
 - [ ] **Step 1:** write the tests.
 
@@ -5774,7 +5788,7 @@ func TestTheFactoryLayerIsPinned(t *testing.T) {
 		t.Error("the Containerfile uses a floating version or names an API key")
 	}
 	var ms map[string]any
-	if err := json.Unmarshal([]byte(ManagedSettings()), &ms); err != nil || ms["allowManagedHooksOnly"] != true || ms["allowManagedMcpServersOnly"] != true {
+	if err := json.Unmarshal([]byte(ManagedSettings()), &ms); err != nil || ms["allowManagedHooksOnly"] != true || ms["allowManagedMcpServersOnly"] != true || len(ms["allowedMcpServers"].([]any)) != 0 { // with only the first two keys, a project's .mcp.json server still ran (2026-10-16)
 		t.Errorf("managed settings = %v, %v; they must block repo hooks and project MCP servers", ms, err)
 	}
 }
@@ -5858,6 +5872,7 @@ Write `sandbox/assets/managed-settings.json`:
 {
   "allowManagedHooksOnly": true,
   "allowManagedMcpServersOnly": true,
+  "allowedMcpServers": [],
   "disableBypassPermissionsMode": "disable"
 }
 ```
@@ -7341,9 +7356,10 @@ a clean tree.
       and never repeats the secret field; any other exit, an unreadable report, an empty report with exit
       7, and a runner error are failures to scan.
 - [ ] The script scans the files changed or new in the leaf, and not the ones `.gitignore` names, a
-      deleted file or a symlink; a gitleaks that fails fails the script.
+      deleted file or a symlink; it runs gitleaks inside its scratch folder, so a finding names the file's
+      path in the leaf; a gitleaks that fails fails the script.
 
-**Named test:** `go test ./scan` in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (206).
+**Named test:** `go test ./scan` in `gleipnir`. **Layer:** `gleipnir`. **Size:** M (207).
 **Depends on:** v0-T081.
 
 - [ ] **Step 1:** write the tests.
@@ -7577,7 +7593,8 @@ while IFS= read -r -d '' f; do
     cp --parents -- "$f" "$d"
   fi
 done < <(git ls-files -z --modified --others --exclude-standard)
-gitleaks dir --no-banner --redact --exit-code 7 --report-format json --report-path /dev/stdout "$d"
+cd "$d" # so the report names files by their path in the leaf, not in a scratch folder
+gitleaks dir --no-banner --redact --exit-code 7 --report-format json --report-path /dev/stdout .
 ```
 
 - [ ] **Step 4:** run the named test. Expect `ok`.
@@ -7612,7 +7629,7 @@ Apply to `sandbox/driver_test.go`:
 
 ```diff
 diff --git a/sandbox/driver_test.go b/sandbox/driver_test.go
-index e723bd1..a9999a9 100644
+index dd6b974..3481656 100644
 --- a/sandbox/driver_test.go
 +++ b/sandbox/driver_test.go
 @@ -212,3 +212,35 @@ func TestNewRefusesAnEngineThatIsNotASocket(t *testing.T) {
@@ -7647,7 +7664,7 @@ index e723bd1..a9999a9 100644
 +	if err := d.StopLeftover(context.Background(), ls[1]); err != nil {
 +		t.Fatal(err)
 +	}
-+	if got := logOf(t, log); !strings.Contains(got, "label=com.docker.compose.project=ygg-p1") || !strings.Contains(got, "podman rm -f -t 2 aaa") {
++	if got := logOf(t, log); !strings.Contains(got, "label=com.docker.compose.project=ygg-p1") || !strings.Contains(got, "podman rm -f -t 2 --depend aaa") {
 +		t.Errorf("StopLeftover didn't remove the project's containers:\n%s", got)
 +	}
 +}
@@ -7772,7 +7789,7 @@ index 16a5977..be02e1d 100644
 
 ```output
 --- FAIL: TestScriptedReportsAProviderAndAToolVersionWhenTheScriptGivesThem (0.00s)
-    scripted_test.go:178: Load() = /tmp/TestScriptedReportsAProviderAndAToolVersionWhenTheScriptGivesThe3402717207/001/script.yaml: yaml: unmarshal errors:
+    scripted_test.go:178: Load() = /tmp/TestScriptedReportsAProviderAndAToolVersionWhenTheScriptGivesThe3609887272/001/script.yaml: yaml: unmarshal errors:
           line 3: field provider not found in type scripted.Outcome
           line 3: field cli_version not found in type scripted.Outcome
 ```
@@ -7847,7 +7864,7 @@ Apply to `sandbox/driver_test.go`:
 
 ```diff
 diff --git a/sandbox/driver_test.go b/sandbox/driver_test.go
-index a9999a9..3fa3ee3 100644
+index 3481656..204ffaf 100644
 --- a/sandbox/driver_test.go
 +++ b/sandbox/driver_test.go
 @@ -244,3 +244,28 @@ exit 0
@@ -7973,7 +7990,7 @@ Apply to `sandbox/driver_test.go`:
 
 ```diff
 diff --git a/sandbox/driver_test.go b/sandbox/driver_test.go
-index 3fa3ee3..a766da6 100644
+index 204ffaf..0a073fa 100644
 --- a/sandbox/driver_test.go
 +++ b/sandbox/driver_test.go
 @@ -269,3 +269,19 @@ func TestInfoReadsRootlessAndTheVersions(t *testing.T) {
@@ -8013,7 +8030,7 @@ Apply to `sandbox/driver.go`:
 
 ```diff
 diff --git a/sandbox/driver.go b/sandbox/driver.go
-index d4cc94c..bc9979d 100644
+index 1819cda..fe96925 100644
 --- a/sandbox/driver.go
 +++ b/sandbox/driver.go
 @@ -10,6 +10,7 @@ import (
@@ -8098,7 +8115,7 @@ takes a few minutes and needs the network. **Needs v0-H07.**
 **Named test:** `YGG_SANDBOX_ENGINE=unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
 YGG_SANDBOX_TREE=$HOME/ygg-it YGG_SANDBOX_TREE_ENGINE=/mnt/wsl/ygg-bind go test -tags sandbox -run
 TestSandboxDriverOnARealEngine -v -timeout 40m ./sandbox` in `gleipnir`, run with the Claude sandbox
-disabled. **Layer:** `gleipnir`. **Size:** M (236). **Depends on:** v0-T086, v0-T077,
+disabled. **Layer:** `gleipnir`. **Size:** M (240). **Depends on:** v0-T086, v0-T077,
 v0-T082; v0-H07.
 
 - [ ] **Step 1:** write `sandbox/integration_test.go`:
@@ -8227,7 +8244,7 @@ func TestSandboxDriverOnARealEngine(t *testing.T) {
 	want := func(name string, code int, out string, argv ...string) {
 		t.Helper()
 		got, o := probe(argv...)
-		if got != code || (out != "" && !strings.Contains(o, out)) {
+		if (code >= 0 && got != code) || (code < 0 && got == 0) || (out != "" && !strings.Contains(o, out)) {
 			t.Errorf("%s: %v exited %d with %q; want exit %d and %q", name, argv, got, o, code, out)
 		}
 	}
@@ -8245,9 +8262,9 @@ func TestSandboxDriverOnARealEngine(t *testing.T) {
 		want("the .git file", 0, "gitdir: ../../.git/modules/repos/app", "cat", ".git")
 	})
 	t.Run("the git dir is read-only, so no hook can be planted", func(t *testing.T) {
-		want("hook", 1, "", "sh", "-c", "echo '#!/bin/sh' > ../../.git/modules/repos/app/hooks/pre-commit")
-		want("config", 1, "", "sh", "-c", "echo x >> ../../.git/modules/repos/app/config")
-		want("the umbrella's own git dir", 1, "", "sh", "-c", "ls ../../.git/HEAD")
+		want("hook", -1, "", "sh", "-c", "echo '#!/bin/sh' > ../../.git/modules/repos/app/hooks/pre-commit")
+		want("config", -1, "", "sh", "-c", "echo x >> ../../.git/modules/repos/app/config")
+		want("the umbrella's own git dir", -1, "", "sh", "-c", "ls ../../.git/HEAD")
 	})
 	t.Run("nothing of the host is there but the leaf", func(t *testing.T) {
 		want("a host file", 1, "", "test", "-e", canary)
@@ -8275,6 +8292,8 @@ func TestSandboxDriverOnARealEngine(t *testing.T) {
 			`printf '%s' '{"mcpServers":{"evil":{"command":"touch","args":["/home/ygg/mcp-ran"]}}}' > .mcp.json`
 		want("plant", 0, "", "sh", "-c", trap)
 		for _, flags := range [][]string{{}, {"--setting-sources", "user", "--strict-mcp-config"}} {
+			// Each variant on its own: a marker from the first must not read as the second's.
+			probe("rm", "-f", "/home/ygg/hook-ran", "/home/ygg/mcp-ran")
 			// No token: the session fails to authenticate, but in an unprotected sandbox the hook and the
 			// server have run by then (sandbox spike B).
 			probe(append([]string{"claude", "-p", "hi", "--max-turns", "1"}, flags...)...)
@@ -8287,7 +8306,9 @@ func TestSandboxDriverOnARealEngine(t *testing.T) {
 		if err := scan.Run(ctx, r); err != nil {
 			t.Fatalf("a clean leaf: %v", err)
 		}
-		want("write a token", 0, "", "sh", "-c", "printf 'token = \"ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789\"\\n' > deploy.env")
+		// Built in two pieces, so this file holds no token for a secret scanner to find in it.
+		token := "ghp_" + "R4nD0mT0k3nV4lu3AbCdEfGhIjKlMnOpQrSt"
+		want("write a token", 0, "", "sh", "-c", "printf 'token = \"%s\"\\n' '"+token+"' > deploy.env")
 		err := scan.Run(ctx, r)
 		var found *scan.FoundError
 		if !asFound(err, &found) || found.Findings[0].File != "deploy.env" {
@@ -8306,7 +8327,7 @@ func TestSandboxDriverOnARealEngine(t *testing.T) {
 			t.Fatal("Exec() returned no error for a command that ran past its context")
 		}
 		time.Sleep(time.Second)
-		want("no sleep left", 1, "", "sh", "-c", "grep -l '^sleep$' /proc/[0-9]*/comm 2>/dev/null | grep -q .")
+		want("no sleep left", 1, "0", "sh", "-c", "for f in /proc/[0-9]*/cmdline; do tr '\\0' ' ' < $f; echo; done | grep -c 'sleep [3]00'")
 	})
 	t.Run("a credential given to one command is not in the next", func(t *testing.T) {
 		var out bytes.Buffer
@@ -9837,7 +9858,7 @@ index 18e79c3..ff13179 100644
 # github.com/ouroboric-dev/odin/internal/leaf [github.com/ouroboric-dev/odin/internal/leaf.test]
 internal/leaf/leaf_test.go:218:14: l.Tidy undefined (type *Leaf has no field or method Tidy)
 internal/leaf/leaf_test.go:229:14: l.Tidy undefined (type *Leaf has no field or method Tidy)
---- FAIL: TestLeafCommandsRunInTheSandboxAndUmbrellaCommandsOnTheHost (0.29s)
+--- FAIL: TestLeafCommandsRunInTheSandboxAndUmbrellaCommandsOnTheHost (0.33s)
 ```
 
 - [ ] **Step 3:** write the code.
@@ -10884,7 +10905,7 @@ func TestDoctorChecksTheEngineAndStopsLeftoverSandboxes(t *testing.T) {
 	if code != ExitDone {
 		t.Errorf("exit %d: a leftover that doctor stopped isn't an error", code)
 	}
-	if got, _ := os.ReadFile(log); !strings.Contains(string(got), "podman rm -f -t 2 c1") {
+	if got, _ := os.ReadFile(log); !strings.Contains(string(got), "podman rm -f -t 2 --depend c1") {
 		t.Errorf("doctor never stopped the leftover container:\n%s", got)
 	}
 }
@@ -11438,7 +11459,7 @@ ledger must verify, and doctor must find nothing left. **Needs v0-H07.**
 
 **Named test:** `YGG_SANDBOX_ENGINE=… YGG_SANDBOX_TREE=$HOME/ygg-it YGG_SANDBOX_TREE_ENGINE=/mnt/wsl/ygg-bind
 go test -tags sandbox -run TestSandboxEscapes -v -timeout 40m ./internal/cli` in `odin`, run with the
-Claude sandbox disabled. **Layer:** `odin`. **Size:** M (107). **Depends on:** v0-T094; v0-H07.
+Claude sandbox disabled. **Layer:** `odin`. **Size:** M (110). **Depends on:** v0-T094; v0-H07.
 
 - [ ] **Step 1:** write `internal/cli/sandbox_e2e_test.go`:
 
@@ -11517,6 +11538,9 @@ func TestSandboxEscapes(t *testing.T) {
 	logs := func(n int) string {
 		b, _ := os.ReadFile(filepath.Join(run.Dir(dir, id), "transcripts", "design-1-run-"+strconv.Itoa(n)+".log"))
 		return string(b)
+	}
+	for i := 1; i <= 6; i++ {
+		t.Logf("probe %d said: %s", i, strings.TrimSpace(logs(i)))
 	}
 	if got := logs(1); strings.Contains(got, "PRIVATE KEY") || !strings.Contains(got, "No such file") {
 		t.Errorf("the agent read the host's key file: %q", got)
@@ -11776,6 +11800,8 @@ the named test was run, and it failed; then the code was restored.
 | v0-T092 | no secret scan before a checkpoint | `TestASecretInAnAgentsWorkStopsTheRunBeforeAnythingIsCommitted` |
 | v0-T092 | a read-only role's change isn't refused | `TestAReadOnlyRoleThatChangesTheLeafIsAHardStop` |
 | v0-T092 | a secret's stop doesn't quarantine the leaf | `TestASecretInAnAgentsWorkStopsTheRunBeforeAnythingIsCommitted` |
+| v0-T073 | (real engine) the git dir mounted read-write | `TestSandboxEscapes`: the hook write printed `WROTE` |
+| v0-T072 | (real engine) the firewall's default policy is ACCEPT | `TestSandboxEscapes`: `Up` refused the sandbox |
 | v0-T093 | a rootful engine passes doctor | `TestDoctorRefusesARootfulEngine` |
 | v0-T093 | doctor stops a container a live run holds | `TestDoctorLeavesWhatALiveRunOrAnotherProjectOwns` |
 
@@ -11802,10 +11828,31 @@ code; the table is the second run.
   0.89.0's `up` takes `--skip-post-create`, `--default-user-env-probe`, `--mount-workspace-git-root` and
   `--user-data-folder`.
 
-**The container tests.** Not run when this plan was written: the Podman machine was stopped. The tests behind the tag (v0-T087 and
-v0-T095) and the images' build (v0-T077's Containerfile) are the one part of this plan that no run has
-shown to work. They compile (`go vet -tags sandbox`), and every call the driver makes was tested against
-stand-ins that log what they are asked, but a stand-in can't say whether `podman-compose` 1.6.0 takes the
-compose options, whether the Containerfile builds on the pinned bases, or whether `podman exec -e NAME` passes a value
-through the remote client. The first real run is step 3 of v0-T087, and the executor corrects what it
-shows, in the task that owns the code. Each fix is small and the probes say where it is.
+**The container tests** were run on 2026-10-16 on the Podman machine's rootless engine (Podman 5.7.1,
+devcontainer CLI 0.89.0, `podman-compose` 1.6.0). The first run built the images in about six minutes and
+found five defects, which the tasks above now carry fixed:
+
+1. The firewall sidecar ran as the operator, because `keep-id` sets the container's user, so
+   `egress.sh` couldn't write `/run/ygg-fw` and exited 1; the work container never started and
+   `devcontainer up` waited until the five-minute bound killed it (v0-T073: `user: "0:0"` for `fw`).
+2. The devcontainer CLI strips every character but letters and digits from the compose project name, so
+   `Down` looked for containers under a name that didn't exist and left them (v0-T073: `Project` makes
+   that name).
+3. `podman rm -f` of the firewall fails while the work container depends on it (v0-T075: `--depend`).
+4. With only `allowManagedHooksOnly` and `allowManagedMcpServersOnly`, a hostile repository's
+   `.mcp.json` server still ran in a session with no flags (v0-T077: `allowedMcpServers: []`; a control
+   with no managed settings ran both the hook and the server, and the new settings ran neither).
+5. gitleaks reports the path it was given, a scratch folder; the scan now runs inside that folder so a
+   finding names the file's path in the leaf (v0-T082). The test's made-up token was also too regular for
+   gitleaks to flag; the test uses a high-entropy one.
+
+After those, `TestSandboxDriverOnARealEngine` passes all ten probes (77 seconds with the images built), and
+`TestSandboxEscapes` passes (40 seconds). Its probes printed what the agent saw: the host key file and
+`~/.ssh` "No such file or directory", the network `BLOCKED`, the git dir "Read-only file system", the
+project's `features.json` "Permission denied", and `CapEff` all zeros; the second run never ran the
+agent's `initializeCommand`. Two defences were then removed on the real engine, and the test failed each
+time: the git dir mounted read-write (the agent's hook write printed `WROTE`), and the firewall's default
+policy set to ACCEPT (`Up` refused the sandbox).
+
+**Not run:** a real model session. Claude Code's and opencode's stream formats are tested against the
+numbers spike B recorded and against real opencode output, not against a live session; that is v0-H09.
