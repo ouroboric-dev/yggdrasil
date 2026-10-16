@@ -167,8 +167,10 @@ These go through the `charter` approval point before this design doc is accepted
   every product starts from. Yggdrasil v0's scope does not change.
 - **Yggdrasil roadmap:** a step for Asgard v0.
 - **Ouroboric charter and docs:** the portfolio shows Asgard as a realm of Yggdrasil, not a second
-  factory; the naming table, the portfolio diagram, readiness evidence RB-02 and the repository lists
-  in `check-repos.sh` follow.
+  factory; the company roadmap, the naming table, the docs standard's examples, the README and the
+  diagrams follow. Dated records (the 2026-10-11 readiness assessment, journal entries, research)
+  stay as written. The repository scripts (`check-repos.sh`, `setup-repo.sh`) change with the
+  submodule wiring after Yggdrasil v0 (§5.2), not before.
 - **Spec-driven development §3.1:** tier 0 gains the nine steps and the `brand` stop (§6.1).
 - **Asgard's product charter** is marked superseded, not deleted.
 
