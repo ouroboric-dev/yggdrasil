@@ -260,6 +260,55 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Fix:** each finding's Fix line in that file.
 - **Status:** reasoned.
 
+Source of items B-035 to B-039: the
+[Asgard v0 design doc §10](../1-product/design/2026-10-17-asgard-v0-design.md#10-what-yggdrasil-needs-later)
+(accepted 2026-10-17). They are not review findings: they are what Yggdrasil must support before the
+Ginnungagap graph can run on Odin. None is Yggdrasil v0 work. Pick them up with the Asgard realm's
+graph, or earlier when a phase touches the code they name.
+
+### B-035: Odin loads a realm only from inside the `yggdrasil` tree
+
+- **Where:** `odin` (realm loading behind `ygg run --realm`), `gungnir/schema` (`pack.yaml`).
+- **Problem:** The web realm is a leaf of the `yggdrasil` umbrella. The `asgard` leaf becomes one after
+  Yggdrasil v0, and Odin must then load its pack the same way.
+- **Fix:** Resolve `--realm asgard` to the `asgard` leaf's pack at a pinned version.
+- **Status:** requirement.
+
+### B-036: a realm must have code leaves, a stack layer and a code check ladder
+
+- **Where:** `odin` (run start, sandbox bring-up), `gungnir/schema` (`pack.yaml`), the check ladder.
+- **Problem:** The Asgard realm's output is documentation in a company umbrella: no code leaves, no
+  devcontainer stack layer, and checks that are document checks (docs standard, readiness, brand).
+- **Fix:** Let a pack declare no stack layer and a check ladder of document checks; let a run work in
+  an umbrella with no leaves.
+- **Status:** requirement.
+
+### B-037: gate nodes assume an operator at a terminal
+
+- **Where:** `odin` gate nodes, `ygg approve` and `ygg reject`.
+- **Problem:** In the Asgard realm the founder approves direction (`charter`, `brand`, readiness), and
+  the founder may never use a terminal. The design doc's v0 answer is a merge of a pull request in the
+  GitHub web page from the founder's own account.
+- **Fix:** Let a gate be approved by a recorded action outside the CLI, such as a merged pull request,
+  and record who approved it in the ledger.
+- **Status:** requirement.
+
+### B-038: realm leaves have no naming convention
+
+- **Where:** the `yggdrasil` umbrella's leaves, `ouroboric/scripts/check-repos.sh`.
+- **Problem:** The web realm's leaf is `realm-web`; the founder does not want to keep that name. The
+  Asgard leaf is `asgard` until a convention exists.
+- **Fix:** Decide one convention for every realm leaf, and rename both at once.
+- **Status:** requirement (a naming decision for the founder).
+
+### B-039: the factory runs on WSL2 only
+
+- **Where:** `gleipnir/sandbox` (the Podman socket and the bind-mount path), `ygg doctor`.
+- **Problem:** The photographer may run the factory on a shared MacBook with Podman. Yggdrasil v0
+  targets WSL2, with the instance tree bind-mounted under `/mnt/wsl`.
+- **Fix:** Support the Podman machine on macOS: its socket, its mount paths, and `ygg doctor` checks.
+- **Status:** requirement.
+
 ## Done
 
 ### B-004: check output in a leaf blocks the next run
