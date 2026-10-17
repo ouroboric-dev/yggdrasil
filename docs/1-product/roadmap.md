@@ -14,12 +14,16 @@ This roadmap sets the order of work, not dates. Each step has its own design doc
 1. **v0:** core (Odin, Gleipnir, Jormungandr, Gungnir), the web realm, metrics; builds client gallery
    lite and shows at least one measured self-improvement. Built by hand following the spec-driven
    development (SDD) process (self-hosting stage 0).
-2. **Iteration 2:** GitHub remote, bot identities and tracker. Then candidates, chosen by what v0's
+2. **Asgard v0:** the Asgard realm's kickstart journey, company template, kickstart skills (in
+   Havamal) and scripts, used by hand; a photographer's company and her three products as the
+   acceptance test. Its design doc is `design/2026-10-17-asgard-v0-design.md`.
+3. **Iteration 2:** GitHub remote, bot identities and tracker. Then candidates, chosen by what v0's
    runs measure: terminal UI; OpenTelemetry export; Next.js comparison realm; Spec Kit planning
    strategy; Ponytail cleanup job.
-3. **Self-hosting stage 1:** Yggdrasil builds one of its own features. It requires the change graph,
+4. **Self-hosting stage 1:** Yggdrasil builds one of its own features. It requires the change graph,
    the Go realm and the `guardrail-change` hard approval point, built first: the factory must not
    change its own code before any change to its guardrails stops for a human.
-4. **Game realm:** its own design doc and spec.
-5. **Benchmark kit (Mimir):** its own design doc and spec; then self-hosting stage 2.
-6. **Later:** parallel agents, deployment, mobile, promotion (Bragi).
+5. **Game realm:** its own design doc and spec.
+6. **Benchmark kit (Mimir):** its own design doc and spec; then self-hosting stage 2.
+7. **Later:** the Ginnungagap graph on Odin (Asgard automation), parallel agents, deployment,
+   mobile, promotion (Bragi).
