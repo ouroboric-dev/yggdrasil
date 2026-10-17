@@ -2,7 +2,7 @@
 title: "Research: compounding learnings and the self-improvement loop"
 status: draft
 date: 2026-10-17
-related: [curation.md, research-loops-graphs.md, ../1-product/charter.md, ../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md]
+related: [curation.md, research-bmad.md, research-loops-graphs.md, ../1-product/charter.md, ../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md]
 style: research
 ---
 
