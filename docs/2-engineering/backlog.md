@@ -227,26 +227,6 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Fix:** Empty them too, or mount them as tmpfs.
 - **Status:** reasoned.
 
-### B-032: a failed journal append does not stop the run at the cap
-
-- **Where:** `internal/run/run.go` (`Spend`), `internal/engine/session.go`, `internal/cli/doctor.go`.
-- **Problem:** Phase 4's final review (I4) was fixed in part: the usage now counts in the run and `run.json`
-  is saved before the journal error returns. Three parts are left: the run ends with an error instead of
-  stopping at `budget-cap` (the leaf holds uncommitted work after an implementer session, and the gate file's
-  text says to raise the cap); the usage the journal missed is kept nowhere, so the day's cap misses that
-  session; `ygg doctor` checks the journal folder, not whether today's file can be opened for appending.
-- **Fix:** keep a pending entry in `run.json` that the next `Spend` or `Open` appends first; stop at
-  `budget-cap` with `CapJournal` and set the work aside as a gate does; make `doctor` open the file.
-- **Status:** reasoned.
-
-### B-033: a reviewer's id may equal a check's name in the schema
-
-- **Where:** `gungnir/schema/graph.go` (`checkLoop`).
-- **Problem:** Phase 4's final review (I3) was fixed in `jormungandr` (#4): the book guards each finding's
-  source and `Review` refuses the `check-` prefix. The schema still accepts a reviewer id equal to a check name.
-- **Fix:** refuse it in `checkLoop`.
-- **Status:** reasoned.
-
 ### B-034: minor findings of Phase 4's final review
 
 - **Where:** the list is in `.superpowers/sdd/tasks-2026-10-16-yggdrasil-v0-phase-4/final-review/review.md`
@@ -258,7 +238,10 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
   M9 `Retrier.Do` treats a failed `infra` result with no error as a success; M10 the day's dollar cap counts
   subscription estimates.
 - **Fix:** each finding's Fix line in that file.
-- **Status:** reasoned.
+- **Status:** reasoned. M3 and M5 are fixed (the cleanup before Phase 5): M3 a session the caps leave no
+  turns for doesn't start, [odin#10](https://github.com/ouroboric-dev/odin/pull/10); M5 an open finding
+  keeps its highest severity, [jormungandr#6](https://github.com/ouroboric-dev/jormungandr/pull/6). M1, M2,
+  M4 and M6 to M10 are open.
 
 Source of items B-035 to B-039: the
 [Asgard v0 design doc §10](../1-product/design/2026-10-17-asgard-v0-design.md#10-what-yggdrasil-needs-later)
@@ -299,7 +282,10 @@ graph, or earlier when a phase touches the code they name.
 - **Problem:** The web realm's leaf is `realm-web`; the founder does not want to keep that name. The
   Asgard leaf is `asgard` until a convention exists.
 - **Fix:** Decide one convention for every realm leaf, and rename both at once.
-- **Status:** requirement (a naming decision for the founder).
+- **Status:** decided 2026-10-17 in the change proposal
+  [realm leaf naming](changes/2026-10-17-realm-leaf-naming/proposal.md)
+  ([yggdrasil#36](https://github.com/ouroboric-dev/yggdrasil/pull/36)): `realm-web` becomes `midgard-react`
+  and `helheim-go`. Done when its tasks T001 to T003 are merged.
 
 ### B-039: the factory runs on WSL2 only
 
@@ -309,7 +295,46 @@ graph, or earlier when a phase touches the code they name.
 - **Fix:** Support the Podman machine on macOS: its socket, its mount paths, and `ygg doctor` checks.
 - **Status:** requirement.
 
+### B-040: admin actions on repos need the founder at a computer
+
+- **Where:** `ouroboric/scripts` (`create-repo.sh`, `setup-repo.sh`), `ouroboric/.github/workflows`, the
+  pr-bot's permissions.
+- **Problem:** Creating and renaming a repo needs an admin token that the founder types into a terminal
+  (`create-repo.sh`, `setup-repo.sh`). From the phone the founder can't run them, and the agents must never
+  hold Administration rights: the same permission changes and deletes rulesets, including the rule that a
+  push needs someone else's approval.
+- **Fix (decided 2026-10-17, variant A):** a `workflow_dispatch` workflow in `ouroboric` that creates a repo
+  (`create-repo.sh`, then `setup-repo.sh`), renames one, or adds one to the pr-bot, and does nothing else (no
+  delete, no weaker ruleset). Its admin credential (a small separate GitHub App with Administration write,
+  so it does not expire) is a secret of an environment that only `main` may use and that names the founder
+  as required reviewer. The pr-bot gets `Actions: write` on `ouroboric` only, so an agent starts a run and
+  the founder approves it with one tap in GitHub mobile. The founder adds the workflow file (the bot can't
+  push workflows); the script changes go in an `ouroboric` PR with tests.
+- **Status:** requirement (the founder follows up later).
+
 ## Done
+
+### B-032: a failed journal append does not stop the run at the cap
+
+- **Where:** `internal/run/run.go` (`Spend`), `internal/engine/session.go`, `internal/cli/doctor.go`.
+- **Problem:** Phase 4's final review (I4) was fixed in part: the usage now counts in the run and `run.json`
+  is saved before the journal error returns. Three parts are left: the run ends with an error instead of
+  stopping at `budget-cap` (the leaf holds uncommitted work after an implementer session, and the gate file's
+  text says to raise the cap); the usage the journal missed is kept nowhere, so the day's cap misses that
+  session; `ygg doctor` checks the journal folder, not whether today's file can be opened for appending.
+- **Fix:** keep a pending entry in `run.json` that the next `Spend` or `Open` appends first; stop at
+  `budget-cap` with `CapJournal` and set the work aside as a gate does; make `doctor` open the file.
+- **Status:** fixed in the cleanup before Phase 5 (pending entries, the stop with the work set aside,
+  `doctor`'s append check, and four review fixes), [odin#10](https://github.com/ouroboric-dev/odin/pull/10).
+
+### B-033: a reviewer's id may equal a check's name in the schema
+
+- **Where:** `gungnir/schema/graph.go` (`checkLoop`).
+- **Problem:** Phase 4's final review (I3) was fixed in `jormungandr` (#4): the book guards each finding's
+  source and `Review` refuses the `check-` prefix. The schema still accepts a reviewer id equal to a check name.
+- **Fix:** refuse it in `checkLoop`.
+- **Status:** fixed in the cleanup before Phase 5, [gungnir#9](https://github.com/ouroboric-dev/gungnir/pull/9),
+  pinned in [odin#11](https://github.com/ouroboric-dev/odin/pull/11).
 
 ### B-004: check output in a leaf blocks the next run
 
