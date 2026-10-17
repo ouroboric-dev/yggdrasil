@@ -1,6 +1,6 @@
 # AGENTS.md: Yggdrasil
 
-Yggdrasil is the software factory. This umbrella holds docs, `go.work` and the component repos as
+Yggdrasil is the agentic factory. This umbrella holds docs, `go.work` and the component repos as
 submodules. Its only code is `bench/harbor/`, which runs the factory on Harbor benchmark tasks; factory
 code lives in the components. Start with `docs/README.md`.
 

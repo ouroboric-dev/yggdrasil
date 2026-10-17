@@ -48,10 +48,12 @@ style: spec
 ## realm-leaf-naming-T003: the living docs (before Phase 5)
 
 - **Acceptance criteria:**
-  - [ ] The delta is folded into the v0 spec, and §2's architecture diagram is redrawn and rendered
-        (`ouroboric/scripts/diagrams.sh`).
-  - [ ] `yggdrasil/README.md`, the roadmap and the Asgard v0 design say `midgard-react` (or Midgard)
-        where they mean the realm, and keep "web" where they mean the kind of product.
+  - [ ] The living docs (`README.md`, `docs/README.md`, `AGENTS.md`, the charter, the roadmap) say
+        `midgard-react` (or Midgard) where they mean the realm, keep "web" where they mean the kind of
+        product, and call Yggdrasil the agentic factory (founder, 2026-10-17).
+  - [ ] The v0 spec, its diagrams and the dated design docs stay as accepted: they are records. The
+        delta folds into the living spec (`system/`) when v0 lands, as every change's delta does.
+        (Corrected 2026-10-17: this task first said to fold the delta into the v0 spec.)
   - [ ] B-038 moves to Done in the backlog, with this change's PR links.
 - **Named test:** review of the diff against the delta.
 - **Layer:** `yggdrasil`.

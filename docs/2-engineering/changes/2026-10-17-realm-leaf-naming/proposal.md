@@ -132,7 +132,8 @@ rule still holds, and only Asgard and the web realms are on the roadmap.
 ## Impact
 
 - **Spec:** §1's scope line, §2's repo table, §2.1, §4.1, §4.2, §6.1, §9 and §15.3 (see the delta).
-  §2's diagram names `realm-web` and is redrawn.
+  §2's diagram names `realm-web`. The v0 spec stays as accepted; the delta, with a redrawn diagram,
+  goes into the living spec (`system/`) when v0 lands.
 - **Repos:** the founder renames `realm-web` to `midgard-react` and creates `helheim-go`. The umbrella's
   `.gitmodules`, `go.work` and pointers change, as do `ouroboric/scripts/check-repos.sh` and the
   `scaffold-component.sh` test's example name.

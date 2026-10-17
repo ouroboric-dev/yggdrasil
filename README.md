@@ -1,7 +1,8 @@
 # Yggdrasil docs
 
-Yggdrasil is an open-source software factory by [Ouroboric](https://github.com/ouroboric-dev). It's
-a Go orchestrator that turns a written brief into verified software. It runs coding agents in
+Yggdrasil is an open-source agentic factory by [Ouroboric](https://github.com/ouroboric-dev). It's
+a Go orchestrator that turns a written brief into verified work: software first, and in time games,
+art and research. It runs coding agents in
 sandboxes, through loops and human approval points. Start with the [charter](docs/1-product/charter.md) and
 the [v0 design doc](docs/1-product/design/2026-10-11-yggdrasil-v0-design.md).
 
@@ -27,7 +28,7 @@ Run `uvx pre-commit install` once after cloning, so `gitleaks` checks each commi
 - **Code:** [AGPL-3.0](LICENSE). Anyone may use, change and share it. Anyone who distributes a
   changed version, or runs one as a service, must publish their source under the same licence.
 - **Anything the factory copies into what you build** (realm templates, scaffolds, skills): MIT, so your
-  products stay yours. Those files live in their own repositories (for example `realm-web`, `havamal`).
+  products stay yours. Those files live in their own repositories (for example `midgard-react`, `havamal`).
 - **Documentation:** [CC BY 4.0](LICENSES/CC-BY-4.0.txt).
 - **Names and logos** are not licensed: see
   [TRADEMARKS.md](https://github.com/ouroboric-dev/ouroboric/blob/main/TRADEMARKS.md).
