@@ -8,22 +8,25 @@ style: direction
 
 # Yggdrasil product charter
 
-This charter sets direction for Yggdrasil, the software factory, within the
+This charter sets direction for Yggdrasil, the agentic factory, within the
 [Ouroboric charter](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/1-company/charter.md).
 Every Yggdrasil design doc must conform to it; a design doc that doesn't stops for a human. It was
 written retroactively on 2026-10-11 from the founding brainstorming sessions (the product kickstart).
 Amended on 2026-10-17 to admit the **Asgard realm**, which kickstarts companies and products. It
 takes over the direction of the superseded
 [Asgard product charter](https://github.com/ouroboric-dev/asgard/blob/main/docs/1-product/charter.md).
+Amended again on 2026-10-17 (founder): Yggdrasil is **the agentic factory**, since its nine realms
+make more than software (see
+[the realms](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/story/naming-and-mythology.md#the-realms)).
 
 ## Vision
 
-Anyone can assemble a trustworthy software factory for their own use case: agents build, humans
+Anyone can assemble a trustworthy agentic factory for their own use case: agents build, humans
 steer.
 
 ## Mission
 
-Build an open, modular software factory that measurably improves with every run, and document every
+Build an open, modular agentic factory that measurably improves with every run, and document every
 lesson of building it, so anyone can run, adapt and trust their own.
 
 ## Principles

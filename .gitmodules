@@ -10,9 +10,12 @@
 [submodule "jormungandr"]
 	path = jormungandr
 	url = https://github.com/ouroboric-dev/jormungandr.git
-[submodule "realm-web"]
-	path = realm-web
-	url = https://github.com/ouroboric-dev/realm-web.git
+[submodule "midgard-react"]
+	path = midgard-react
+	url = https://github.com/ouroboric-dev/midgard-react.git
 [submodule "havamal"]
 	path = havamal
 	url = https://github.com/ouroboric-dev/havamal.git
+[submodule "helheim-go"]
+	path = helheim-go
+	url = https://github.com/ouroboric-dev/helheim-go.git
