@@ -71,7 +71,7 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
 - **Problem:** `Resolve` runs `git submodule update --init` before `Start` takes the locks. The
   comment on `Prepare` says "It writes nothing". Two starts at once can collide on `index.lock`.
 - **Fix:** move the checkouts after the locks are taken, or change the comment and accept the race.
-- **Status:** reasoned.
+- **Status:** reasoned. Phase 5a (2026-10-17) leaves `Prepare` as it was; still open.
 
 ### B-006: a parent project's graph can bypass a sub-project's locks
 
@@ -81,7 +81,7 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
   use different `runs.lock`, `repo-*.lock` and pointer locks for the same leaf and umbrella.
 - **Fix:** key the leaf and umbrella locks by the canonical git dir. Or refuse a repo path that
   crosses a child umbrella with its own `.factory/`.
-- **Status:** reasoned.
+- **Status:** reasoned. Phase 5a (2026-10-17) leaves the lock names as they were; still open.
 
 ### B-007: submodule names are not validated
 
@@ -108,20 +108,6 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
   is correct. But any other failure also reads as zero rows, so the guard passes.
 - **Fix:** tell "the path is not in HEAD" apart from other errors, for example with
   `git cat-file -e HEAD:<file>`. Return the other errors.
-- **Status:** reasoned.
-
-### B-010: ledger gaps around landings
-
-- **Where:** `internal/engine/land.go` (`runPointer`).
-- **Problem, three parts:**
-  1. A `shrink-guard` stop returns before it logs `node_failed`, so the attempt that `node_started`
-     opened never closes in the ledger.
-  2. A pointer move that committed, but whose `run.json` save was lost, is skipped on resume: the
-     pointer is already there, so `res.Commit` is empty and no `pointer_moved` line is written.
-  3. `Waived` is cleared only when the move succeeds. A waiver therefore outlives a failed attempt.
-     If the generated files change before the retry, the guard is skipped for different content.
-- **Fix:** log `node_failed` before the hard stop. On resume, log `pointer_moved` when the pointer is
-  already at `To` and the ledger has no such line. Clear `Waived` on any outcome other than a stop.
 - **Status:** reasoned.
 
 ### B-011: `doctor` reports a live run's half-written ledger line as an error
@@ -156,13 +142,6 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
 - **Status:** proved.
 
 Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fresh Opus reviewer over `gungnir` `8631647..768edab`, `havamal` `0940ffe..e7b4e47`, `gleipnir` `968aee0..7653026` and `odin` `5076219..e10a881`. It found one Critical and five Important issues, all fixed before merge; these are the Minor ones, plus two follow-ups the fixer noted (B-030, B-031). Line numbers are not recorded: search by name.
-
-### B-015: two leaves can share a sandbox
-
-- **Where:** `gleipnir/sandbox/config.go, driver.go`.
-- **Problem:** `Project()` and the config folder name collapse punctuation, so `repos/web-app` and `repos/webapp` share a compose project; one leaf's `Up` or `Down` tears down the other's sandbox.
-- **Fix:** Keep punctuation distinct (hash the path). Test: `TestTwoLeavesNeverShareASandboxProject`.
-- **Status:** reasoned.
 
 ### B-022: opencode may download unpinned language servers
 
@@ -249,23 +228,6 @@ Source of items B-035 to B-039: the
 Ginnungagap graph can run on Odin. None is Yggdrasil v0 work. Pick them up with the Asgard realm's
 graph, or earlier when a phase touches the code they name.
 
-### B-035: Odin loads a realm only from inside the `yggdrasil` tree
-
-- **Where:** `odin` (realm loading behind `ygg run --realm`), `gungnir/schema` (`pack.yaml`).
-- **Problem:** The web realm is a leaf of the `yggdrasil` umbrella. The `asgard` leaf becomes one after
-  Yggdrasil v0, and Odin must then load its pack the same way.
-- **Fix:** Resolve `--realm asgard` to the `asgard` leaf's pack at a pinned version.
-- **Status:** requirement.
-
-### B-036: a realm must have code leaves, a stack layer and a code check ladder
-
-- **Where:** `odin` (run start, sandbox bring-up), `gungnir/schema` (`pack.yaml`), the check ladder.
-- **Problem:** The Asgard realm's output is documentation in a company umbrella: no code leaves, no
-  devcontainer stack layer, and checks that are document checks (docs standard, readiness, brand).
-- **Fix:** Let a pack declare no stack layer and a check ladder of document checks; let a run work in
-  an umbrella with no leaves.
-- **Status:** requirement.
-
 ### B-037: gate nodes assume an operator at a terminal
 
 - **Where:** `odin` gate nodes, `ygg approve` and `ygg reject`.
@@ -274,7 +236,8 @@ graph, or earlier when a phase touches the code they name.
   GitHub web page from the founder's own account.
 - **Fix:** Let a gate be approved by a recorded action outside the CLI, such as a merged pull request,
   and record who approved it in the ledger.
-- **Status:** requirement.
+- **Status:** requirement. Phase 5a (2026-10-17) still stops at a gate for an operator at a terminal; open
+  (Phase 5b/5c or later).
 
 ### B-039: the factory runs on WSL2 only
 
@@ -282,7 +245,7 @@ graph, or earlier when a phase touches the code they name.
 - **Problem:** The photographer may run the factory on a shared MacBook with Podman. Yggdrasil v0
   targets WSL2, with the instance tree bind-mounted under `/mnt/wsl`.
 - **Fix:** Support the Podman machine on macOS: its socket, its mount paths, and `ygg doctor` checks.
-- **Status:** requirement.
+- **Status:** requirement. Phase 5a (2026-10-17) still runs on WSL2 only; open (Phase 5b/5c or later).
 
 ### B-040: admin actions on repos need the founder at a computer
 
@@ -301,7 +264,81 @@ graph, or earlier when a phase touches the code they name.
   push workflows); the script changes go in an `ouroboric` PR with tests.
 - **Status:** requirement (the founder follows up later).
 
+Source of item B-041: the final review of Phase 5a (2026-10-17), one fresh Opus reviewer over `gungnir`,
+`gleipnir`, `jormungandr` and `odin` on the Phase 5a branches, and a scoped re-review of its fix wave. The
+review found one Critical and six Important findings; all were fixed before merge. The Minor findings are
+left. The two reports are in the SDD workspace (`final-review/review.md` and `re-review.md`).
+
+### B-041: minor findings of Phase 5a's final review
+
+- **Where:** as listed; `odin` is `internal/...`, `gungnir` is `schema/...`, `gleipnir` is `sandbox/...`.
+- **Problem and fix, one line each (all Minor; M-1 to M-12 are from the review, N-1 to N-6 from the re-review):**
+  - M-1 `engine/scratch.go` (`copyTree`) reads a whole input file before checking the byte budget: check the size first.
+  - M-2 `engine/publish.go` (`copyDocument`) and `scratch.go` (`copyTree`) check a file's type, then read it by path, which follows a symlink: open with no-follow, or copy `out/` into an Odin-owned staging folder first.
+  - M-3 `engine/stages.go` (`planLeaves`) reads the leaves file without a size limit or regular-file check, and `init.go` (`readLeaves`) truncates at 1 MiB without refusing: one helper that refuses both.
+  - M-4 `schema/graph.go` (`projectPath`) accepts `.` as a scratch agent input, so `.factory` is copied into the workspace: refuse `.`, or skip `.factory` at the root.
+  - M-5 a `publish` target at or under a leaf writes into the leaf before the umbrella's `git add` fails: refuse it at prepare.
+  - M-6 `run/sandbox.go` keys a scratch sandbox `scratch/<node>`, which can also be a leaf path: use a key a repo path cannot be.
+  - M-7 `realm/realm.go` hashes a symlink by its target string and the loader follows links out of the realm: refuse links in a realm, or hash the resolved bytes.
+  - M-8 `engine/init.go` takes "one commit on HEAD" to mean a new leaf, so an existing leaf with one commit gets the template written over it: record the leaves a run created, and write no template through a symlink.
+  - M-9 `engine/returns.go` logs `node_returned` before `run.json` is saved: save first, or tolerate the duplicate on resume.
+  - M-10 `plan/expand.go`: an expanded id that clashes with a graph node id fails the foreach node instead of sending the plan back: check it in the tasks node.
+  - M-11 (unverified) `cli/cli.go` (`blockedTasks`) prints a task's `Why` to the terminal as is: strip control characters.
+  - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task.
+  - N-1 `egress.sh` allows DNS only to the first nameserver. v0-H12 passed on a real engine (2026-10-17): the work container reached a service by name on its port with services on the internal network. Still unchecked: that a service cannot reach the internet, the host or the gateway, and that the internal network's DNS does not forward outside names (the integration test does not cover service egress).
+  - N-2 `run.Unexpand` leaves state keyed by the old task node ids: a new plan that reuses a task id inherits it (for example, a node that spent its returns).
+  - N-3 test gaps: the I-1 test would also pass if `main` were reset to the run's base; gleipnir's render passes every test if it stops calling `literalEnv`; no test covers an Odin failure on the pointer path or a Tidy failure not being sent back.
+  - N-4 if a task's pointer has moved and a later loop of the same task gives up, `mainBack` moves `main` below the commit the umbrella points at (the current graph shapes cannot do it).
+  - N-5 the minimal engine environment drops proxy variables, `CONTAINERS_*` paths and `SSL_CERT_FILE`: `ygg sandbox build` fails behind a proxy or with a custom podman config.
+  - N-6 (before Phase 5a) compose still expands `$` in rendered volume paths and labels.
+- **Status:** reasoned (M-11 and N-1 unverified).
+
 ## Done
+
+### B-010: ledger gaps around landings
+
+- **Where:** `internal/engine/land.go` (`runPointer`).
+- **Problem, three parts:**
+  1. A `shrink-guard` stop returns before it logs `node_failed`, so the attempt that `node_started`
+     opened never closes in the ledger.
+  2. A pointer move that committed, but whose `run.json` save was lost, is skipped on resume: the
+     pointer is already there, so `res.Commit` is empty and no `pointer_moved` line is written.
+  3. `Waived` is cleared only when the move succeeds. A waiver therefore outlives a failed attempt.
+     If the generated files change before the retry, the guard is skipped for different content.
+- **Fix:** log `node_failed` before the hard stop. On resume, log `pointer_moved` when the pointer is
+  already at `To` and the ledger has no such line. Clear `Waived` on any outcome other than a stop.
+- **Status:** fixed 2026-10-17 in Phase 5a (v0-T179: a pointer move's ledger lines close the attempts they
+  open, and a waiver lasts one move), [odin#12](https://github.com/ouroboric-dev/odin/pull/12).
+
+### B-015: two leaves can share a sandbox
+
+- **Where:** `gleipnir/sandbox/config.go, driver.go`.
+- **Problem:** `Project()` and the config folder name collapse punctuation, so `repos/web-app` and `repos/webapp` share a compose project; one leaf's `Up` or `Down` tears down the other's sandbox.
+- **Fix:** Keep punctuation distinct (hash the path). Test: `TestTwoLeavesNeverShareASandboxProject`.
+- **Status:** fixed 2026-10-17 in Phase 5a (v0-T157),
+  [gleipnir#7](https://github.com/ouroboric-dev/gleipnir/pull/7).
+
+### B-035: Odin loads a realm only from inside the `yggdrasil` tree
+
+- **Where:** `odin` (realm loading behind `ygg run --realm`), `gungnir/schema` (`pack.yaml`).
+- **Problem:** The web realm is a leaf of the `yggdrasil` umbrella. The `asgard` leaf becomes one after
+  Yggdrasil v0, and Odin must then load its pack the same way.
+- **Fix:** Resolve `--realm asgard` to the `asgard` leaf's pack at a pinned version.
+- **Status:** fixed 2026-10-17 in Phase 5a (v0-T168 to v0-T171: realms load from a store by name, at the
+  version the project pins, with a hash of what a run could read),
+  [odin#12](https://github.com/ouroboric-dev/odin/pull/12) with the pins in
+  [gungnir#10](https://github.com/ouroboric-dev/gungnir/pull/10).
+
+### B-036: a realm must have code leaves, a stack layer and a code check ladder
+
+- **Where:** `odin` (run start, sandbox bring-up), `gungnir/schema` (`pack.yaml`), the check ladder.
+- **Problem:** The Asgard realm's output is documentation in a company umbrella: no code leaves, no
+  devcontainer stack layer, and checks that are document checks (docs standard, readiness, brand).
+- **Fix:** Let a pack declare no stack layer and a check ladder of document checks; let a run work in
+  an umbrella with no leaves.
+- **Status:** fixed 2026-10-17 in Phase 5a (v0-T145 for the schema, v0-T193 for a run in an umbrella with
+  no leaves), [gungnir#10](https://github.com/ouroboric-dev/gungnir/pull/10) and
+  [odin#12](https://github.com/ouroboric-dev/odin/pull/12). The document checks themselves are Asgard's.
 
 ### B-038: realm leaves have no naming convention
 
