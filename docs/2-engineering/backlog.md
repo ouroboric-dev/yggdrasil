@@ -273,27 +273,31 @@ left. The two reports are in the SDD workspace (`final-review/review.md` and `re
 
 - **Where:** as listed; `odin` is `internal/...`, `gungnir` is `schema/...`, `gleipnir` is `sandbox/...`.
 - **Problem and fix, one line each (all Minor; M-1 to M-12 are from the review, N-1 to N-6 from the re-review):**
-  - M-1 `engine/scratch.go` (`copyTree`) reads a whole input file before checking the byte budget: check the size first.
-  - M-2 `engine/publish.go` (`copyDocument`) and `scratch.go` (`copyTree`) check a file's type, then read it by path, which follows a symlink: open with no-follow, or copy `out/` into an Odin-owned staging folder first.
-  - M-3 `engine/stages.go` (`planLeaves`) reads the leaves file without a size limit or regular-file check, and `init.go` (`readLeaves`) truncates at 1 MiB without refusing: one helper that refuses both.
-  - M-4 `schema/graph.go` (`projectPath`) accepts `.` as a scratch agent input, so `.factory` is copied into the workspace: refuse `.`, or skip `.factory` at the root.
   - M-5 a `publish` target at or under a leaf writes into the leaf before the umbrella's `git add` fails: refuse it at prepare.
   - M-6 `run/sandbox.go` keys a scratch sandbox `scratch/<node>`, which can also be a leaf path: use a key a repo path cannot be.
-  - M-7 `realm/realm.go` hashes a symlink by its target string and the loader follows links out of the realm: refuse links in a realm, or hash the resolved bytes.
-  - M-8 `engine/init.go` takes "one commit on HEAD" to mean a new leaf, so an existing leaf with one commit gets the template written over it: record the leaves a run created, and write no template through a symlink.
   - M-9 `engine/returns.go` logs `node_returned` before `run.json` is saved: save first, or tolerate the duplicate on resume.
   - M-10 `plan/expand.go`: an expanded id that clashes with a graph node id fails the foreach node instead of sending the plan back: check it in the tasks node.
   - M-11 (unverified) `cli/cli.go` (`blockedTasks`) prints a task's `Why` to the terminal as is: strip control characters.
   - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task.
-  - N-1 `egress.sh` allows DNS only to the first nameserver. v0-H12 passed on a real engine (2026-10-17): the work container reached a service by name on its port with services on the internal network. Still unchecked: that a service cannot reach the internet, the host or the gateway, and that the internal network's DNS does not forward outside names (the integration test does not cover service egress).
   - N-2 `run.Unexpand` leaves state keyed by the old task node ids: a new plan that reuses a task id inherits it (for example, a node that spent its returns).
   - N-3 test gaps: the I-1 test would also pass if `main` were reset to the run's base; gleipnir's render passes every test if it stops calling `literalEnv`; no test covers an Odin failure on the pointer path or a Tidy failure not being sent back.
   - N-4 if a task's pointer has moved and a later loop of the same task gives up, `mainBack` moves `main` below the commit the umbrella points at (the current graph shapes cannot do it).
-  - N-5 the minimal engine environment drops proxy variables, `CONTAINERS_*` paths and `SSL_CERT_FILE`: `ygg sandbox build` fails behind a proxy or with a custom podman config.
   - N-6 (before Phase 5a) compose still expands `$` in rendered volume paths and labels.
-- **Status:** reasoned (M-11 and N-1 unverified).
+  - M-13 (from the pre-5b cleanup's review) a `run.json` written before `new_leaves` existed loads with an empty record: a leaf an older run created before a crash never gets its template, and the run can still finish `done`. Bump the `run.json` schema or fail the resume.
+  - M-14 a `new_leaves` entry stays after a failed create and could send the template into a repository someone later puts at that path: drop the entry when the create fails.
+  - M-15 `engine/publish.go` leaves the `<scratch>/.publish` staging folder after the scan: remove it.
+  - M-16 (defence in depth) `os.OpenRoot` follows a symlink at `out/` itself and links between folders inside the root if something swaps them while Odin reads; the driver kills every process after each exec today, so nothing can. It becomes Important if a later phase leaves a process running.
+- **Status:** reasoned (M-11 unverified).
 
 ## Done
+
+### B-041, first part: file handling, engine environment and service egress (Phase 5a's final review)
+
+- **Fixed 2026-10-17** by the pre-5b cleanup, each with a test that failed first:
+  - M-1, M-2, M-3, M-4, M-7 and M-8 in [odin#13](https://github.com/ouroboric-dev/odin/pull/13): a large scratch input is refused before it is read in full; files are opened without following symlinks and must be the file the listing found; publish scans exactly the bytes it publishes; one checked read of the leaves file for `init` and the tasks node; no `.factory` or `.git` in a scratch workspace; symlinks (root included) are refused in a realm; init applies a realm's template only to a leaf it created.
+  - M-4 also in [gungnir#11](https://github.com/ouroboric-dev/gungnir/pull/11): `.` is refused as a scratch input.
+  - N-5 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): the engine tools keep proxy, podman config and CA variables, from an allow-list.
+  - N-1 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): `TestASandboxServiceHasNoRouteOut` passed on a real engine: the service has only its subnet route and no probe out succeeded.
 
 ### B-010: ledger gaps around landings
 
