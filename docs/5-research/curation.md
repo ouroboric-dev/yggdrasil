@@ -251,6 +251,22 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 | [gua-project/gua](https://github.com/gua-project/gua) | "Playwright-style" UI testing for Godot and Unity | 19 | push 2026-10-10 | MIT | **Bench for engine games.** Exactly the idea of hidden black-box suites, but very new. | WATCH |
 | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) | Unity Editor bridge for agents | 14.8k | push 2026-10-08 | MIT | Unity is not on your roadmap; skim for the editor-bridge pattern. | SKIP |
 
+### 2.11 Learning stores and self-improvement
+
+Added 2026-10-17; the GitHub API data in this section is from that day. The full analysis is in
+[research-compounding](research-compounding.md).
+
+> **Highlight [ANALYSIS]: Compound Engineering is the closest existing design for the middle of the
+> Ouroboros loop**, the step between the ledger and a factory change. It distils one solved problem
+> into one typed, searchable lesson, keeps the store honest with a refresh pass, and promotes lessons
+> into prescriptive rules. It does not measure whether a lesson helped; Yggdrasil's criterion 7 and
+> `ygg metrics --compare` would supply that half.
+
+| Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
+|---|---|---|---|---|---|---|
+| [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin) | Skill pack (36 skills, 14 hosts): brainstorm → plan → work → simplify → review → **compound**; learnings go to `docs/solutions/` as markdown with typed YAML frontmatter | 25.6k | push 2026-10-17, rel v3.31.0 (2026-10-16) | MIT | **Ledger, Odin (change graph), Gleipnir (skills).** Borrow: the "durable bar" counterfactual for whether a lesson is worth writing; the schema (bug vs knowledge track, `applies_when`, `retire_when`); grep-first retrieval over frontmatter; the refresh outcomes (Keep, Update, Consolidate, Replace, Delete) with "age alone is not staleness" and "unverifiable is not false"; the promotion ladder learning → pattern → Compound Pack; `ce-retune`'s refusal to tune without an A/B harness. Do not install it whole: it is tied to its own skills and host UIs, and it releases almost daily. | MUST (concepts) |
+| [iwe-org/memory-bench](https://github.com/iwe-org/memory-bench) | Benchmark of a markdown knowledge graph as agent memory (LOCOMO, HotPotQA) with Claude Code | 3 | push 2026-07-19 | none stated | **Tree, Bench.** On sealed LOCOMO data, grep over raw transcripts (0.812) beat grep over curated notes (0.764); the graph won on cost, not accuracy. A ready-made reason to gate any lessons graph behind the routing bench. Conversational recall, not coding. No licence, so read only. | WATCH |
+
 ---
 
 ## 3. Start here: top 10, in order
@@ -294,7 +310,7 @@ The "Why it matters" column is **[ANALYSIS]**.
 - **Safe to copy code (permissive):** MIT, Apache-2.0, CC0. This covers most entries.
 - **Read only. Copying code makes your project inherit the terms:** claude-squad (AGPL-3.0), serena app (GPL-3.0+), cmux (GPL-3.0+), Daytona (AGPL-3.0).
 - **Source-available. Do not embed in an OSS factory others may host:** crush (FSL-1.1, converts to MIT after 2 years), Phoenix (ELv2), Restate (BSL 1.1), Inngest (SSPL), claude-task-master (Commons Clause), langfuse `ee/` folders.
-- **No licence, so all rights reserved (read only):** anthropics/claude-code, disler repos, polyglot-benchmark, Gut (no SPDX detected; check the file).
+- **No licence, so all rights reserved (read only):** anthropics/claude-code, disler repos, polyglot-benchmark, Gut (no SPDX detected; check the file), iwe-org/memory-bench.
 - **Content you may not adapt:** awesome-claude-code (CC BY-NC-ND).
 
 **What goes wrong if you ignore this [ANALYSIS]:** copy a 200-line AGPL helper from claude-squad into Gleipnir, and anyone who runs Yggdrasil as a hosted service must publish their full source under AGPL. That can block every company that would otherwise adopt it. Removing the code later means a clean-room rewrite plus a history audit.
