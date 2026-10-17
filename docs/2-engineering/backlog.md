@@ -71,7 +71,7 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
 - **Problem:** `Resolve` runs `git submodule update --init` before `Start` takes the locks. The
   comment on `Prepare` says "It writes nothing". Two starts at once can collide on `index.lock`.
 - **Fix:** move the checkouts after the locks are taken, or change the comment and accept the race.
-- **Status:** reasoned. Phase 5a (2026-10-17) leaves `Prepare` as it was; still open.
+- **Status:** reasoned. Phase 5a (2026-10-17) leaves `Prepare` as it was; still open. Phase 5b (2026-10-18) leaves it as it was too.
 
 ### B-006: a parent project's graph can bypass a sub-project's locks
 
@@ -81,7 +81,7 @@ Odin line numbers are at `odin` `5076219`. Gungnir line numbers are at `gungnir`
   use different `runs.lock`, `repo-*.lock` and pointer locks for the same leaf and umbrella.
 - **Fix:** key the leaf and umbrella locks by the canonical git dir. Or refuse a repo path that
   crosses a child umbrella with its own `.factory/`.
-- **Status:** reasoned. Phase 5a (2026-10-17) leaves the lock names as they were; still open.
+- **Status:** reasoned. Phase 5a (2026-10-17) leaves the lock names as they were; still open. Phase 5b (2026-10-18) leaves them as they were too.
 
 ### B-007: submodule names are not validated
 
@@ -169,7 +169,11 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 - **Where:** `gleipnir/sandbox/assets/egress.sh`.
 - **Problem:** DNS to the resolver and 443 to shared CDN addresses can carry data out.
 - **Fix:** Record as an accepted risk of decision 5, or tighten with a DNS allowlist.
-- **Status:** reasoned.
+- **Status:** reasoned. Phase 5b (2026-10-18): the work container's DNS is now answered by the firewall's
+  sidecar (dnsmasq) from the allowed hosts and the services, and nothing else. This closes the channel to the
+  container's own resolver. Two gaps remain, from Phase 5b's final review: `server=/<service>/` forwards a
+  service name's whole subtree to the podman resolver (M-3), and an address refresh leaves the old addresses
+  answerable for a moment (M-2; see B-048).
 
 ### B-026: `CheckEvals` trusts the recorded gain and pass flag
 
@@ -237,7 +241,7 @@ graph, or earlier when a phase touches the code they name.
 - **Fix:** Let a gate be approved by a recorded action outside the CLI, such as a merged pull request,
   and record who approved it in the ledger.
 - **Status:** requirement. Phase 5a (2026-10-17) still stops at a gate for an operator at a terminal; open
-  (Phase 5b/5c or later).
+  (Phase 5b/5c or later). Phase 5b (2026-10-18) adds no change here.
 
 ### B-039: the factory runs on WSL2 only
 
@@ -245,7 +249,7 @@ graph, or earlier when a phase touches the code they name.
 - **Problem:** The photographer may run the factory on a shared MacBook with Podman. Yggdrasil v0
   targets WSL2, with the instance tree bind-mounted under `/mnt/wsl`.
 - **Fix:** Support the Podman machine on macOS: its socket, its mount paths, and `ygg doctor` checks.
-- **Status:** requirement. Phase 5a (2026-10-17) still runs on WSL2 only; open (Phase 5b/5c or later).
+- **Status:** requirement. Phase 5a (2026-10-17) still runs on WSL2 only; open (Phase 5b/5c or later). Phase 5b (2026-10-18) adds no change here.
 
 ### B-040: admin actions on repos need the founder at a computer
 
@@ -274,7 +278,7 @@ left. The two reports are in the SDD workspace (`final-review/review.md` and `re
 - **Where:** as listed; `odin` is `internal/...`, `gungnir` is `schema/...`, `gleipnir` is `sandbox/...`.
 - **Problem and fix, one line each (all Minor; M-1 to M-12 are from the review, N-1 to N-6 from the re-review):**
   - M-5 a `publish` target at or under a leaf writes into the leaf before the umbrella's `git add` fails: refuse it at prepare.
-  - M-6 `run/sandbox.go` keys a scratch sandbox `scratch/<node>`, which can also be a leaf path: use a key a repo path cannot be.
+  - M-6 `run/sandbox.go` keys a scratch sandbox `scratch/<node>`, which can also be a leaf path: use a key a repo path cannot be. Phase 5b adds the snapshot sandbox's `snapshot/<node>` key, which has the same problem: fix both.
   - M-9 `engine/returns.go` logs `node_returned` before `run.json` is saved: save first, or tolerate the duplicate on resume.
   - M-10 `plan/expand.go`: an expanded id that clashes with a graph node id fails the foreach node instead of sending the plan back: check it in the tasks node.
   - M-11 (unverified) `cli/cli.go` (`blockedTasks`) prints a task's `Why` to the terminal as is: strip control characters.
@@ -288,6 +292,73 @@ left. The two reports are in the SDD workspace (`final-review/review.md` and `re
   - M-15 `engine/publish.go` leaves the `<scratch>/.publish` staging folder after the scan: remove it.
   - M-16 (defence in depth) `os.OpenRoot` follows a symlink at `out/` itself and links between folders inside the root if something swaps them while Odin reads; the driver kills every process after each exec today, so nothing can. It becomes Important if a later phase leaves a process running.
 - **Status:** reasoned (M-11 unverified).
+
+Source of items B-042 to B-047: the Phase 5b plan (2026-10-17), where each was left out on purpose.
+
+### B-042: the docs rung has no Vale prose rules
+
+- **Problem:** the docs rung checks structure and links but not prose style.
+- **Fix:** add Vale with the factory's rules to `docs.sh` in both realms. **Status:** requirement.
+
+### B-043: the scripts both realms copy
+
+- **Problem:** `helheim-go` and `midgard-react` each hold a copy of `docs.sh` and other shared scripts, and they drift.
+- **Fix:** one home for them (a realm both depend on, or a vendored directory with a drift check). **Status:** requirement.
+
+### B-044: packages in the stack images are not pinned
+
+- **Problem:** the images pin their bases and downloads but install apt packages (and Chromium through
+  `playwright install --with-deps`, with no hash) at whatever version the mirror serves.
+- **Fix:** pin apt packages by version, and the browser download by hash. **Status:** requirement.
+
+### B-045: TypeScript is held at 5.9 by `openapi-typescript`
+
+- **Problem:** `openapi-typescript` 7 asks for TypeScript 5, so the web template cannot move to 6.
+- **Fix:** move when `openapi-typescript` supports it. **Status:** requirement.
+
+### B-046: no initializer agent customizes a leaf's `AGENTS.md`
+
+- **Problem:** a new leaf starts with the template's `AGENTS.md` and only the first task may change it.
+- **Fix:** an initializer agent in the realm's graph. **Status:** requirement.
+
+### B-047: an implementer cannot read the project's design documents
+
+- **Problem:** a task states what it needs, and the design documents live outside the leaf.
+- **Fix:** a way for a task to name the documents it needs and have them copied into the scratch input. **Status:** requirement.
+
+Source of item B-048: the final review of Phase 5b (2026-10-18), one fresh Opus reviewer over the six repos and
+two scoped re-reviews of its fix wave. The review found 2 Critical and 6 Important findings. The Critical ones
+and the Important ones were fixed before merge (helheim-go #3, midgard-react #7, odin #14). The reports are in the
+SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
+
+### B-048: config protection is a path list, and minors of Phase 5b's final review
+
+- **Where:** as listed; `odin` is `internal/...`, `gleipnir` is `sandbox/...`.
+- **Problem and fix, one line each:**
+  - **Important, parked after two fix rounds:** the ladder's config protection is a list of paths, so it is
+    incomplete. Go: a config replaced by a symlink, or hidden by `.gitignore`, passes. Web: ESLint 10 obeys an
+    added `src/eslint.config.js`. A handwritten `internal/store/querier.go` with a forged sqlc header gets no
+    test, lint or sqlc check. Fix: run the linters with configs baked into `/opt/ygg/checks`, and recompute
+    sqlc's output path from the generator.
+  - M-1 `run/sandbox.go`: the snapshot takes each other leaf at its working copy's `HEAD`, not the commit the
+    umbrella records, and skips a leaf that is not checked out silently: use the gitlink, refuse an absent leaf.
+  - M-2 `egress.sh`: on a refresh, old addresses leave the rules before dnsmasq gets the HUP: keep both for a cycle.
+  - M-3 `egress.sh`: `server=/<service>/` forwards a service name's subtree to the podman resolver: write the
+    resolved addresses into the hosts file and drop the `server=` lines.
+  - M-4 `sandbox/stackbuild.go`: the Containerfile parser does not know `# escape=` or heredocs, so an unpinned
+    `FROM` can hide: refuse parser directives and `<<`.
+  - M-5 `engine/conformance.go`: `os.OpenRoot` follows a symlinked `out`: open the root at the scratch dir.
+  - M-6 `web-tdd.sh`: only `.ts`/`.tsx` under `src/` count as code: count `.js`, `.jsx`, `.mjs` and code outside `src/`.
+  - M-7 see B-044 (Chromium download with no hash).
+  - M-8 `ponytail-review/SKILL.md`: a `shortcut:` comment the task's own diff adds turns a finding into a
+    decision: say in `reviewer-simplicity.md` that it does not count.
+  - M-9 `accept-e2e.sh` reports an oasdiff parse error as a broken contract; `web-e2e.sh` runs `mktemp -d`
+    before the busy-port check and leaks the folder; a `snapshot/<node>` sandbox keeps its Postgres and
+    SeaweedFS up until `Advance` returns, and the database's state carries over between attempts.
+  - Residual (re-review 2): the scripts honour a `YGG_CHECKS_PATH` override that the engine never sets; keep it
+    out of the images or drop it once the stubs have another seam.
+- **Status:** reasoned, except the parked Important finding, the module-cache and I-3 reproductions, which the
+  reviewers proved.
 
 ## Done
 
