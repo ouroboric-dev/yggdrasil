@@ -30,6 +30,10 @@ A child `AGENTS.md` may add rules; it must not loosen these.
 ### Agents building the factory
 
 12. Work on a branch, stage files by path, and open a pull request for every change.
+13. Use the tree's scripts, not hand-made commands, for GitHub, the container engine and plans:
+    `ouroboric/scripts/` (`as-bot.sh`, `ygg-engine.sh`, `ygg-smoke-realms.sh`, `plan-*`). The table is in
+    https://github.com/ouroboric-dev/ouroboric/blob/main/AGENTS.md#scripts. A reusable script you write goes
+    there, with a test, in a pull request.
 
 ## Map
 
