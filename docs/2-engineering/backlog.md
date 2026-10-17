@@ -276,17 +276,6 @@ graph, or earlier when a phase touches the code they name.
   and record who approved it in the ledger.
 - **Status:** requirement.
 
-### B-038: realm leaves have no naming convention
-
-- **Where:** the `yggdrasil` umbrella's leaves, `ouroboric/scripts/check-repos.sh`.
-- **Problem:** The web realm's leaf is `realm-web`; the founder does not want to keep that name. The
-  Asgard leaf is `asgard` until a convention exists.
-- **Fix:** Decide one convention for every realm leaf, and rename both at once.
-- **Status:** decided 2026-10-17 in the change proposal
-  [realm leaf naming](changes/2026-10-17-realm-leaf-naming/proposal.md)
-  ([yggdrasil#36](https://github.com/ouroboric-dev/yggdrasil/pull/36)): `realm-web` becomes `midgard-react`
-  and `helheim-go`. Done when its tasks T001 to T003 are merged.
-
 ### B-039: the factory runs on WSL2 only
 
 - **Where:** `gleipnir/sandbox` (the Podman socket and the bind-mount path), `ygg doctor`.
@@ -313,6 +302,22 @@ graph, or earlier when a phase touches the code they name.
 - **Status:** requirement (the founder follows up later).
 
 ## Done
+
+### B-038: realm leaves have no naming convention
+
+- **Where:** the `yggdrasil` umbrella's leaves, `ouroboric/scripts/check-repos.sh`.
+- **Problem:** The web realm's leaf is `realm-web`; the founder does not want to keep that name. The
+  Asgard leaf is `asgard` until a convention exists.
+- **Fix:** Decide one convention for every realm leaf, and rename both at once.
+- **Status:** fixed 2026-10-17 by the change proposal
+  [realm leaf naming](changes/2026-10-17-realm-leaf-naming/proposal.md)
+  ([yggdrasil#36](https://github.com/ouroboric-dev/yggdrasil/pull/36)): the nine realms are domains and a
+  leaf is `<realm>-<flavor>`; `realm-web` became `midgard-react`
+  ([midgard-react#3](https://github.com/ouroboric-dev/midgard-react/pull/3)) beside the new `helheim-go`
+  ([helheim-go#1](https://github.com/ouroboric-dev/helheim-go/pull/1)); scripts in
+  [ouroboric#40](https://github.com/ouroboric-dev/ouroboric/pull/40), brand in
+  [ouroboric#39](https://github.com/ouroboric-dev/ouroboric/pull/39); the umbrella in this PR. The engine
+  part (a lead realm and each leaf's realm) is the proposal's task T004, in Phase 5.
 
 ### B-032: a failed journal append does not stop the run at the cap
 
