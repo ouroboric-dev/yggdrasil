@@ -8,7 +8,7 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 # Engineering backlog
 
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
-phase, with one exception: [B-058](#b-058-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
+phase, with one exception: [B-061](#b-061-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
 blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
 **Minor** by its effect on a person using the factory.
 
@@ -492,11 +492,11 @@ its tooling review and its final steps (2026-10-18). Lines are at `ouroboric` `7
   merge, run `scripts/rollout-ci.sh --org ouroboric-dev protect huldra`, which uses the founder's token only.
 - **Status:** open, by design.
 
-Source of items B-052 to B-058: the realm readiness assessments of 2026-10-18 (`readiness/2026-10-18-*.md`),
+Source of items B-055 to B-061: the realm readiness assessments of 2026-10-18 (`readiness/2026-10-18-*.md`),
 over `helheim-go` `60731f6`, `midgard-react` `26ca85e` and `asgard` `3e614b4`. Each item names the realm and the
 checklist item ([realm-readiness.md](realm-readiness.md)).
 
-### B-052: a product's own CI reads the tool configs that the ladder ignores
+### B-055: a product's own CI reads the tool configs that the ladder ignores
 
 - **Where:** `helheim-go/templates/api/.github/workflows/ci.yml` (`golangci-lint run --config .golangci.yml`);
   `midgard-react/templates/web/.github/workflows/ci.yml` (`npm run lint`, `typecheck`, `test` and `build` read
@@ -514,7 +514,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   template's `AGENTS.md` (B-049's open consequence).
 - **Status:** reasoned.
 
-### B-053: the leaf templates carry no "Built with Ouroboric" notice
+### B-056: the leaf templates carry no "Built with Ouroboric" notice
 
 - **Where:** `helheim-go/templates/api`, `midgard-react/templates/web`. Readiness: helheim-go and midgard-react,
   RR-18.
@@ -525,7 +525,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
 - **Fix:** add the notice where a product shows it (for example the template's `README.md` or the web app's
   footer), and a template test that finds it. **Status:** proved (the grep).
 
-### B-054: helheim-go's own CI skips the tests that need sqlc and golangci-lint
+### B-057: helheim-go's own CI skips the tests that need sqlc and golangci-lint
 
 - **Where:** `helheim-go/.github/workflows/ci.yml` (the plain `golang` image). Readiness: helheim-go, RR-04.
 - **Problem:** five tests of the check ladder skip in CI, because the image has neither tool:
@@ -539,7 +539,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   hashes in the job. Then make the five tests fail, not skip, when `YGG_REQUIRE_TEMPLATES` (or a new variable) is
   set. **Status:** proved (the CI log).
 
-### B-055: helheim-go's product CI has no SeaweedFS, and its test does not check the steps
+### B-058: helheim-go's product CI has no SeaweedFS, and its test does not check the steps
 
 - **Where:** `helheim-go/templates/api/.github/workflows/ci.yml`, `helheim-go/ci_test.go` (`TestTemplateCI`).
   Readiness: helheim-go, RR-18.
@@ -554,7 +554,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
     command, as midgard-react's test does.
 - **Status:** reasoned.
 
-### B-056: two base images were pinned when they were less than two weeks old, and no check reads an image's age
+### B-059: two base images were pinned when they were less than two weeks old, and no check reads an image's age
 
 - **Where:** `midgard-react/devcontainer/Containerfile` and both realms' CI (`node@sha256:efd0ab57…`);
   `helheim-go` and `midgard-react` (`golang:1.26.9-bookworm@sha256:d9c68c2c…`). Readiness: midgard-react, RR-13.
@@ -568,7 +568,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   and fails under two weeks unless a waiver is named. RR-13 then runs it. **Status:** proved (the registry's
   creation times).
 
-### B-057: asgard is not a realm leaf yet
+### B-060: asgard is not a realm leaf yet
 
 - **Where:** the `asgard` repo, `yggdrasil/.gitmodules`, `ouroboric/scripts/check-repos.sh` (the lists).
   Readiness: asgard, RR-04, RR-05, RR-07, RR-08, RR-10 and RR-22.
@@ -584,7 +584,7 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   `REALMS` in `check-repos.sh`, and RR-09 applies); then the wiring pull request (submodule, and asgard moved to
   `LEAVES` in `check-repos.sh`). **Status:** requirement.
 
-### B-058: since odin #15, the first task's acceptance run sees the other new leaf without its template
+### B-061: since odin #15, the first task's acceptance run sees the other new leaf without its template
 
 - **Where:** `odin/internal/engine/init.go` (`initLeaf`, `mainToTemplate`), `odin/internal/run/sandbox.go`
   (`snapshotSources`, `recordedCommit`). Readiness: helheim-go and midgard-react, RR-21.
