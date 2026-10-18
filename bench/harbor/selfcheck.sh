@@ -64,5 +64,5 @@ fi
 sleep 2
 outside="$(comm -13 <(echo "$baseline") <(podman diff "$NAME" | sort) | awk '{print $2}' \
   | grep -Ev '^(/app|/tmp|/var/tmp)(/|$)|^/$|^/var$' || true)"
-[ -z "$outside" ] || result FAIL "wrote outside /app and the temporary folders: $outside"
+[ -z "$outside" ] || result FAIL "wrote outside /app and the temporary folders: ${outside//$'\n'/ }"
 result PASS
