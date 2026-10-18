@@ -371,6 +371,38 @@ SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
   from the generator (`sqlc diff`) instead of a path list. Test: each of the three bypasses above fails its rung.
 - **Status:** proved (the re-reviewer reproduced the symlink, `.gitignore` and `src/eslint.config.js` cases).
 
+Source of items B-050 and B-051: the founder's runs v0-H14 and v0-H15 on a real engine (2026-10-18).
+
+### B-050: a realm is loaded from its working folder, so ignored build output breaks the run
+
+- **Where:** `odin/internal/realm/realm.go` (the loader that refuses a symlink in a realm), `midgard-react/templates/web`.
+- **Problem:** the loader reads whatever is in the realm's folder. `npm ci` in a template leaves `node_modules`
+  (242 MB, full of `.bin` symlinks) and `dist`, both git-ignored. v0-H15 stopped at once: `…/templates/web/node_modules/.bin/acorn is a symlink; a realm holds its own files and folders`.
+  Anyone who builds a template in place breaks every run until they clean up by hand.
+- **Fix:** load a realm from its committed files (`git ls-tree` and `git cat-file`, as the snapshot export does)
+  when the realm folder is a git repository, so ignored and untracked files are not part of it; keep the symlink
+  refusal for the committed files. Test: a realm folder with an ignored `node_modules/.bin/x` symlink loads, and a committed symlink is still refused.
+  Until then, the tests of a template must build in a copy (v0-T225's build test does; the in-place `vitest` runs of v0-T224 did not).
+- **Status:** proved (v0-H15 stopped on it).
+
+### B-051: the first `devcontainer up` of a run hangs about half the time, cause unknown
+
+- **Where:** `gleipnir/sandbox/driver.go` (`Up`), the devcontainer CLI 0.89.0 on rootless Podman 5.7.1, WSL2.
+- **Problem:** `devcontainer up` hangs after `podman compose up -d` has started the containers, until
+  `UpTimeout` kills it. First seen in the sandbox spike (item 1: "the next `devcontainer up` succeeded in
+  seconds"). In v0-H14 `TestSandboxBuildsARealmsStackAndStartsALeafOnIt` hung in at least 5 of 9 runs; the other two engine
+  tests, which start later in the same process, never did. Gleipnir #10 limits the damage (an attempt gets two
+  minutes, then `Down` and one retry; the retried run passed).
+- **What was observed at a hang:** both containers were `Up`, and the engine's event log held both `start`
+  events, but the `podman events --filter event=start` process the CLI had started was still waiting
+  (`futex_do_wait`) and the CLI sat in `epoll_wait`, using no CPU. No memory pressure (8 GB free, PSI 0), no OOM kill; WSL2 distros share one VM, so the
+  machine's "2 GB" setting is not a limit. Twenty trials of starting `podman events` and a container together
+  missed no event, so a plain subscribe race is not it.
+- **Not known:** whether the CLI does not read the events or podman does not write them (the bytes-written
+  probe was armed after the hang). Next step: catch a hang with `/proc/<pid>/io` (`wchar`) of the events process
+  and the unread bytes of its stdout pipe, and try a newer devcontainer CLI or `--docker-compose-path` with `podman compose` itself.
+- **Status:** proved (a hang, not its cause).
+
 ## Done
 
 ### B-041, first part: file handling, engine environment and service egress (Phase 5a's final review)
