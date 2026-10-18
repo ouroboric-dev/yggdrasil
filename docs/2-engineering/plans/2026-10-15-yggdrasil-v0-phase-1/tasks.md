@@ -5068,7 +5068,7 @@ func main() {
 
 - Create: `internal/cli/doctor.go`, `internal/cli/doctor_test.go`
 - Modify: `internal/cli/cli.go`. Add `"doctor": c.doctor` to the command map, and the usage line
-  `ygg doctor  [--project <dir>] [--config <factory.yaml>]` after `status`.
+  `ygg doctor  [--project <dir>] [--config <factory.yaml>]`, indented two spaces like the other usage lines, after `status`.
 
 **Interfaces:**
 
