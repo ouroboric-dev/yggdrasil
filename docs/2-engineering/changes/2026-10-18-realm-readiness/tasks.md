@@ -98,10 +98,12 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T001: the realm readiness checklist
 
 **Files (in `yggdrasil`):**
+
 - Create: `docs/2-engineering/realm-readiness.md` (front matter `style: procedure`)
 - Modify: `docs/3-using/operations/README.md` (one line that links to the checklist)
 
 **Interfaces:**
+
 - Produces: the item IDs `RR-01` to `RR-22`, which T008's assessments and backlog entries cite.
 
 - [ ] **Step 1:** Write the checklist from design §6, with these changes:
@@ -132,6 +134,7 @@ acceptance criteria with the named tests' output.
 - [ ] **Step 3:** Commit, push and open the PR.
 
 **Acceptance criteria:**
+
 - [ ] The checklist has RR-01 to RR-22, each with an "applies to" value, a check type, and a "How to
   check" for each `auto` item.
 - [ ] The docs check names no problem in either file.
@@ -142,6 +145,7 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T002: `helheim-go`'s own CI
 
 **Files (in `helheim-go`):**
+
 - Create: `.github/workflows/ci.yml`
 - Modify: `README.md` (one line: the `test` check, what it runs), `docs/architecture.md` (the CI)
 
@@ -160,6 +164,7 @@ acceptance criteria with the named tests' output.
   `check-repos.sh --check ruleset helheim-go` prints `PASS`.
 
 **Acceptance criteria:**
+
 - [ ] `test` passes on the PR, and `TestTemplate*` ran, not skipped.
 - [ ] `test` is required on `main`.
 
@@ -169,6 +174,7 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T003: `midgard-react`'s own CI
 
 **Files (in `midgard-react`):**
+
 - Create: `.github/workflows/ci.yml`
 - Modify: `README.md`, `docs/architecture.md` (as in T002)
 
@@ -187,6 +193,7 @@ acceptance criteria with the named tests' output.
   `check-repos.sh --check ruleset midgard-react` prints `PASS`.
 
 **Acceptance criteria:**
+
 - [ ] `test` passes on the PR, and the template and e2e tests ran, not skipped.
 - [ ] `test` is required on `main`.
 
@@ -196,16 +203,18 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T004: the API template's CI, protected
 
 **Files (in `helheim-go`):**
+
 - Create: `templates/api/.github/workflows/ci.yml`, `ci_test.go`
 - Modify: `devcontainer/checks/go-static.sh` (`protected=('.devcontainer/' '.github/')`),
   `checks_test.go`, `docs/architecture.md` (what the template's CI runs)
 
 **Interfaces:**
+
 - Produces: `TestTemplateCI` in `ci_test.go`, the model for T005's test.
 
 - [ ] **Step 1: Write the failing tests.**
   - `TestTemplateCI` reads `templates/api/.github/workflows/ci.yml` as text and asserts:
-    - it has the line `  test:` under `jobs:`, and no other job;
+    - it has the line `test:`, indented two spaces, under `jobs:`, and no other job;
     - each `uses:` line matches `@[0-9a-f]{40} # v`;
     - the container image is the `FROM` image of `devcontainer/Containerfile`'s `stack` stage;
     - the Postgres service image is `pack.yaml`'s `services.postgres.image`, and its env holds
@@ -227,6 +236,7 @@ acceptance criteria with the named tests' output.
 - [ ] **Step 6:** Commit, push and open the PR.
 
 **Acceptance criteria:**
+
 - [ ] `TestTemplateCI` and `TestStaticRefusesAWorkflowChange` pass, and fail when the workflow's
   image digest is edited, or when the path is taken out of `protected`.
 - [ ] The workflow's commands pass on a fresh copy of the template.
@@ -238,11 +248,13 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T005: the web template's CI, protected
 
 **Files (in `midgard-react`):**
+
 - Create: `templates/web/.github/workflows/ci.yml`, `ci_test.go`
 - Modify: `devcontainer/checks/web-protected.sh` (`files=('.npmrc' '.github/')`),
   `checks_test.go`, `docs/architecture.md`
 
 **Interfaces:**
+
 - Consumes: T004's `TestTemplateCI` as the model.
 
 - [ ] **Step 1: Write the failing tests.**
@@ -262,6 +274,7 @@ acceptance criteria with the named tests' output.
 - [ ] **Step 6:** Commit, push and open the PR.
 
 **Acceptance criteria:**
+
 - [ ] Both tests pass, and fail when a digest or an `npm run` name is edited, or when the path is
   taken out of `files`.
 - [ ] The workflow's commands pass on a fresh copy of the template.
@@ -273,9 +286,11 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T006: one `docs.sh`
 
 **Files (in `midgard-react`):**
+
 - Modify: `devcontainer/checks/docs.sh` (byte for byte `helheim-go`'s)
 
 **Interfaces:**
+
 - Produces: the two realms' `devcontainer/checks/docs.sh` are the same file, which T007's check
   verifies.
 
@@ -288,6 +303,7 @@ acceptance criteria with the named tests' output.
 - [ ] **Step 4:** Commit, push and open the PR.
 
 **Acceptance criteria:**
+
 - [ ] The two copies are the same file, and `midgard-react`'s tests pass.
 
 **Named test:** `cmp` of the two copies; `midgard-react` `go test ./...`.
@@ -296,9 +312,11 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T007: a check that keeps the shared scripts one
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/check-repos.sh`, `scripts/tests/check-repos.test.sh`
 
 **Interfaces:**
+
 - Produces: in `check-repos.sh`, `check_shared <repo>`. For a repo in `REALMS=" midgard-react
   helheim-go "`, it compares the SHA-256 of each file in `SHARED=(devcontainer/checks/docs.sh)` with
   `helheim-go`'s copy. It prints `PASS <repo> shared`, or `FAIL <repo> shared: <file> differs from
@@ -325,6 +343,7 @@ acceptance criteria with the named tests' output.
   helheim-go`. Expected: two `PASS` lines.
 
 **Acceptance criteria:**
+
 - [ ] `check-repos.test.sh` passes, with the five new cases.
 - [ ] `--check shared` passes on both realms.
 
@@ -334,12 +353,14 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T008: the three assessments
 
 **Files (in `yggdrasil`):**
+
 - Create: `docs/2-engineering/readiness/2026-10-<dd>-midgard-react.md`, `...-helheim-go.md`,
   `...-asgard.md` (front matter `style: procedure`, as Asgard's checklist uses)
 - Modify: `docs/2-engineering/backlog.md`; the `midgard-react`, `helheim-go` and `asgard` submodule
   pointers (the commits that T002 to T006 merged)
 
 **Interfaces:**
+
 - Consumes: T001's checklist and item IDs; T007's `--check shared`.
 
 - [ ] **Step 1:** Run each `auto` item's "How to check" on each realm, and keep the output.
@@ -356,6 +377,7 @@ acceptance criteria with the named tests' output.
   `missing`, `n/a` counts, and the backlog entries added.
 
 **Acceptance criteria:**
+
 - [ ] Three assessments, with every row filled and every `auto` row backed by output or a link.
 - [ ] Every row that is not `met` or `n/a` has a backlog entry.
 
@@ -365,12 +387,14 @@ acceptance criteria with the named tests' output.
 ### Task realm-readiness-T009: the docs in `ouroboric`
 
 **Files (in `ouroboric`):**
+
 - Modify: `docs/4-ways-of-working/docs-standard.md` (the repo section), `AGENTS.md` (the scripts
   table: `check-repos.sh`'s `shared` check)
 - Create: `docs/6-journal/2026-10-<dd>-a-definition-of-done-for-realms.md` (the journal's own front
   matter, see `docs/6-journal/README.md`)
 
 **Interfaces:**
+
 - Consumes: T008's counts for the journal's measured results.
 
 - [ ] **Step 1:** In the docs standard's repo section, say what a realm repo holds beyond any repo:
@@ -384,6 +408,7 @@ acceptance criteria with the named tests' output.
 - [ ] **Step 5:** Commit, push and open the PR.
 
 **Acceptance criteria:**
+
 - [ ] The docs standard and `AGENTS.md` match what T002 to T007 built.
 - [ ] The journal entry quotes T008's counts.
 

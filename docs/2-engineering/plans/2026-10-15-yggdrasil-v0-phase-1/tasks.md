@@ -126,7 +126,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 - **Pins**, each at least two weeks old when pinned:
 
   | What | Pin |
-  |---|---|
+  | --- | --- |
   | `go.yaml.in/yaml/v3` | v3.0.5 |
   | `github.com/santhosh-tekuri/jsonschema/v6` | v6.0.3 (brings `golang.org/x/text` v0.14.0, indirect) |
   | `govulncheck` | `golang.org/x/vuln/cmd/govulncheck@v1.8.0` (2026-09-08) |
@@ -163,7 +163,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T020 contract types | `gungnir` | M | Phase 0 |
 | v0-T021 schemas and `factory.yaml` caps | `gungnir` | M | v0-T020 |
 | v0-T022 strict reading, gate overrides | `gungnir` | S | v0-T021 |
@@ -233,18 +233,21 @@ Gungnir's root package: the `Agent` interface, approval points and modes, and fi
 §4.6, §7.1).
 
 **Files (in `gungnir`):**
+
 - Create: `agent.go`, `gate.go`, `finding.go`, `gungnir_test.go`
 - Modify: `AGENTS.md`. Its line "Interfaces live in `gungnir`, never here (spec §1)." is wrong for
   this repo, so it becomes "Every interface and schema lives here. A change here comes with a PR in
   each affected component (spec §1)."
 
 **Interfaces:**
+
 - Produces: `gungnir.Agent`, `Task`, `Result`, `Status` (`StatusOK`, `StatusFailed`), `Usage`
   (`Add`), `Result.Validate`; `Gate` with its 15 constants, `Gate.Hard`, `Gate.Known` and `Gates()`;
   `Mode` (`ModeStepByStep`, `ModeKeyPoints`, `ModeUnattended`), `ParseMode` and `Mode.Looser`;
   `Finding`, `Severity`, `FindingStatus` and `Finding.Validate`.
 
 **Acceptance criteria:**
+
 - [ ] The hard approval points are exactly the eight of spec §7.1, and `Known` is false for any other
       name.
 - [ ] `Result.Validate` refuses an empty or unknown status, a negative count, and a NaN or infinite
@@ -601,11 +604,13 @@ The schema package, and `factory.yaml` with required caps. This is the `gungnir`
 `require-budget-caps-T001`.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/schema.go`, `schema/factory.schema.json`, `schema/factory.go`,
   `schema/factory_test.go`
 - Modify: `go.mod`, `go.sum`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Mode`, `gungnir.Gate` (v0-T020).
 - Produces: `schema.Factory`, `Role`, `Budget`, `Cap`; `LoadFactory(path)`, `ParseFactory(file, data)`
   (both `(*Factory, error)`); `*CapsError` with `File`, `Missing []string` and `Paid`;
@@ -614,6 +619,7 @@ The schema package, and `factory.yaml` with required caps. This is the `gungnir`
   `https://github.com/ouroboric-dev/gungnir/schema/<file>`.
 
 **Acceptance criteria:**
+
 - [ ] The `factory.yaml` schema rejects a file without caps (`TestFactorySchemaRequiresCaps`, "the
       schema itself requires the caps").
 - [ ] No caps, a per-run cap without a per-day cap, a cap without turns, and a paid-API role without
@@ -1032,13 +1038,16 @@ func sortedKeys[K ~string, V any](m map[K]V) []K {
 ### Task v0-T022: strict reading and gate overrides
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/schema.go`, `schema/factory.go`, `schema/factory_test.go`
 
 **Interfaces:**
+
 - Produces: `(*schema.Factory).CheckGates(mode gungnir.Mode) error`, which v0-T031 calls on every
   `--mode` switch. `ParseFactory` calls it with the file's own mode.
 
 **Acceptance criteria:**
+
 - [ ] A second YAML document, a duplicate key, a misspelled key, zero or fractional or wordy tokens,
       an unknown mode or agent, a scripted role without a script, a script on another adapter, and a
       non-string key are each refused (review focus 4).
@@ -1160,16 +1169,19 @@ func (f *Factory) CheckGates(mode gungnir.Mode) error {
 ### Task v0-T023: `graph.yaml` and `pack.yaml`
 
 **Files (in `gungnir`):**
+
 - Create: `schema/graph.schema.json`, `schema/pack.schema.json`, `schema/graph.go`, `schema/pack.go`,
   `schema/graph_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Graph` (`Index(id) int`), `Node`, `NodeKind` (`KindExec`, `KindAgent`,
   `KindGate`), `Duration`; `LoadGraph(path)`, `ParseGraph(file, data)` (both `(*Graph, error)`).
   After parsing, every gate's `Reruns` names the node a rejection re-runs. Also `schema.Pack`,
   `PackRole`, and `LoadPack(dir) (*Pack, error)`.
 
 **Acceptance criteria:**
+
 - [ ] A gate re-runs the node it names, which must come before it and must not be a gate. Without a
       name, it re-runs the nearest non-gate node before it. With no such node, the graph is refused.
 - [ ] Each refusal in `TestParseGraphRefuses` fails for its own reason. Among them: duplicate ids,
@@ -1567,15 +1579,18 @@ schema (spec §4.6). The `gen_ai.*` names were checked on 2026-10-15 against the
 That repo has no release yet, and the names' status is Development.
 
 **Files (in `gungnir`):**
+
 - Create: `event.go`, `schema/ledger-event.schema.json`, `schema/finding.schema.json`,
   `schema/event.go`, `schema/event_test.go`
 
 **Interfaces:**
+
 - Produces: `gungnir.Event`, `EventName` with 20 constants, `Events()`, `LedgerSchema`
   (`"ygg.ledger/v1"`), `Event.WithUsage(Usage) Event`; `schema.ValidateEvent(line []byte) error`;
   `schema.ParseFinding(data []byte) (gungnir.Finding, error)`.
 
 **Acceptance criteria:**
+
 - [ ] Usage marshals as `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` and
       `gen_ai.usage.cache_read.input_tokens`; the role as `gen_ai.agent.name`; the model as
       `gen_ai.request.model`.
@@ -1891,10 +1906,12 @@ func ParseFinding(data []byte) (gungnir.Finding, error) {
 Replays canned actions, for deterministic tests at no model cost (spec §5, §13).
 
 **Files (in `gleipnir`):**
+
 - Create: `scripted/scripted.go`, `scripted/scripted_test.go`
 - Modify: `go.mod`, `go.sum`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Agent`, `Task`, `Result`, `Status`, `Usage` (v0-T020, merged and pinned).
 - Produces: `scripted.Load(path string) (*scripted.Agent, error)`, where `*Agent` implements
   `gungnir.Agent` with `Name() == "scripted"`. The script format is
@@ -1905,6 +1922,7 @@ Replays canned actions, for deterministic tests at no model cost (spec §5, §13
   prompt.
 
 **Acceptance criteria:**
+
 - [ ] Attempt n of a node replays step n. A missing step is an error, never a default.
 - [ ] `hang` blocks until the context ends; `error` returns the script's error.
 - [ ] No write leaves the workdir, whether through `..`, an absolute path, or a symlink (`os.Root`).
@@ -2236,16 +2254,19 @@ func writeTranscript(t gungnir.Task) (string, error) {
 ### Task v0-T026: the ledger
 
 **Files (in `odin`):**
+
 - Create: `internal/ledger/ledger.go`, `internal/ledger/ledger_test.go`
 - Modify: `go.mod`, `go.sum`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Event`, `schema.ValidateEvent` (v0-T024, merged and pinned).
 - Produces: `ledger.Genesis`, `ledger.Anchor{Seq int64; Hash string}`,
   `ledger.Open(path string, want Anchor) (*Ledger, error)`, `(*Ledger).Append(gungnir.Event) error`,
   `Head() Anchor` and `Close() error`, and `ledger.Verify(path string, want Anchor) (Anchor, error)`.
 
 **Acceptance criteria:**
+
 - [ ] Each line holds the SHA-256 of the line before it; the first holds `Genesis`. Each line is
       synced to disk before `Append` returns.
 - [ ] `Verify` names the changed line, catches lines cut from the end against an anchor, and
@@ -2544,9 +2565,11 @@ func hash(line []byte) string {
 ### Task v0-T027: `run.json` and the run lock
 
 **Files (in `odin`):**
+
 - Create: `internal/run/state.go`, `internal/run/state_test.go`
 
 **Interfaces:**
+
 - Consumes: `ledger.Anchor` (v0-T026).
 - Produces: `run.State` (run.json, schema `"ygg.run/v1"`), `run.Status` (`StatusRunning`,
   `StatusStopped`, `StatusFailed`, `StatusDone`), `RoleRecord`, `NewID(now, random) (string, error)`,
@@ -2555,6 +2578,7 @@ func hash(line []byte) string {
   `ErrInUse`.
 
 **Acceptance criteria:**
+
 - [ ] Run ids look like `20261015-142233-a1b2c3`, and `ValidID` refuses anything that could be a path.
 - [ ] `Save` writes atomically (a temporary file, then a rename) and leaves only `run.json`.
 - [ ] `LoadState` refuses unknown fields and another schema, and never returns a nil map.
@@ -2851,13 +2875,16 @@ func Locked(dir string) bool {
 ### Task v0-T028: CI workflows (prepared by the agent)
 
 **Files (in each of `gungnir`, `gleipnir` and `odin`):**
+
 - Create: `.github/workflows/ci.yml`
 - Modify: `.devcontainer/devcontainer.json` (the image, to the CI digest; decision 12)
 
 **Interfaces:**
+
 - Produces: a job named `test`, reported by GitHub Actions, which v0-T029's scripts require.
 
 **Acceptance criteria:**
+
 - [ ] The workflow runs `gofmt`, `go vet`, `go test -race` and `govulncheck` in the pinned image,
       with `GOWORK=off`, read-only permissions, and no persisted credentials.
 - [ ] Each repo's commit is on a local branch `ci/workflow`. Nothing is pushed: the pr-bot can't push
@@ -2923,11 +2950,13 @@ jobs:
 ### Task v0-T029: the required CI check in the repo scripts
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/setup-repo.sh`, `scripts/check-repos.sh`
 - Create: `scripts/tests/fake-gh`, `scripts/tests/setup-repo.test.sh`,
   `scripts/tests/check-repos.test.sh`
 
 **Interfaces:**
+
 - Produces: `setup-repo.sh <repo>` adds a `required_status_checks` rule (context `test`,
   `integration_id` 15368 for GitHub Actions, strict) when `.github/workflows/ci.yml` exists on
   `main`. `check-repos.sh --check ruleset` then expects
@@ -2937,6 +2966,7 @@ jobs:
   `$FAKE_GH_DIR/log`.
 
 **Acceptance criteria:**
+
 - [ ] A repo without CI gets the same three rules as before; a repo with CI also gets the required
       check, and an existing ruleset is replaced.
 - [ ] `check-repos.sh` fails a repo with CI whose check isn't required, a check another app could
@@ -3082,6 +3112,7 @@ RULESET+=']}'
 ### Task v0-H05 (founder): CI on, and its check required
 
 **Acceptance criteria:**
+
 - [ ] `ouroboric-dev`'s Actions policy allows only `actions/checkout`, pinned to a full commit SHA;
       workflow permissions are read-only by default; and Actions can't create or approve pull
       requests.
@@ -3128,13 +3159,16 @@ unset T
 ### Task v0-T030: the mode × approval-point table
 
 **Files (in `odin`):**
+
 - Create: `internal/gate/decide.go`, `internal/gate/decide_test.go`
 
 **Interfaces:**
+
 - Produces: `gate.Action` (`Stop`, `Auto`, `Block`), `gate.Facts{Deviation, ContractInSpec bool}`,
   and `gate.Decide(mode gungnir.Mode, g gungnir.Gate, overrides map[gungnir.Gate]string, f Facts) Action`.
 
 **Acceptance criteria:**
+
 - [ ] The table test holds spec §7.1 row by row, for all 15 approval points and all three modes.
 - [ ] A spec deviation stops; `ContractInSpec` lets `pointer-contract` pass outside step-by-step;
       overrides can't pass a hard gate; an unknown gate stops.
@@ -3279,6 +3313,7 @@ The run starts only with complete caps. This is the `odin` half of `require-budg
 `ygg run`. It also adds the toy realm the remaining tasks use.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/run.go`, `internal/run/caps_test.go`, `internal/agents/agents.go`,
   `testdata/toy/pack.yaml`, `testdata/toy/graph.yaml`, `testdata/toy/script.yaml`,
   `testdata/toy/script-hang.yaml`, and `testdata/toy/prompts/{design,spec,plan,build}.md`, each
@@ -3286,6 +3321,7 @@ The run starts only with complete caps. This is the `odin` half of `require-budg
 - Modify: `go.mod`, `go.sum` (pin `gungnir` with v0-T023 merged, and `gleipnir`)
 
 **Interfaces:**
+
 - Consumes: `schema.ParseFactory`, `CheckGates`, `LoadPack`, `ParseGraph`; `scripted.Load`;
   `ledger.Open`; `run.State`, `Lock`, `NewIDNow`.
 - Produces: `run.Options{Project, Config, Realm, Brief string; Mode gungnir.Mode}`, `run.Setup`,
@@ -3295,6 +3331,7 @@ The run starts only with complete caps. This is the `odin` half of `require-budg
   `scripted` in Phase 1.
 
 **Acceptance criteria:**
+
 - [ ] `Start` with no caps, with a per-run cap but no per-day cap, or with a paid-API role and no
       spend limit returns a `*schema.CapsError` naming the fields, and creates nothing.
 - [ ] With complete caps, `Start` creates `.factory/runs/<id>/` with `run.json` (status `running`,
@@ -3703,15 +3740,18 @@ What `resume`, `approve` and `reject` open. It refuses whatever would mislead th
 `resume` part of `require-budget-caps-T001`.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/run.go`, `internal/run/caps_test.go`
 - Create: `internal/run/open_test.go`
 
 **Interfaces:**
+
 - Produces: `run.Open(project, id string, mode gungnir.Mode) (*Run, error)`. It returns `ErrInUse`, a
   `*schema.CapsError`, or an error that says why. It logs `config_changed` when `factory.yaml`
   changed, and `mode_changed` (with `ygg.mode.looser`) when `mode` switches it.
 
 **Acceptance criteria:**
+
 - [ ] Resume refuses without complete caps, as run does.
 - [ ] `Open` refuses a run another process holds, a changed graph, a changed brief, a path as the run
       id, and a ledger that doesn't reach run.json's anchor (review focus 1, 3 and 5).
@@ -3898,16 +3938,19 @@ func open(project, dir string, mode gungnir.Mode) (*Run, error) {
 ### Task v0-T033: the engine, exec and agent nodes
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/engine.go`, `internal/engine/engine_test.go`, `internal/engine/gates.go`
   (a stop-only placeholder that v0-T034 replaces)
 
 **Interfaces:**
+
 - Consumes: `run.Run`, `run.Status`; `gungnir.Event`, `Task`, `Result`; `schema.Node`.
 - Produces: `engine.Outcome{Status run.Status; Gate string; Err error}`,
   `engine.Advance(ctx, *run.Run) (Outcome, error)`, `engine.ExecTimeout` (10 minutes), and the
   unexported `startAttempt` and `nodeFailure`, which v0-T034 uses.
 
 **Acceptance criteria:**
+
 - [ ] Nodes run in order. Usage adds up in run.json. The ledger has `node_started` and
       `node_finished` with the `gen_ai.*` usage, then `run_finished`.
 - [ ] A failed node stops the run as `failed`, and the next `Advance` re-runs it as attempt 2.
@@ -4325,16 +4368,19 @@ func runExec(ctx context.Context, r *run.Run, n schema.Node) error {
 ### Task v0-T034: the engine, gate nodes
 
 **Files (in `odin`):**
+
 - Replace: `internal/engine/gates.go`
 - Create: `internal/engine/gates_test.go`
 
 **Interfaces:**
+
 - Consumes: `gate.Decide` (v0-T030), `startAttempt` (v0-T033).
 - Produces: `engine.Approve(r *run.Run, gateID, note string) error` and
   `engine.Reject(r *run.Run, gateID, reason string) error`. The gate file is
   `gates/<node>-<n>.md`.
 
 **Acceptance criteria:**
+
 - [ ] A stop writes the gate file with what happened, the cost so far, and the two commands; logs
       `gate_pending`; and leaves the run `stopped` until a decision.
 - [ ] An auto-pass still writes the gate file and logs `gate_auto_passed` (spec §7.2).
@@ -4603,16 +4649,19 @@ func Reject(r *run.Run, gateID, reason string) error {
 ### Task v0-T035: the `ygg` command line
 
 **Files (in `odin`):**
+
 - Create: `cmd/ygg/main.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`
 - Modify: `README.md`. A "Usage" section after "Build and test" gives the six commands and the exit
   codes, copied from `usage` in `cli.go`.
 
 **Interfaces:**
+
 - Produces: `cli.Main(ctx, args []string, stdout, stderr io.Writer) int`; `ExitDone`, `ExitFailed`,
   `ExitRefused`, `ExitStopped` (decision 10); the commands `run`, `resume`, `approve`, `reject` and
   `status`. Flags may come before or after the positional arguments.
 
 **Acceptance criteria:**
+
 - [ ] Usage errors exit 2 and create nothing, including a path as the run id and an unknown mode.
 - [ ] `run` stops at the first gate with exit 3 and prints the two commands. `status` shows the
       waiting gate. `approve` continues the run, and `resume` of a done run is refused.
@@ -5016,15 +5065,18 @@ func main() {
 `require-budget-caps-T001`, and it also checks every run's ledger.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/doctor.go`, `internal/cli/doctor_test.go`
 - Modify: `internal/cli/cli.go`. Add `"doctor": c.doctor` to the command map, and the usage line
-  `  ygg doctor  [--project <dir>] [--config <factory.yaml>]` after `status`.
+  `ygg doctor  [--project <dir>] [--config <factory.yaml>]`, indented two spaces like the other usage lines, after `status`.
 
 **Interfaces:**
+
 - Produces: `ygg doctor [--project] [--config]`. It prints `OK|WARN|ERROR <what>: <detail>` lines,
   and exits 1 if any line is an ERROR. Phase 3 adds leftover containers and processes.
 
 **Acceptance criteria:**
+
 - [ ] Incomplete caps print `ERROR caps:` with the missing fields, and the exit code is 1.
 - [ ] A run whose ledger was changed prints `ERROR run <id>: ledger:` (review focus 5).
 - [ ] A run left `running` with no lock prints `WARN … interrupted`, and a good run prints `OK`.
@@ -5159,14 +5211,17 @@ The phase's exit criterion as a test, and the deterministic end-to-end run that 
 (spec §13).
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/e2e_test.go`
 
 **Interfaces:**
+
 - Consumes: `cli.Main`, and the toy realm and helpers from `cli_test.go`.
 - Produces: `TestMain`, which lets the test binary run as `ygg` when `YGG_E2E_MAIN=1`, so a test can
   kill a real `ygg` process.
 
 **Acceptance criteria:**
+
 - [ ] Step-by-step stops at all four gates. Key-points and unattended stop only at `design`.
       Unattended with `design: auto` never stops. `plan: stop` adds a stop in key-points. Every run
       ends with a verified ledger, four gate files, and the counts of `gate_pending`,
@@ -5408,9 +5463,11 @@ func TestToyGraphEndToEnd(t *testing.T) {
 ### Task v0-T038: pointers and the exit check
 
 **Files (in `yggdrasil`):**
+
 - Modify: the `gungnir`, `gleipnir` and `odin` submodule pointers
 
 **Acceptance criteria:**
+
 - [ ] Each pointer is its repo's `main`, which holds v0-T020 to v0-T037 and the CI workflow.
 - [ ] The exit criterion holds at those pointers: the end-to-end test passes through `go.work`; each
       repo's `test` check is green on `main` and required.

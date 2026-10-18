@@ -31,7 +31,7 @@ The "applies to" column says which realms an item covers:
 ## The checklist
 
 | ID | Applies to | Area | Question | Check | How to check |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | RR-01 | all | repo | Does the repo pass `check-repos.sh` (settings, security, ruleset), with `lint` required, and `test` where `ci.yml` exists? | auto | `check-repos.sh --check settings --check security --check ruleset <repo>`. The founder runs it under `as-bot.sh --read all`. |
 | RR-02 | all | licence | Does `reuse lint` pass, with MIT on everything copied into products? | auto | `check-repos.sh --check reuse <repo>` |
 | RR-03 | all | CI | Does `lint.yml` exist, and does it pass on `main`? | auto | The file `.github/workflows/lint.yml` exists (it comes from the repo-bootstrap scripts). The founder checks on GitHub that it passes on `main`. |

@@ -58,10 +58,11 @@ modular script gives every new repo a base CI, built from pre-commit hooks that 
   changing it:
 
   | Layer | What it gives | Where |
-  |---|---|---|
+  | --- | --- | --- |
   | 1. Every repo | created, licences, base CI (`lint`), protected | this proposal |
   | 2. Every realm repo | the realm contract, the realm repo's own `test` CI, readiness | the realm-creation design |
   | 3. Each flavor | language checks, stack, template, the CI a template gives products | the realm itself |
+
 - **Rolling the base CI out to existing repos.** The founder is handling this in another session.
   [Future work](#future-work-documented-not-built) says how the scripts could support it.
 - **Making `check-repos.sh` org-agnostic.** It stays Ouroboric's own check. It changes only to match
@@ -91,7 +92,7 @@ All scripts stay in `ouroboric/scripts`, with tests in `scripts/tests/`, until t
 hold.
 
 | Script | Job | Status |
-|---|---|---|
+| --- | --- | --- |
 | `new-repo.sh` | The one command. Reads the org config, checks every input, then runs the steps below for each repo. | new |
 | `create-repo.sh` | Creates empty repos on GitHub. Creates none if any named repo exists. | changed: it no longer makes the first commit or calls `setup-repo.sh` |
 | `add-licences.sh` | Writes `LICENSE`, `LICENSES/` and `REUSE.toml` into a directory, from the config. | new, taken out of `create-repo.sh` |
@@ -110,7 +111,7 @@ hold.
 `new-repo.sh` checks every repo name and the whole config before it creates anything, as
 `create-repo.sh` does today. It takes the same repo arguments as `create-repo.sh` does today:
 
-```
+```text
 GH_TOKEN=... new-repo.sh --org ouroboric-dev [--private] [--ci <piece>,...] <repo> "<description>" [<repo> "<description>"]...
 ```
 
@@ -153,7 +154,7 @@ their `CREATE_REPO_*` overrides (API, git host, setup script) so the tests can u
   `scripts/templates/ci/`. The pieces are:
 
   | Piece | Hook | Default for `ouroboric-dev` |
-  |---|---|---|
+  | --- | --- | --- |
   | `gitleaks` | gitleaks, `rev: v8.30.1` (as today) | always on; the user can't remove it |
   | `reuse` | `reuse lint` | on |
   | `markdown` | markdownlint | on |

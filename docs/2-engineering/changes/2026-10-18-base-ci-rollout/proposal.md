@@ -47,7 +47,7 @@ On 2026-10-18 the full base CI ran on a fresh clone of each repo's `main`: every
 `gitleaks-history`.
 
 | Repo | markdownlint | yamllint | shellcheck |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | yggdrasil | 33,051 in 31 files | 0 | 9 |
 | ouroboric | 544 in 50 files | 6 | 44 |
 | odin | 28 | 519 | 0 |
@@ -135,7 +135,7 @@ For each finding, the builder asks whether the house style gets real value from 
 The founder decided this rule. The cases the brainstorm sorted:
 
 | Finding | Decision | Reason |
-|---|---|---|
+| --- | --- | --- |
 | MD010 hard tabs in Go code blocks | bend: MD010 ignores code blocks | gofmt requires tabs; the plan tools extract that code verbatim |
 | odin `testdata/` YAML and prompt `.md` files | bend: exclude `testdata/` from markdownlint and yamllint only | they are test inputs read by code, not docs or config |
 | MD022, MD032 blank lines | default | the habit carries no value |

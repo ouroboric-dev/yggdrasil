@@ -214,7 +214,7 @@ Each line is **Decided 2026-10-15** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T039 `repo-admin` and `Remote` | `gungnir` | M | Phase 1 |
 | v0-T040 `umbrella.yaml` | `gungnir` | M | v0-T039 |
 | v0-T041 graph and pack for the tree | `gungnir` | M | v0-T040 |
@@ -294,10 +294,12 @@ The Gungnir half of `remote-creates-repos-T001`: the hard approval point `repo-a
 `Remote` interface with `Create` and `Protect` (decision 4).
 
 **Files (in `gungnir`):**
+
 - Create: `gate_test.go`, `remote.go`
 - Modify: `gate.go`, `gungnir_test.go`, `schema/factory.schema.json`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.GateRepoAdmin` (`"repo-admin"`, hard: 16 approval points, 9 hard).
   `gungnir.Remote` with `Name() string`, `Create(ctx, Repo) error` and
   `Protect(ctx, Repo) (applied bool, err error)`. `gungnir.Visibility` (`VisibilityPrivate`,
@@ -305,6 +307,7 @@ The Gungnir half of `remote-creates-repos-T001`: the hard approval point `repo-a
   Path string; Files map[string][]byte}` with `Validate() error`.
 
 **Acceptance criteria:**
+
 - [ ] `repo-admin` is a known, hard approval point, and no config can override it: the
       `factory.yaml` and `graph.yaml` schemas know the name, so the existing override test meets
       it as a hard point.
@@ -537,9 +540,11 @@ index 3aefb32..b4c200e 100644
 ### Task v0-T040: `umbrella.yaml`
 
 **Files (in `gungnir`):**
+
 - Create: `schema/umbrella.schema.json`, `schema/umbrella.go`, `schema/umbrella_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Visibility` (v0-T039).
 - Produces: `schema.Umbrella{Root bool; Owner string; Visibility gungnir.Visibility; Children
   map[string]Child}`, `schema.Child{Kind ChildKind; Owner string; Visibility gungnir.Visibility}`,
@@ -549,6 +554,7 @@ index 3aefb32..b4c200e 100644
   never nil.
 
 **Acceptance criteria:**
+
 - [ ] A valid file parses; an umbrella with no children has an empty, non-nil `Children`.
 - [ ] Refused: no owner, an unknown visibility or kind, an unknown field, a child without an owner, a
       child path that climbs, is absolute, is `.` or starts a segment with a dot (so never in `.git`
@@ -823,17 +829,20 @@ its leaves (decision 6); the ledger the `repo_created` event. Two Phase 1 follow
 a rejection re-runs an agent, and durations are positive.
 
 **Files (in `gungnir`):**
+
 - Modify: `event.go`, `schema/event_test.go`, `schema/graph.go`, `schema/graph.schema.json`,
   `schema/graph_test.go`, `schema/ledger-event.schema.json`, `schema/pack.go`,
   `schema/pack.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.KindMerge`, `schema.KindPointer`; `schema.Node` gains `Repo string`,
   `Checks, Acceptance, Generated []string`; `schema.Pack` gains `Leaves map[string]PackLeaf`, with
   `schema.PackLeaf{Description, Template string; FirstCommit []string}`; `gungnir.EventRepoCreated`
   (`"repo_created"`). After `ParseGraph`, a gate's `Reruns` is always an agent node before it.
 
 **Acceptance criteria:**
+
 - [ ] Merge and pointer nodes parse with their fields. A merge node needs a repo and a check;
       neither kind may name the project (`.`) as its repo; a generated file must stay inside the
       umbrella; a repo path can't climb. `repo` stays optional on exec and agent nodes (decision 7).
@@ -1334,12 +1343,15 @@ index 517044d..6f964a9 100644
 Two Phase 1 follow-ups (decision 16).
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/factory.go`, `schema/factory_test.go`, `go.mod`, `go.sum`
 
 **Interfaces:**
+
 - Produces: `schema.KnownAgent(agent string) bool`.
 
 **Acceptance criteria:**
+
 - [ ] A role with an unknown agent (such as `codex`) is refused by the schema, by name, and never as
       a `*CapsError` asking for a spend limit.
 - [ ] `KnownAgent`'s list and the schema's agent enum agree.
@@ -1447,16 +1459,19 @@ The wrapper every host git call goes through (decision 3; spec §3.3 rule 5, §1
 pins Gungnir here (decision 18).
 
 **Files (in `odin`):**
+
 - Create: `internal/git/git.go`, `internal/git/git_test.go`
 - Modify: `internal/gate/decide_test.go` (Gungnir now has nine hard approval points); `go.mod`,
   `go.sum` (the pin)
 
 **Interfaces:**
+
 - Produces: `git.Run(ctx, dir string, args ...string) (string, error)` (standard output, trimmed; an
   error carries the command and git's message), `git.Repo{GitDir, WorkTree string}` with
   `Run(ctx, args...)`, `git.CheckURL(url string) error`, and the identity `git.Name`, `git.Email`.
 
 **Acceptance criteria:**
+
 - [ ] No hook runs: not in the repo's `.git/hooks`, not through its own `core.hooksPath`.
 - [ ] `core.fsmonitor` never runs a command.
 - [ ] The operator's global git config never applies (a `hooksPath`, `commit.gpgsign`, a
@@ -1783,9 +1798,11 @@ submodules on the way (spec §3.1; §3.3 rule 6). `treetest` builds fixture tree
 test: each node a repo with its own bare remote, the root cloned without submodules.
 
 **Files (in `odin`):**
+
 - Create: `internal/tree/tree.go`, `internal/tree/tree_test.go`, `internal/tree/treetest/treetest.go`
 
 **Interfaces:**
+
 - Consumes: `schema.Umbrella`, `LoadUmbrella`, `ChildUmbrella`, `ChildLeaf` (v0-T040); `git.Run`,
   `git.CheckURL` (v0-T043).
 - Produces: `tree.Node{Path, Dir, GitDir string; Kind schema.ChildKind; Owner string; Visibility
@@ -1795,6 +1812,7 @@ test: each node a repo with its own bare remote, the root cloned without submodu
   `treetest.Standard()`, `treetest.Build(t, Node) string` (the root's fresh clone).
 
 **Acceptance criteria:**
+
 - [ ] `Resolve` checks out the path to its target and nothing else: not the sibling project, not the
       sibling leaf, not the submodules that aren't nodes (`assets/`, `tools/`).
 - [ ] A leaf's git dir is its parent's `.git/modules/<name>`.
@@ -2233,12 +2251,15 @@ func submodule(ctx context.Context, dir, p string) (name, url string, err error)
 fixture proves the walker has no fixed depth (spec §3.1).
 
 **Files (in `odin`):**
+
 - Modify: `internal/tree/tree.go`, `internal/tree/tree_test.go`, `internal/tree/treetest/treetest.go`
 
 **Interfaces:**
+
 - Produces: `tree.Walk(ctx, root, fn func(Node) error) error`, and `treetest.Deep()`.
 
 **Acceptance criteria:**
+
 - [ ] `Resolve` walks the deeper fixture, a company umbrella → project → `services/backend` →
       `repos/api`, and `FindRoot` finds the root from that leaf.
 - [ ] `Walk` visits checked-out nodes in path order, reports the others with `Present` false, enters
@@ -2417,14 +2438,17 @@ index 567df1f..2bd7eed 100644
 The Odin half of `remote-creates-repos-T001`, its remote (decision 5).
 
 **Files (in `odin`):**
+
 - Create: `internal/remote/local.go`, `internal/remote/local_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Remote`, `gungnir.Repo` (v0-T039); `tree.Node`, `tree.Resolve`, `treetest`
   (v0-T044).
 - Produces: `remote.NewLocal(parent tree.Node) *remote.Local`, a `gungnir.Remote` named `local`.
 
 **Acceptance criteria:**
+
 - [ ] `Create` makes a leaf at the path, whose one commit holds the first-commit files and nothing
       else; its git dir is in the parent's `.git/modules`; the parent's `umbrella.yaml` lists it with
       its owner and visibility, and the parent has one commit for it and nothing uncommitted.
@@ -2674,9 +2698,11 @@ Host git on a leaf (decisions 8 and 9): a run's branch, checkpoint commits, and 
 leaf is trusted.
 
 **Files (in `odin`):**
+
 - Create: `internal/leaf/leaf.go`, `internal/leaf/leaf_test.go`
 
 **Interfaces:**
+
 - Consumes: `tree.Node` (v0-T044), `git.Repo` (v0-T043).
 - Produces: `leaf.Open(tree.Node) (*leaf.Leaf, error)`; on `*Leaf`: `Dir()`, `Head(ctx)`,
   `Rev(ctx, ref)`, `Git(ctx, args...)`, `StartBranch(ctx, branch, from) (string, error)`,
@@ -2684,6 +2710,7 @@ leaf is trusted.
   `Reset(ctx, branch, sha) error`; `leaf.PolicyError` and `leaf.IsPolicy(err) bool`.
 
 **Acceptance criteria:**
+
 - [ ] A checkpoint commits the leaf's work on the branch it has checked out; with nothing changed it
       commits nothing and returns the head.
 - [ ] A checkpoint refuses, as a `*PolicyError`, a nested git repository built from plain file
@@ -3048,13 +3075,16 @@ Spec §8.3: a generated file committed at a pointer move is refused when it has 
 previous version's rows (decision 13).
 
 **Files (in `odin`):**
+
 - Create: `internal/shrink/shrink.go`, `internal/shrink/shrink_test.go`
 
 **Interfaces:**
+
 - Produces: `shrink.Check(path string, prev, next []byte) error` (a `*shrink.Error{Path; Old, New
   int}`), and `shrink.Rows([]byte) int`.
 
 **Acceptance criteria:**
+
 - [ ] A new file, growth, and exactly half pass; under half, an emptied file and a deleted one are
       refused; blank lines aren't rows; the refusal names the file and both counts.
 
@@ -3161,10 +3191,12 @@ Spec §4.5 and decision 12, with both of its tests from spec §13. The lock pack
 lock made general; `Held` reads `/proc/locks` (decision 10).
 
 **Files (in `odin`):**
+
 - Create: `internal/lock/lock.go`, `internal/lock/lock_test.go`, `internal/merge/merge.go`,
   `internal/merge/merge_test.go`
 
 **Interfaces:**
+
 - Consumes: `leaf.Leaf` (v0-T047).
 - Produces: `lock.Take(path) (release func(), err error)`, `lock.Held(path) bool`, `lock.ErrHeld`;
   `merge.Spec{Leaf *leaf.Leaf; Branch, Base, Lock string; Check func(ctx) error}`,
@@ -3172,6 +3204,7 @@ lock made general; `Held` reads `/proc/locks` (decision 10).
   `merge.Refused{Why string; Err error}` with `WhyConflict`, `WhyChecks`, `WhyMoved`.
 
 **Acceptance criteria:**
+
 - [ ] One holder at a time; `Take` creates the lock's directory; `Held` neither takes the lock nor
       creates the file, so a `Take` right after it never fails (review focus 5).
 - [ ] Spec §13: a branch that passed against an old base but fails against the new one doesn't merge,
@@ -3596,9 +3629,11 @@ func Land(ctx context.Context, s Spec) (Result, error) {
 Spec §3.4 and decision 13: one level, under the parent's lock.
 
 **Files (in `odin`):**
+
 - Create: `internal/pointer/pointer.go`, `internal/pointer/pointer_test.go`
 
 **Interfaces:**
+
 - Consumes: `tree.Node` (v0-T044), `leaf.Leaf` (v0-T047), `shrink.Check` (v0-T048), `lock.Take`
   (v0-T049).
 - Produces: `pointer.Spec{Parent tree.Node; Child string; Leaf *leaf.Leaf; To, Lock string; Check,
@@ -3607,6 +3642,7 @@ Spec §3.4 and decision 13: one level, under the parent's lock.
   is empty when the pointer was already there), and `pointer.Refused{Why string; Err error}`.
 
 **Acceptance criteria:**
+
 - [ ] A move commits in the parent only, with the given message; the root gets no commit (one level); a
       second move to the same commit commits nothing.
 - [ ] Failing leaf checks or acceptance checks refuse the move, and the pointer stays.
@@ -3900,6 +3936,7 @@ A run's project is an umbrella of an instance tree, and every node that does wor
 (decision 7). Phase 1's `workspace/` goes. Every test that starts a run moves onto a tree fixture.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/tree_test.go`
 - Modify: `internal/run/run.go`, `internal/run/state.go`, `internal/engine/engine.go`,
   `internal/cli/cli.go`, `internal/tree/treetest/treetest.go`, `testdata/toy/graph.yaml`,
@@ -3908,6 +3945,7 @@ A run's project is an umbrella of an instance tree, and every node that does wor
   `internal/engine/gates_test.go`, `internal/cli/cli_test.go`, `internal/cli/e2e_test.go`
 
 **Interfaces:**
+
 - Consumes: `tree.FindRoot`, `tree.Resolve` (v0-T044); `leaf.Open` (v0-T047).
 - Produces: `run.Prepare(ctx, Options)`, `run.Start(ctx, Options)`, `run.Open(ctx, project, id,
   mode)` (a context added to each); `run.Setup` gains `Root`, `ProjectPath`, `Project tree.Node`,
@@ -3918,6 +3956,7 @@ A run's project is an umbrella of an instance tree, and every node that does wor
   `treetest.SubProject(t, leaves ...string) (root, sub string)`: a project holding a sub-project.
 
 **Acceptance criteria:**
+
 - [ ] A run starts only in a project umbrella inside an instance tree; outside one it is refused with
       "not inside an instance tree" and nothing is created, and a leaf as `--project` is refused.
 - [ ] Prepare resolves each node's repo, checking out only those, and refuses a node with no repo, an
@@ -4977,13 +5016,16 @@ A run works on its own branch in every leaf (decision 8), and a run that fails o
 recorded as failed (decision 16).
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/run.go`, `internal/run/state.go`, `internal/run/tree_test.go`
 
 **Interfaces:**
+
 - Produces: `run.Branch(id) string` (`ygg/<id>`); `run.State.Leaves map[string]run.LeafRecord`, with
   `LeafRecord{Branch, Base, Checkpoint string}`; `run.Failed{ID string; Err error}`.
 
 **Acceptance criteria:**
+
 - [ ] Start checks out `ygg/<run-id>` from `main` in each leaf the graph names, and records the
       branch, the base and the checkpoint (the base, so far) in `run.json`.
 - [ ] A leaf with a person's uncommitted edit fails the start: `Start` returns a `*Failed`,
@@ -5206,15 +5248,18 @@ index 5a190dd..9c03e18 100644
 The Odin half of `remote-creates-repos-T001`, its `init` criterion (decision 6).
 
 **Files (in `odin`):**
+
 - Create: `testdata/toy/templates/app/LICENSE`
 - Modify: `internal/run/run.go`, `internal/run/tree_test.go`, `testdata/toy/graph.yaml`,
   `testdata/toy/pack.yaml`
 
 **Interfaces:**
+
 - Consumes: `remote.NewLocal` (v0-T046); `schema.Pack.Leaves` (v0-T041).
 - Produces: `run.Setup.Create []string`, the leaves Start creates.
 
 **Acceptance criteria:**
+
 - [ ] A run in a project that lacks the toy realm's leaf creates it through the local remote, before
       any node: its first commit holds the template's `LICENSE` only, the project has a commit for
       it, and the ledger has `repo_created`.
@@ -5462,16 +5507,19 @@ leaves left alone, one advancing run per project, and the run lock on the `lock`
 Phase 1 follow-ups: `run.json` is checked when a run opens, and `status` no longer takes the lock.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/run.go`, `internal/run/state.go`, `internal/run/tree_test.go`,
   `internal/engine/engine.go`, `internal/engine/gates.go`, `internal/engine/engine_test.go`
 
 **Interfaces:**
+
 - Consumes: `leaf.Checkpoint`, `leaf.Reset`, `leaf.IsPolicy` (v0-T047); `lock.Take`, `lock.Held`
   (v0-T049).
 - Produces: `run.ErrProjectBusy`; `run.LockFile(project, repo) string` and `(*Run).LockFile(repo)`;
   `run.State.PendingGate gungnir.Gate`.
 
 **Acceptance criteria:**
+
 - [ ] Every agent or exec node in a leaf ends with a checkpoint commit on the run's branch, named
       after the run, node and attempt; `run.json` records it, the node's `node_finished` line carries
       it, and the leaf has nothing uncommitted.
@@ -6016,9 +6064,11 @@ index 24d70f3..40bf0f9 100644
 Two of decision 16's items.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/run.go`, `internal/run/tree_test.go`
 
 **Acceptance criteria:**
+
 - [ ] A run whose config is `unattended` with `design: auto` opens with `--mode step-by-step`.
 - [ ] After `factory.yaml` changes a role's model, `run.json` records the new one.
 
@@ -6122,16 +6172,19 @@ way an exec node's command does. The run's own lock moves to `runs.lock`, so a p
 project can take `project.lock` while the run holds its own (decision 10).
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/land.go`, `internal/engine/land_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/engine_test.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Consumes: `merge.Land` (v0-T049), `pointer.Move` (v0-T050), `schema.KindMerge`,
   `schema.KindPointer` (v0-T041).
 - Produces: `run.RunsLock(project) string`; in the engine, merge and pointer nodes; a
   `check_result` ledger line for each pack check, and `pointer_moved` for a move.
 
 **Acceptance criteria:**
+
 - [ ] A merge node lands the run's branch: the leaf's `main` is the run's head, and it is the leaf's
       new checkpoint; the ledger has the check's `check_result` and the node's `node_finished` with
       the commit.
@@ -6577,15 +6630,18 @@ A node itself stops the run at a hard approval point: `policy-violation` for pla
 `shrink-guard` for a shrunk generated file (decision 13). The quarantine of spec §12.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/engine.go`, `internal/engine/gates.go`, `internal/engine/land.go`,
   `internal/engine/engine_test.go`, `internal/engine/gates_test.go`, `internal/engine/land_test.go`,
   `internal/run/run.go`, `internal/run/state.go`, `internal/cli/cli.go`
 
 **Interfaces:**
+
 - Produces: `engine.Approve(ctx, r, gateID, note)` and `engine.Reject(ctx, r, gateID, reason)` (a
   context added); `run.State.Waived map[string]bool`.
 
 **Acceptance criteria:**
+
 - [ ] A planted repository stops the run at `policy-violation`, in unattended mode too, and nothing is
       committed; opening the run leaves the leaf as it is; approving puts the leaf back to its
       checkpoint, and the node runs again.
@@ -7075,10 +7131,12 @@ index 43467e7..391c287 100644
 leaves.
 
 **Files (in `odin`):**
+
 - Modify: `internal/cli/cli.go`, `internal/cli/doctor.go`, `internal/cli/cli_test.go`,
   `internal/cli/doctor_test.go`, `README.md`
 
 **Acceptance criteria:**
+
 - [ ] In a project, `doctor` prints `OK tree: <root>: <n> nodes, <m> checked out`; outside a tree,
       `ERROR tree:` and exit 1.
 - [ ] `doctor --root <dir>` checks the tree only, with no config, and warns
@@ -7391,11 +7449,13 @@ ends with its work on the leaf's `main` and the project pointing at it, across s
 A scripted agent tries the git escapes of spec §13 that need no sandbox.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/escape_test.go`
 - Modify: `internal/cli/cli_test.go`, `internal/cli/e2e_test.go`, `testdata/toy/graph.yaml`,
   `testdata/toy/pack.yaml`
 
 **Acceptance criteria:**
+
 - [ ] Step-by-step stops at all six approval points; key-points and unattended only at `design`;
       unattended with `design: auto` never; `plan: stop` adds `plan`. Every run ends with the
       project pointing at the leaf's merged commit, one `pointer_moved`, one `repo_created`, a
@@ -7730,9 +7790,11 @@ func TestAnAgentCannotWriteOdinsRecords(t *testing.T) {
 ### Task v0-T060: pointers and the exit check
 
 **Files (in `yggdrasil`):**
+
 - Modify: the `gungnir` and `odin` submodule pointers (`gleipnir` has no Phase 2 change)
 
 **Acceptance criteria:**
+
 - [ ] Each pointer is its repo's `main`, which holds its Phase 2 tasks, and `test` is green on that
       commit.
 - [ ] The exit criterion holds at those pointers, through `go.work`: the tree fixtures pass, the

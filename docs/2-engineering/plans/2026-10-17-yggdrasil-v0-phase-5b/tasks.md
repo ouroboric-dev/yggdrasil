@@ -246,7 +246,7 @@ Each line is **Decided 2026-10-17** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T205 a realm's stack is a pinned image or a build context in the realm | `gungnir` | M | Phase 5a |
 | v0-T206 a service may name its command, for an image that does nothing without one | `gungnir` | S | v0-T205 |
 | v0-T207 a scratch reviewer reads the output of the agent it reviews, and the spec gate reads its verdict | `gungnir` | S | v0-T206 |
@@ -349,15 +349,18 @@ GOWORK=off go mod tidy
 Gungnir's first task. Branch `realms/content` from `main` in `gungnir`, before step 1. A realm's tools must be in its sandbox's image, and its check scripts out of the agent's reach, which an upstream image pinned by digest can't give (change `realm-content`). The pack says the stack either way: an image, as before, or a folder of the realm with a Containerfile, which `ygg sandbox build` builds. Both forms are in the schema, so a realm can move to images published somewhere later by naming the image.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/pack_stack_test.go`, `schema/stack.go`, `stack.go`, `stack_test.go`
 - Modify: `sandbox.go`, `schema/pack.go`, `schema/pack.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.PackSandbox.Build` (a folder of the realm), `Target` (a stage of its Containerfile; the last when empty) and `Acceptance *PackStack{Stack, Build, Target}` (the stack of the sandbox that holds a snapshot of the whole project). Exactly one of `stack` and `build` is given, for the stack and for the acceptance stack; a target needs a build.
 - Produces: `(*Pack).StackRef(dir string) (string, error)` and `AcceptanceRef`: the pinned image, or the local tag `localhost/ygg-stack-<realm>[-acceptance]:<12 hex>` of the build. `schema.StackHash(dir, target)` is the hash in the tag: of every file of the context (path, executable bit, bytes) and of the stage. `schema.HashContext(dir)` refuses a context with no Containerfile at its top, any file that is not a regular file (a symlink could lead the build outside the realm), more than `MaxContextFiles` (500) files or `MaxContextBytes` (64 MiB).
 - Produces: `gungnir.ValidStack(ref)` (an image pinned by digest, or a local tag as above) and `gungnir.LocalStack(name, hash)`. `SandboxSpec.Validate` accepts either form of `Stack`.
 
 **Acceptance criteria:**
+
 - [ ] A pack with `sandbox.build` loads, and `StackRef` returns the local tag; a pack with `sandbox.stack` returns the image; both forms, or neither, are refused.
 - [ ] The tag changes with a file's bytes, with a file made executable, with an added file and with the target; it does not change when nothing does.
 - [ ] A context with no Containerfile, a symlink, too many files or too many bytes, and a `build` that climbs out of the realm are refused; so is a `target` on an image, or a target that is not a lower-case stage name.
@@ -890,14 +893,17 @@ func LocalStack(name, hash string) string { return "localhost/ygg-stack-" + name
 SeaweedFS, which the Go realm's API needs for object storage, does nothing when it starts without an argument. Phase 5a said a service runs the image's own command; a service may now name its own, as an argument vector (no shell).
 
 **Files (in `gungnir`):**
+
 - Create: `sandbox_command_test.go`, `schema/pack_command_test.go`
 - Modify: `sandbox.go`, `schema/pack.go`, `schema/pack.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.Service.Command []string`, `MaxServiceCommand` (16) and `MaxServiceArg` (256); `schema.PackService.Command` and `(*Pack).ServiceList()` carries it.
 - `ValidateServices` refuses an empty argument, one over 256 bytes, one with a NUL or a line break, one with a `$` (compose would expand it from the operator's environment), and more than 16 arguments; its message never echoes the argument.
 
 **Acceptance criteria:**
+
 - [ ] A service with a command validates; each refusal above is a test case, and the pack's schema refuses an empty command or an empty argument.
 - [ ] The pack's command reaches `ServiceList()`.
 
@@ -1098,14 +1104,17 @@ index 8441c34..965f521 100644
 Spec §4.2: a design-conformance reviewer checks the spec, and the spec gate stops on a deviation. The reviewer is a scratch agent that must see what the spec stage wrote, which is not in the project yet (it is published after the gate). This task is the graph's side of that.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/graph_conformance_test.go`
 - Modify: `schema/graph.go`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.Node.Reviews` (a scratch agent: the earlier scratch agent whose `out/` it finds as `reviewed/`) and `Node.DeviationFrom` (a gate of the `spec` kind: the scratch reviewer whose verdict it reads).
 - `ParseGraph` refuses `reviews` on a node that is not a scratch agent, on one that names a node that is not there, is itself, comes after it or is not a scratch agent; and `deviation_from` on a gate that is not `spec`, or that names a node that is not a scratch agent with `reviews`.
 
 **Acceptance criteria:**
+
 - [ ] The spec stage of a web graph (spec, conformance, spec gate re-running spec, publish) parses with its `Reviews`, `DeviationFrom` and `Reruns`.
 - [ ] Each refusal above is a test case, and each is refused for its own reason (the test checks the message).
 
@@ -1278,14 +1287,17 @@ index 0219085..3cfebba 100644
 The verdict decides whether a person must look at a spec, so it is read as strictly as a reviewer's findings (spec §4.6): one JSON document, bare or in one code fence; a verdict that cannot be read is an error, never a pass.
 
 **Files (in `gungnir`):**
+
 - Create: `conformance.go`, `schema/conformance.schema.json`, `schema/conformance_test.go`
 - Modify: `event.go`, `schema/event.go`, `schema/ledger-event.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.Conformance{Deviation bool; Amendment string}` and `MaxAmendment` (8000); `schema.ParseConformance([]byte) (gungnir.Conformance, error)`; the ledger event `conformance_checked`.
 - `ParseConformance` refuses an empty answer, prose, `{}`, a deviation with no amendment or a blank one, an amendment on a verdict with no deviation, a verdict that is not a boolean, an unknown field, two documents and an amendment over `MaxAmendment`.
 
 **Acceptance criteria:**
+
 - [ ] `{"deviation": false}`, the same in a code fence and a deviation with its amendment are read; every other answer above is an error.
 - [ ] The ledger accepts a `conformance_checked` line.
 
@@ -1492,9 +1504,11 @@ index ac0d59f..c0d564e 100644
 The architecture page says what Gungnir now defines.
 
 **Files (in `gungnir`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says that a stack is an image or a build context (with its target), that a service may carry a command, and what the design-conformance review is.
 
 **Named test:** `git diff --stat -- docs/architecture.md` in `gungnir`. **Layer:** `gungnir`. **Size:** S (7). **Depends on:** v0-T208.
@@ -1536,14 +1550,17 @@ index 85c5d9c..cedd2c0 100644
 Gleipnir's first task. Branch `realms/content` from `main` in `gleipnir`, before step 1. Gungnir's v0-T205 to v0-T209 are merged and pinned, or `yggdrasil/go.work` builds the local copy. A service the pack gives a command runs it instead of the image's own (SeaweedFS does nothing without `server -s3`). The compose file is still generated by the factory alone and checked against what it should be before every start.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/command_test.go`
 - Modify: `sandbox/config.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Service.Command`. The generated `compose.yaml` carries it as the service's `command`, and nothing for a service that has none, so the image's own stays.
 - `Validate` compares the generated file with what the factory renders, so a command changed in the file since it was generated is refused.
 
 **Acceptance criteria:**
+
 - [ ] A service with a command renders it; one without renders none.
 - [ ] `Validate` accepts the generated file and refuses one whose service command was changed.
 
@@ -1651,13 +1668,16 @@ index 2a95ca7..81d3934 100644
 A realm's stack may be a folder of the realm with a Containerfile (change `realm-content`). Building it is the one place a registry and the network are reached for tools, so the driver builds it from inputs that are pinned and refuses anything else before it calls the engine.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/stackbuild.go`, `sandbox/stackbuild_test.go`
 
 **Interfaces:**
+
 - Produces: `(*Driver).BuildStack(ctx, ref, dir, target string) (built bool, err error)`. It refuses a `ref` that is not the local tag of a stack, a tag that does not match `schema.StackHash(dir, target)`, a Containerfile with no `FROM`, a `FROM` that is neither an image pinned by digest nor `scratch` nor an earlier stage (an `ARG` in a `FROM` is refused too), a `COPY --from` or `RUN --mount ...from=` of anything but an earlier stage, an `ADD` (it may fetch a URL), and a `target` that is not a stage.
 - Otherwise it returns `false` without a call to the engine when the image is already there (the tag is a hash of the context, so an image with it is this image); else it pulls every external base once, by digest, with the isolated registry auth, and runs `podman build --pull=never -t <ref> -f <dir>/Containerfile [--target <stage>] <dir>`.
 
 **Acceptance criteria:**
+
 - [ ] A context with two stages builds: each base is pulled once before the build, which never pulls, and `--target` is passed.
 - [ ] An image that exists is left alone.
 - [ ] Each refusal above is a test case, and in each the engine is not called.
@@ -1994,12 +2014,15 @@ func joinContinuations(text string) []string {
 `Build` pulls the stack by digest and layers the factory's tools on it. A stack built from a context is local: nothing to pull, and a missing one is a mistake to report.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/images.go`, `sandbox/images_test.go`
 
 **Interfaces:**
+
 - `(*Driver).Build(ctx, stack)` with a local stack tag checks `podman image exists <stack>` instead of pulling it, and returns `ErrNoImage` naming the stack when it is not there; the node image is pulled as before, and the layers are built `--pull=never` on the stack.
 
 **Acceptance criteria:**
+
 - [ ] A built stack is not pulled from a registry, and the layers are built on it.
 - [ ] A stack that was not built fails with `ErrNoImage`, and no layer is built.
 
@@ -2104,13 +2127,16 @@ index 481f510..29aefc6 100644
 The firewall allows the addresses its sidecar resolved when it started, and the work container resolved the same names later through the same resolver. A name served from a large pool answers with another address from time to time (the Go proxy and the vulnerability databases are Google's), and then the connection is refused: found on a real engine, when the first Go check of the smoke run failed with `connection refused` to an address the rules did not allow. So the work container is no longer left to ask. Every DNS query of a process that is neither root (the script's own lookups) nor nobody (dnsmasq's) is redirected to a dnsmasq in the sandbox's network namespace, which answers from the addresses the rules allow, asks the services' resolver about the services' names, and answers nothing else. This also closes the DNS channel for the work container (backlog B-025).
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/assets/Containerfile`, `sandbox/assets/egress.sh`, `sandbox/firewall_test.go`, `sandbox/images_test.go`, `sandbox/integration_test.go`
 
 **Interfaces:**
+
 - `egress.sh` writes `$STATE/hosts` ("address host" lines, whole, in one move) and `$STATE/dnsmasq.conf` (port 5353 on 127.0.0.1, `no-resolv`, `no-hosts`, no cache, `addn-hosts`, `server=/<service>/<resolver>` for each service name, `user=nobody`), starts dnsmasq and waits for its pid file before it says it is ready (a firewall that cannot answer never opens), and adds the `nat` rules: RETURN for uid 0 and uid 65534, REDIRECT of UDP and TCP port 53 to 5353 for the rest.
 - On a refresh the rules are swapped first and the answers second (`kill -HUP`), so whatever dnsmasq gives out is already allowed. `YGG_MAX_REFRESH` ends the loop after that many refreshes (for tests). The `fw` image installs `dnsmasq-base`.
 
 **Acceptance criteria:**
+
 - [ ] The answers file holds every address of every listed host; dnsmasq's configuration forwards only the services' names; the redirect rules are in place, root and nobody first, before the firewall says it is ready.
 - [ ] A firewall whose dnsmasq does not start never says it is ready, and after a refresh the answers are the new address alone and the rules have the new address in the other chain.
 - [ ] The older tests of the script (hosts, services, a service that is late, a host that does not resolve) still pass.
@@ -2448,9 +2474,11 @@ index 70db0ab..f136b56 100644
 Things only a real engine can show: a leaf started on a stack built from a context sees the check scripts baked into it and cannot change them; a service takes the command it was given and a sandbox that has one still reaches the hosts its leaf may and nothing else; and the work container resolves the allowed hosts and the services and nothing else, to addresses it can connect to. Like Phase 5a's v0-T162, the tests are behind the `sandbox` build tag and skip without an engine; v0-H14 runs them. They were run for this plan on rootless Podman, and the DNS one is what showed v0-T213 was needed.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/integration_stack_test.go`
 
 **Acceptance criteria:**
+
 - [ ] `go vet -tags sandbox ./...` is clean.
 - [ ] With an engine: a stack built from a context with a script is built once and not again, a leaf started on it runs the script and cannot write to it; a service started with a command is reachable on its port, `proxy.golang.org` is reachable from the same sandbox and `1.1.1.1` is not; the service's name and the listed hosts resolve to addresses the rules allow, and `example.com` does not resolve.
 
@@ -2606,9 +2634,11 @@ func TestSandboxAnswersDNSForTheListedHostsAndTheServicesOnly(t *testing.T) {
 The architecture page says what Gleipnir now does.
 
 **Files (in `gleipnir`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says that Gleipnir builds a realm's stack from pinned inputs only and that a service may take a command.
 
 **Named test:** `git diff --stat -- docs/architecture.md` in `gleipnir`. **Layer:** `gleipnir`. **Size:** S (7). **Depends on:** v0-T214.
@@ -2653,14 +2683,17 @@ index ed6fb3a..3853b31 100644
 Havamal's only task. Branch `skills/ponytail` from `main` in `havamal`, before step 1. The plan's reuse review and the task loop's simplicity reviewer load Ponytail's `ponytail-review` skill (spec-driven development §8; the founder chose to keep it, 2026-10-17). It is vendored, never installed: a pinned, reviewed copy of one commit of the public upstream, under its licence (MIT, already listed in the writing styles). The skill is instructions an agent follows, so the diff of this task is the part a person must read.
 
 **Files (in `havamal`):**
+
 - Create: `ponytail_test.go`, `skills/ponytail-review/LICENSE`, `skills/ponytail-review/SKILL.md`
 - Modify: `skills.lock`
 
 **Interfaces:**
+
 - `havamal vendor` copies `skills/ponytail-review/` of `https://github.com/DietrichGebert/ponytail` at commit `16352ac229eb08a9598dcae48fe9f2b342567d86` (release 5.3.2, 2026-10-17) into `skills/ponytail-review/` with its licence, and records the upstream, the commit, the licence and the SHA-256 of each file in `skills.lock`.
 - `havamal.Embedded()` opens the library, so `Get("ponytail-review")` returns it.
 
 **Acceptance criteria:**
+
 - [ ] The skill is vendored from that commit: `SKILL.md` has the SHA-256 `33fe4ebe22a460924e5d4a261e223df22e409cc94ab76182bee9fb91a3ef022e` and `LICENSE` has `fb1bc6909ac3ef82d5c22106e32ef682b0cff66788fa915fb9b53b15c9d2f3ab`.
 - [ ] `go run ./cmd/havamal check .` says the library is as locked, and the test reads the entry (MIT, the upstream's public URL at one full commit).
 
@@ -2896,13 +2929,16 @@ Lists findings, changes no code.
 helheim-go's first task. Branch `realm/content` from `main` in `helheim-go`, before step 1. A new API leaf starts from this template (`init` copies it, spec §4.2). It is small and real: it builds, passes its own checks, and holds the habits the ladder expects of a leaf: a contract the code is described by, tests first, standard library first, JSON errors that leak nothing. The template is MIT so a product may license it as it likes. Its tests run in a copy of the folder, as a product would have it.
 
 **Files (in `helheim-go`):**
+
 - Create: `template_test.go`, `templates/api/.devcontainer/devcontainer.json`, `templates/api/.gitignore`, `templates/api/.golangci.yml`, `templates/api/AGENTS.md`, `templates/api/LICENSE`, `templates/api/cmd/api/main.go`, `templates/api/cmd/api/main_test.go`, `templates/api/go.mod`, `templates/api/init.sh`, `templates/api/internal/httpapi/server.go`, `templates/api/internal/httpapi/server_test.go`, `templates/api/openapi.yaml`
 
 **Interfaces:**
+
 - Produces: `templates/api`, a Go module named `api`: `cmd/api` (the program: `PORT`, graceful shutdown), `internal/httpapi` (`New() http.Handler` with `GET /healthz` answering `{"status":"ok"}`, a 405 with `Allow` for another method and a 404 with a JSON body), `openapi.yaml`, `.golangci.yml` (standard linters plus `gosec`, `errorlint` and `bodyclose`), `AGENTS.md` (under 100 lines), `init.sh`, `LICENSE` (MIT) and a `.devcontainer/devcontainer.json` that only names the image.
 - A catch-all route would answer a wrong method on a known path with 404, so `only(method, handler)` answers 405 itself (found by the test). `PORT` is checked to be a whole number from 1 to 65535 before it is logged or used (`gosec` G706).
 
 **Acceptance criteria:**
+
 - [ ] `go vet` and `go test -race` pass in a copy of the template, and `gofmt -l` prints nothing.
 - [ ] `GET /healthz` is 200 with the JSON status; `POST /healthz` is 405; an unknown path is a JSON 404; a bad `PORT` is an error.
 - [ ] The template carries a licence that starts "MIT License", an `AGENTS.md` of at most 100 lines, `init.sh`, `openapi.yaml`, and a `devcontainer.json` that sets none of the keys that run or widen something when a person opens the repo.
@@ -3333,14 +3369,17 @@ paths:
 The API stack is Go, `sqlc` and Postgres (spec §9.2). The template carries the plumbing so that implementers add SQL and migrations, not tooling: a migration runner, the code `sqlc` generates, a store wired into `/healthz`, and an integration test that the ladder's last rung runs against the sandbox's Postgres. Building the template found two known vulnerabilities in a dependency of the Postgres driver (`golang.org/x/text`), so the template pins the fixed release; and Go 1.26.7's standard library fails `govulncheck`, so the image the template names is 1.26.9 (decision 11).
 
 **Files (in `helheim-go`):**
+
 - Create: `templates/api/db/queries/info.sql`, `templates/api/internal/store/db.go`, `templates/api/internal/store/info.sql.go`, `templates/api/internal/store/migrate.go`, `templates/api/internal/store/migrations/0001_init.sql`, `templates/api/internal/store/models.go`, `templates/api/internal/store/store_integration_test.go`, `templates/api/internal/store/store_test.go`, `templates/api/sqlc.yaml`
 - Modify: `template_test.go`, `templates/api/AGENTS.md`, `templates/api/cmd/api/main.go`, `templates/api/go.mod`, `templates/api/internal/httpapi/server.go`, `templates/api/internal/httpapi/server_test.go`, `templates/api/openapi.yaml`
 
 **Interfaces:**
+
 - Produces: `sqlc.yaml`, `internal/store/migrations/0001_init.sql` (a table `app_info`), `db/queries/info.sql` (`GetInfo`, `SetInfo`) and the generated `internal/store` (`db.go`, `models.go`, `info.sql.go`, by `sqlc` 1.31.1); `store.Open(ctx, url)` and `store.Migrate(ctx, pool)`, which applies the embedded migrations in file order, each in a transaction, under an advisory lock; `httpapi.Deps{DB Pinger}` and `httpapi.New(Deps)`; `/healthz` answers 503 `{"status":"database unavailable"}` when the database does not answer, never the error.
 - The program uses the database at `DATABASE_URL` when that is set. Tests that need a database carry `//go:build integration` and read `YGG_DATABASE_URL`.
 
 **Acceptance criteria:**
+
 - [ ] The unit tests cover `/healthz` with no database, with one that answers and with one that is down (and the body never carries the driver's error), and that the migrations are named `NNNN_what.sql`, in order, without a number twice.
 - [ ] `go vet -tags integration` is clean, so the integration test compiles; `sqlc diff` finds nothing to change.
 - [ ] `govulncheck` and `osv-scanner` find nothing in the template (run with Go 1.26.9).
@@ -3965,13 +4004,16 @@ sql:
 The stack layer of the Go realm (spec §9.4): the Go toolchain, the tools of the ladder at pinned versions, and the ladder's scripts baked into `/opt/ygg/checks`, owned by root, where the agent's user can run them and cannot write them. Rung 1 (static) and the tests of rung 2 are its first scripts. They run in a leaf's top folder.
 
 **Files (in `helheim-go`):**
+
 - Create: `checks_test.go`, `containerfile_test.go`, `devcontainer/Containerfile`, `devcontainer/checks/docs.sh`, `devcontainer/checks/go-static.sh`, `devcontainer/checks/go-unit.sh`
 
 **Interfaces:**
+
 - Produces: `devcontainer/Containerfile` (one stage; `FROM golang:1.26.9-bookworm` by digest; `golangci-lint` 2.14.0, `sqlc` 1.31.1, `oasdiff` 1.33.0, `vacuum` 0.30.6 and `osv-scanner` 2.6.0 as release binaries, each checked against a SHA-256 recorded when the version was reviewed; `govulncheck` 1.8.0 by `go install`; `rm -rf /go/pkg` after it, so that the agent's user can make its module cache; `COPY checks/ /opt/ygg/checks/`, made read-only for all but root).
 - Produces: `devcontainer/checks/docs.sh` (every `docs/**.md` has front matter with `title`, a `status` of draft, accepted, implemented or superseded and a `date`; a plain file name; relative links that point at files), `go-static.sh` (`gofmt -l`, `go vet` with and without the integration tag, `golangci-lint run`, the docs) and `go-unit.sh` (`go test -race -count=1 ./...`).
 
 **Acceptance criteria:**
+
 - [ ] Every `FROM` is pinned by digest, every download is checked against a hash, `curl` is used once (inside the checking function), `go install` names a version, nothing is piped into a shell, and the context is one gungnir can hash.
 - [ ] The scripts are executable, start `#!/bin/bash` with `set -euo pipefail` and pass `shellcheck`.
 - [ ] `docs.sh` accepts good documents and names every problem of bad ones; `go-static.sh` stops at the first problem (an unformatted file, a vet error, also behind the integration tag, a lint failure, a bad document) and says what to fix; `go-unit.sh` fails on a failing test.
@@ -4379,14 +4421,17 @@ go test -race -count=1 ./...
 Spec §9.5 rung 2: new tests must fail on the parent commit. The script builds the commit the task started from (the leaf's `main`) in a folder of its own, puts the change's test files on it and runs their packages. A test of code that is not there yet fails to compile, and that counts. It is not a promise that a test is good, only that it can fail.
 
 **Files (in `helheim-go`):**
+
 - Create: `devcontainer/checks/go-tdd.sh`
 - Modify: `checks_test.go`
 
 **Interfaces:**
+
 - Produces: `devcontainer/checks/go-tdd.sh`. It refuses Go code that changed without a new or changed test (generated files, marked `Code generated`, are not code that needs one); it refuses new tests that pass on the parent; it passes, with a note, a change that has only tests behind the `integration` tag (they need a database), and a change with no Go code.
 - It works in a temporary folder and leaves the leaf as it was.
 
 **Acceptance criteria:**
+
 - [ ] A change with code and a test that needs it passes and shows the failure; code with no test, a test that passes before the code, and a changed test that does not fail are refused; generated code only, a document only, and an integration test only pass with the matching note; an unchanged branch passes.
 - [ ] The leaf's tree is not changed by the check.
 
@@ -4569,13 +4614,16 @@ tail -n 12 "$log"
 Rung 3 lints the contract, checks the generated code and lists the breaking changes since the task started (a breaking change is listed, not refused: the consumers must follow, and the task says so). Rung 4 asks `govulncheck` and OSV. Rung 5 for the API runs the integration tests against the Postgres the sandbox starts. The scripts were run with the real tools on the template and on the code of the smoke run (v0-H15's first task); the tests below use stand-ins for the tools, to check the scripts' own logic.
 
 **Files (in `helheim-go`):**
+
 - Create: `devcontainer/checks/go-contract.sh`, `devcontainer/checks/go-integration.sh`, `devcontainer/checks/go-security.sh`
 - Modify: `checks_test.go`
 
 **Interfaces:**
+
 - Produces: `devcontainer/checks/go-contract.sh` (`vacuum lint` at error severity, `sqlc diff`, and `oasdiff breaking` against the commit the task started from, read as JSON: `[]` is none), `go-security.sh` (`govulncheck` with and without the integration tag, `osv-scanner scan source -L go.mod`) and `go-integration.sh` (waits for Postgres at `YGG_DB_HOST`/`YGG_DB_PORT`, `postgres:5432` by default, for `YGG_DB_WAIT` seconds; then `go test -race -tags integration` with `YGG_DATABASE_URL` set to a database `app` as the user `postgres` with no password).
 
 **Acceptance criteria:**
+
 - [ ] A lint error, generated code that is out of date and a missing contract fail; a breaking change is printed with `BREAKING` and does not fail; a contract that is new has nothing to break.
 - [ ] A vulnerability found by either tool fails the rung.
 - [ ] With the database answering the tagged tests run and see its address; with none the rung fails after the wait, naming the host and port.
@@ -4773,13 +4821,16 @@ osv-scanner scan source -L go.mod
 The pack ties the realm together: the leaf recipe every build realm offers under the same names (template, implementer prompt, the ladder by name), the services an API needs, and the sandbox. It has no graph: a run takes its graph from its lead realm. The implementer prompt is what a task's implementer is told about this leaf.
 
 **Files (in `helheim-go`):**
+
 - Create: `pack.yaml`, `pack_test.go`, `prompts/implementer.md`
 
 **Interfaces:**
+
 - Produces: `pack.yaml` (`version: 0.1.0`; the checks `static`, `unit`, `tdd`, `contract`, `security`, `integration`, each one script in `/opt/ygg/checks`; `leaf.checks` in that order, cheap rungs first; `services.postgres` (17.10, by digest, `POSTGRES_DB=app`, `POSTGRES_HOST_AUTH_METHOD=trust`, port 5432) and `services.seaweedfs` (4.45, by digest, command `server -s3 -dir=/data`, port 8333); `sandbox.build: devcontainer` with the hosts the checks reach: the Go proxy and checksum database, `vuln.go.dev`, `api.osv.dev`) and `prompts/implementer.md`.
 - The prompt tells the implementer to read `AGENTS.md`, to write the test first, to keep the contract with the code, to go through `sqlc`, to treat every input as hostile, which commands to run before it stops, and what it must not do (commit, change the checks or the devcontainer, leave the repository).
 
 **Acceptance criteria:**
+
 - [ ] The pack loads through Gungnir's schema; its stack tag is a local tag of `helheim-go`; every check runs one script that the Containerfile bakes in, and every baked script is used.
 - [ ] The services are the ones an API asks for, pinned by digest, and `go-integration.sh` connects to what the pack starts.
 - [ ] The commands the prompt tells the implementer to run are the ones the ladder runs.
@@ -5030,9 +5081,11 @@ reviewer should look at first.
 The architecture page and the README say what the realm holds and how it is tested.
 
 **Files (in `helheim-go`):**
+
 - Modify: `README.md`, `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` lists the pack, the Containerfile, the scripts, the template and the prompt, and says how the tests run and what they need.
 
 **Named test:** `git diff --stat -- docs/architecture.md README.md` in `helheim-go`. **Layer:** `helheim-go`. **Size:** S (29). **Depends on:** v0-T222.
@@ -5111,13 +5164,16 @@ index 3c1b3c4..cbf7965 100644
 midgard-react's first task. Branch `realm/content` from `main` in `midgard-react`, before step 1. This task has no Go test: its test is Vitest's, run in `templates/web`. Copy `package-lock.json` from the reference workspace (the plan leaves lock files out; the copy is the reviewed one), or run `npm install --package-lock-only` and say in the PR that the transitive versions are new. A new web leaf starts from this template (`init` copies it). It is the stack of spec §9.2 in small: React 19, Vite, TypeScript (strict), Tailwind 4, shadcn/ui-style base components, TanStack Router and Query, and a client typed by the API contract (`openapi-typescript` and `openapi-fetch`). Every dependency is at one exact version. TypeScript is 5.9.3 because `openapi-typescript` 7 asks for TypeScript 5 (backlog B-045).
 
 **Files (in `midgard-react`):**
+
 - Create: `templates/web/components.json`, `templates/web/contracts/api.openapi.yaml`, `templates/web/eslint.config.js`, `templates/web/index.html`, `templates/web/package.json`, `templates/web/src/api/schema.d.ts`, `templates/web/src/components/health-badge.tsx`, `templates/web/src/components/ui/button.tsx`, `templates/web/src/health.test.tsx`, `templates/web/src/index.css`, `templates/web/src/lib/api.ts`, `templates/web/src/lib/utils.ts`, `templates/web/src/main.tsx`, `templates/web/src/router.tsx`, `templates/web/src/routes/index.tsx`, `templates/web/src/test-setup.ts`, `templates/web/tsconfig.json`, `templates/web/vite.config.ts`
 
 **Interfaces:**
+
 - Produces: `package.json` (scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`, `gen:api`), `tsconfig.json`, `vite.config.ts` (the React and Tailwind plugins, the Vitest environment, and a proxy of `/api` to `API_URL` for the dev and preview servers), `eslint.config.js`, `components.json`, `index.html`, and `src/`: `main.tsx`, `router.tsx`, `routes/index.tsx` (the home page), `components/health-badge.tsx` (what `/healthz` says), `components/ui/button.tsx`, `lib/api.ts` (the typed client), `lib/utils.ts`, `api/schema.d.ts` (generated, committed) and `test-setup.ts`; `contracts/api.openapi.yaml`, the copy of the API's contract.
 - `api` is `createClient<paths>` with an absolute base URL (`new URL("/api", window.location.origin)`: a relative one is refused by `Request` outside a browser) and a `fetch` that looks `globalThis.fetch` up at each call (the library keeps the one it finds when the client is made, so a test could not replace it).
 
 **Acceptance criteria:**
+
 - [ ] `npm ci`, `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` pass in the folder.
 - [ ] `HealthBadge` says `API: ok` for a 200, `API: database unavailable` for a 503 with that body, and `API: not reachable` when the request fails.
 - [ ] `npm run gen:api` changes nothing: `src/api/schema.d.ts` is what the contract generates.
@@ -5629,13 +5685,16 @@ export default defineConfig({
 What a leaf of the factory carries beyond its code: a short `AGENTS.md`, an MIT licence, an editor config that only names the image, a Playwright config and a first spec, and `init.sh`. A Go test in the realm's repo builds the template as a product would have it.
 
 **Files (in `midgard-react`):**
+
 - Create: `template_test.go`, `templates/web/.devcontainer/devcontainer.json`, `templates/web/.gitignore`, `templates/web/AGENTS.md`, `templates/web/LICENSE`, `templates/web/e2e/smoke.spec.ts`, `templates/web/init.sh`, `templates/web/playwright.config.ts`
 
 **Interfaces:**
+
 - Produces: `templates/web/AGENTS.md` (under 100 lines: the stack, test first, the contract is a copy that may lag but that the API may not break, the typed client only, every state, accessibility, no photo bytes through the API, no secret), `LICENSE` (MIT), `.gitignore`, `.devcontainer/devcontainer.json`, `init.sh`, `playwright.config.ts` (the app at `E2E_URL`, Chromium) and `e2e/smoke.spec.ts` (the home page shows `API: ok`).
 - Produces: `template_test.go`: it copies the template, installs exactly what the lock file says, runs `typecheck`, `lint`, `test` and `build`, and checks that generating the types again changes nothing; it skips (fails with `YGG_REQUIRE_TEMPLATES`) when `npm` or the registry is not there. A second test checks the licence, the length of `AGENTS.md`, that every dependency is one exact version and that the editor config sets none of the keys that run or widen something.
 
 **Acceptance criteria:**
+
 - [ ] The template builds and passes its own checks in a copy.
 - [ ] Every dependency is pinned to one version; `devcontainer.json` sets no `initializeCommand`, `postCreateCommand`, mounts, `runArgs`, features and the like.
 
@@ -5917,13 +5976,16 @@ export default defineConfig({
 The web leaf's ladder starts like the Go leaf's. `web-tdd.sh` runs the new Vitest files on a copy of the commit the task started from, with the leaf's installed packages beside it (a symlink to its `node_modules`), and they must fail there. Playwright specs need a browser and an API, so a change that has only those passes with a note.
 
 **Files (in `midgard-react`):**
+
 - Create: `checks_test.go`, `devcontainer/checks/docs.sh`, `devcontainer/checks/web-static.sh`, `devcontainer/checks/web-tdd.sh`, `devcontainer/checks/web-unit.sh`
 
 **Interfaces:**
+
 - Produces: `devcontainer/checks/docs.sh` (the same as `helheim-go`'s; backlog B-043 is the duplication), `web-static.sh` (`npm ci` if there are no packages, `eslint`, `tsc`, the build, the docs), `web-unit.sh` (`npm test`) and `web-tdd.sh`.
 - `web-tdd.sh` refuses app code (`src/**/*.ts(x)` that is not a test, a `.d.ts` or the test setup) changed without a new or changed `*.test.ts(x)`; refuses new tests that pass on the parent; passes, with a note, a change with only a Playwright spec, only a generated type file, or a document.
 
 **Acceptance criteria:**
+
 - [ ] `web-static.sh` installs only what is missing and stops at the first failing step; a bad document fails it.
 - [ ] `web-tdd.sh` passes code with a test that needs it and shows the failure; refuses code with no test and a test that passes on the parent; the leaf is left as it was, and Vitest is given the new test files only.
 - [ ] The scripts were run on the template and on the smoke run's second task with the real tools.
@@ -6317,12 +6379,15 @@ npm test
 Rung 3 for the web leaf is the contract it uses: its copy is linted, the types generated from it are what it says, and the changes of the copy since the task started are listed. Rung 4 asks npm's advisories and OSV.
 
 **Files (in `midgard-react`):**
+
 - Create: `contract_test.go`, `devcontainer/checks/web-contract.sh`, `devcontainer/checks/web-security.sh`
 
 **Interfaces:**
+
 - Produces: `devcontainer/checks/web-contract.sh` (`vacuum lint`, `openapi-typescript` into a temp file compared with `src/api/schema.d.ts`, `oasdiff breaking` against the copy at the commit the task started from) and `web-security.sh` (`npm audit --audit-level=high`, `osv-scanner scan source -L package-lock.json`).
 
 **Acceptance criteria:**
+
 - [ ] Types that are out of date fail, with `npm run gen:api` named; a lint error fails; a breaking change of the copy is listed and does not fail; a leaf with no contract copy fails.
 - [ ] A vulnerability from either source fails rung 4.
 
@@ -6458,12 +6523,15 @@ osv-scanner scan source -L package-lock.json
 Rung 5 for the web leaf (decision 4): in a task's loop Playwright runs against the built app with a mock of the leaf's copy of the API contract behind it. The acceptance run (decision 5) is the pointer move's: on the snapshot it checks the API still keeps what the copy promises, builds the API, starts it against the Postgres of the acceptance sandbox, builds the web app and runs its specs against both. Both scripts start servers, so both refuse a port that is already taken: a server of an earlier run would otherwise answer for this run's (found on the first local run: a leftover `vite preview` served an old build). Both start the server itself (`node_modules/.bin/vite`, not `npx`), so that the pid kept is the server's and stopping it stops it.
 
 **Files (in `midgard-react`):**
+
 - Create: `devcontainer/checks/accept-e2e.sh`, `devcontainer/checks/web-e2e.sh`, `e2e_test.go`
 
 **Interfaces:**
+
 - Produces: `devcontainer/checks/web-e2e.sh` (Prism on `YGG_MOCK_PORT` 4010, `npm run build`, `vite preview` on `YGG_APP_PORT` 4173 with `API_URL` the mock, `playwright test` with `E2E_URL`; every server it started is stopped, on success and on failure) and `accept-e2e.sh` (`oasdiff breaking <web copy> <api contract> --fail-on ERR`; `go build` of `repos/api`; the API on `YGG_API_PORT` 8080 with `DATABASE_URL`; the web build; `vite preview` with `API_URL` the API; `playwright test`). The leaves are `repos/api` and `repos/web` unless `YGG_API_DIR` and `YGG_WEB_DIR` say otherwise.
 
 **Acceptance criteria:**
+
 - [ ] `web-e2e.sh` starts the mock from `contracts/api.openapi.yaml`, builds, starts the app, runs Playwright with the app's URL, and leaves no server up, also after a failing run; a mock that never comes up ends it with the mock's log; a taken port is refused before anything is started.
 - [ ] `accept-e2e.sh` stops before building anything when the API's contract breaks what the web copy promises, and stops when the API leaf or the copy is missing; with a database answering it starts the API with its address, then the app, then runs Playwright; a taken port is refused.
 - [ ] `web-e2e.sh` was run for real, with Prism, Vite and Chromium, on the template and on the smoke run's second task.
@@ -6812,12 +6880,15 @@ E2E_URL="http://127.0.0.1:$app_port" npx playwright test
 One Containerfile, two stages that are two images (decision 2): `web`, the leaf's stack, and `acceptance`, which adds the Go toolchain for the sandbox that holds the snapshot. The base is the node image the factory's own layer uses, by digest. Playwright's browsers are the ones its version asks for, so the stack installs the template's version.
 
 **Files (in `midgard-react`):**
+
 - Create: `containerfile_test.go`, `devcontainer/Containerfile`
 
 **Interfaces:**
+
 - Produces: `devcontainer/Containerfile`: `golang:1.26.9-bookworm` by digest as a stage to copy the toolchain from; `web` from the factory's node image by digest, with `git`, `curl` and CA certificates (the node image is the slim one), `oasdiff` 1.33.0, `vacuum` 0.30.6 and `osv-scanner` 2.6.0 (each checked against a SHA-256), Prism 5.16.0 and Playwright 1.63.0 installed globally at exact versions, Chromium and its system libraries by `playwright install --with-deps chromium`, and the ladder's scripts in `/opt/ygg/checks`, read-only; `acceptance` from `web`, with `/usr/local/go` and `GOTOOLCHAIN=local`.
 
 **Acceptance criteria:**
+
 - [ ] Every `FROM` is pinned by digest or is an earlier stage; the three downloads are checked; `npm install -g` names exact versions; nothing is piped into a shell; the context is one gungnir can hash.
 - [ ] The Playwright version in the Containerfile is the template's.
 - [ ] Every check script is executable and starts the way the others do. Built on a real engine (v0-H14): Node 22, Prism 5.16.0, Playwright 1.63.0 with `chromium-1243`, the three binaries, and the scripts owned by root.
@@ -7007,13 +7078,16 @@ ENV PATH=/usr/local/go/bin:$PATH \
 The stages before the code (spec §4.2) are agents with prompts. Each tells its agent where its documents go, in the shapes Odin reads: a planner's documents are published into `docs/`, the spec stage names the leaves in the realm versions the store has, the plan is tasks that a program reads and that each stand alone (the implementer sees its leaf and its task only), the conformance reviewer answers with one JSON verdict, and the reuse review reads the plan with Ponytail's eye.
 
 **Files (in `midgard-react`):**
+
 - Create: `prompts/conformance.md`, `prompts/design.md`, `prompts/plan.md`, `prompts/reuse-review.md`, `prompts/spec.md`, `prompts_test.go`
 
 **Interfaces:**
+
 - Produces: `prompts/design.md` (`out/1-product/design/<date>-<slug>.md`: summary, goals, non-goals and success criteria, context, the product at user level, decisions, open questions; stay inside the brief), `spec.md` (`out/2-engineering/specs/<date>-<slug>.md` and `out/leaves.yaml`, offering `helheim-go` 0.1.0 and `midgard-react` 0.1.0 and the paths `repos/api` and `repos/web`), `conformance.md` (`out/conformance.json`: `{"deviation": false}` or `{"deviation": true, "amendment": ...}`; what counts as a deviation; when in doubt it is one), `plan.md` (`out/2-engineering/plans/<date>-<slug>/{plan,tasks}.md` in the canonical layout; self-contained tasks; the contract first; a thin slice first) and `reuse-review.md` (`out/2-engineering/reviews/<date>-<slug>-reuse-review.md`).
 - A test checks that no prompt mentions the benchmark, that each names where its documents go, and that the examples in them are what Odin reads: the verdicts through `ParseConformance`, the example task through `ParseTasks` and `CheckReady`, the leaves file through `ParseLeaves`.
 
 **Acceptance criteria:**
+
 - [ ] Each prompt is a page or two, names the paths its output goes to, and keeps the benchmark out of the agent's reach.
 - [ ] The conformance prompt's two examples are verdicts Odin accepts; the plan prompt's task is ready; the spec prompt's leaves file parses and its second leaf consumes the first.
 
@@ -7472,12 +7546,15 @@ When you are done, answer with one or two sentences: what the spec covers, and a
 The task loop's agents (spec §9.5 rung 6): the implementer of the web leaf, and three read-only reviewers, in the spec's order: spec compliance, simplicity, quality. Odin adds the findings format to a reviewer's prompt, so the prompts say what to look for and how to name findings, not the format. The simplicity reviewer loads Ponytail's skill and maps its groups to severities: must fix is a blocker, should fix is major, nice to have is minor.
 
 **Files (in `midgard-react`):**
+
 - Create: `build_prompts_test.go`, `prompts/implementer.md`, `prompts/reviewer-quality.md`, `prompts/reviewer-simplicity.md`, `prompts/reviewer-spec.md`
 
 **Interfaces:**
+
 - Produces: `prompts/implementer.md` (read `AGENTS.md`; test first; one task; the contract text is copied exactly and `gen:api` run; every state; accessible; no photo bytes through the API; the four commands to run before stopping; no `git commit`, no change to the checks, the devcontainer or Playwright's config), `reviewer-spec.md` (each criterion: done, tested, matches its words; more than asked; the contract; the named test), `reviewer-simplicity.md` and `reviewer-quality.md` (correctness, security, tests, accessibility and states, the rules, readability), with the ids `spec-1`, `simple-1`, `quality-1`.
 
 **Acceptance criteria:**
+
 - [ ] Each prompt keeps the benchmark out; the implementer names only `npm` scripts the template has, and the files and commands it must use.
 - [ ] Each reviewer says it is read-only, how to see the change (`git diff $(git merge-base HEAD main) HEAD`), the id scheme, `file:line` and the severities; none talks of committing.
 
@@ -7753,12 +7830,15 @@ reviewers do.
 The lead realm's graph (spec §4.2) in the nodes Phase 5a built: design (scratch agent, gate, publish); spec, the conformance review, the spec gate that reads its verdict, publish; plan, the reuse review, publish, publish; the plan read into tasks (a refusal goes back to the planner), the leaves created, the plan gate; then for every task the implementer's loop with the ladder and the three reviewers, the feature and merge gates, the merge, the pointer gate and the pointer move with the acceptance run (a refusal of either goes back to the implementer). There is no `pointer-contract` gate: it waits for the impact index (5c).
 
 **Files (in `midgard-react`):**
+
 - Create: `graph.yaml`, `pack.yaml`, `pack_test.go`
 
 **Interfaces:**
+
 - Produces: `graph.yaml` and `pack.yaml` (`version: 0.1.0`; the checks `static`, `unit`, `tdd`, `contract`, `security`, `e2e` and `accept`, each one script in `/opt/ygg/checks`; `leaf.checks` in that order; `sandbox.build: devcontainer` with `target: web`, the hosts `registry.npmjs.org` and `api.osv.dev`, and `acceptance: {build: devcontainer, target: acceptance}`). The roles the graph uses are `planner`, `implementer` and `reviewer`: the operator's `factory.yaml` defines them.
 
 **Acceptance criteria:**
+
 - [ ] The pack loads; its two stack tags are two images of one context; every check runs a baked script and every baked script is used; the stages it builds are stages of the Containerfile.
 - [ ] The graph has the nodes in the order above, `conformance` reviews `spec`, `spec-gate` reads `conformance` and re-runs `spec`, `ready` goes back to `plan`, and the task shape is implement (three attempts, three reviewers, the simplicity one with the skill), feature gate, merge gate, merge, pointer gate, pointer move with `accept`.
 - [ ] Every prompt a node names is there and every prompt is used; the spec prompt offers this realm at this pack's version.
@@ -8066,9 +8146,11 @@ sandbox:
 The architecture page and the README say what the realm holds and how it is tested.
 
 **Files (in `midgard-react`):**
+
 - Modify: `README.md`, `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` lists the pack, the graph, the prompts, the Containerfile and scripts and the template, and says how the tests run and what they need.
 
 **Named test:** `git diff --stat -- docs/architecture.md README.md` in `midgard-react`. **Layer:** `midgard-react`. **Size:** S (39). **Depends on:** v0-T232.
@@ -8160,13 +8242,16 @@ index e0a344d..2b3fa22 100644
 Odin's first task. Branch `realms/content` from `main` in `odin`, before step 1. Gungnir's v0-T205 to v0-T209 and gleipnir's v0-T210 to v0-T215 are merged and pinned, or `yggdrasil/go.work` builds the local copies. Phase 5a started each leaf on `Pack.Sandbox.Stack`, an image. A realm may now name a build context instead (change `realm-content`), and then the image is the local tag of what `ygg sandbox build` makes. Odin works the reference out once, when it loads the realm, and uses it everywhere a stack is named.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/sandbox_build_test.go`
 - Modify: `internal/realm/realm.go`, `internal/run/prepare.go`, `internal/run/sandbox.go`
 
 **Interfaces:**
+
 - Produces: `realm.Realm.Stack` and `Acceptance` (empty for a realm with no sandbox or no acceptance stack), filled by `Load` from `Pack.StackRef` and `AcceptanceRef`. `Setup.SandboxFor`, the default images of the sandbox configuration and a scratch agent's sandbox use them.
 
 **Acceptance criteria:**
+
 - [ ] A web leaf whose realm builds its stack from a context starts on the local tag, and the default images of the sandbox configuration are those of the lead realm's stack.
 - [ ] A leaf whose realm names an image starts on the image, as in Phase 5a.
 - [ ] The spec Odin builds is one the driver would accept.
@@ -8377,13 +8462,16 @@ index b5d2417..5231ef1 100644
 `ygg sandbox build` is the one command that pulls and builds images (a run never does). For a realm whose stack is a context it now builds the context first (and the acceptance stack, a second stage of it, when the pack names one), then the factory's layers on it, once for each distinct stack.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/sandbox_build_test.go`
 - Modify: `internal/cli/sandbox.go`, `internal/cli/sandbox_test.go`
 
 **Interfaces:**
+
 - `stacksToBuild` returns `stackBuild{ref, dir, target}` for each distinct stack of the realms named (or all of the store): `dir` is empty for an image pinned by digest. For a context, `BuildStack` runs first; its answer "the stack is there already" is printed, and then `Build` makes the layers on the stack.
 
 **Acceptance criteria:**
+
 - [ ] A realm with a build and an acceptance stage builds both stacks, in that order, and the layers on both; the stack is built before its layers.
 - [ ] A second `ygg sandbox build` finds the stacks and builds nothing of them again.
 - [ ] The older tests of the command (images, `--all`, the services' images pulled once) still pass.
@@ -8591,13 +8679,16 @@ index 99327e6..8ecf4f5 100644
 The design-conformance reviewer checks a spec that is not published yet: it is in the `out/` of the spec agent's workspace until the gate approves it. A scratch agent with `reviews: <node>` gets that output as a copy in `reviewed/`, beside its own inputs, and is told so. The copy follows the same rule as an input: regular files only, nothing that could lead out of the project, bounded.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/reviewscratch_test.go`
 - Modify: `internal/engine/scratch.go`
 
 **Interfaces:**
+
 - `seedScratch` copies `<scratch of the reviewed node>/out` to `<workspace>/reviewed`, through `copyTree` (a symlink or any other kind of file is refused, with the file's name; the file and byte limits of the workspace apply), after the inputs; the workspace note says `reviewed/ holds the output of the node X, which you review ... What you change in it is ignored.` A node that reviews nothing is told nothing of the kind.
 
 **Acceptance criteria:**
+
 - [ ] The reviewer reads the spec's output as a copy, and a change it makes to the copy does not reach the output it reviews.
 - [ ] A symlink in the reviewed output fails the reviewer's node before it runs, and nothing is copied.
 
@@ -8752,13 +8843,16 @@ index b86e05b..2f5a8a4 100644
 Spec §7.1: the `spec` gate is automatic unless the design-conformance review found a deviation, and then it stops with the proposed amendment. The mode table already had the fact (`Facts.Deviation`); nothing set it. A verdict that is missing or cannot be read must never be taken for "no deviation" (§4.6), so the reviewer is asked once more with the reason, and a second failure stops the run.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/conformance.go`, `internal/engine/conformance_test.go`
 - Modify: `internal/engine/gates.go`, `internal/engine/scratch.go`
 
 **Interfaces:**
+
 - Produces: `readConformance(r, node)` (the reviewer's `out/conformance.json`, a regular file of at most 64 KiB inside its workspace, through `schema.ParseConformance`) and `conformanceSection`. After a scratch node that a gate reads the verdict of, `runScratch` reads it; if it cannot, it makes the workspace again and runs the node once more with the reason in the prompt (`Your answer could not be read`), then fails the node. `reachGate` reads the verdict for a gate with `deviation_from`, logs `conformance_checked` (`no deviation`, or `deviation:` and the amendment's first line), passes the fact to `gate.Decide` and adds a section "Design conformance" to the gate file.
 
 **Acceptance criteria:**
+
 - [ ] No deviation: the spec gate opens by itself in key-points mode, the gate file says so, and the spec is published after the gate. Step-by-step still stops.
 - [ ] A deviation stops the gate in key-points and unattended modes, the gate file quotes the amendment, nothing is published before the approval, and an approval continues.
 - [ ] A rejection re-runs the spec writer with the reason and the reviewer again, and the second verdict decides.
@@ -9094,14 +9188,17 @@ index 2f5a8a4..b021459 100644
 Acceptance checks run over several leaves, so no leaf's sandbox holds them. With a sandbox on they run in one that holds a snapshot of the project (decision 5): what each repo has committed, at the commit it is on, in a plain folder. A working copy's ignored build output (`node_modules`), a file not added yet and an edit not committed never reach it, and nothing in it can lead out of it.
 
 **Files (in `odin`):**
+
 - Create: `internal/snapshot/snapshot.go`, `internal/snapshot/snapshot_test.go`
 - Modify: `internal/git/git.go`
 
 **Interfaces:**
+
 - Produces: package `snapshot`: `Export(ctx, dst, []Source{Rel, Repo git.Repo, Rev string}) error` makes `dst` hold, in the order given, the files of `git archive <rev>` of each repo at `Rel` (`.` for the project umbrella; `HEAD` when `Rev` is empty, otherwise a full commit hash), with the executable bit kept. `dst` is emptied in place, so a sandbox that mounted it keeps the same folder.
 - It refuses a tracked symlink or any entry that is not a regular file or a folder, a path that leaves its source's folder, a source at `Rel` that is empty or climbs, a file two repos both hold (nothing is overwritten), a `Rev` that is not `HEAD` or a full hash (so it can never be read as an option), more than 20,000 files, 256 MiB, or a file over 32 MiB. Produces `git.Repo.Pipe(ctx, read, args...)`, which hands git's standard output to `read` as it is made and stops git if `read` returns early.
 
 **Acceptance criteria:**
+
 - [ ] The snapshot of a project with two leaves holds exactly the committed files of the three repos, with the right modes, and none of an ignored file, an unadded file or an uncommitted edit; a leftover of an earlier export is gone; `dst` is the same folder.
 - [ ] A tracked symlink is refused and not written; the other refusals above are test cases; a repo is exported at the commit it is told to.
 
@@ -9506,13 +9603,16 @@ func emptyDir(dir string) error {
 The sandbox of the snapshot is a scratch sandbox (one folder, no git dir) on the lead realm's acceptance stack, with the services of the realm of every leaf of the project, since the checks run the whole product, and the registries of those realms. A realm with acceptance checks and no acceptance stack is refused before the run starts.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/snapshot_sandbox_test.go`
 - Modify: `internal/run/prepare.go`, `internal/run/sandbox.go`
 
 **Interfaces:**
+
 - Produces: `Setup.SnapshotSandbox() (stack, egress, services, err)`; `Run.SnapshotRunner(ctx, node, revs)`: it exports the snapshot into `<run>/snapshot/<node>` (every time: the work changes between attempts), starts the sandbox the first time under the name `snapshot/<node>`, records it in `run.json` so that `Advance`, a resume and `ygg doctor` stop it like a leaf's, and returns the runner; a failure of the export is a `*run.SnapshotError`, not a failure of the sandbox. `serviceSet` merges services (two realms may offer one service only exactly alike, command included). `Prepare` refuses a node with acceptance checks when the lead realm has no acceptance stack.
 
 **Acceptance criteria:**
+
 - [ ] The snapshot sandbox gets the stack, the services of both realms and the registries of both; its spec is one the driver accepts.
 - [ ] The snapshot is made again at every call and the sandbox starts once; a commit made in a leaf between two calls is in the second snapshot.
 - [ ] Realms that disagree on a service cannot share it, and the error says "the snapshot"; a realm with no acceptance stack has no snapshot sandbox.
@@ -9908,13 +10008,16 @@ index 5231ef1..1a72f61 100644
 Phase 3's decision 11 refused acceptance checks with a sandbox on; this task is what replaces it. In a run with a sandbox, a pointer node's acceptance checks run, as the lead realm's checks, in the snapshot sandbox, over the committed files of every leaf, the one being moved at the commit it moves to. A run without a sandbox runs them in the umbrella on the host, as before.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/snapshot_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/land.go`, `internal/engine/sandbox_test.go`
 
 **Interfaces:**
+
 - `runPointer`'s acceptance callback calls `runAcceptance` when `Run.Sandbox` is set and the node has acceptance checks; it needs the pointer's parent to be the project (else the node fails, saying so). `runChecks` is split into `runChecksWith`, which takes the function that runs a command, and `commandOn`/`runOn`, which run it on a runner chosen by the caller.
 
 **Acceptance criteria:**
+
 - [ ] A pointer move's acceptance check goes through the snapshot sandbox, on the acceptance stack, with the leaf's committed files in it and no `.git` anywhere; the sandboxes are all stopped at the end.
 - [ ] A failing acceptance check refuses the move, and the pointer does not move.
 - [ ] A file a leaf ignores is not in the snapshot, and the leaf itself still has it.
@@ -10197,12 +10300,15 @@ index 11fa7b3..0404d0d 100644
 Phase 5b's exit criterion with scripted agents: `midgard-react` and `helheim-go`, as they are in the umbrella, run through `ygg run`: their graph, prompts, templates and leaf recipes. Two things are not the realms': the agents answer from a script, and the check ladder's commands are replaced by plain ones, because the ladder's tools are in the stack images (v0-H15 runs the real ladder on a real engine). The test needs the realms beside `odin`, as in the umbrella, and skips without them; the executor runs it after the two realms' PRs are merged.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/realms_content_test.go`
 
 **Interfaces:**
+
 - Produces: `internal/cli/realms_content_test.go`: it copies both realms into a store (leaving out `.git`, `node_modules` and `dist`), swaps each ladder script for `test -f AGENTS.md` and the acceptance script for `test -f umbrella.yaml`, and runs the brief to the end: the design gate is approved by hand, the spec gate opens by itself, the leaves come from the real templates, three tasks run in two leaves with three reviewers each, and the pointers move.
 
 **Acceptance criteria:**
+
 - [ ] The documents of the three stages are published; the project pins `midgard-react` and each leaf's realm; the API leaf has `openapi.yaml`, `sqlc.yaml` and the store from its template and the web leaf has `package.json`, the typed client and the Playwright spec from its own.
 - [ ] The three tasks are done and the project points at what landed; the nine reviewer sessions ran; the ledger has `conformance_checked` ("no deviation"), `tasks_ready` and `pointer_moved`; the simplicity reviewer's and the reuse review's prompts carry the Ponytail skill.
 - [ ] The spec prompt offers each realm at the version the loaded pack has; `ygg status` shows both realms and three tasks done.
@@ -10513,12 +10619,15 @@ FAIL	github.com/ouroboric-dev/odin/internal/cli	32.100s
 The files that v0-H15 reads when it runs the two real realms on a real engine, kept in `odin` so they are reviewed and versioned with the code that reads them. The agents answer from the script and cost nothing; the brief is two small tasks (the API says its version, the web page shows it), written so that every rung of the check ladders and the acceptance run has real code and real tests to judge.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/smoke_content_test.go`, `testdata/smoke-content/brief.md`, `testdata/smoke-content/factory.example.yaml`, `testdata/smoke-content/script.yaml`
 
 **Interfaces:**
+
 - Produces: `testdata/smoke-content/script.yaml` (the answers of the planners, the implementers and the reviewers, the same `scripted` format as `testdata/toy/script.yaml`), `brief.md`, `factory.example.yaml` (an operator copies it and sets the engine, the mounts and the realm folder) and `internal/cli/smoke_content_test.go`.
 
 **Acceptance criteria:**
+
 - [ ] The script loads with the scripted adapter, the brief is not empty, and the example config gives the planner, the implementer and the reviewer the script.
 - [ ] The files were run on a real engine in the scratch workspace of this plan: both tasks done and merged, the pointers moved, the acceptance run passed on the snapshot sandbox ("Evidence" says so).
 
@@ -10935,9 +11044,11 @@ FAIL	github.com/ouroboric-dev/odin/internal/cli	25.785s
 The architecture page says what Odin now does.
 
 **Files (in `odin`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says that a realm's stack may be built from its context, that acceptance checks run in a snapshot sandbox, and how the spec gate reads the conformance verdict.
 
 **Named test:** `git diff --stat -- docs/architecture.md` in `odin`. **Layer:** `odin`. **Size:** S (10). **Depends on:** v0-T242.
@@ -10982,10 +11093,12 @@ index c967a34..adfb5f1 100644
 The umbrella moves the pointers once, and the exit check runs on the merged code.
 
 **Files (in `yggdrasil`):**
+
 - Modify: the submodule pointers of `gungnir`, `gleipnir`, `havamal`, `helheim-go`, `midgard-react` and `odin`;
   `docs/2-engineering/backlog.md`.
 
 **Acceptance criteria:**
+
 - [ ] After all six pull requests are merged, the pointers are at each repo's `main`, and `go.work` builds them
       together: `go vet ./...` and `go test ./...` pass in each repo with `go.work` and with `GOWORK=off`.
 - [ ] The exit criterion: `go test -run 'TestTheRealRealmsBuildAProductFromABriefWithScriptedAgents|TestARunOfTheToyRealms|TestAnUnattendedRunOfTheToyRealms' ./internal/cli`
@@ -11092,6 +11205,7 @@ Expect exit code 0 and a report in `~/ygg-it/content/h15-report.txt`: `docs_publ
 `conformance_checked` line saying `no deviation`, `tasks_ready`, `repo_created` or the leaves' creation, and for each
 of `version-t1` and `version-t2` a `check_result` for every rung of its ladder (`static`, `unit`, `tdd`, `contract`,
 `security`, and `integration` for the API, `e2e` for the web app), `pointer_moved` twice, and `Run … is done.`
+
 - [ ] **Step 3:** paste the report (`--clip` puts it on the clipboard) into the pull request of v0-T244. If a rung
       failed, send the report anyway: the log of the failing check is in
       `~/ygg-it/content/smoke-realms-*/.factory/runs/*/logs/`.
@@ -11150,7 +11264,7 @@ agent was refused by the inputs rule (v0-T207), and the unit rung's test had no 
 line that another check covers, or a text that was not there, and the rows were changed.
 
 | Task | Defence removed | Test that fails |
-|---|---|---|
+| --- | --- | --- |
 | v0-T205 | a build context holding a symlink is refused | `TestABuildContextIsRefusedWhenItCouldReachOutsideItself` |
 | v0-T205 | a build context over its limits is refused | `TestABuildContextIsRefusedWhenItCouldReachOutsideItself` |
 | v0-T205 | a build folder outside the realm is refused | `TestABuildContextIsRefusedWhenItCouldReachOutsideItself` |
@@ -11189,4 +11303,3 @@ line that another check covers, or a text that was not there, and the rows were 
 | v0-T238 | a revision that is not HEAD or a full hash is refused | `TestExportTakesAReposFilesAtTheCommitItWasToldTo` |
 | v0-T239 | two realms offering one service differently cannot share a sandbox | `TestRealmsThatDisagreeOnAServiceCannotShareASnapshotSandbox` |
 | v0-T240 | acceptance checks run in the snapshot sandbox | `TestAcceptanceChecksRunInASandboxThatHoldsASnapshotOfTheProject` |
-

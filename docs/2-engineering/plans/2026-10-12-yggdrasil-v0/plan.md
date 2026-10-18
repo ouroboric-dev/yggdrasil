@@ -54,7 +54,7 @@ is the `plan` approval; no agent changes the status.
 ## Phases
 
 | Phase | Builds | Repos | Exit criterion |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **0. Readiness** | the spike; repo checks; the existing repos brought to standard; `AGENTS.md` invariants; the component repos; `gitleaks`; the founder's tokens, accounts and hidden suite; Harbor on Podman and the Harbor agent adapter (v0-T016 to v0-T019) | all | **the readiness gate below** |
 | **1. Contract and walking skeleton** | Gungnir types and schemas (`factory.yaml`, `graph.yaml`, `pack.yaml`, ledger events with OpenTelemetry `gen_ai.*` field names, findings); the `Agent` interface and the `scripted` adapter; Odin's graph engine with exec, agent and gate nodes, the mode × approval-point table, config validation, `run.json`, the hash-chained ledger; `ygg run`, `resume`, `approve`, `reject`, `status`, `doctor`; change task `require-budget-caps-T001` (all its cases: per-run and per-day caps, the spend limit for paid-API roles, refusing `resume`, the `doctor` error); CI that runs the deterministic end-to-end tests, made a required check in each ruleset | `gungnir`, `odin`, `gleipnir` | a scripted toy graph runs end to end in all three modes, stops at gates, resumes, and refuses to run without complete caps; CI is green and required |
 | **2. Instance tree and git** | the tree walker (any depth), path-only checkout, host git with hooks off, checkpoints and resume, one-level pointer moves, the merge gate with locks, the shrink guard, the warning when a public umbrella lists private children (spec §3.1); change task `remote-creates-repos-T001` (the local remote creates leaves; the `repo-admin` approval point); a project is its own tree, with no operator L0 (change `project-is-its-own-tree`) | `gungnir`, `odin` | tree fixtures (including the deeper one) pass; both merge-gate tests from spec §13 pass; the git escape tests pass with the `scripted` adapter |
@@ -75,7 +75,7 @@ Building starts only when the readiness assessment
 met**. Phase 0 closes the open ones:
 
 | Item | Closed by |
-|---|---|
+| --- | --- |
 | RB-05 `AGENTS.md` invariants | v0-T006 |
 | RB-12 component repos | v0-H04 (founder creates them), v0-T005, v0-T007 to v0-T013 |
 | RB-13 budget and caps | v0-H01 (founder) |
@@ -89,7 +89,7 @@ v0-T015 re-runs the assessment and records the gate.
 ## Success criteria → phases
 
 | Design doc criterion | Met in |
-|---|---|
+| --- | --- |
 | 1. builds client gallery lite; rungs 1–6 pass; hidden suite scored | Phase 6 benchmark run |
 | 2. same brief with another agent tool or model for one role | Phase 6 cross-model run |
 | 3. complete hash-chained ledger; `ygg metrics` reports everything | Phases 1 and 6 |
@@ -105,7 +105,7 @@ task that closes it, so it isn't lost when v0 ends. Reusable tooling lives in `o
 with a test, until a row here moves it.
 
 | Item | Why it waits | Closed by |
-|---|---|---|
+| --- | --- | --- |
 | Move repo creation and protection from `ouroboric/scripts/create-repo.sh` and `setup-repo.sh` into the `github` remote, then delete the scripts | the `github` remote is iteration 2 (spec §15.1) | `remote-creates-repos-T002` |
 | Require the founder's review on every PR, with `CODEOWNERS` and `require_code_owner_review`, so a bot's approval never counts | the pr-bot can approve PRs other people open; external contributions are rare in v0 | a reviewed change to `setup-repo.sh`, before the first external contribution is accepted |
 | Move the component scaffold from `ouroboric/scripts/scaffold-component.sh` and `scripts/templates/go-component/` into Odin's `init`, as a Go component template set, then delete the script | `init` scaffolds leaves from realm templates (spec §4.2); scaffolding Yggdrasil's own components with it is self-hosting (spec §15.4) | a task in the first self-hosting stage's plan, which passes `scaffold-component.test.sh`'s cases |
@@ -114,7 +114,7 @@ with a test, until a row here moves it.
 ## Risks
 
 | Risk | Effect | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | The devcontainer CLI doesn't work with rootless Podman here (spec §16, items 1 and 5) | Phase 3 changes | v0-T001 decides; fallback is a plain Podman driver behind the same interface |
 | The Podman VM can't mount WSL paths (§16, item 6) | the sandbox can't see the leaf | v0-T001 tests native Podman in WSL, a VM-visible path, and copy-in with `podman cp` (shown to work on 2026-10-12) |
 | `claude -p --bare` doesn't work with a subscription token (§16, item 2) | repo hooks and project MCP servers must be blocked another way | v0-T002 tests managed settings as the fallback |

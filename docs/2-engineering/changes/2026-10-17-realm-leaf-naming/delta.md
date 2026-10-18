@@ -55,7 +55,7 @@ style: spec
 - §9: "The web realm" becomes "The client gallery's realms". §9.2's table gains a column naming each
   leaf's realm: `api` is `helheim-go`, `web` is `midgard-react`. §9.4's single pack becomes two:
 
-  ```
+  ```text
   midgard-react/
     pack.yaml        name, version, default roles/models, check commands
     graph.yaml       the graph in §4.2
