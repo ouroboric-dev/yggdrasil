@@ -32,15 +32,15 @@ The "applies to" column says which realms an item covers:
 
 | ID | Applies to | Area | Question | Check | How to check |
 | --- | --- | --- | --- | --- | --- |
-| RR-01 | all | repo | Does the repo pass `check-repos.sh` (settings, security, ruleset), with `lint` required, and `test` where `ci.yml` exists? | auto | `check-repos.sh --check settings --check security --check ruleset <repo>`. The founder runs it under `as-bot.sh --read all`. |
+| RR-01 | all | repo | Does the repo pass `check-repos.sh` (settings, security, ruleset), with `lint` required, and `test` where `ci.yml` exists? | auto | `check-repos.sh --check settings --check security --check ruleset <repo>`. The founder, or an agent under `scripts/as-bot.sh --read all` (a read-only token), runs it. |
 | RR-02 | all | licence | Does `reuse lint` pass, with MIT on everything copied into products? | auto | `check-repos.sh --check reuse <repo>` |
-| RR-03 | all | CI | Does `lint.yml` exist, and does it pass on `main`? | auto | The file `.github/workflows/lint.yml` exists (it comes from the repo-bootstrap scripts). The founder checks on GitHub that it passes on `main`. |
-| RR-04 | all | CI | Does `ci.yml` run the realm's own tests (pack, template, checks, Containerfile) in a job named `test`, and does it pass on `main`? | auto | The file `.github/workflows/ci.yml` has a job `test`. The founder checks on GitHub that it passes on `main`. |
+| RR-03 | all | CI | Does `lint.yml` exist, and does it pass on `main`? | auto | The file `.github/workflows/lint.yml` exists (it comes from the repo-bootstrap scripts). The founder, or an agent under `scripts/as-bot.sh --read all` (a read-only token), checks on GitHub that it passes on `main`. |
+| RR-04 | all | CI | Does `ci.yml` run the realm's own tests (pack, template, checks, Containerfile) in a job named `test`, and does it pass on `main`? | auto | The file `.github/workflows/ci.yml` has a job `test`. The founder, or an agent under `scripts/as-bot.sh --read all` (a read-only token), checks on GitHub that it passes on `main`. |
 | RR-05 | all | agents | Does `AGENTS.md` carry the umbrella's invariants? | auto | `check-repos.sh --check agents <repo>` |
 | RR-06 | all | secrets | Is gitleaks in the pre-commit config? | auto | `check-repos.sh --check gitleaks <repo>` |
 | RR-07 | all | docs | Do `README.md`, `AGENTS.md` and `docs/architecture.md` follow the docs standard? | auto | The docs check, run in the leaf. |
 | RR-08 | all | contract | Does `pack.yaml` load and validate against Gungnir at the version it declares? | auto | `go test -run Pack ./...` in the leaf |
-| RR-09 | all | shared | Does every shared piece match its source? The shared files today: `devcontainer/checks/docs.sh`. | auto | `check-repos.sh --check shared <repo>`. This check does not exist yet. Change task T007 adds it. |
+| RR-09 | all | shared | Does every shared piece match its source? The shared files today: `devcontainer/checks/docs.sh`. | auto | `check-repos.sh --check shared <repo>`. The check exists (ouroboric #48). |
 | RR-10 | all | tree | Is the realm a submodule of the `yggdrasil` umbrella, in `go.work` if it is Go, and in `check-repos.sh`'s lists? | auto | Read `.gitmodules` and `go.work` in the umbrella, and the lists at the top of `check-repos.sh`. This is a wiring item. |
 | RR-11 | all | name | Does the name follow `<realm>-<flavor>`, and was it screened? | human | A person judges the name and the screening. |
 | RR-12 | build | contract | Does the pack name the standard roles: the implementer prompt, the leaf template and the leaf checks? | auto | `go test -run Pack ./...` in the leaf |
@@ -58,8 +58,9 @@ The "applies to" column says which realms an item covers:
 ## Items that read GitHub
 
 RR-01, and the "passes on `main`" parts of RR-03 and RR-04, read repo settings and workflow runs
-through the GitHub API. A factory sandbox has no GitHub token. The founder runs these items by hand
-and gives the output as evidence. A later step decides how the runner gets them.
+through the GitHub API. A factory sandbox has no GitHub token. The founder, or an agent under
+`scripts/as-bot.sh --read all` (a read-only token), runs these items and gives the output as evidence. A later
+step decides how the runner gets them.
 
 ## Wiring items
 
