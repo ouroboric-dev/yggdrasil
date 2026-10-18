@@ -436,6 +436,49 @@ Source of items B-050 and B-051: the founder's runs v0-H14 and v0-H15 on a real 
 - **Status:** proved (a hang, not its cause); not reproduced at the H14 rate on 2026-10-18. The retry of gleipnir #10
   still limits it to a two-minute delay.
 
+Source of items B-052 to B-054: the base-CI rollout ([change](changes/2026-10-18-base-ci-rollout/proposal.md)),
+its tooling review and its final steps (2026-10-18). Lines are at `ouroboric` `7508c77`.
+
+### B-052: a global git URL rewrite can send the repo scripts' pushes over SSH, around the token
+
+- **Where:** `ouroboric/scripts/new-repo.sh` (the credential-helper push), `ouroboric/scripts/as-bot.sh`, and
+  `ouroboric/scripts/rollout-ci.sh` (`cred_git`).
+- **Problem:** the founder's global git config has `url.git@github.com:.insteadOf https://github.com/`. A script
+  that pushes to `https://github.com/…` with the token in a credential helper then goes over SSH with whatever key
+  ssh-agent holds, and may prompt for a passphrase on `/dev/tty`, which `exec </dev/null` does not stop.
+  - `rollout-ci.sh` overrides `insteadOf` for its org (`-c url.$GIT/$RC_ORG/.insteadOf=$GIT/$RC_ORG/`), so its
+    pushes keep to the token. It does not override `pushInsteadOf`, which git applies to push URLs first.
+  - `new-repo.sh` overrides neither. `as-bot.sh` overrides `insteadOf` but not `pushInsteadOf`.
+- **Fix:** give every git call that carries the token both overrides for the org's base URL (`insteadOf` and
+  `pushInsteadOf`), in one shared helper if the scripts can share it. Test: a `GIT_CONFIG_GLOBAL` that rewrites the
+  base URL, once with `insteadOf` and once with `pushInsteadOf`, to a wrong path; the push must still land in the
+  right bare repo. `rollout-ci.test.sh` has the `insteadOf` case to copy.
+- **Status:** proved for `insteadOf` (the tooling review: `git ls-remote --get-url` returned the `git@` URL on the
+  founder's machine). Reasoned for `pushInsteadOf`, which no config uses today.
+
+### B-053: `md-same-text.py` copies the plan tools' fence pattern, and nothing catches a drift
+
+- **Where:** `ouroboric/scripts/md-same-text.py` (the copy of the fence regex) and `ouroboric/scripts/plan-blocks.py:16`.
+- **Problem:** md-same-text proves a Markdown change is formatting only. For plan code, it compares blocks as the plan
+  tools find them, with a copy of their regex (`` ^(`{3,4})(\w*)\n(.*?)\n\1$ ``). The copy is needed because
+  `plan-blocks.py` has a hyphen and cannot be imported. If one of the two changes alone, md-same-text checks blocks the
+  plan tools do not see, and a change to plan code can pass as formatting, which is the gap the rollout found once.
+  Also untested: that a bare plan fence given `text` (the one allowed info change) still reads `same`.
+- **Fix:** a test in `md-same-text.test.sh` that the pattern in both files is the same string; or move the pattern
+  into a module both import (`plan_fence.py`). Add the `text` case for a plan-style block.
+- **Status:** reasoned (the follow-up's review, ouroboric #53).
+
+### B-054: `huldra` has no base CI
+
+- **Where:** the private repo `huldra` (the hidden benchmark suite).
+- **Problem:** the rollout covered the ten public non-realm repos. Agents must never read `huldra`, so it was left out,
+  and it still has only the gitleaks pre-commit hook, with no `lint` check and nothing required.
+- **Fix (founder only):** in a clone, on a branch, run `scripts/add-ci.sh --org ouroboric-dev --ci reuse,markdown,shell,actions,yaml --upgrade .`
+  and fix what the hooks flag. Push the branch and open the pull request with the founder's own token, not with
+  `rollout-ci.sh push`: that opens pull requests as the pr-bot, which must never have access to `huldra`. After the
+  merge, run `scripts/rollout-ci.sh --org ouroboric-dev protect huldra`, which uses the founder's token only.
+- **Status:** open, by design.
+
 ## Done
 
 ### B-041, first part: file handling, engine environment and service egress (Phase 5a's final review)
