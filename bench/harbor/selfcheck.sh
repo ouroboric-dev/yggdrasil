@@ -16,6 +16,7 @@ CLEAN_ENV=(env -i HOME=/home/app USER=app LANG=C.UTF-8 LC_ALL=C.UTF-8
 NAME="ygg-selfcheck-$$-$RANDOM"
 LOG="$(mktemp)"
 pid=""
+# shellcheck disable=SC2329  # called by the EXIT trap below
 cleanup() {
   [ -n "$pid" ] && kill "$pid" 2>/dev/null
   podman rm -f -t 0 "$NAME" > /dev/null 2>&1
@@ -32,6 +33,7 @@ in_ctr() { podman exec "$NAME" "$@"; }
 
 podman run -d --pull=never --name "$NAME" --user root --entrypoint sleep "$IMAGE" infinity > /dev/null \
   || result FAIL "could not start a container from $IMAGE"
+# shellcheck disable=SC2015  # A && B || C is on purpose: a failure of either A or B is the failure to report
 podman cp "$APP/." "$NAME:/app" && in_ctr chown -R app:app /app || result FAIL "could not copy $APP into /app"
 podman exec -u app "$NAME" test -x /app/start.sh || result FAIL "/app/start.sh is missing or not executable"
 ip="$(in_ctr python3 -c 'import socket; print(socket.gethostbyname(socket.gethostname()))')"
@@ -62,5 +64,5 @@ fi
 sleep 2
 outside="$(comm -13 <(echo "$baseline") <(podman diff "$NAME" | sort) | awk '{print $2}' \
   | grep -Ev '^(/app|/tmp|/var/tmp)(/|$)|^/$|^/var$' || true)"
-[ -z "$outside" ] || result FAIL "wrote outside /app and the temporary folders: $(echo $outside)"
+[ -z "$outside" ] || result FAIL "wrote outside /app and the temporary folders: ${outside//$'\n'/ }"
 result PASS

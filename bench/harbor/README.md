@@ -6,7 +6,7 @@ with this machine's Podman. Commands that use Podman need its socket, so run the
 Code's sandbox.
 
 | File | What it does |
-|---|---|
+| --- | --- |
 | `harbor-podman.sh` | `setup` installs pinned Docker Compose v5.5.1 (checked by SHA-256), a `docker` shim to Podman and an empty registry config in `~/.cache/yggdrasil-harbor`; `prepare` checks the brief's hash, builds the task image and makes a copy of the task that uses it; `exec` runs Harbor in that setup |
 | `selfcheck.sh` | runs a build the way grading does: a fresh container, only `/app`, `start.sh` as `app` with a clean environment, port 3000 within 2 minutes, no writes outside `/app` and the temporary folders |
 | `ygg_harbor/agent.py` | the agent `ygg_harbor.agent:YggdrasilAgent`: runs the factory command on the host and carries out its requests in the task environment (the bridge is described at the top of the file) |
