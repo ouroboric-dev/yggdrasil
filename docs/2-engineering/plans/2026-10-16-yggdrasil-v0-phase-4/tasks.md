@@ -273,7 +273,7 @@ Each line is **Decided 2026-10-16** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T097 how a session fails, and its final answer | `gungnir` | M | Phase 3 |
 | v0-T098 budget caps: the error, the meter, when a cap is reached | `gungnir` | M | v0-T097 |
 | v0-T099 `factory.yaml`: where the spend journal lives | `gungnir` | S | v0-T098 |
@@ -386,9 +386,11 @@ in its final answer, which a summary clipped to a thousand characters cannot car
 Branch `contract/loop` from `main` in `gungnir`, before step 1.
 
 **Files (in `gungnir`):**
+
 - Modify: `agent.go`, `gungnir_test.go`
 
 **Interfaces:**
+
 - Produces: `gungnir.FailureKind` with `FailureAgent`, `FailureTransient`, `FailureQuota`,
   `FailureInfra`; `gungnir.MaxOutput` (256 KiB); `Result.Failure FailureKind` (a failed result's kind; empty
   means agent) and `Result.Output string` (the session's whole final answer).
@@ -400,6 +402,7 @@ Branch `contract/loop` from `main` in `gungnir`, before step 1.
   (infra is an error's kind, never a result's), and an output over `MaxOutput`.
 
 **Acceptance criteria:**
+
 - [ ] `Validate` refuses a failure kind on a success, an unknown kind, `infra` as a result's kind, and an
       answer one byte over the limit; it accepts an answer at the limit and every kind it allows.
 - [ ] `FailureOf` reads a `*SessionError` through wrapping, treats a `*SessionError` with no kind and a
@@ -598,10 +601,12 @@ Spec §7.4 stops a run that reaches a cap. Phase 1 made the caps required; this 
 that lets a component ask whether one is reached, and say which.
 
 **Files (in `gungnir`):**
+
 - Create: `budget.go`, `budget_test.go`
 - Modify: `schema/factory.go`, `schema/factory_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Usage` (Phase 1), `schema.Cap`, `schema.Budget`, `schema.PaidAPI`.
 - Produces: `gungnir.CapScope` (`CapRun`, `CapDay`), `gungnir.CapDimension` (`CapTokens`, `CapTurns`,
   `CapUSD`); `*gungnir.CapError{Scope; Dimension; Used, Limit float64}`, with an `Error()` that says the
@@ -612,6 +617,7 @@ that lets a component ask whether one is reached, and say which.
   `(*schema.Factory).PaysPerToken() bool`, whether any role bills a paid API.
 
 **Acceptance criteria:**
+
 - [ ] `CapTokens` counts input and output tokens and ignores cache reads.
 - [ ] A cap is reached at its limit, not past it; a cap of zero is reached at once.
 - [ ] Dollars count only when `usd` is true; a subscription's dollars never reach a cap.
@@ -814,14 +820,17 @@ The per-day cap sums a journal outside every project (decision 5). Its folder de
 operator's state folder, and `budget.journal` names another.
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/factory.go`, `schema/factory.schema.json`, `schema/factory_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Budget.Journal string` (`budget.journal`): an absolute, clean folder, or empty for
   the default. The schema accepts the key; `ParseFactory` refuses a relative or unclean path and an empty
   string.
 
 **Acceptance criteria:**
+
 - [ ] A config with `budget.journal: /var/lib/ygg/spend` parses and carries the path.
 - [ ] A config without it parses with an empty path.
 - [ ] A relative path, an unclean path (`/var/../spend`) and an empty string are refused.
@@ -933,9 +942,11 @@ Spec §10.1 lists the events a ledger holds. A retry, a paused run and a finding
 phase adds, with the finding's fields (`ygg.finding.*`; OpenTelemetry has no name for them).
 
 **Files (in `gungnir`):**
+
 - Modify: `event.go`, `schema/event_test.go`, `schema/ledger-event.schema.json`
 
 **Interfaces:**
+
 - Produces: `EventRetry` (`retry`), `EventRunPaused` (`run_paused`), `EventFindingRaised`
   (`finding_raised`), `EventFindingClosed` (`finding_closed`), `EventFindingReopened`
   (`finding_reopened`), all in `gungnir.Events()` and in the ledger schema's enum.
@@ -944,6 +955,7 @@ phase adds, with the finding's fields (`ygg.finding.*`; OpenTelemetry has no nam
   `FindingReopens` are how many attempts a closed finding took and how often it came back.
 
 **Acceptance criteria:**
+
 - [ ] Every event name validates against the schema, and an unknown one does not.
 - [ ] A `finding_closed` line with its finding fields validates; a severity of `critical` does not.
 
@@ -1098,13 +1110,16 @@ Decision 7: a loop that gave up stops the run for a person in every mode. It is 
 so a graph or a config can name it, and it can't be set to `auto`.
 
 **Files (in `gungnir`):**
+
 - Modify: `gate.go`, `gungnir_test.go`, `schema/factory.schema.json`, `schema/factory_test.go`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.GateEscalation` (`escalation`), a known, soft approval point, in `Gates()` (now 17),
   in `graph.schema.json`'s and `factory.schema.json`'s lists.
 
 **Acceptance criteria:**
+
 - [ ] `GateEscalation.Known()` is true and `.Hard()` is false.
 - [ ] A graph may name it in a gate node; `gates: { escalation: stop }` parses and
       `gates: { escalation: auto }` is refused, naming `gates.escalation`.
@@ -1252,10 +1267,12 @@ A reviewer answers in one JSON document (spec §4.6, decision 8). Reading it is 
 answer must never read as an empty one.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/report.schema.json`
 - Modify: `finding.go`, `schema/event.go`, `schema/event_test.go`, `schema/schema.go`
 
 **Interfaces:**
+
 - Produces: `gungnir.Report{Findings []Finding}`; `schema.ParseReport(answer []byte) (gungnir.Report, error)`,
   which accepts one document `{"findings": [...]}`, bare or in one code fence and nothing else, and
   refuses: prose before or after it, two fences, an unclosed fence, an empty answer, no `findings`
@@ -1266,6 +1283,7 @@ answer must never read as an empty one.
   refer to another by file name.
 
 **Acceptance criteria:**
+
 - [ ] The five well-formed shapes parse (no findings, an open finding, open and fixed, in a fence, in a
       bare fence).
 - [ ] Each of the fourteen malformed shapes is an error: unreadable output is never a pass.
@@ -1505,9 +1523,11 @@ Spec §4.2's implement ⇄ check ladder loop is a node of the graph. A gate that
 sends the work back to the loop.
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/graph.go`, `schema/graph.schema.json`, `schema/graph_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.KindLoop`; `schema.DefaultAttempts` (3); `Node.Attempts int`,
   `Node.Reviewers []Reviewer`; `schema.Reviewer{ID, Role, Prompt string; Skills []string; MaxTurns int;
   Timeout Duration}`; `Node.SessionKey(Reviewer) string`, `<loop id>-<reviewer id>`, which names a
@@ -1520,6 +1540,7 @@ sends the work back to the loop.
   loop* node before it.
 
 **Acceptance criteria:**
+
 - [ ] The example loop parses, with its defaults, and the gate after it re-runs it.
 - [ ] Each refusal above is an error that names the cause.
 
@@ -1887,14 +1908,17 @@ A per-day cap that can't be checked must stop the run (decision 5). The stop nee
 note to say why.
 
 **Files (in `gungnir`):**
+
 - Modify: `budget.go`, `budget_test.go`
 
 **Interfaces:**
+
 - Produces: `gungnir.CapJournal` (a `CapDimension` that is not a limit); `CapError.Note string`, why the
   journal can't be read. `Error()` of a `CapJournal` error says the cap can't be checked and so counts as
   reached.
 
 **Acceptance criteria:**
+
 - [ ] The message names the scope, says the cap can't be checked and counts as reached, and carries the
       note.
 
@@ -1981,13 +2005,16 @@ index ff91003..f5a8b12 100644
 A finding goes back into a prompt on every attempt, so a reviewer can't write one as long as a book.
 
 **Files (in `gungnir`):**
+
 - Modify: `finding.go`, `gungnir_test.go`, `schema/event_test.go`, `schema/finding.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.MaxID` and `MaxSource` (100), `MaxLocation` (300), `MaxClaim` (4,000), `MaxProof`
   (2,000), in characters; `Finding.Validate` and `finding.schema.json` refuse a longer text.
 
 **Acceptance criteria:**
+
 - [ ] A finding with every text at its limit validates (multi-byte characters count once).
 - [ ] A longer id, source, location, claim or proof is refused, and so is a report that holds one.
 
@@ -2154,9 +2181,11 @@ Gleipnir learns later is one line in one file. Gleipnir's first task. Branch `ha
 pinned (see "How each task lands").
 
 **Files (in `gleipnir`):**
+
 - Create: `failure/failure.go`, `failure/failure_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.FailureKind` (v0-T097).
 - Produces: `failure.Classify(status int, message string) gungnir.FailureKind`. A message about a quota,
   a credit balance, a plan's usage limit or a key's limit is `FailureQuota`, whatever the status (a
@@ -2167,6 +2196,7 @@ pinned (see "How each task lands").
   transient.
 
 **Acceptance criteria:**
+
 - [ ] The cases of the table: a rate limit, an overloaded API, a server error, a request timeout, a
       network error with no status, a plan's usage limit with and without a 429, credits used up, a key
       over its limit, a quota, and a bad request, an unauthorised key, a missing model, an empty
@@ -2288,9 +2318,11 @@ Spec §12 and §4.6. A failed `result` event says its API status and its message
 nothing is a CLI that crashed at start; and the reviewer's findings arrive in the final answer, whole.
 
 **Files (in `gleipnir`):**
+
 - Modify: `claudecode/claudecode.go`, `claudecode/claudecode_test.go`
 
 **Interfaces:**
+
 - Consumes: `failure.Classify` (v0-T106), `gungnir.SessionError`, `Result.Failure`, `Result.Output`
   (v0-T097).
 - Produces: a successful or failed `Result` whose `Output` is the final answer, trimmed, whole (an answer
@@ -2304,6 +2336,7 @@ nothing is a CLI that crashed at start; and the reviewer's findings arrive in th
   exited non-zero (a crash at start); quota when stderr says the quota is used up.
 
 **Acceptance criteria:**
+
 - [ ] The whole final answer is in `Output` and only the summary is clipped; an answer over the limit is
       an agent failure.
 - [ ] A 429, an overloaded API and a 500 are transient; a usage limit, with or without a 429, is quota; a
@@ -2607,10 +2640,12 @@ Backlog B-020 and B-021. A session killed by its timeout spent tokens, and the c
 chatty session must not fill the host's memory.
 
 **Files (in `gleipnir`):**
+
 - Create: `bounded/bounded.go`, `bounded/bounded_test.go`
 - Modify: `claudecode/claudecode.go`, `claudecode/claudecode_test.go`
 
 **Interfaces:**
+
 - Produces: package `bounded`: `NewBuffer(limit int) *Buffer` keeps the first `limit` bytes and reports
   `Truncated()`; `NewWriter(w io.Writer, limit int64) *Writer` passes on the first `limit` bytes,
   keeps the first error of `w` (`Err()`) and reports `Truncated()`. Neither ever fails a write or
@@ -2623,6 +2658,7 @@ chatty session must not fill the host's memory.
   an agent failure, and the transcript stops at the same bound.
 
 **Acceptance criteria:**
+
 - [ ] A session ended by its deadline reports the tokens and turns of its messages, a repeated message
       counted once.
 - [ ] A session with no result reports what it printed; one that printed nothing reports nothing.
@@ -2997,9 +3033,11 @@ The same for `opencode` (spec §12, §4.6), and backlog B-019: tokens with no do
 dollar cap blind, and that is refused for a session that failed as much as for one that succeeded.
 
 **Files (in `gleipnir`):**
+
 - Modify: `failure/failure.go`, `failure/failure_test.go`, `opencode/opencode.go`, `opencode/opencode_test.go`
 
 **Interfaces:**
+
 - Consumes: `failure.Classify`, `SessionError`, `Result.Failure`, `Result.Output`.
 - Changes: `(*Agent).parse` returns the result, what the events reported as `gungnir.Usage` whether or not
   the session is usable, and whether there was any event. `Output` is the text of the last step that said
@@ -3012,6 +3050,7 @@ dollar cap blind, and that is refused for a session that failed as much as for o
   quota.
 
 **Acceptance criteria:**
+
 - [ ] A 429 and a 502 are transient; 402, a quota in the words and a key over its limit are quota; a 401
       and a 400 are agent failures.
 - [ ] The final answer is the text of the last step that spoke, whole, across several text parts.
@@ -3379,14 +3418,17 @@ index c203a54..cde140c 100644
 Backlog B-020 and B-021, for `opencode`: the steps that finished before the session ended were spent.
 
 **Files (in `gleipnir`):**
+
 - Modify: `opencode/opencode.go`, `opencode/opencode_test.go`
 
 **Interfaces:**
+
 - Consumes: `bounded` (v0-T108).
 - Produces: every `*SessionError` of the adapter carries the usage of the steps that finished, parsed
   from the partial stream. Output over 32 MiB is an agent failure; the transcript stops at the same bound.
 
 **Acceptance criteria:**
+
 - [ ] A session ended by its deadline, in the middle of a step, reports the step that finished.
 - [ ] A session over the bound is an agent failure, and its transcript is at most the bound.
 
@@ -3535,9 +3577,11 @@ Odin's tests need a scripted agent that fails the ways real ones do, spends what
 spends, and answers as a reviewer answers.
 
 **Files (in `gleipnir`):**
+
 - Modify: `scripted/scripted.go`, `scripted/scripted_test.go`
 
 **Interfaces:**
+
 - Produces, in a script: on a step, `kind: agent|transient|quota|infra` for an `error` step, and
   `usage:` for an `error` or `hang` step (a `*gungnir.SessionError` when either is set; a plain error
   otherwise, an agent failure); on a `result`, `failure: agent|transient|quota` (with `status: failed`),
@@ -3548,6 +3592,7 @@ spends, and answers as a reviewer answers.
   success, names a kind that does not exist, or puts `usage` beside a `result` is refused.
 
 **Acceptance criteria:**
+
 - [ ] Each kind of error step fails with its kind, an error with no kind and no usage stays a plain error,
       and the usage of a quota error survives.
 - [ ] A hang ends with the context's error and carries its usage.
@@ -3882,9 +3927,11 @@ Backlog B-016 and B-017. `podman exec` exits 125 when podman itself failed, a co
 for one. That is not the command's exit code: it must not read as a failed check or node (spec §12).
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Changes: `(*Driver).Exec` returns an error, with no exit code, when the command's `podman exec` exits
   125, and names the program; every other exit code, 126, 127 and 137 included, stays the command's
   result. A command that itself exits 125 reads the same way, which is a cost worth paying.
@@ -3893,6 +3940,7 @@ for one. That is not the command's exit code: it must not read as a failed check
   network closed.
 
 **Acceptance criteria:**
+
 - [ ] An exit of 125 is an error; exits 1, 2, 126, 127 and 137 are results.
 - [ ] A probe that could not run refuses `Up` and the sandbox is removed; one that timed out does not.
 
@@ -4012,13 +4060,16 @@ Backlog B-028. `Down` runs when a run ends, under a context that can't be cancel
 hangs hung `ygg` with it.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Produces: `Driver.DownTimeout time.Duration` (two minutes by default). `Down` ends, with an error, when
   the engine has not answered by then; the sandbox stays recorded in `run.json` and `ygg doctor` finds it.
 
 **Acceptance criteria:**
+
 - [ ] With a podman that sleeps for 30 seconds and a timeout of 300 ms, `Down` returns an error within a
       few seconds.
 
@@ -4125,9 +4176,11 @@ Spec §2.1: Gleipnir runs checks. A check is one command in a leaf's sandbox, re
 or a timeout; a failing one becomes a typed finding for the loop (spec §4.6, decision 12).
 
 **Files (in `gleipnir`):**
+
 - Create: `checks/checks.go`, `checks/checks_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Runner`, `bounded` (v0-T108).
 - Produces: `checks.Spec{Name string; Argv []string; Timeout time.Duration}`;
   `checks.Result{Name; Passed bool; ExitCode int; TimedOut bool; Tail, Log string; Duration time.Duration}`;
@@ -4142,6 +4195,7 @@ or a timeout; a failing one becomes a typed finding for the loop (spec §4.6, de
   and the end of the output. A check that passed has none.
 
 **Acceptance criteria:**
+
 - [ ] A passing check has no finding and its log holds its output.
 - [ ] A failing check's finding is valid, has the stable id and the end of the output, and is the same
       finding on the next attempt.
@@ -4451,12 +4505,15 @@ Odin bounds a session's turns by what the caps allow (decision 6); a test needs 
 session was given.
 
 **Files (in `gleipnir`):**
+
 - Modify: `scripted/scripted.go`, `scripted/scripted_test.go`
 
 **Interfaces:**
+
 - Changes: the scripted transcript, `<node>-<attempt>.json`, gains `max_turns`.
 
 **Acceptance criteria:**
+
 - [ ] The transcript of a session given 7 turns records 7.
 
 **Named test:** `go test ./scripted -run TestTheTranscriptRecordsWhatTheSessionWasGiven` in `gleipnir`.
@@ -4542,12 +4599,15 @@ index 050d8d2..c5271ab 100644
 A test of the loop needs to see that a reviewer ran read-only and the implementer did not.
 
 **Files (in `gleipnir`):**
+
 - Modify: `scripted/scripted.go`, `scripted/scripted_test.go`
 
 **Interfaces:**
+
 - Changes: the scripted transcript gains `read_only`.
 
 **Acceptance criteria:**
+
 - [ ] The transcript of a read-only session records `read_only: true`.
 
 **Named test:** `go test ./scripted -run TestTheTranscriptRecordsWhatTheSessionWasGiven` in `gleipnir`.
@@ -4630,9 +4690,11 @@ every later task returns or reads. Branch `loop/core` from `main` in `jormungand
 Gungnir alone.
 
 **Files (in `jormungandr`):**
+
 - Create: `jormungandr.go`, `jormungandr_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Result`, `gungnir.FailureOf`, `gungnir.FailureKind`, `gungnir.CapError` (v0-T097,
   v0-T098).
 - Produces: `jormungandr.Classify(res gungnir.Result, err error) (kind gungnir.FailureKind, why string)`:
@@ -4644,6 +4706,7 @@ Gungnir alone.
   that failed as an agent does: a loop attempt), `IsCap(err) (*gungnir.CapError, bool)`.
 
 **Acceptance criteria:**
+
 - [ ] `Classify` reads a success, a failed result with and without a kind, a plain error, and wrapped
       infra and transient errors.
 - [ ] Each outcome's message says what happened; `IsCap` finds a cap through wrapping.
@@ -4801,9 +4864,11 @@ used-up quota pauses the run; an infrastructure failure stops it with no retry l
 before every try (spec §7.4).
 
 **Files (in `jormungandr`):**
+
 - Create: `retry.go`, `retry_test.go`
 
 **Interfaces:**
+
 - Produces: `jormungandr.Backoff{Base, Max time.Duration; Retries int}`, with `Delay(n int)` (the wait
   before retry `n` from 1: `Base`, twice, four times, never over `Max`); `jormungandr.DefaultBackoff`
   (5 s, a minute at most, 3 retries).
@@ -4817,6 +4882,7 @@ before every try (spec §7.4).
   wait, and an error from it stops the retries. `Sleep` is a timer unless a test replaces it.
 
 **Acceptance criteria:**
+
 - [ ] A transient failure is retried after a doubling wait, the failed tries are told to `OnRetry`, and the
       third try succeeds.
 - [ ] Transient failures that never end stop after four tries and three waits.
@@ -5127,9 +5193,11 @@ Spec §4.6: a finding does not close until its source confirms the fix with proo
 source: it reopens a finding by failing and closes it by passing.
 
 **Files (in `jormungandr`):**
+
 - Create: `book.go`, `book_test.go`
 
 **Interfaces:**
+
 - Produces: `jormungandr.Record{gungnir.Finding; Raised, Closed, Reopens int}`, with `Attempts()` (the
   attempts it took to close, counting the one that raised it and the one that closed it, or 0 while
   open); `jormungandr.Book{Records map[string]*Record}`, plain data that serialises into `run.json`;
@@ -5142,6 +5210,7 @@ source: it reopens a finding by failing and closes it by passing.
   finding that never failed or is closed already is no change).
 
 **Acceptance criteria:**
+
 - [ ] A check that keeps failing keeps one finding, which follows its output and keeps the attempt that
       raised it.
 - [ ] A check closes its finding only by passing, with proof, and not twice.
@@ -5450,9 +5519,11 @@ A reviewer is a source that can say a lot. The book accepts a report only if it 
 spec §4.6 and decision 8, and a report that breaks one changes nothing.
 
 **Files (in `jormungandr`):**
+
 - Create: `review.go`, `review_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Report` (v0-T102), `Book` (v0-T119).
 - Produces: `jormungandr.ReportError{Reviewer, Reason}`; `(*Book).Review(attempt int, reviewer string,
   passed []string, report gungnir.Report) ([]Change, error)`. It refuses (with a `*ReportError`, and
@@ -5465,6 +5536,7 @@ spec §4.6 and decision 8, and a report that breaks one changes nothing.
   `disputed` finding stays open and blocks.
 
 **Acceptance criteria:**
+
 - [ ] A reviewer raises findings; an empty report is a pass; a finding closes with a proof that cites a
       place and a check that passed.
 - [ ] Seven reports each break a rule and change nothing: a finding dropped, a close with no place, a close
@@ -5737,9 +5809,11 @@ are all the next attempt knows; and a reviewer must know how to answer, what it 
 checks passed.
 
 **Files (in `jormungandr`):**
+
 - Create: `prompt.go`, `prompt_test.go`
 
 **Interfaces:**
+
 - Produces: `jormungandr.Feedback(open []gungnir.Finding, lastFailure, guidance string) string`: a
   section "Findings to fix" that lists each finding (id, severity, source, place, and the claim's lines)
   and says the implementer must not call any of them fixed, a section "The last attempt failed", and a
@@ -5750,6 +5824,7 @@ checks passed.
   report to copy.
 
 **Acceptance criteria:**
+
 - [ ] `Feedback` lists the findings in the order given, marks a disputed one, and carries the failure and
       the guidance; it is empty for nothing.
 - [ ] `ReviewRequest` shows a reviewer its own findings and the checks that passed, and nothing of a first
@@ -5925,9 +6000,11 @@ Spec §4.2 and §7.3. An implementer works, the checks judge, the findings that 
 after the last attempt the loop gives up. This task is the loop without reviewers, caps and quotas.
 
 **Files (in `jormungandr`):**
+
 - Create: `loop.go`, `loop_test.go`
 
 **Interfaces:**
+
 - Produces: `jormungandr.Config{Attempts int; Checks []string}`; `jormungandr.State{Attempt, Limit int;
   Phase Phase; Passed bool; Book Book; Failure string}`, plain data that goes into `run.json`, with
   `NewState(cfg) *State` (attempt 1, phase `implement`); `Phase` (`PhaseImplement`, `PhaseLadder`);
@@ -5946,6 +6023,7 @@ after the last attempt the loop gives up. This task is the loop without reviewer
   loop does not run again.
 
 **Acceptance criteria:**
+
 - [ ] Work that passes every check passes in the first attempt, calling nothing else.
 - [ ] A failing check stops the ladder, goes back to the implementer as a finding, and closes when the
       check passes, with the attempts it took.
@@ -6368,9 +6446,11 @@ The ladder's second half (spec §9.5 rung 6), the promises of spec §4.6 about a
 the stops of spec §7.4 and §12 that leave the loop where it is.
 
 **Files (in `jormungandr`):**
+
 - Modify: `loop.go`, `loop_test.go`
 
 **Interfaces:**
+
 - Changes: `Config.Reviewers []string` (ids, in order); `State.Unreadable map[string]int` (answers that
   could not be used, in a row, for each reviewer); `Steps.Review(ctx, attempt int, reviewer string, open
   []gungnir.Finding, passed []string) (answer string, err error)` (one read-only session; its whole
@@ -6387,6 +6467,7 @@ the stops of spec §7.4 and §12 that leave the loop where it is.
   ladder leaves the ladder to run again from its first rung and the implementer not to run.
 
 **Acceptance criteria:**
+
 - [ ] A reviewer's finding goes back to the next attempt and closes only when the reviewer says so, with
       proof; the next reviewer waits.
 - [ ] A minor finding is recorded and does not fail the loop.
@@ -6951,9 +7032,11 @@ The architecture page and the README say what the module does now. A reference p
 standard's `style: reference`), no test.
 
 **Files (in `jormungandr`):**
+
 - Modify: `README.md`, `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says what Jormungandr does, how a loop runs, and what it leaves to Odin; its
       front matter is as before, with the plan in `related`.
 - [ ] `README.md` says what the module is and who calls it.
@@ -7058,14 +7141,17 @@ every approval point Gungnir knows. Branch `loop/phase-4` from `main` in `odin`,
 all need those three; the *Depends on* column names what each one uses.
 
 **Files (in `odin`):**
+
 - Modify: `internal/gate/decide.go`, `internal/gate/decide_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.GateEscalation` (v0-T101).
 - Changes: `gate.Decide` returns `Stop` for `escalation` in every mode, whatever the overrides say about
   it (decision 7). The table test, which walks `gungnir.Gates()`, gets the row.
 
 **Acceptance criteria:**
+
 - [ ] `escalation` stops in step-by-step, key-points and unattended mode.
 
 **Named test:** `go test ./internal/gate -run TestModeTimesApprovalPointTable` in `odin`. **Layer:**
@@ -7135,9 +7221,11 @@ Decision 5. Every session's usage goes into a file outside every project, one fi
 operator's, so the per-day cap can add up what every run spent.
 
 **Files (in `odin`):**
+
 - Create: `internal/budget/budget_test.go`, `internal/budget/journal.go`
 
 **Interfaces:**
+
 - Produces: package `budget`: `budget.Entry{Time; Run, Project, Node string; Usage gungnir.Usage}`;
   `budget.Journal{Dir string; Now func() time.Time; Loc *time.Location}`; `budget.DefaultDir(getenv
   func(string) string, home func() (string, error)) (string, error)` (`$XDG_STATE_HOME/ygg/spend` when
@@ -7150,6 +7238,7 @@ operator's, so the per-day cap can add up what every run spent.
   included.
 
 **Acceptance criteria:**
+
 - [ ] The day adds up every run's sessions; tomorrow starts at zero; the file is private.
 - [ ] A day ends at the operator's midnight, not UTC's.
 - [ ] Twenty goroutines appending 25 lines each give 500 whole lines.
@@ -7450,9 +7539,11 @@ func finite(u gungnir.Usage) bool {
 Spec §7.4. The meter answers one question for Jormungandr: is a cap reached, the run's or the day's?
 
 **Files (in `odin`):**
+
 - Create: `internal/budget/meter.go`, `internal/budget/meter_test.go`
 
 **Interfaces:**
+
 - Consumes: `schema.Cap.Reached`, `gungnir.CapError`, `gungnir.CapJournal` (v0-T098, v0-T104), `Journal`.
 - Produces: `budget.Meter{Run *gungnir.Usage; Caps schema.Budget; USD bool; Journal *Journal}`,
   a `gungnir.Meter`. `Check()` is the run's cap first, then the day's from the journal; a journal that
@@ -7461,6 +7552,7 @@ Spec §7.4. The meter answers one question for Jormungandr: is a cap reached, th
   `Near(frac) []gungnir.CapError` lists the caps at least `frac` used and not reached. `Today()`.
 
 **Acceptance criteria:**
+
 - [ ] The meter stops at the run's cap, then at the day's, which other runs' spending can reach; a new day
       has room again.
 - [ ] Dollars count only for a paid API.
@@ -7674,10 +7766,12 @@ the run and in the day's journal, whatever way it ended, and classifies how it e
 now; loops do in v0-T134.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/budget_test.go`, `internal/engine/session.go`
 - Modify: `internal/cli/e2e_test.go`, `internal/engine/engine.go`, `internal/engine/engine_test.go`, `internal/engine/main_test.go`, `internal/run/main_test.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Consumes: `jormungandr.Retrier`, `Classify`, `AgentFailure`, `ExhaustedError`, `QuotaError`
   (v0-T117, v0-T118); `gungnir.SessionError` (v0-T097); the scripted adapter's `kind` and `usage` on
   failed steps (v0-T111).
@@ -7695,6 +7789,7 @@ now; loops do in v0-T134.
   writes under the real `HOME`; the engine tests get `startWith(setup{...})`, a run with its own journal.
 
 **Acceptance criteria:**
+
 - [ ] A run's usage is in `run.json` and in the day's journal, once.
 - [ ] A session that failed after it spent tokens still counts them, on its `node_failed` line too.
 - [ ] Every existing test passes unchanged in what it asserts.
@@ -8293,9 +8388,11 @@ Spec §7.4 and decisions 6 and 10. No session starts over a cap, and the run sto
 point `budget-cap` with everything resumable.
 
 **Files (in `odin`):**
+
 - Modify: `internal/cli/cli.go`, `internal/cli/e2e_test.go`, `internal/engine/budget_test.go`, `internal/engine/gates.go`, `internal/engine/session.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Consumes: `budget.Meter` (v0-T127), `jormungandr.Retrier.Meter`, `gungnir.GateBudgetCap`.
 - Produces: `(*Run).Meter() *budget.Meter`; `session` asks the meter before every try and bounds a
   session's turns by `meter.RemainingTurns()` (`turnsFor`: its own `max_turns` when that is fewer;
@@ -8307,6 +8404,7 @@ point `budget-cap` with everything resumable.
   drop the work you start a new run.
 
 **Acceptance criteria:**
+
 - [ ] A run that reaches its cap stops at `budget-cap` before the next session in every mode, with a
       ledger line that names the cap and a gate file that says what to do.
 - [ ] Approving does not lift a cap that is still reached; raising it in `factory.yaml` and approving
@@ -8690,10 +8788,12 @@ index 9f27acc..3763c3f 100644
 Spec §12 and decision 4, in a run: the status `paused`, exit code 4, and the ledger lines for every wait.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/retry_test.go`, `testdata/toy/script-quota.yaml`
 - Modify: `internal/cli/cli.go`, `internal/cli/e2e_test.go`, `internal/engine/engine.go`, `internal/engine/session.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `run.StatusPaused`; `run.Pause{Node, Reason string; Since time.Time}` in `State.Paused`;
   `engine.pause`/`pauseRun`: a `*QuotaError` pauses the run at its node with a `run_paused` line, and
   `Advance` returns `Outcome{Status: StatusPaused}`; a resume starts the node from the checkpoint (the
@@ -8705,6 +8805,7 @@ Spec §12 and decision 4, in a run: the status `paused`, exit code 4, and the le
   `design` runs.
 
 **Acceptance criteria:**
+
 - [ ] A transient failure, an error or a failed result, is retried after 1 s then 2 s (a test's backoff),
       the retries and the failed tries are in the ledger, the failed try's tokens count, and the retry is
       not a new attempt of anything.
@@ -9133,9 +9234,11 @@ index 37cbb69..23920d6 100644
 Spec §10.1 lists budget warnings; the operator needs to see the caps without reading `factory.yaml`.
 
 **Files (in `odin`):**
+
 - Modify: `internal/budget/journal.go`, `internal/budget/meter.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `internal/cli/doctor.go`, `internal/cli/doctor_test.go`, `internal/cli/e2e_test.go`, `internal/engine/budget_test.go`, `internal/engine/session.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: a `budget_warning` line the first time a cap is 80% used and not reached (once for each run's
   cap, once each day for the day's), remembered in `State.Warned`; `run.BudgetJournal(cfg, now)`.
 - Produces: `ygg status` prints `caps:     this run <n> of <cap> tokens, <n> of <cap> turns; today ...`
@@ -9145,6 +9248,7 @@ Spec §10.1 lists budget warnings; the operator needs to see the caps without re
 - Changes: each CLI test gets a journal of its own (`t.Setenv("XDG_STATE_HOME", t.TempDir())`).
 
 **Acceptance criteria:**
+
 - [ ] One warning when a cap passes 80%, none when it is crossed again, and it survives a resume.
 - [ ] `status` and `doctor` show the figures; `doctor` reports an unreadable journal and an unwritable
       folder as errors (the second not as root).
@@ -9603,10 +9707,12 @@ infrastructure failure of the node, not a failed command; a program that can't s
 command that failed, as in a shell.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/hostrun.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/land_test.go`, `internal/engine/sandbox_test.go`, `internal/sandboxfake/fake.go`
 
 **Interfaces:**
+
 - Consumes: `checks.Run` (v0-T114).
 - Produces: `engine.command` and `engine.runCheck(ctx, r, node, repo, dir, checks.Spec, logPath)
   (checks.Result, error)`; `engine.hostRunner{r, node, dir}`, a `gungnir.Runner` that runs a command on the
@@ -9617,6 +9723,7 @@ command that failed, as in a shell.
   constant `checks` is renamed `packChecks`, since a package now imports `checks`.
 
 **Acceptance criteria:**
+
 - [ ] A sandbox that fails under a command fails the node with a message that says so, the sandbox is
       stopped, and a resume with the sandbox working finishes the run.
 - [ ] A program that can't start on the host is a failed node with exit status 127 and the reason in its
@@ -10038,10 +10145,12 @@ sandbox opens, and `run.json` must have a place for the loop's state. It also gi
 realm is added for the tests.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/loop_test.go`, `testdata/toy-loop/graph.yaml`, `testdata/toy-loop/pack.yaml`, `testdata/toy-loop/prompts/build.md`, `testdata/toy-loop/prompts/review-quality.md`, `testdata/toy-loop/prompts/review-spec.md`, `testdata/toy-loop/script.yaml`, `testdata/toy-loop/templates/app/LICENSE`
 - Modify: `internal/run/prepare.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Consumes: `schema.KindLoop`, `schema.Reviewer`, `Node.SessionKey` (v0-T103); `jormungandr.State`.
 - Produces: `(*Setup).checkSession` (a prompt in the realm, a role in `factory.yaml`, one adapter for
   each role); `Prepare` refuses a loop whose reviewer or implementer role is undefined, whose prompt is
@@ -10055,6 +10164,7 @@ realm is added for the tests.
   a gate and the merge; its script is the run that passes at once.
 
 **Acceptance criteria:**
+
 - [ ] A loop prepares, with its reviewers' roles built.
 - [ ] Five loops that could not run are refused, each naming the cause.
 - [ ] A reviewer's skill is in the record, and a skill nobody vendored refuses the run.
@@ -10555,10 +10665,12 @@ secret scan of Phase 3), the checks through the check runner with the leaf put b
 each, the ledger lines, and `run.json`.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/loop.go`, `internal/engine/loop_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/session.go`
 
 **Interfaces:**
+
 - Consumes: `jormungandr.Run`, `Steps`, `Feedback`; `session`, `nodeError`, `runCheck` (v0-T128, v0-T129,
   v0-T132); `checks.Result.Finding` (v0-T114); `(*Run).DiscardWork` (v0-T133).
 - Produces: `engine.runLoop(ctx, r, n)`, wired into `Advance`: it keeps the loop's record in
@@ -10578,6 +10690,7 @@ each, the ledger lines, and `run.json`.
   so a dropped session's half work never reaches the next try.
 
 **Acceptance criteria:**
+
 - [ ] Work that passes its checks is one attempt: the run's state, the summary, the ledger lines and the
       commit are as described.
 - [ ] A failing check goes back to the next attempt as a finding in its prompt, the first attempt was
@@ -10994,10 +11107,12 @@ Spec §9.5 rung 6, §4.6, decision 14 and backlog B-018. A loop's reviewers run 
 check, as read-only sessions, and answer with findings.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/reviewers_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/loop.go`
 
 **Interfaces:**
+
 - Consumes: `jormungandr.ReviewRequest`; `session` (v0-T128).
 - Produces: `loopSteps.Review`: the reviewer's prompt (its prompt file, its skills, the brief, then
   `ReviewRequest(id, open, passed)`), run read-only under the session key `<loop>-<reviewer>`; its whole
@@ -11008,6 +11123,7 @@ check, as read-only sessions, and answer with findings.
   same pair, so an ignored file an earlier check left is not the reader's doing.
 
 **Acceptance criteria:**
+
 - [ ] A reviewer is told its own findings and the checks that passed; its finding goes back to the next
       attempt; it closes only with a proof that names a check, and the ledger says so.
 - [ ] Reviewers run read-only and the implementer does not.
@@ -11294,10 +11410,12 @@ Spec §7.3 and §4.6, decisions 7 and 8. When the attempts run out, or a reviewe
 twice, the run stops for a person, in every mode.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/escalation.go`, `internal/engine/escalation_test.go`
 - Modify: `internal/cli/cli.go`, `internal/engine/engine.go`, `internal/engine/gates.go`, `internal/engine/loop.go`
 
 **Interfaces:**
+
 - Produces: `engine.escalation{out jormungandr.Outcome}` and `stopEscalation(r, n, e)`: it writes
   `gates/<loop>-<attempt>.md` (what happened, the findings still open with their claims, the cost so far,
   and the decisions on offer), logs `gate_pending`, and stops the run with `PendingGate` `escalation`.
@@ -11313,6 +11431,7 @@ twice, the run stops for a person, in every mode.
   gave up in an attempt, and how many findings are open).
 
 **Acceptance criteria:**
+
 - [ ] A loop that runs out of attempts stops the run in all three modes with the right ledger lines, a
       gate file that lists the findings and offers both decisions.
 - [ ] Rejecting it with a reason gives attempts 4 to 6, with the reason and the findings in the fourth
@@ -11863,9 +11982,11 @@ that stops for a cap, a quota, an interruption or a quarantine goes on from wher
 first time they run; each was checked to fail with its defence removed (see "Evidence").
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/loop_resume_test.go`
 
 **Acceptance criteria:**
+
 - [ ] A cap between two attempts stops the run at `budget-cap` with the next attempt not started and the
       finding open; raising the cap and approving runs that attempt, not a later one, and the finding is in
       its prompt.
@@ -12043,14 +12164,17 @@ func TestACheckThatPlantsARepositoryInTheLeafStopsTheRunAtPolicyViolationAndTheL
 The phase's exit criterion, through `ygg` itself, on the toy loop realm with scripted agents (spec §13).
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/loop_e2e_test.go`
 - Modify: `internal/cli/cli.go`
 
 **Interfaces:**
+
 - Changes: the `loop:` line of `ygg status` says `gave up in attempt <n> (<reason>)`, with the attempt the
   loop was in.
 
 **Acceptance criteria:**
+
 - [ ] **A malformed reviewer output stops the loop.** `ygg run --mode unattended` with a reviewer that
       answers "LGTM" twice exits 3 at the approval point `build`, which takes no approval; `status` says
       the loop gave up in attempt 1 (`reviewer-unreadable`); `approve` is refused (exit 2); `resume` stays
@@ -12270,10 +12394,12 @@ Spec §13: the smoke run runs before benchmark runs and after any model or CLI v
 loop. It costs a few cents and is the founder's to run (v0-H11); the test only checks it prepares.
 
 **Files (in `odin`):**
+
 - Create: `testdata/smoke-loop/factory.example.yaml`, `testdata/smoke-loop/graph.yaml`, `testdata/smoke-loop/pack.yaml`, `testdata/smoke-loop/prompts/hello.md`, `testdata/smoke-loop/prompts/review.md`, `testdata/smoke-loop/templates/app/LICENSE`
 - Modify: `internal/run/loop_test.go`
 
 **Acceptance criteria:**
+
 - [ ] The realm prepares with `factory.example.yaml` (a `claude-code` implementer, an `opencode` reviewer),
       with one loop node of two attempts and one reviewer, and its sandbox opens
       `api.anthropic.com` and `openrouter.ai` and nothing else. (The test skips as root: `ygg` refuses to
@@ -12425,9 +12551,11 @@ The toy app is a test fixture of Odin, AGPL-3.0-only.
 The architecture page says what Odin does now. A reference page, no test.
 
 **Files (in `odin`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says that a loop node is Jormungandr's loop with Odin's steps, that every
       session's usage is counted in the run and in a daily journal, that a cap stops the run before a
       session starts over it, and that a used-up quota pauses the run.
@@ -12480,10 +12608,12 @@ criteria and the output of their named tests.
 The umbrella moves the four pointers once, and the exit check runs on the merged code.
 
 **Files (in `yggdrasil`):**
+
 - Modify: the submodule pointers of `gungnir`, `gleipnir`, `jormungandr` and `odin`;
   `docs/2-engineering/backlog.md`.
 
 **Acceptance criteria:**
+
 - [ ] After all four pull requests are merged, the pointers are at each repo's `main`, and `go.work`
       builds them together: `go vet ./...` and `go test ./...` pass in each repo with `go.work` and with
       `GOWORK=off`.
@@ -12631,7 +12761,7 @@ hand).
 test was run, and it failed; then the code was restored. (`scripts/plan-defences.py` does it, from the rows in `defences.json` of the SDD folder; an executor can run it again on the merged code.)
 
 | Task | Defence removed | Test that fails |
-|---|---|---|
+| --- | --- | --- |
 | v0-T097 | an answer over the limit is refused | `TestAResultNamesHowItFailed` |
 | v0-T102 | a report may not use an id twice | `TestParseReport` |
 | v0-T108 | a session that did not finish still counts | `TestASessionWithoutAResultCountsWhatItReported`, `TestATimedOutSessionStillCountsItsUsage` |

@@ -130,10 +130,12 @@ The PR body lists each task's acceptance criteria with the named tests' output. 
 ### Task repo-bootstrap-T001: one config per org
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/repo-config.sh`, `scripts/orgs/ouroboric-dev.json`, `scripts/orgs/README.md`
 - Test: `scripts/tests/repo-config.test.sh`
 
 **Interfaces:**
+
 - Produces, in `scripts/repo-config.sh` (sourced, never run; it defines functions only):
   - `repo_config_args ARGS...` reads a leading `--org <name>` or `--config <path>`. It sets
     `RC_FILE`, an absolute path, and the array `RC_REST`, which holds the other arguments. It sets
@@ -167,6 +169,7 @@ The PR body lists each task's acceptance criteria with the named tests' output. 
   - `copyright` and each docs path: non-empty, with no `"`, `\` or newline.
 
 **Acceptance criteria:**
+
 - [ ] `--org ouroboric-dev` loads the shipped config. It gives `AGPL-3.0-only`, `CC-BY-4.0`, the three
       docs paths, the copyright holder "Bruno Guilhermo de Barros Valério", issues on for `yggdrasil`
       and `asgard`, and the default pieces `reuse,markdown,actions`.
@@ -230,10 +233,12 @@ The PR body lists each task's acceptance criteria with the named tests' output. 
 ### Task repo-bootstrap-T002: create-repo.sh only creates, for any org
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/create-repo.sh`, `scripts/tests/fake-github.py`
 - Test: `scripts/tests/create-repo.test.sh`
 
 **Interfaces:**
+
 - Consumes: `repo_config_args`, `repo_config_load`, `RC_ORG` (T001).
 - Produces: `GH_TOKEN=... create-repo.sh (--org <name>|--config <path>) [--private] [--check] <repo> "<description>" [<repo> "<description>"]...`
   - It checks the token, each name and description, duplicates in the batch, and that no repo
@@ -250,6 +255,7 @@ The PR body lists each task's acceptance criteria with the named tests' output. 
   - `POST /orgs/<org>/repos` makes the bare repo `$FAKE_GIT_ROOT/<org>/<name>.git`.
 
 **Acceptance criteria:**
+
 - [ ] With `--config` for org `acme`, the POST goes to `/orgs/acme/repos` with the same body as
       today.
 - [ ] `--check` creates nothing (the fake logs no POST), even when every repo is new.
@@ -290,10 +296,12 @@ The PR body lists each task's acceptance criteria with the named tests' output. 
 ### Task repo-bootstrap-T003: add-licences.sh writes the licence files
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/add-licences.sh`
 - Test: `scripts/tests/add-licences.test.sh`
 
 **Interfaces:**
+
 - Consumes: T001's `RC_LICENCE`, `RC_DOCS_LICENCE`, `RC_DOCS_PATHS`, `RC_COPYRIGHT`,
   `RC_LICENCE_DIR`.
 - Produces: `add-licences.sh (--org <name>|--config <path>) [--year <yyyy>] (--check | <dir>)`.
@@ -327,6 +335,7 @@ SPDX-License-Identifier = "<docs_licence>"
   Without `docs_licence`, the file ends after the first annotation, with no blank line after it.
 
 **Acceptance criteria:**
+
 - [ ] With `--org ouroboric-dev --year 2026`, the folder holds exactly `LICENSE`,
       `LICENSES/AGPL-3.0-only.txt`, `LICENSES/CC-BY-4.0.txt` and `REUSE.toml`. `REUSE.toml` is byte
       for byte the heredoc in today's `create-repo.sh`. `LICENSE` equals the AGPL text.
@@ -364,6 +373,7 @@ SPDX-License-Identifier = "<docs_licence>"
 ### Task repo-bootstrap-T004: add-ci.sh and the base CI pieces
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/add-ci.sh` and `scripts/templates/ci/README.md`
 - Create: `scripts/templates/ci/lint.yml`
 - Create, in `scripts/templates/ci/pieces/`: `gitleaks.yaml`, `reuse.yaml`, `markdown.yaml`,
@@ -373,6 +383,7 @@ SPDX-License-Identifier = "<docs_licence>"
 - Test: `scripts/tests/add-ci.test.sh`
 
 **Interfaces:**
+
 - Consumes: T001's `RC_CI`.
 - Produces: `add-ci.sh (--org <name>|--config <path>) [--ci <piece>,...] (--check | <dir>)`.
   - **The pieces.** They come from `--ci`, or else from `RC_CI`. The list is split on commas, and an
@@ -391,7 +402,7 @@ SPDX-License-Identifier = "<docs_licence>"
 - **The piece contract**, which `templates/ci/README.md` documents and `add-ci.sh` enforces:
   - one file per piece; its name without `.yaml` is the piece's name (`^[a-z0-9-]+$`);
   - exactly one line matching `^  - repo: https://`;
-  - exactly one line matching `^    rev: `, whose value matches
+  - exactly one line matching `^    rev:` , whose value matches
     `^v?[0-9]+(\.[0-9]+)+([.-][0-9A-Za-z]+)*$`;
   - a line `^    hooks:`;
   - no tabs.
@@ -401,6 +412,7 @@ SPDX-License-Identifier = "<docs_licence>"
   work, item 3).
 
 **Acceptance criteria:**
+
 - [ ] `--org ouroboric-dev` writes three files: `.pre-commit-config.yaml`, with the repos gitleaks,
       reuse-tool, markdownlint-cli2 and actionlint, in that order; `lint.yml`; and `.markdownlint.yaml`.
 - [ ] `--ci shell` gives gitleaks then shellcheck-py. `--ci gitleaks,gitleaks` gives one gitleaks
@@ -557,10 +569,12 @@ jobs:
 ### Task repo-bootstrap-T005: setup-repo.sh requires lint and test, for any org
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/setup-repo.sh` and `scripts/check-repos.sh` (`check_ruleset` only)
 - Test: `scripts/tests/setup-repo.test.sh` and `scripts/tests/check-repos.test.sh`
 
 **Interfaces:**
+
 - Consumes: T001's `RC_ORG` and `RC_ISSUES_ON`.
 - Produces: `GH_TOKEN=... setup-repo.sh (--org <name>|--config <path>) <repo>`. It does the same as
   today, with three changes:
@@ -579,6 +593,7 @@ jobs:
   `check-repos.sh` stays Ouroboric's own, with `ORG=ouroboric-dev`.
 
 **Acceptance criteria:**
+
 - [ ] `setup-repo.sh` requires:
   - nothing, with no workflow;
   - `lint` only, with `lint.yml` only;
@@ -616,12 +631,14 @@ jobs:
 ### Task repo-bootstrap-T006: new-repo.sh, the one command, and its docs
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/new-repo.sh`
 - Modify: `docs/4-ways-of-working/docs-standard.md` (the bullets on creating and setting up repos)
   and `AGENTS.md` (the scripts table and the founder-only line)
 - Test: `scripts/tests/new-repo.test.sh`
 
 **Interfaces:**
+
 - Consumes: `create-repo.sh` (T002), `add-licences.sh` (T003) and `add-ci.sh` (T004), each with its
   `--check`; `setup-repo.sh` (T005); and `repo_config_args`, `repo_config_load`,
   `repo_after_create` and `RC_FROM` (T001).
@@ -645,6 +662,7 @@ jobs:
      `new-repo: <repo> was created, but <step> failed. It is not protected and agents must not get it yet. Delete it, or push a first commit and run setup-repo.sh.`
 
 **Acceptance criteria:**
+
 - [ ] With `--org ouroboric-dev` against the fakes, two repos are created. Each `main` holds one
       commit with exactly these files:
   - `.github/workflows/lint.yml`, `.markdownlint.yaml` and `.pre-commit-config.yaml`;
@@ -695,17 +713,20 @@ jobs:
 ### Task repo-bootstrap-T007: the scaffold builds on new-repo.sh's first commit
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/scaffold-component.sh`
 - Delete: `scripts/templates/go-component/pre-commit-config.yaml.tmpl`
 - Test: `scripts/tests/scaffold-component.test.sh`
 
 **Interfaces:**
+
 - Consumes: T006's first commit, which already holds `.pre-commit-config.yaml` with gitleaks.
 - Produces: `scaffold-component.sh` no longer writes `.pre-commit-config.yaml`. Its first-commit
   check also requires `.pre-commit-config.yaml` holding `repo: https://github.com/gitleaks/gitleaks`.
   Its error says "doesn't hold new-repo.sh's first commit". The header names `new-repo.sh`.
 
 **Acceptance criteria:**
+
 - [ ] On a folder laid out like new-repo.sh's first commit, the scaffold writes its files, apart from
       `.pre-commit-config.yaml`, which stays as it was.
 - [ ] A folder with no `.pre-commit-config.yaml` is refused with exit 2.
@@ -730,6 +751,7 @@ jobs:
 ### Task repo-bootstrap-H01 (founder): one real run, and the token question settled
 
 **Acceptance criteria:**
+
 - [ ] A throwaway public repo, `bootstrap-trial`, is created with
       `GH_TOKEN=... scripts/new-repo.sh --org ouroboric-dev bootstrap-trial "Trial of new-repo.sh."`.
       The run is non-interactive and exits 0.

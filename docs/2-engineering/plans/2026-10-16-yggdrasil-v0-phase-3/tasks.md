@@ -240,7 +240,7 @@ Each line is **Decided 2026-10-16** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T061 the `Sandbox` contract | `gungnir` | M | Phase 2 |
 | v0-T062 `factory.yaml`: sandbox and skills | `gungnir` | M | v0-T061 |
 | v0-T063 pack sandbox and node skills | `gungnir` | S | v0-T062 |
@@ -348,10 +348,12 @@ with what a sandbox holds and how a command is given to it, and adds what the ad
 need from the contract. Branch `contract/sandbox` from `main` in `gungnir`, before step 1.
 
 **Files (in `gungnir`):**
+
 - Create: `sandbox.go`, `sandbox_test.go`
 - Modify: `agent.go`, `event.go`, `schema/event_test.go`, `schema/ledger-event.schema.json`
 
 **Interfaces:**
+
 - Produces: `gungnir.Sandbox` with `Up(ctx, SandboxSpec) (Env, error)`, `Exec(ctx, Env, Cmd)
   (ExecResult, error)` and `Down(ctx, Env) error`. `gungnir.SandboxSpec{Run, Name, Parent, Leaf,
   GitDir string; Egress []string}` with `Validate() error` and `Layout() Layout` (the leaf and the git
@@ -364,6 +366,7 @@ need from the contract. Branch `contract/sandbox` from `main` in `gungnir`, befo
   `sandbox_up` and `sandbox_down`, in the Go list and in the ledger schema.
 
 **Acceptance criteria:**
+
 - [ ] `SandboxSpec.Validate` refuses a spec with no run id, a name or path that climbs, a relative
       path, a leaf outside its parent umbrella, a git dir outside `<parent>/.git/modules`, and an
       egress entry that is a URL, a wildcard, an address or has a port.
@@ -708,10 +711,12 @@ The factory sets the engine's socket and how the engine sees the host's files in
 (decision 1), and a real agent needs that (decision 2).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/factory_sandbox_test.go`
 - Modify: `schema/factory.go`, `schema/factory.schema.json`, `schema/factory_test.go`
 
 **Interfaces:**
+
 - Consumes: `schema.Factory`, `schema.ParseFactory` (Phase 1).
 - Produces: `schema.Factory.Sandbox *schema.Sandbox{Engine string; Mounts []schema.Mount{Host,
   Engine string}}` and `schema.Factory.Skills schema.Skills{PrivateDir string}`. `factory.yaml`'s
@@ -719,6 +724,7 @@ The factory sets the engine's socket and how the engine sees the host's files in
   `ParseFactory` refuses a role whose agent isn't `scripted` when there is no `sandbox:` section.
 
 **Acceptance criteria:**
+
 - [ ] A config with a `claude-code` role and a sandbox section parses, with the engine, mounts and
       private skills directory read.
 - [ ] A config with a real agent and no sandbox section is refused, naming the role and agent.
@@ -973,10 +979,12 @@ commands reach, such as package registries (decision 5). An agent node names the
 (decision 13).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/pack_sandbox_test.go`
 - Modify: `sandbox.go`, `schema/graph.go`, `schema/graph.schema.json`, `schema/graph_test.go`, `schema/pack.go`, `schema/pack.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.Pack.Sandbox *schema.PackSandbox{Stack string; Egress []string}`; `pack.yaml`'s
   `sandbox: {stack, egress}`, where `stack` must end in `@sha256:<64 hex>` and each egress entry
   satisfies `gungnir.ValidHost(string) bool`, a plain lower-case host name with a dot, which this task
@@ -984,6 +992,7 @@ commands reach, such as package registries (decision 5). An agent node names the
   an agent node, unique, each a name like `asd-ste100`.
 
 **Acceptance criteria:**
+
 - [ ] A pack with a digest-pinned stack and registries loads; a pack without a `sandbox:` section
       still loads, with `Sandbox` nil.
 - [ ] A stack without a digest, a sandbox section with no stack, and an egress entry that is a URL or
@@ -1242,14 +1251,17 @@ operator can give a role's model a price, in dollars per million tokens, and the
 the cost from the tokens.
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/factory.go`, `schema/factory.schema.json`, `schema/factory_sandbox_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Role.Price *schema.Price{Input, Output, CacheRead, CacheWrite float64}`;
   `factory.yaml`'s `price: {input, output, cache_read, cache_write}` on a role, with `input` and
   `output` required and no value negative.
 
 **Acceptance criteria:**
+
 - [ ] A priced `opencode` role parses, with every number read.
 - [ ] A negative price, a price with no output, and an unknown price field are each refused.
 
@@ -1368,10 +1380,12 @@ hash of each file (spec §5.1, decision 13). Branch `skills/lock` from `main` in
 step 1. Havamal's `go.mod` gains `go.yaml.in/yaml/v3` v3.0.5, to read a skill's front matter.
 
 **Files (in `havamal`):**
+
 - Create: `havamal_test.go`, `lock.go`, `skill.go`
 - Modify: `go.mod`
 
 **Interfaces:**
+
 - Produces: `havamal.Lock{Schema string; Skills []Entry}`; `havamal.Entry{Name string; Own bool;
   Upstream *Upstream{Repo, Path, Commit string}; Licence string; Files []File{Path, SHA256 string}}`;
   `ParseLock([]byte) (*Lock, error)`, which reads exactly (no unknown field, one document, sorted and
@@ -1382,6 +1396,7 @@ step 1. Havamal's `go.mod` gains `go.yaml.in/yaml/v3` v3.0.5, to read a skill's 
   which requires the front matter's name to be the folder's.
 
 **Acceptance criteria:**
+
 - [ ] `ParseLock` refuses an unknown field, a second document, a licence the factory can't
       redistribute, a short commit, a non-https upstream, a short hash and a wrong schema.
 - [ ] `ParseSkill` refuses a file with no front matter, no description, or another skill's name.
@@ -1735,10 +1750,12 @@ func ParseSkill(folder string, data []byte) (Skill, error) {
 Spec §5.1: a check must fail on drift. It compares a library with its lock, and `havamal check` runs it.
 
 **Files (in `havamal`):**
+
 - Create: `cli/cli.go`, `cli/cli_test.go`, `cmd/havamal/main.go`, `verify.go`
 - Modify: `havamal_test.go`
 
 **Interfaces:**
+
 - Consumes: `havamal.ParseLock`, `ParseSkill`, `Sum` (v0-T065).
 - Produces: `havamal.Verify(fs.FS) (drift []string, err error)` over a folder with `skills/` and
   `skills.lock`; one sorted line per problem, nil when the library is as locked. `havamal.SkillsDir`
@@ -1746,6 +1763,7 @@ Spec §5.1: a check must fail on drift. It compares a library with its lock, and
   clean, 1 drift, 2 refused.
 
 **Acceptance criteria:**
+
 - [ ] A library built with its lock has no drift.
 - [ ] A changed file, an extra file, a missing file, a skill folder that isn't in the lock, a lock
       entry with no folder, a folder whose SKILL.md names another skill, and a vendored skill with no
@@ -2116,10 +2134,12 @@ The module embeds `skills/` and `skills.lock`, so its version pins them (decisio
 opens only if it has not drifted, and a task gets the skills it names and no others.
 
 **Files (in `havamal`):**
+
 - Create: `embed.go`, `library.go`, `skills.lock`, `skills/.gitkeep`
 - Modify: `havamal_test.go`, `lock.go`
 
 **Interfaces:**
+
 - Consumes: `Verify`, `ParseSkill`, `SetHash` (v0-T065, v0-T066).
 - Produces: `havamal.Open(fs.FS) (*Library, error)`, which refuses a drifted library;
   `havamal.Embedded() (*Library, error)`; `havamal.OpenPrivate(dir string) (*Library, error)`, an
@@ -2129,6 +2149,7 @@ opens only if it has not drifted, and a task gets the skills it names and no oth
   `skills/` (with `.gitkeep`) and an empty `skills.lock`.
 
 **Acceptance criteria:**
+
 - [ ] The shipped library opens: it is as its lock says.
 - [ ] `Open` refuses a library with a changed file.
 - [ ] `Select` returns the named skills in the order named, and none that weren't named. An unknown
@@ -2506,16 +2527,19 @@ objects through git with hooks and the operator's config off, and never checks a
 filter, hook or symlink in the upstream runs or lands.
 
 **Files (in `havamal`):**
+
 - Create: `vendor.go`, `vendor_test.go`
 - Modify: `cli/cli.go`
 
 **Interfaces:**
+
 - Produces: `havamal.Vendor(ctx, VendorOptions{Dir, Name, Repo, Source, Commit, Path, Licence string;
   Update bool}) error`, and `havamal vendor -dir … -name … -repo https://… -commit <40 hex> -path …
   -licence <spdx> [-update]`. `Source` is where git fetches from when it is not `Repo`: tests point it
   at a local repo.
 
 **Acceptance criteria:**
+
 - [ ] Vendoring a skill copies its folder, and the upstream's root licence when the folder has none;
       records upstream, path and commit; and leaves a library with no drift.
 - [ ] Vendoring the same skill again is refused unless `-update` is given.
@@ -2991,9 +3015,11 @@ tasks with the skill and without it (spec §5.1). The harness runs them against 
 trials whose checks all pass in each arm, and says whether the gain meets what the eval asks.
 
 **Files (in `havamal`):**
+
 - Create: `eval.go`, `eval_test.go`
 
 **Interfaces:**
+
 - Produces: `havamal.ParseEval([]byte) (*Eval, error)` for `eval.yaml` (`schema: ygg.skill-eval/v1`,
   `runs`, `min_gain`, tasks with a prompt, starting `files` and `checks`; a check is one of
   `file_exists`, `file_contains`, `file_not_contains`, `file_matches`, `output_contains`,
@@ -3005,6 +3031,7 @@ trials whose checks all pass in each arm, and says whether the gain meets what t
   `eval-result.json`.
 
 **Acceptance criteria:**
+
 - [ ] An agent that follows the skill when it has it scores 0 of 3 without and 3 of 3 with, and the
       eval passes. An agent that ignores the skill gets a gain of 0 and the eval does not pass.
 - [ ] An eval with fewer than 3 runs, no `min_gain`, a task with no check, a check that sets two
@@ -3421,15 +3448,18 @@ the harness against a model costs tokens and comes with the first skill of our o
 gate it writes to.
 
 **Files (in `havamal`):**
+
 - Modify: `cli/cli.go`, `cli/cli_test.go`, `eval.go`, `eval_test.go`, `lock.go`
 
 **Interfaces:**
+
 - Consumes: `RunEval`, `ContentHash` (v0-T069), `Verify` (v0-T066).
 - Produces: `havamal.CheckEvals(fs.FS) (problems []string, err error)`, run by `havamal check` after
   a clean `Verify`; `havamal.Relock(dir, name, licence string) error`, which records one of our own
   skills as it is on disk, and `havamal lock [-dir d] -licence <spdx> <skill>`.
 
 **Acceptance criteria:**
+
 - [ ] An own skill with no `eval.yaml`, no result, a result for an older version of the skill, or a
       gain below what the eval asks, fails the check. A current passing result passes.
 - [ ] `Relock` records an own skill and leaves a library with no drift; a new skill needs a licence; a
@@ -3774,15 +3804,18 @@ first task. Branch `harness/sandbox` from `main` in `gleipnir`, before step 1. U
 request is merged, `gleipnir` builds against the local `gungnir` through `yggdrasil/go.work`.
 
 **Files (in `gleipnir`):**
+
 - Modify: `scripted/scripted.go`, `scripted/scripted_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Task.Sandbox`, `gungnir.Runner`, `gungnir.Cmd` (v0-T061).
 - Produces: `scripted.Action.Run *scripted.Run{Argv []string; AllowFailure bool}`; in a script,
   `- run: { argv: [cat, /root/.ssh/id_ed25519], allow_failure: true }`. The command's output goes to
   `<transcript dir>/<node>-<attempt>-run-<n>.log`.
 
 **Acceptance criteria:**
+
 - [ ] A `run` action in a task with no sandbox is refused: the scripted adapter never runs a command on
       the host.
 - [ ] With a sandbox, the command goes through it and its output is kept in the log; a non-zero exit
@@ -3981,14 +4014,17 @@ never opens half closed, and it resolves again every `YGG_REFRESH` seconds, swap
 host rules before it removes the old one. The test runs it with stand-ins for `iptables` and `getent`.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/assets.go`, `sandbox/assets/egress.sh`, `sandbox/firewall_test.go`
 
 **Interfaces:**
+
 - Produces: `sandbox.EgressScript` (the embedded `egress.sh`, run as `sh egress.sh <hosts file>`).
   Environment: `YGG_FW_STATE` (default `/run/ygg-fw`; `ready` appears there when the rules hold),
   `YGG_REFRESH`, `YGG_ONCE=1` for tests.
 
 **Acceptance criteria:**
+
 - [ ] The rules set every default policy to DROP, allow DNS to the resolver and 443/tcp to each listed
       host's addresses, and nothing else; `ready` appears afterward.
 - [ ] A list with a host that doesn't resolve makes the script fail before any rule is changed, and
@@ -4210,9 +4246,11 @@ settings, into a folder outside the leaf. The same renderer later tells `Validat
 say.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/config.go`, `sandbox/config_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.SandboxSpec`, `Layout` (v0-T061); `EgressScript` (v0-T072).
 - Produces: `sandbox.Config{Mounts []PathMap{Host, Engine string}; Images Images{Work, Firewall string};
   UID, GID int}` and `Config.MapPath(host string) (engine string, err error)`, which uses the longest
@@ -4223,6 +4261,7 @@ say.
   `sandbox.LabelLeaf`.
 
 **Acceptance criteria:**
+
 - [ ] The compose file has two services. `work` mounts the leaf read-write and its git dir read-only,
       at the leaf's layout under `/u`, joins `fw`'s network namespace, drops every capability, sets
       `no-new-privileges`, runs as the given uid and gid, and holds no added capability. `fw` alone
@@ -4557,16 +4596,19 @@ generated files back, names each of those, and then compares every file with wha
 write, so anything it didn't think of is refused too.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/validate.go`, `sandbox/validate_test.go`
 - Modify: `sandbox/config.go`
 
 **Interfaces:**
+
 - Consumes: `Generated`, `Generate`'s renderer (v0-T073).
 - Produces: `sandbox.Validate(Generated, gungnir.SandboxSpec, Config) error`, returning a
   `*sandbox.PolicyError{Problems []string}` for a configuration that breaks a rule or differs from the
   rendering.
 
 **Acceptance criteria:**
+
 - [ ] What `Generate` wrote validates.
 - [ ] Each of these is refused, naming the key where there is one: `initializeCommand`, a
       `postStartCommand`, `mounts`, `runArgs` with `--privileged`, an unknown devcontainer key,
@@ -5058,9 +5100,11 @@ and 7). Every call has `CONTAINER_HOST` set to the socket from `factory.yaml`, a
 7). `Down` finds containers by label, so it works for a sandbox this process never started.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Produces: `sandbox.New(socket string, Config, workDir string) (*Driver, error)`, which refuses an
   engine that isn't a `unix:///` socket and writes the empty auth under `workDir/registry-auth`;
   `(*Driver).Env() []string`; `(*Driver).Down(ctx, gungnir.Env) error`, which removes the containers
@@ -5068,6 +5112,7 @@ and 7). Every call has `CONTAINER_HOST` set to the socket from `factory.yaml`, a
   are fields, `Podman`, `Devcontainer` and `Compose`, and so is `ReadyTimeout` (a minute).
 
 **Acceptance criteria:**
+
 - [ ] A network engine such as `tcp://…` is refused.
 - [ ] `Down` removes the project's containers (`rm -f -t 2 --depend`) and its `_default` network, twice in a row
       without error, and refuses an environment with no project.
@@ -5308,14 +5353,17 @@ the devcontainer CLI, waits for the firewall, and proves the network closed from
 what the command started when its context ends.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/config.go`, `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Consumes: `Generate`, `Validate` (v0-T073, v0-T074); `Driver`, `Down` (v0-T075).
 - Produces: `(*Driver).Up(ctx, gungnir.SandboxSpec) (gungnir.Env, error)` and `(*Driver).Exec(ctx,
   gungnir.Env, gungnir.Cmd) (gungnir.ExecResult, error)`, so `*Driver` is a `gungnir.Sandbox`.
 
 **Acceptance criteria:**
+
 - [ ] `Up` calls the devcontainer CLI with the configuration it generated, with `--skip-post-create`, and
       every engine call carries the factory's socket and the isolated auth, whatever the shell's
       `CONTAINER_HOST` and `DOCKER_CONFIG` are.
@@ -5722,14 +5770,17 @@ pulls (with the isolated auth) and then builds with `--pull=never`. The managed 
 repository hooks and project MCP servers whatever flags a session gets.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/assets/Containerfile`, `sandbox/assets/managed-settings.json`, `sandbox/images.go`, `sandbox/images_test.go`
 
 **Interfaces:**
+
 - Produces: `sandbox.ImagesFor(stack string) Images`; `(*Driver).Build(ctx, stack string) (Images,
   error)`; `sandbox.ManagedSettings() string`; the pins `NodeImage`, `ClaudeCode`, `OpenCode`,
   `GitleaksVersion`, `GitleaksSHA256`.
 
 **Acceptance criteria:**
+
 - [ ] The tags follow every input: the same inputs give the same tag, a new stack gives a new work tag
       and the same firewall tag.
 - [ ] The Containerfile pins its base by digest, checks the gitleaks archive's SHA-256, installs the CLIs
@@ -5973,15 +6024,18 @@ recorded for a real session (4 input, 3,134 cache-creation, 26,776 cache-read an
 turns, $0.0189).
 
 **Files (in `gleipnir`):**
+
 - Create: `claudecode/claudecode.go`, `claudecode/claudecode_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Agent`, `Task.Sandbox`, `ErrNoSandbox` (v0-T061).
 - Produces: `claudecode.Agent` (zero value usable; `Getenv` for tests), `claudecode.Args(gungnir.Task)
   []string`, `claudecode.TokenVar` (`CLAUDE_CODE_OAUTH_TOKEN`) and `claudecode.Hosts`
   (`api.anthropic.com`). `Result.Provider` is `anthropic`, `Result.CLIVersion` comes from the `init` event.
 
 **Acceptance criteria:**
+
 - [ ] A session's usage is read from its `result` event as decision 9 says, and its transcript is the
       raw stream, kept at `<transcript dir>/<node>-<attempt>.jsonl`.
 - [ ] The command line has `--output-format stream-json`, `--setting-sources user`,
@@ -6419,9 +6473,11 @@ The part of the adapter that decides what a session may do: the model, the permi
 `privacy: strict` puts on every request (decisions 10 and 14, spike C).
 
 **Files (in `gleipnir`):**
+
 - Create: `opencode/opencode.go`, `opencode/opencode_test.go`
 
 **Interfaces:**
+
 - Produces: `opencode.New(model string, Config{Privacy string; Price *Price; Getenv}) (*Agent, error)`,
   which refuses a model that isn't `openrouter/<model>` and an unknown privacy level;
   `(*Agent).ConfigJSON(gungnir.Task) (string, error)`; `opencode.Args(gungnir.Task, model string)
@@ -6429,6 +6485,7 @@ The part of the adapter that decides what a session may do: the model, the permi
   `opencode.Price{Input, Output, CacheRead, CacheWrite float64}`.
 
 **Acceptance criteria:**
+
 - [ ] Under `strict`, the model carries `provider: {data_collection: deny, zdr: true, allow_fallbacks:
       false}`, and `small_model` is the same model, so no title request goes to a model without it.
 - [ ] Under `standard`, no provider restriction is set. The key is a reference to the environment
@@ -6653,10 +6710,12 @@ opencode 1.18.32 printed on 2026-10-16 against a local stand-in for OpenRouter: 
 5 output and 80 cache-read tokens, and a 401. A repository's own configuration is switched off.
 
 **Files (in `gleipnir`):**
+
 - Create: `opencode/testdata/auth-error.jsonl`, `opencode/testdata/success.jsonl`
 - Modify: `opencode/opencode.go`, `opencode/opencode_test.go`
 
 **Interfaces:**
+
 - Consumes: `opencode.New`, `ConfigJSON`, `Args` (v0-T079).
 - Produces: `(*opencode.Agent).Run(ctx, gungnir.Task) (gungnir.Result, error)`, so it is a
   `gungnir.Agent`. The environment it sets: `OPENROUTER_API_KEY`, `OPENCODE_CONFIG_CONTENT`,
@@ -6664,6 +6723,7 @@ opencode 1.18.32 printed on 2026-10-16 against a local stand-in for OpenRouter: 
   `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_SHARE`, `OPENCODE_DISABLE_MODELS_FETCH`.
 
 **Acceptance criteria:**
+
 - [ ] A session's usage is the sum of its `step_finish` events, with cache reads kept apart from input
       tokens; the cost is marked estimated; the provider is `openrouter` and the version comes from
       `opencode --version`.
@@ -7157,15 +7217,18 @@ decision 13). It imports Havamal; until `havamal`'s pull request is merged, `gle
 the local copy through `yggdrasil/go.work`.
 
 **Files (in `gleipnir`):**
+
 - Create: `skills/skills.go`, `skills/skills_test.go`
 
 **Interfaces:**
+
 - Consumes: `havamal.Library`, `Select`, `SetHash` (v0-T067).
 - Produces: `skills.Libraries{Pinned, Private *havamal.Library}`; `Libraries.Load(names []string)
   (text string, error)` (no names, no text); `Libraries.Record(names []string) (skills.Record{Hash
   string; Skills []string; Private []PrivateRecord{Name, SHA256}}, error)`.
 
 **Acceptance criteria:**
+
 - [ ] `Load` returns the named skills' bodies under a heading each, without their front matter, and
       nothing for a task that names none. An unknown name is an error.
 - [ ] `Record` hashes the whole set once whatever the order or repeats, lists the private skills with
@@ -7343,15 +7406,18 @@ files git would add, and exits 7 for "found", so a failure of the tool can't be 
 a clean tree.
 
 **Files (in `gleipnir`):**
+
 - Create: `scan/scan.go`, `scan/scan.sh`, `scan/scan_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Runner` (v0-T061).
 - Produces: `scan.Run(ctx, gungnir.Runner) error`: nil for a clean tree, a `*scan.FoundError{Findings
   []Finding{Rule, File string; Line int}}` for secrets, any other error for a scan that couldn't run.
   `scan.Script() string`, the embedded `scan.sh`.
 
 **Acceptance criteria:**
+
 - [ ] Exit 0 is clean; exit 7 with a gitleaks report is a `FoundError` that names rule, file and line
       and never repeats the secret field; any other exit, an unreadable report, an empty report with exit
       7, and a runner error are failures to scan.
@@ -7609,14 +7675,17 @@ gitleaks dir --no-banner --redact --exit-code 7 --report-format json --report-pa
 carries the run label, and stops one project's containers.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/leftover.go`
 - Modify: `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Produces: `(*Driver).Leftovers(ctx) ([]Leftover{Run, Leaf, Project, Container, State string}, error)`,
   sorted by run, leaf and container; `(*Driver).StopLeftover(ctx, Leftover) error`.
 
 **Acceptance criteria:**
+
 - [ ] Two labelled containers of different runs are listed oldest run first, with their project, and
       stopping one removes the containers of its project.
 
@@ -7750,13 +7819,16 @@ Odin's tests of the ledger need a scripted result that reports a provider and a 
 real adapter does.
 
 **Files (in `gleipnir`):**
+
 - Modify: `scripted/scripted.go`, `scripted/scripted_test.go`
 
 **Interfaces:**
+
 - Produces: `result: { …, provider: anthropic, cli_version: 2.1.284 }` in a script, into
   `Result.Provider` and `Result.CLIVersion`.
 
 **Acceptance criteria:**
+
 - [ ] A scripted result carries the provider and the version its script gives.
 
 **Named test:** `go test ./scripted -run TestScriptedReportsAProviderAndAToolVersionWhenTheScriptGivesThem`
@@ -7845,13 +7917,16 @@ index a30b74c..134d5aa 100644
 path.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/driver_test.go`, `sandbox/leftover.go`
 
 **Interfaces:**
+
 - Produces: `(*Driver).Info(ctx) (sandbox.Info{Rootless bool; Podman string}, error)`;
   `(*Driver).DevcontainerCLI(ctx) (string, error)`; `sandbox.DevcontainerVersion` (`0.89.0`).
 
 **Acceptance criteria:**
+
 - [ ] `Info` reads a rootless and a rootful answer and refuses a garbled one; `DevcontainerCLI` returns
       what the CLI prints.
 
@@ -7972,12 +8047,15 @@ the CLI five minutes, and every engine tool runs in its own process group, kille
 so a child that outlives its parent can't hold the pipes open.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Produces: `(*Driver).UpTimeout` (five minutes by default).
 
 **Acceptance criteria:**
+
 - [ ] A devcontainer CLI that never returns, and leaves a child running, makes `Up` fail within the
       timeout and a few seconds, and removes what it started.
 
@@ -8101,13 +8179,16 @@ a credential given to one command isn't in the next. It builds the images on the
 takes a few minutes and needs the network. **Needs v0-H07.**
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/integration_test.go`
 
 **Interfaces:**
+
 - Consumes: everything in `sandbox` and `scan`. Environment: `YGG_SANDBOX_ENGINE`, `YGG_SANDBOX_TREE`,
   `YGG_SANDBOX_TREE_ENGINE`.
 
 **Acceptance criteria:**
+
 - [ ] Without the tag, the test file isn't built, and `go vet -tags sandbox ./sandbox` passes.
 - [ ] With the tag and the engine up, every probe above passes. A probe is shown to fail when its
       defence is removed (see "Evidence").
@@ -8384,10 +8465,12 @@ what the adapter can't promise. The new testdata realm `toy-sandbox` is the toy 
 acceptance check.
 
 **Files (in `odin`):**
+
 - Create: `internal/agents/agents_test.go`, `internal/run/prepare.go`, `internal/run/prepare_test.go`, `testdata/toy-sandbox/graph.yaml`, `testdata/toy-sandbox/pack.yaml`, `testdata/toy-sandbox/prompts/build.md`, `testdata/toy-sandbox/prompts/design.md`, `testdata/toy-sandbox/prompts/plan.md`, `testdata/toy-sandbox/prompts/spec.md`, `testdata/toy-sandbox/script.yaml`, `testdata/toy-sandbox/templates/app/LICENSE`
 - Modify: `internal/agents/agents.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Consumes: `claudecode.Agent`, `opencode.New`, `sandbox.ImagesFor`, `sandbox.Config` (gleipnir);
   `skills.Libraries.Record` (v0-T081); `havamal.Embedded`, `OpenPrivate`.
 - Produces: `agents.New(role, configDir, agents.Options{Privacy})` and `agents.Hosts(agent) []string`;
@@ -8396,6 +8479,7 @@ acceptance check.
   `run.Options.Hooks run.Hooks{Libs, NewSandbox}` for tests.
 
 **Acceptance criteria:**
+
 - [ ] A config with a `claude-code` role, a sandbox section, and the `toy-sandbox` realm prepares, with
       the engine, the mounts, the images of the pack's stack, and an egress list of the roles' model
       APIs and the pack's registries, sorted, each once.
@@ -9002,10 +9086,12 @@ before anything runs in it, and stops every sandbox it started. A resume stops w
 `internal/sandboxfake` stands in for the driver in tests: it runs commands on the host, in the leaf.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/sandbox.go`, `internal/run/sandbox_test.go`, `internal/sandboxfake/fake.go`
 - Modify: `internal/run/prepare_test.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Sandbox`, `Bind` (v0-T061); `tree.Resolve`.
 - Produces: `(*run.Run).Runner(ctx, repo string) (gungnir.Runner, error)`: nil for an umbrella or a run
   with no sandbox; otherwise the leaf's sandbox, started once. `(*run.Run).DownSandboxes(ctx) error`.
@@ -9013,6 +9099,7 @@ before anything runs in it, and stops every sandbox it started. A resume stops w
   `sandboxfake.Sandbox{Ups, Downs, Execs, UpErr, Scan, Intercept}`.
 
 **Acceptance criteria:**
+
 - [ ] `Runner` starts one sandbox per leaf however often it is called, with the spec Odin builds (the
       run's id, the leaf's path, its parent umbrella, the leaf, its git dir, and the egress list), which the
       driver would accept; it records the sandbox in `run.json` and logs `sandbox_up`.
@@ -9615,15 +9702,18 @@ After a node's checks the leaf is tidied (backlog B-004, closed here). A configu
 rule is a hard stop at `policy-violation`; a sandbox that won't start fails the node, with one attempt.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/sandbox_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/land.go`, `internal/leaf/leaf.go`, `internal/leaf/leaf_test.go`, `internal/sandboxfake/fake.go`
 
 **Interfaces:**
+
 - Consumes: `Run.Runner` (v0-T089).
 - Produces: `leaf.Tidy(ctx) error`; `engine.Outcome.Warn []string`; the CLI prints each warning. `command`
   runs in the sandbox for a leaf and on the host for an umbrella or a run with none.
 
 **Acceptance criteria:**
+
 - [ ] A leaf's check goes through the sandbox with no environment; an exec node in the umbrella runs on
       the host; one sandbox is started and stopped.
 - [ ] The merge and pointer checks run in the sandbox, and a file they wrote doesn't stay: the leaf is
@@ -10159,14 +10249,17 @@ An agent node's task carries the leaf's sandbox, and the prompt carries the skil
 no others. The provider and the tool's version go in the ledger with the usage.
 
 **Files (in `odin`):**
+
 - Create: `internal/skillfake/skillfake.go`
 - Modify: `internal/cli/cli.go`, `internal/engine/engine.go`, `internal/engine/sandbox_test.go`, `internal/run/prepare_test.go`
 
 **Interfaces:**
+
 - Consumes: `Run.Runner`, `Setup.Libs` (v0-T088, v0-T089); `Libraries.Load` (v0-T081).
 - Produces: the ledger's `gen_ai.provider.name` and `ygg.agent.cli_version` on a node's lines.
 
 **Acceptance criteria:**
+
 - [ ] A scripted agent's `run` action goes through the sandbox and acts on the leaf; the prompt holds
       the node's own prompt and its skill; the ledger has the provider, the version, and both sandbox
       events.
@@ -10443,14 +10536,17 @@ run at `real-secrets-or-user-data` with nothing committed and the leaf kept; app
 back and saves nothing. A read-only node that changed its leaf stops the run at `policy-violation`.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/engine.go`, `internal/engine/gates.go`, `internal/engine/sandbox_test.go`, `internal/run/run.go`, `internal/sandboxfake/fake.go`
 
 **Interfaces:**
+
 - Consumes: `scan.Run` (v0-T082); `Run.Runner`.
 - Produces: `run.Quarantines(gate) bool`: a stop that keeps the leaf as it is. `sandboxfake.Sandbox.Scan`
   and `Scans`.
 
 **Acceptance criteria:**
+
 - [ ] A scan that finds a secret stops the run at `real-secrets-or-user-data`, the checkpoint doesn't
       move, the gate file names the rule, file and line and not the secret, and the leaf keeps the agent's
       file. Approving resets the leaf, saves nothing under `refs/ygg/`, and the node runs again.
@@ -10797,16 +10893,19 @@ Decision 15, and spec §12: doctor finds and stops orphaned containers and proce
 that pulls or builds is `ygg sandbox build`.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/sandbox.go`, `internal/cli/sandbox_test.go`
 - Modify: `internal/cli/cli.go`, `internal/cli/doctor.go`, `internal/run/leftover_test.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Consumes: `Driver.Info`, `DevcontainerCLI`, `Leftovers`, `StopLeftover` (v0-T083, v0-T085);
   `Driver.Build` (v0-T077).
 - Produces: `ygg sandbox build --realm <dir> [--config <factory.yaml>]`; `run.LeftoverProcess(*ExecProcess)
   bool` and `run.StopLeftoverProcess(*ExecProcess) error`.
 
 **Acceptance criteria:**
+
 - [ ] Doctor reports a rootless engine, the CLI's version, and stops the container of a run in this
       project that no `ygg` holds; it leaves the container of a live run and of another project's, and
       says the latter belongs elsewhere.
@@ -11295,13 +11394,16 @@ CLI version bump. This is the Phase 3 version: an implementer on `claude-code` w
 example `factory.example.yaml` has no credentials: they come from the environment.
 
 **Files (in `odin`):**
+
 - Create: `testdata/smoke/factory.example.yaml`, `testdata/smoke/graph.yaml`, `testdata/smoke/pack.yaml`, `testdata/smoke/prompts/hello.md`, `testdata/smoke/prompts/review.md`, `testdata/smoke/templates/app/LICENSE`
 - Modify: `internal/run/prepare_test.go`
 
 **Interfaces:**
+
 - Produces: `testdata/smoke/` (the realm and `factory.example.yaml`), run by v0-H09.
 
 **Acceptance criteria:**
+
 - [ ] The realm prepares with the example config: the implementer is `claude-code`, the reviewer
       `opencode`, and the sandbox may reach `api.anthropic.com` and `openrouter.ai` and nothing more.
 
@@ -11445,12 +11547,15 @@ sandbox for that leaf. Each attempt must fail or be ignored, the host marker mus
 ledger must verify, and doctor must find nothing left. **Needs v0-H07.**
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/sandbox_e2e_test.go`
 
 **Interfaces:**
+
 - Consumes: the whole stack; `ygg sandbox build`. Environment as v0-T087.
 
 **Acceptance criteria:**
+
 - [ ] Without the tag the file isn't built, and `go vet -tags sandbox ./internal/cli` passes.
 - [ ] With the tag and the engine up: the host's key file isn't readable; no key material is found; the
       network is blocked; the hook write is refused; `features.json` doesn't appear in the project; the
@@ -11588,10 +11693,12 @@ func TestSandboxEscapes(t *testing.T) {
 The umbrella moves the four pointers once, and the exit check runs on the merged code.
 
 **Files (in `yggdrasil`):**
+
 - Modify: the submodule pointers of `gungnir`, `havamal`, `gleipnir` and `odin`;
   `docs/2-engineering/backlog.md`.
 
 **Acceptance criteria:**
+
 - [ ] After all four pull requests are merged, the pointers are at each repo's `main`, and `go.work`
       builds them together: `go vet ./...` and `go test ./...` pass in each repo with `go.work` and with
       `GOWORK=off`.
@@ -11770,7 +11877,7 @@ are handled in their own steps).
 the named test was run, and it failed; then the code was restored.
 
 | Task | Defence removed | Test that fails |
-|---|---|---|
+| --- | --- | --- |
 | v0-T067 | `Open` accepts a drifted library | `TestOpenRefusesADriftedLibrary` |
 | v0-T067 | a private skill may shadow a pinned one | `TestAPrivateSkillNeverShadowsAPinnedOne` |
 | v0-T068 | `vendor` accepts a symlink | `TestVendorRefusesWhatItShouldNotCopy` |

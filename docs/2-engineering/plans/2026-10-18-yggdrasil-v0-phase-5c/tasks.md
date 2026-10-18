@@ -120,7 +120,7 @@ Each line is **Decided 2026-10-18** when the founder merges this plan. The draft
 Each task assumes the answer in **bold**. Say so on the pull request if you want another.
 
 | # | Question | Assumed |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Reward counts fail-to-pass only, and pass-to-pass is reported alone? | **Yes** |
 | 2 | Hidden suite and grader run with no memory or CPU limit on this machine (`none` and `0`)? Or do you delegate cgroups to your user? | **No limit, with a doctor warning** |
 | 3 | `.factory/runs/` is untracked but not ignored in a project. Does the umbrella template ignore it? | **It must; v0-T265 files a backlog item** |
@@ -208,7 +208,7 @@ Each task assumes the answer in **bold**. Say so on the pull request if you want
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T245 schema and ledger events for the grader, routing and dependency checks; the `grade` node; the `grader` block | `gungnir` | M | Phase 5b |
 | v0-T246 `Grade`: build the task image, run the hidden suite in an isolated container | `gleipnir` | M | v0-T245 |
 | v0-T247 task.toml, the brief hash, the suite version, the retired mark | `odin` | M | v0-T245 |
@@ -287,10 +287,12 @@ GOWORK=off go mod tidy
 Gungnir's first task of Phase 5c. Branch `grader/contract` from `main` in `gungnir`, before step 1. The isolated grader (change `benchmark-split`) needs a contract before any other repo can use it: a node that grades, a factory block that says where the tasks and the hidden suites are, the shape of `score.json` and of a suite's `manifest.json`, and the ledger events. The ledger events of the routing and dependency tasks (v0-T251 to v0-T259) are added here too, so those tasks only use them.
 
 **Files (in `gungnir`):**
+
 - Create: `score.go`, `score_test.go`, `schema/score.go`, `schema/score_test.go`, `schema/score.schema.json`, `schema/suite.schema.json`, `schema/event_grade_test.go`, `schema/graph_grade_test.go`, `schema/factory_grader_test.go`
 - Modify: `event.go`, `schema/ledger-event.schema.json`, `schema/graph.go`, `schema/graph.schema.json`, `schema/factory.go`, `schema/factory.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.KindGrade` (`grade`), a graph node with an `id` and nothing else. It must be the last node of the graph, and there is at most one: grading starts only after every sandbox has stopped. It is not allowed in a `foreach` body.
 - Produces: `schema.Factory.Grader *Grader{TasksDir, SuiteDir string; Timeout Duration; Memory string; CPUs int}`, YAML key `grader`. All five fields are required when the block is there, and nothing is defaulted. The two folders are clean, absolute paths, not the root, and neither is inside the other. `timeout` is positive (`30m`), `memory` is a number and `m` or `g` (`4g`), `cpus` is 1 to 256.
 - Produces: `gungnir.Suite{Schema, Suite, Scenarios []Scenario{ID, Category, Kind}}` (`tests/manifest.json`, `ygg.suite/v1`) with `Validate`, and `schema.ParseSuite([]byte)`. A scenario id used twice, no scenario, an unknown kind and a wrong schema are errors.
@@ -299,7 +301,7 @@ Gungnir's first task of Phase 5c. Branch `grader/contract` from `main` in `gungn
 - Produces: seven `EventName`s and their `Event` fields. The ledger writes every event name in snake case, so the contract's `grade.started` is `grade_started` (see "Deviation" below): `EventGradeStarted`, `EventGradeFinished`, `EventGradeRefused`, `EventRoutingIndexBuilt`, `EventPointerContractChecked`, `EventDepsChecked`, `EventDepsBump`. `Events()` lists them and the ledger schema accepts them.
 
 | Event | Fields (JSON name; `Event` field) |
-|---|---|
+| --- | --- |
 | `grade_started` | `ygg.task.id` (`Task`), `ygg.grade.suite` (`Suite`), `ygg.grade.brief_sha256` (`BriefSHA256`), `ygg.grade.image` (`Image`) |
 | `grade_finished` | `Task`, `Suite`, `ygg.grade.score_path` (`ScorePath`), `ygg.grade.reward` (`Reward *float64`: a pointer, so a reward of 0 is still written), `ygg.grade.fail_to_pass` (`FailToPass`, `"p/t"`), `ygg.grade.pass_to_pass` (`PassToPass`) |
 | `grade_refused` | `Task`, `Suite`, `ygg.grade.reason` (`Reason GradeReason`) |
@@ -313,6 +315,7 @@ A count of 0 (`Edges`, `Extracted`, `Inferred`, `Findings`) is left out of the l
 **Deviation from the grader contract (T245 owns the names):** the contract writes `grade.started`, `routing.index_built`, `pointer_contract.checked`, `deps.checked` and `deps.bump`, and says `routing.lookup` and `conformance.checked` exist. They do not. The ledger's 36 names are snake case (`routing_lookup`, `conformance_checked`), and the ledger schema is an enum of them. The new names follow that rule. Every later task uses the snake-case names.
 
 **Acceptance criteria:**
+
 - [ ] A graph whose last node is `{ id: score, kind: grade }` loads. A grade node with a node after it, two grade nodes, a grade node in a `foreach` body, and a grade node with a field (`repo`, `run`) are refused.
 - [ ] A `grader:` block with five exact fields loads. A relative folder, a folder that is not clean, the root, one folder inside the other, a timeout of zero, negative or without a unit, a missing field, a memory without a unit, zero `cpus` and an unknown key are refused. A config with no `grader:` block still loads.
 - [ ] A score round-trips through JSON. A score with a lying tally, category, weight sum or reward is refused. A pass-to-pass failure does not change the reward. A category with no scenarios counts 0.
@@ -727,6 +730,7 @@ func TestTheGraderBlockIsRefusedWhenItIsNotExact(t *testing.T) {
 ```bash
 go test ./schema . 2>&1 | head -6
 ```
+
 ```output
 # github.com/ouroboric-dev/gungnir/schema [github.com/ouroboric-dev/gungnir/schema.test]
 schema/event_grade_test.go:19:12: undefined: gungnir.EventGradeStarted
@@ -1424,6 +1428,7 @@ go vet ./...
 go test -race -count=1 -v -run 'TestAScoreRoundTripsThroughJSON|TestPassToPassNeverChangesTheReward|TestAScoreThatDoesNotAddUpIsRefused|TestASuiteManifestIsRefusedWhenItIsAmbiguous|TestParseSuiteReadsAManifestExactly|TestParseScoreReadsWhatMarshalWrote|TestAGradeNodeEndsTheGraph|TestAGradeNodeThatCouldRunBesideASandboxIsRefused|TestFactoryNamesTheGrader|TestTheGraderBlockIsRefusedWhenItIsNotExact|TestTheLedgerRecordsGradingRoutingAndDependencyChecks|TestAZeroRewardIsStillWrittenAndABadGradeFieldIsRefused|TestLedgerEventSchema' ./... 2>&1 | grep -E "^(--- |ok|FAIL|PASS)"
 GOWORK=off go test -race -count=1 ./...
 ```
+
 ```output
 --- PASS: TestAScoreRoundTripsThroughJSON (0.00s)
 --- PASS: TestPassToPassNeverChangesTheReward (0.00s)
@@ -1466,10 +1471,12 @@ git commit -m "Schema and ledger events for the grader, routing and dependency c
 Gleipnir's task of Phase 5c. Branch `grader/run` from `main` in `gleipnir`, before step 1. Needs v0-T245 merged and pinned only for the types Odin uses; the code below imports nothing new from `gungnir` and builds with the pin of Phase 5b. Odin (v0-T249) hands `Grade` four host folders and gets back an exit status. The score is Odin's: `Grade` reads no result.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/grade.go`, `sandbox/grade_test.go`, `sandbox/integration_grade_test.go`
 - Modify: `sandbox/stackbuild.go` (the pull-and-build tail becomes `pullAndBuild`, used by `BuildStack` and `BuildGrader`), `sandbox/driver_test.go` (the fake `podman` answers `run` and `rm`)
 
 **Interfaces:**
+
 - Produces: `sandbox.GraderImage(task, environment) (ref string, err error)`: `localhost/ygg-grader-<task>:<12 hex>`, the hash of every file of the task's environment folder (path, executable bit, bytes). It refuses a folder with no `Containerfile` or `Dockerfile`, a file that is not a regular file (a symlink), and more than `schema.MaxContextFiles` files or `schema.MaxContextBytes` bytes.
 - Produces: `(*Driver).BuildGrader(ctx, task, environment) (ref string, built bool, err error)`: builds the image from the `Containerfile` or else the `Dockerfile` of the folder, with the rules of `BuildStack`: every base pinned by digest, no `ADD`, no `COPY --from` an image. The image exists already: nothing is built. The image never holds the hidden suite.
 - Produces: `sandbox.GradeSpec{Run, Task, Environment, App, Tests, Logs string; Timeout time.Duration; Memory string; CPUs int; Env map[string]string}` and `(*Driver).Grade(ctx, GradeSpec) (GradeResult{Image, ExitCode, Log}, error)`. `Grade` runs `bash /tests/test.sh` in a container of the image with: `--network none` (loopback only), `/app` the `App` folder (read-write; Odin passes a copy it throws away), `/tests` the `Tests` folder (`ro=true`), `/logs/verifier` the `Logs` folder (must be empty), the label `ygg.grader=<run>`, the name `ygg-grader-<run>-<task>`, `--memory`, `--cpus`, `--env` for each `Env` entry. There is no other mount, and no other flag that gives the container more.
@@ -1479,12 +1486,14 @@ Gleipnir's task of Phase 5c. Branch `grader/run` from `main` in `gleipnir`, befo
 - A `podman run` that exits 125, 126 or 127 is an error, not a result: those are podman's own failures (and a limit the engine can't apply). Any other exit status is `GradeResult.ExitCode`, and `results.json` is the truth.
 
 **Facts found on a real engine (read before v0-H16):**
+
 - The rootless engine of this workspace (Podman on WSL, cgroup v2 with no delegation) cannot apply `--memory` or `--cpus`: `podman run` exits 127 with `crun: open memory.max for writing: No such file or directory`. `Grade` passes the limits the factory gives it, so on such an engine every grading run fails with the error above, not with a wrong score. `GradeSpec` takes an empty `Memory` and `CPUs` 0 as "no limit", so a test can run without them. The factory's `grader:` block asks for both (v0-T245). Decision for the founder: on this engine either delegate the cgroup controllers to the user, or accept grading without limits. The plan does not choose.
 - Registry credentials: a pull through the host's own Podman config failed on a credential helper of the host. The driver's pulls use the isolated, empty auth, and worked.
 - The mimir task `client-gallery-lite` has a `Dockerfile`, not a `Containerfile`. `BuildGrader` takes either.
 - Not tried: the Dockerfile of `client-gallery-lite` itself (Playwright image, `npm ci`), and Chromium in the container under the grader's flags. A rootless engine maps the container's root to the operator's user; whether `/app` is writable for the unprivileged `app` user of that image is v0-H16's to find.
 
 **Acceptance criteria:**
+
 - [ ] `Grade` calls the engine in this order: pull of each base, build, run, remove. The `run` line has `--network none`, the label, the name, the limits, the `--env` entries and ends with `<image> bash /tests/test.sh`.
 - [ ] The `run` line has exactly three `--mount` options, with the destinations `/app` (rw), `/tests` (ro) and `/logs/verifier` (rw), each from the engine's view of the given host folder, and no `-v`, `--volume`, `--tmpfs`, `--device`, `--privileged`, `--userns`, `--cap-add` or other network flag. No path of the environment folder, of the task folder or of a sibling of the three folders is on the line.
 - [ ] The container is removed after a suite that passes, one that fails, an engine failure (125 and 127), a timeout, and a cancelled context. A container that can't be removed is an error.
@@ -1896,6 +1905,7 @@ func TestGraderImageIsNamedForEveryFileOfTheEnvironmentAndRefusesWhatCouldLeadOu
 ```bash
 go vet ./sandbox
 ```
+
 ```output
 # github.com/ouroboric-dev/gleipnir/sandbox
 # [github.com/ouroboric-dev/gleipnir/sandbox]
@@ -2255,6 +2265,7 @@ go vet ./...
 go test -race -count=1 -v -run 'TestGrade|TestGrader|TestBuildStack' ./sandbox 2>&1 | grep -E "^(--- |ok|FAIL)"
 GOWORK=off go test -race -count=1 ./...
 ```
+
 ```output
 --- PASS: TestGradeBuildsTheImageThenRunsTheSuiteWithoutANetworkAndRemovesTheContainer (0.01s)
 --- PASS: TestGradeKeepsAnImageThatIsThereAndRefusesABaseNobodyPinned (0.03s)
@@ -2285,7 +2296,6 @@ ok  	github.com/ouroboric-dev/gleipnir/skills	1.016s
 `gofmt -l .` and `go vet ./...` print nothing.
 
 - [ ] **Step 5:** the integration test, behind the `sandbox` build tag. Write `sandbox/integration_grade_test.go`:
-
 
 ```go
 //go:build sandbox
@@ -2449,6 +2459,7 @@ YGG_SANDBOX_ENGINE=unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-
 YGG_SANDBOX_TREE=/mnt/wsl/ygg-bind YGG_SANDBOX_TREE_ENGINE=/mnt/wsl/ygg-bind \
   go test -tags sandbox -count=1 -run TestSandboxGrade -v -timeout 20m ./sandbox
 ```
+
 ```output
 === RUN   TestSandboxGradeRunsTheSuiteIsolatedAndRemovesTheContainer
 --- PASS: TestSandboxGradeRunsTheSuiteIsolatedAndRemovesTheContainer (0.31s)
@@ -2470,6 +2481,7 @@ git commit -m "Grade: build the task image, run the hidden suite isolated, label
 **Evidence (v0-T246):** built and run in the reference workspace on 2026-10-18 as commit `3766b48` on `main` of `gleipnir` (not pushed). Tests first: the build failed as in step 2, then all passed. Mutation check: a temporary extra `--mount ...,dst=/env` of the environment folder made `TestGradeNeverMountsAnythingButTheThreePaths` fail with two errors (the mount set, and the path on the line); the change was removed. `gofmt -l .`, `go vet ./...` and `go vet -tags sandbox ./sandbox` print nothing; `GOWORK=off go test -race -count=1 ./...` is `ok` in every package; `reuse lint` prints nothing. Ran on a real engine (Podman client 5.8.3 on WSL, the user socket `podman-user.sock`): both `TestSandboxGrade...` tests passed, with the base `golang:1.26.7-bookworm@sha256:e8c859f5...` and WITHOUT memory and CPU limits, because this engine cannot apply them (see "Facts found on a real engine"). Not run: the limits on a real engine; the Dockerfile of `client-gallery-lite` (Playwright, `npm ci`); the hidden suite itself (nobody here may read it; the integration test uses a probe script); a second engine or rootful mode.
 
 ---
+
 ### Task v0-T247: read a benchmark task: `task.toml`, the brief's hash, the suite version, the retired mark
 
 Odin's first task of the grader. Branch `grader/odin` from `main` in `odin`, before step 1. It needs v0-T245 and v0-T246
@@ -2477,10 +2489,12 @@ merged and pinned (see "To pin a sibling" under "How each task lands"); until th
 Two commits: part 1 reads the task, part 2 reads its hidden suite.
 
 **Files (in `odin`):**
+
 - Create: `internal/task/task.go`, `internal/task/task_test.go`
 - Modify: `go.mod`, `go.sum` (the TOML parser: decision 1)
 
 **Interfaces:**
+
 - Consumes: `gungnir.GradeReason` and its five values, `gungnir.ValidVersion`, `gungnir.Suite` (`Validate`), `gungnir.Scenario`, `gungnir.FailToPass` (v0-T245). `tasks_dir/<id>/{task.toml,instruction.md,environment/}`; the hidden suite at `suite_dir/<id>/<suite>/tests/{test.sh,manifest.json}`; a retired suite is `tasks_dir/<id>/retired/<suite>`, a file or a folder.
 - Produces: `task.Load(tasksDir, suiteDir, id) (*Task, error)` (in part 1 the signature is `Load(tasksDir, id)`; part 2 adds `suiteDir`). `Task` holds `ID`, `Version`, `Suite`, `BriefSHA256`, `Dir`, `Environment`, `Tests`, `Timeout`, `Env`, `Weights` and `Manifest`.
 - Produces: `*task.Refusal{Reason gungnir.GradeReason, Detail string}`. Every failure of `Load` is one. Odin's grade stage (v0-T249) logs it as `grade_refused`.
@@ -2490,6 +2504,7 @@ Two commits: part 1 reads the task, part 2 reads its hidden suite.
 - `bad_manifest`: `manifest.json` that is not one JSON document, has an unknown field, fails `gungnir.Suite.Validate`, names another suite than `task.toml`, or has a fail-to-pass scenario in a category that `SCORE_WEIGHTS` gives no weight. (A category with a weight and no scenario is fine: it counts 0.)
 
 **Acceptance criteria:**
+
 - [ ] `Load` of a well-formed fake task returns its version, suite, brief hash, folders, timeout (the verifier's), env, weights and manifest.
 - [ ] `retired/<suite>` as a file or as a folder gives `retired`. A mark for another suite does not.
 - [ ] A changed `instruction.md` gives `brief_changed`, with the first 12 hex digits of the true hash in the detail.
@@ -2498,6 +2513,7 @@ Two commits: part 1 reads the task, part 2 reads its hidden suite.
 - [ ] The smoke task of mimir (`smoke-notes`) with its PUBLIC sample suite loads: 7 scenarios, weight 0.4 for security. The test skips when no mimir checkout is near; `YGG_MIMIR` names one and `YGG_REQUIRE_MIMIR` makes the skip a failure.
 
 **Review focus pinned by tests:**
+
 - A retired suite scores a new run: `TestGraderRefusesRetiredVersion` (named by change benchmark-split-T001).
 - A task whose brief changed after the hash was frozen: `TestAChangedBriefIsRefused`.
 - A task file that lies about itself or leads out of the checkout: `TestATaskFileThatIsNotExactIsRefused`, `TestATaskFolderMayNotLeadOutsideItself`.
@@ -2719,7 +2735,7 @@ go test ./internal/task
 
 Real output (the tests of this commit on the code of its parent):
 
-```
+```text
 # github.com/ouroboric-dev/odin/internal/task [github.com/ouroboric-dev/odin/internal/task.test]
 internal/task/task_test.go:71:25: undefined: Task
 internal/task/task_test.go:71:47: undefined: Load
@@ -3136,7 +3152,7 @@ go test ./internal/task
 
 Real output (first lines):
 
-```
+```text
 # github.com/ouroboric-dev/odin/internal/task [github.com/ouroboric-dev/odin/internal/task.test]
 internal/task/task_test.go:80:71: too many arguments in call to Load
 	have (string, string, string)
@@ -3282,7 +3298,7 @@ go test -race -count=1 -v ./internal/task 2>&1 | grep -E "^(--- |ok|FAIL)"
 
 Real output:
 
-```
+```text
 --- PASS: TestLoadReadsTheTaskAndFindsItsSuite (0.00s)
 --- PASS: TestGraderRefusesRetiredVersion (0.01s)
 --- PASS: TestAChangedBriefIsRefused (0.00s)
@@ -3305,15 +3321,16 @@ git commit -m "Read a task's hidden suite: its folders and its manifest, refusin
 
 **Evidence (v0-T247):** built and run in the reference workspace on 2026-10-18 as commits `a82a0fb` and `e0a136d` on branch `grader/odin` of `odin` (not pushed). Tests first: the build failed as in steps 2 and 7, then every test passed. `gofmt -l .` and `go vet ./...` print nothing. `go test -race -count=1 ./internal/task`: `ok`. Two mutations were tried and each failed the test named for it, then were undone: the retired check made never true (`TestGraderRefusesRetiredVersion` failed), the hash comparison made never true (`TestAChangedBriefIsRefused` failed). Not run: `GOWORK=off go test`, which needs the merged pins of v0-T245 and v0-T246 (the pinned `gungnir` has no `GradeReason`); the tests ran through `go.work`. `reuse lint` (5.0.2) prints nothing.
 
-
 ### Task v0-T248: the suite manifest, the results join and `score.json`
 
 Odin's second task of the grader. It needs v0-T247 on the same branch. Two commits: part 1 reads the Playwright results, part 2 joins them with the manifest and writes the score.
 
 **Files (in `odin`):**
+
 - Create: `internal/score/results.go`, `internal/score/results_test.go`, `internal/score/score.go`, `internal/score/score_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.Suite`, `gungnir.Score` (`Validate`, `RewardOf`), `gungnir.ScoredScenario`, `gungnir.Tally`, `gungnir.CategoryScore`, `gungnir.ScoreSchema` (v0-T245); `task.Task.Manifest` and `.Weights` (v0-T247, passed in by the caller: `score` does not import `task`).
 - Produces: `score.ReadResults(path) (map[string]gungnir.ScenarioStatus, error)`: the status of each spec of a Playwright JSON report, by title, in nested suites too. A test is as good as its last try. A spec passes when every test of it passes; it fails when one fails, times out, is interrupted or has a status Odin does not know; it is skipped when none ran or one was skipped. A report with no spec, a title used twice, or a file over 32 MiB is an error.
 - Produces: `*score.MismatchError{NotRun, Unknown, Repeated}`. A scenario in the manifest and not in the results, a spec in the results and not in the manifest, or a title twice. The message names at most five ids. The grade stage logs it as `bad_manifest`.
@@ -3321,6 +3338,7 @@ Odin's second task of the grader. It needs v0-T247 on the same branch. Two commi
 - Produces: `score.Write(runDir, Score) (path, error)`: validates, then writes `<runDir>/score.json` through a temporary file in the same folder and a rename, mode `0600`. It has no other place to write to, and refuses a relative path or a folder that is not there.
 
 **Acceptance criteria:**
+
 - [ ] A report with nested suites, a retried test, a test with two projects and a skipped spec reads as the tests say.
 - [ ] A last try of `failed`, `timedOut`, `interrupted` or an unknown word is a failure, whatever came before.
 - [ ] A scenario on one side only gives a `*MismatchError` in both directions, and no score.
@@ -3329,6 +3347,7 @@ Odin's second task of the grader. It needs v0-T247 on the same branch. Two commi
 - [ ] After `Write`, the run folder holds `score.json` and no other new file, and the parent folder holds nothing new.
 
 **Review focus pinned by tests:**
+
 - A scenario that disappears and is read as a pass: `TestAScenarioOnOneSideOnlyIsAnErrorNeverAPass`, `TestReadResultsRefusesWhatItCannotReadExactly` (title twice).
 - A retry, a skip or an interrupt read as a pass: `TestReadResultsReadsNestedSuitesAndTheLastTryOfEachTest`, `TestAFailedLastTryIsAFailureWhateverCameBefore`, `TestASkippedScenarioIsNotAPass`.
 - A pass-to-pass scenario that changes the reward: `TestPassToPassIsReportedOnItsOwnAndNeverChangesTheReward`.
@@ -3439,7 +3458,7 @@ go test ./internal/score
 
 Real output:
 
-```
+```text
 # github.com/ouroboric-dev/odin/internal/score [github.com/ouroboric-dev/odin/internal/score.test]
 internal/score/results_test.go:33:14: undefined: ReadResults
 internal/score/results_test.go:54:9: undefined: MismatchError
@@ -3879,7 +3898,7 @@ go test ./internal/score
 
 Real output (first lines):
 
-```
+```text
 # github.com/ouroboric-dev/odin/internal/score [github.com/ouroboric-dev/odin/internal/score.test]
 internal/score/score_test.go:22:14: undefined: Input
 internal/score/score_test.go:23:9: undefined: Input
@@ -4030,7 +4049,7 @@ git commit -m "Join the manifest with the results and write score.json to the ru
 
 Real output of the test run:
 
-```
+```text
 --- PASS: TestReadResultsReadsNestedSuitesAndTheLastTryOfEachTest (0.00s)
 --- PASS: TestReadResultsRefusesWhatItCannotReadExactly (0.00s)
 --- PASS: TestAFailedLastTryIsAFailureWhateverCameBefore (0.00s)
@@ -4048,16 +4067,17 @@ ok  	github.com/ouroboric-dev/odin/internal/score	1.051s
 
 **Evidence (v0-T248):** built and run in the reference workspace on 2026-10-18 as commits `6d08bd9` and `654dc8c` (not pushed). Tests first: both builds failed as in steps 2 and 6, then every test passed. `gofmt -l .` and `go vet ./...` print nothing; `go test -race -count=1 ./internal/score`: `ok`. Three mutations were tried, each undone: Compute ignoring a scenario that was not run (`TestAScenarioOnOneSideOnlyIsAnErrorNeverAPass` failed); pass-to-pass scenarios counted in the categories (six tests failed, among them `TestPassToPassIsReportedOnItsOwnAndNeverChangesTheReward`); `failed` read as a pass (the first version of the tests did not catch it, so `TestAFailedLastTryIsAFailureWhateverCameBefore` was added, and then failed). Not run: a real Playwright report; the shape is the JSON reporter's as described by the contract and as the sample suite of mimir writes it, but the sample suite was not run in a container (v0-H16).
 
-
 ### Task v0-T249: the `grade` stage in the engine
 
 Odin's third task of the grader. It needs v0-T248. Three commits: part 1 gives the run a grader and the export, part 2 is the stage, part 3 pins the failure paths and the isolation.
 
 **Files (in `odin`):**
+
 - Create: `internal/task/tasktest/tasktest.go`, `internal/run/grade.go`, `internal/run/grade_test.go`, `internal/engine/grade.go`, `internal/engine/grade_test.go`, `internal/engine/grade_failure_test.go`, `internal/engine/grade_isolation_test.go`
 - Modify: `internal/run/run.go` (hooks, the `Grader` field, `checkNode`), `internal/engine/engine.go` (one `case`)
 
 **Interfaces:**
+
 - Consumes: `schema.KindGrade` and `schema.Factory.Grader` (v0-T245); `sandbox.GradeSpec`, `GradeResult`, `GraderImage`, `(*Driver).Grade` (v0-T246); `task.Load` (v0-T247); `score.ReadResults`, `Compute`, `Write` (v0-T248); `snapshot.Export` and `Run.snapshotSources` (v0-T238).
 - Produces: `run.Grader` (one method, `Grade(ctx, sandbox.GradeSpec) (sandbox.GradeResult, error)`; `*sandbox.Driver` is the real one), `run.Hooks.NewGrader` (tests give a fake), `Run.Grader` (nil unless the config has both a `grader:` and a `sandbox:` section; the driver gets a configuration folder of its own, `<run>/grader`).
 - Produces: `Run.GradeDir()` (`<run>/grade`), `Run.ExportApp(ctx, dst)` (the committed files of the project umbrella and of each leaf at the commit the umbrella records, no git dir; `dst` is emptied first) and `Run.NoSandboxesLeft()`.
@@ -4074,6 +4094,7 @@ Odin's third task of the grader. It needs v0-T248. Three commits: part 1 gives t
 - The grader sees three folders: `/app` (a copy, in the run folder), `/tests` (the suite's tests folder, read only, and nothing else of the store) and `/logs/verifier`. No agent sandbox is ever given the store (`SandboxSpec` has no field for it), and the stage starts after the last sandbox stopped. The tests below walk every field of every `SandboxSpec` and `Cmd` of a full fake run.
 
 **Acceptance criteria:**
+
 - [ ] `TestGraderCombinesPublicTaskAndHiddenSuite`: the spec given to the fake grader has the environment from `tasks_dir`, the tests from `suite_dir`, the run's id, the smaller timeout, the limits and the env; `score.json` names the task, its version, the brief's SHA-256 and the suite; the ledger has `grade_started` and `grade_finished` with every field.
 - [ ] Each of the five refusals stops the run failed with its reason in the error, calls the grader zero times, exports nothing, writes no `score.json`, and leaves `grade_refused` (and no `grade_started`) in the ledger. A run built from another brief than the task's is refused as `brief_changed`.
 - [ ] A report missing a scenario, or holding one the manifest does not know, leaves no `score.json`, and the ledger has `grade_started` and `grade_refused` with `bad_manifest`.
@@ -4084,6 +4105,7 @@ Odin's third task of the grader. It needs v0-T248. Three commits: part 1 gives t
 - [ ] No string of any `SandboxSpec` or `Cmd` of the fake sandbox, and no prompt of an agent, holds the path of `grader.suite_dir`. The walker itself is tested: it finds the path in a spec and in a command that hold it.
 
 **Review focus pinned by tests:**
+
 - No agent path to the hidden suite: `TestNoAgentSandboxOrCommandEverHoldsTheSuiteFolder`, `TestTheWalkerThatGuardsTheSuiteFolderFindsItWhereItIs`.
 - Grading beside a live sandbox: `TestGradingStartsOnlyAfterEverySandboxHasStopped`.
 - The score where an agent can read it: `TestScoreJSONIsInNoLeafAndNoTree`.
@@ -4330,7 +4352,7 @@ go test ./internal/run -run 'Grade|Grader|Export|NoSandboxes'
 
 Real output:
 
-```
+```text
 # github.com/ouroboric-dev/odin/internal/run [github.com/ouroboric-dev/odin/internal/run.test]
 internal/run/grade_test.go:73:5: unknown field NewGrader in struct literal of type Hooks
 internal/run/grade_test.go:73:46: undefined: Grader
@@ -4750,7 +4772,7 @@ go test ./internal/engine -run 'Grader|Refusal'
 
 Real output (first lines):
 
-```
+```text
 --- FAIL: TestGraderCombinesPublicTaskAndHiddenSuite (0.36s)
     grade_test.go:149: 0 grading runs, want 1
 --- FAIL: TestEveryRefusalStopsTheRunBeforeAnythingIsBuilt (1.82s)
@@ -4972,7 +4994,7 @@ git commit -m "The grade stage: grade the committed project against the task's h
 
 Real output (the two tests of this step; the filter also matches two older tests with "Refusal" in the name):
 
-```
+```text
 --- PASS: TestGraderCombinesPublicTaskAndHiddenSuite (0.65s)
 --- PASS: TestEveryRefusalStopsTheRunBeforeAnythingIsBuilt (3.02s)
     --- PASS: TestEveryRefusalStopsTheRunBeforeAnythingIsBuilt/retired (0.61s)
@@ -5279,7 +5301,7 @@ Expected: `ok  	github.com/ouroboric-dev/odin/internal/engine	107.266s` (the pac
 
 Real output of the new tests:
 
-```
+```text
 --- PASS: TestAResultsFileThatDoesNotMatchTheManifestIsRefusedAsBadManifest (1.26s)
 --- PASS: TestAGradingRunThatFailsFailsTheNodeAndAResumeGradesAgain (0.62s)
 --- PASS: TestASuiteThatWritesNoResultsIsAFailureNotAPass (0.53s)
@@ -5293,22 +5315,24 @@ Real output of the new tests:
 
 **Evidence (v0-T249):** built and run in the reference workspace on 2026-10-18 as commits `a5925c4`, `4ef3d84` and `9267548` (not pushed). Tests first for parts 1 and 2: the failures are as in steps 2 and 6. `gofmt -l .` and `go vet ./...` print nothing; `go test -race -count=1 ./...` is `ok` for every package of `odin` (the slowest: `engine` 107 s, `cli` 46 s, `run` 28 s). Mutations tried on the finished code, each undone: (1) the sandboxes not stopped before grading: nine tests failed, among them `TestGradingStartsOnlyAfterEverySandboxHasStopped`; (2) the scratch sandbox given the suite folder as an egress entry, a stand-in for any sandbox spec that names it: `TestNoAgentSandboxOrCommandEverHoldsTheSuiteFolder` failed; (3) `score.json` written into the leaf: `TestScoreJSONIsInNoLeafAndNoTree`, `TestGraderCombinesPublicTaskAndHiddenSuite` and the resume test failed; (4) the run-brief comparison removed: `TestARunBuiltFromAnotherBriefThanTheTasksIsRefused` failed. The grader here is a fake: the real container is gleipnir's (v0-T246) and runs only in v0-H16. Not run: a run through `ygg run` with a grade node on a real engine.
 
-
 ### Task v0-T250: `ygg grade`, the `grader:` block checked by `ygg doctor`, and leftover grader containers
 
 Odin's last task of the grader. It needs v0-T249.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/grade.go`, `internal/cli/grade_test.go`
 - Modify: `internal/cli/cli.go` (the usage, the command table, the `--task` flag), `internal/cli/doctor.go`
 
 **Interfaces:**
+
 - Consumes: `engine.Grade`, `task.Refusal`, `sandbox.Driver.GraderLeftovers` and `RemoveGrader` (v0-T246).
 - Produces: `ygg grade <run-id> [--task <id>] [--project <dir>]`. It opens the run as `resume` does, refuses a run that is not done (its sandboxes and its work are final only then) and a config without the `grader:` and `sandbox:` sections (exit 2), then calls `engine.Grade`. A refusal exits 2 and prints `ygg: grading refused (<reason>): <detail>`. A failure of the grading run exits 1. Success prints the run, the task and its version, the suite, `reward`, `fail-to-pass`, `pass-to-pass` and the path of `score.json`, and exits 0. The reward goes to the operator's terminal and to nobody else.
 - Produces: the config wiring. The `grader:` block is parsed and checked by v0-T245 (`schema.Factory.Grader`). v0-T249 gave the run its `Grader` and refused a `grade` node without the sections. This task adds what the operator sees: `ygg doctor` reports `OK grader: <n> task(s) in <tasks_dir>, suites in <suite_dir>` and an `ERROR grader:` when `tasks_dir` can't be read or `suite_dir` is not a folder.
 - Produces: `ygg doctor` finds the containers that carry the label `ygg.grader` (`GraderLeftovers`), and for each one: a live `ygg` holds the run (its lock): leave it; the run is not in this project: `WARN graders: container <id> of run <run> belongs to another project; doctor in that project removes it`; otherwise `RemoveGrader` and `WARN graders: run <run> left the grader container <id> (<state>); removed it`. Last line: `OK graders: <n> grader container(s) of ygg runs`. A container that can't be removed is an `ERROR`.
 
 **Acceptance criteria:**
+
 - [ ] `ygg grade <id>` on a done run, with the real driver and a stand-in `podman` on the path, writes `score.json` and prints the reward. The `podman run` line has `--network none`, `--label ygg.grader=<run>`, exactly three `--mount` options (`/app`, `/tests` read only, `/logs/verifier`) and ends with `bash /tests/test.sh`. The container is removed after.
 - [ ] A retired suite makes `ygg grade` exit 2, call neither `podman run` nor `podman build`, leave no `score.json` and leave `grade_refused` with reason `retired` in the ledger. `--task` with a task that is not in the store is `bad_task`.
 - [ ] `ygg grade` without a grader section, for a run that does not exist, with no run id, or for a run that is stopped, exits 2.
@@ -5316,6 +5340,7 @@ Odin's last task of the grader. It needs v0-T249.
 - [ ] `ygg doctor` reports a missing `tasks_dir` as an error, and says nothing of graders when the config has no `grader:` block.
 
 **Review focus pinned by tests:**
+
 - A refusal that still builds or runs: `TestGradeRefusesWithExitTwoAndBuildsNothing`.
 - A grader container that lives on after a killed `ygg`: `TestDoctorFindsAndRemovesALeftoverGraderContainer`.
 - A doctor that removes the container of a run another process is grading, or of another project: the same test (the other project's) and, for the lock, `run.Locked` as `ygg doctor` uses it for sandboxes.
@@ -5580,7 +5605,7 @@ go test ./internal/cli -run 'TestGrade|TestDoctorFinds|TestDoctorChecksTheGrader
 
 Real output (first lines):
 
-```
+```text
 --- FAIL: TestGradeGradesADoneRunAndPrintsTheScore (0.28s)
     grade_test.go:90: grade: exit 2
         ygg: unknown command "grade"
@@ -5770,7 +5795,7 @@ git commit -m "ygg grade, and ygg doctor lists and removes leftover grader conta
 
 Real output of the named tests:
 
-```
+```text
 --- PASS: TestDoctorFindsAChangedLedger (0.58s)
 --- PASS: TestGradeGradesADoneRunAndPrintsTheScore (0.59s)
 --- PASS: TestGradeRefusesWithExitTwoAndBuildsNothing (0.55s)
@@ -5783,7 +5808,7 @@ ok  	github.com/ouroboric-dev/odin/internal/cli	4.864s
 
 (`TestDoctorFindsAChangedLedger` matches the filter by its name; it is an older test.) Real output of the whole suite:
 
-```
+```text
 ok  	github.com/ouroboric-dev/odin/internal/agents	1.047s
 ok  	github.com/ouroboric-dev/odin/internal/budget	1.333s
 ok  	github.com/ouroboric-dev/odin/internal/cli	45.883s
@@ -5809,6 +5834,7 @@ ok  	github.com/ouroboric-dev/odin/internal/tree	7.525s
 (packages with no test files are left out.)
 
 **Evidence (v0-T250):** built and run in the reference workspace on 2026-10-18 as commit `b6da7a0` (not pushed). Tests first: the failure is as in step 2. `gofmt -l .` and `go vet ./...` print nothing; `go test -race -count=1 ./...` is `ok` for every package. Mutations tried, each undone: `RemoveGrader` not called (`TestDoctorFindsAndRemovesALeftoverGraderContainer` failed); a refusal exiting 1 instead of 2 (`TestGradeRefusesWithExitTwoAndBuildsNothing` failed). The `podman` and `devcontainer` of these tests are shell stand-ins that log their arguments: they prove the arguments the real driver passes, not that a container behaves. Not run: `ygg grade` and `ygg doctor` against a real engine (v0-H16); a doctor that finds a grader container whose run a live `ygg` holds leaves it alone (`TestDoctorLeavesTheGraderContainerOfARunAliveYggHoldsAlone` holds the run's lock).
+
 ### Task v0-T251: the wiring index generator: the `REPOS.md` block, every edge tagged `extracted` or `inferred`
 
 Odin's first routing task. Branch `grader/odin` continues in `odin`. A new package, `internal/routing`, reads a project
@@ -5817,11 +5843,13 @@ part 1 is the edge type and the block, part 2 reads the umbrella, the packs and 
 and makes the reading safe.
 
 **Files (in `odin`):**
+
 - Create: `internal/routing/edge.go`, `block.go`, `block_test.go`, `wiring.go`, `wiring_test.go`
 - Create: `testdata/routing/project/**` (the fixture project: three leaves, no git), `testdata/routing/wiring.golden.md`
 - Modify: `go.mod` (`go.yaml.in/yaml/v3` is now a direct dependency; it was already in `go.sum`)
 
 **Interfaces:**
+
 - Consumes: `schema.LoadUmbrella`, `schema.Pack.Services`, `schema.ChildLeaf` (Gungnir). No new Gungnir code.
 - Produces: `routing.Edge{From, To, Kind, Tag, Source}`; `routing.Extracted`, `routing.Inferred`; `routing.Sorted`, `routing.Counts`.
 - Produces: `routing.Wiring(dir string, packs map[string]*schema.Pack) (*Result, error)`. `Result` holds `Edges` (sorted, no duplicates), `Leaves`, `Contracts` (v0-T252 uses these) and `Skipped` (what was left out, and why).
@@ -5830,19 +5858,20 @@ and makes the reading safe.
 - The kinds, and the tag each one has: `consumes` (umbrella.yaml `consumes`, extracted), `uses-realm` (extracted), `needs` (a service of the leaf's realm pack, extracted), `requires` (a direct `go.mod` or `package.json` dependency; a `require` of another leaf's module is an edge to that leaf; extracted), `pins` (the version `go.sum` or `package-lock.json` confirms, extracted), `imports` (a Go import of another leaf's module, extracted), `holds` (a leaf holds an OpenAPI file, extracted), `copies` (a leaf's contract copies the contract of a leaf it depends on, when both have the same `info.title`: **extracted if the bytes are identical, `inferred` if not**), `mentions` (a README or AGENTS.md names another leaf with no extracted edge between them: `inferred`).
 
 **Acceptance criteria:**
+
 - [ ] The fixture gives the edges of the golden file, byte for byte, three times in a row.
 - [ ] Every edge has a tag, and the tag is `extracted` or `inferred`. The fixture has both.
 - [ ] A symlink in a leaf, a file over 1 MiB, an indirect Go requirement, a name with `|` or a marker in it: none gives an edge. Each one but the indirect requirement is in `Skipped`.
 - [ ] `WriteWiring` twice leaves one block and the text around it as it was. Two begin markers, or an end before a begin, is an error and the file is unchanged.
 
 **Review focus pinned by tests:**
+
 - Leaf files are written by an agent: `TestWiringIgnoresSymlinksHugeFilesAndNamesThatBreakTheTable`.
 - A guess is never a fact: `TestEveryEdgeIsTaggedExtractedOrInferred`, and the `copies` and `mentions` rows of `TestWiringReadsManifestsLockfilesContractsAndImports`.
 - Same input, same bytes: `TestWiringIsTheSameBytesEveryTime`, `TestTheFixtureBlockMatchesItsGoldenFile`.
 - A person's text is not cut: `TestTheBlockReplacesItselfAndKeepsThePeopleText`, `TestAStrayMarkerIsAnErrorAndCutsNothing`.
 
 **Named test:** `go test ./internal/routing` in `odin`. **Layer:** `odin`. **Size:** M, S and M (171, 433, 282). **Depends on:** v0-T250.
-
 
 #### Part 1: the edge and the block (`0251122`)
 
@@ -6214,7 +6243,7 @@ require (
 
 Create `testdata/routing/project/api/go.sum`:
 
-```
+```text
 github.com/go-chi/chi/v5 v5.2.3 h1:fixturehashchi=
 github.com/go-chi/chi/v5 v5.2.3/go.mod h1:fixturehashchimod=
 github.com/jackc/pgx/v5 v5.7.6 h1:fixturehashpgx=
@@ -6276,7 +6305,7 @@ Create `testdata/routing/project/web/package.json`:
 
 Create `testdata/routing/project/web/src/main.ts`:
 
-```
+```text
 export const app = 1
 ```
 
@@ -7053,10 +7082,12 @@ Spec §8.2: the impact index says what a change to a file or contract affects. I
 guess apart from the facts. One commit (`26f99eb`).
 
 **Files (in `odin`):**
+
 - Create: `internal/routing/impact.go`, `internal/routing/impact_test.go`, `testdata/routing/impact.golden.json`
 - Modify: `internal/routing/wiring.go` (`Result` gains `Leaves`, `Contracts`)
 
 **Interfaces:**
+
 - Consumes: `routing.Result` and the edges of v0-T251.
 - Produces: `routing.Impact` (JSON file `.ygg/impact.json`, schema `ygg.impact/v1`, `"bound": "lower"`), with `edges`, `extracted`, `inferred`, `contracts[]` (`id`, `path`, `owner`, `sha256`, `readers{extracted[],inferred[]}`), `reach{<node>: {extracted[], inferred[]}}` and `inferred_edges[]` (every guess, in full).
 - Produces: `routing.ImpactOf(*Result) *Impact`, `(*Impact).Reaches(node)`, `(*Impact).Contract(path)`, `(*Impact).JSON()`, `routing.WriteImpact(dir, imp)`, `routing.ReadImpact(dir)`, `routing.ParseImpact([]byte)` (strict: unknown field, other schema or a bound other than `lower` is an error), `routing.ImpactFile`.
@@ -7064,12 +7095,14 @@ guess apart from the facts. One commit (`26f99eb`).
 - A contract's `readers` are the leaves other than its owner that a change to it reaches.
 
 **Acceptance criteria:**
+
 - [ ] A change to the api's contract reaches web and worker by extracted edges. A change to web reaches worker only as a guess (the README mention).
 - [ ] A bump of `go:github.com/go-chi/chi/v5` reaches `api`, and `web` and `worker` through `api`.
 - [ ] The fixture index has 24 edges: 22 extracted and 2 inferred, and the two guesses are in `inferred_edges`.
 - [ ] Two runs give the same bytes, and the bytes equal the golden file. `WriteImpact` then `ReadImpact` round-trips.
 
 **Review focus pinned by tests:**
+
 - A lower bound, and guesses apart: `TestTheImpactIndexIsALabelledLowerBoundAndReportsGuessesApart`.
 - A guess is never counted as a fact: `TestAChangeToALeafReachesWhatDependsOnIt` (web reaches worker in `inferred` only).
 - Same input, same bytes: `TestTheImpactIndexIsTheSameBytesEveryTimeAndRoundTrips`.
@@ -7471,10 +7504,12 @@ Spec §8.3: a generated file committed at a pointer move is refused if it has fe
 makes the guard count edges. It also puts the generators into the move. One commit (`e6c4a3b`).
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/routing.go`, `internal/engine/routing_test.go`
 - Modify: `internal/shrink/shrink.go`, `internal/shrink/shrink_test.go`, `internal/pointer/pointer.go`, `internal/routing/block.go` (`WiringRows`), `internal/routing/impact.go` (`ImpactRows`), `internal/engine/land.go`, `internal/engine/land_test.go`, `internal/engine/ledgergaps_test.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.EventRoutingIndexBuilt` and its fields `IndexKind`, `Edges`, `Extracted`, `Inferred` (v0-T245).
 - Produces: `shrink.Guard(file, prev, next)`. For a file called `REPOS.md` it counts the rows of the wiring block. For `.ygg/impact.json` it counts `edges + contracts + reach entries`. Any other file counts its lines, as `shrink.Check` does (which stays). A `next` with no block, or that is not an index, has no rows. A `prev` that cannot be counted leaves nothing to compare with: `next` passes. The limit is the spec's: under half is refused.
 - Produces: `routing.WiringRows([]byte) (rows int, found bool)`, `routing.ImpactRows([]byte) (rows int, ok bool)`.
@@ -7482,6 +7517,7 @@ makes the guard count edges. It also puts the generators into the move. One comm
 - A pointer node that lists `REPOS.md` or `.ygg/impact.json` in `generated` has Odin rebuild that file before the move (`engine.shipRouting`), in the project umbrella only. For each file it writes, it logs `routing_index_built` (`kind` `wiring` or `impact`, `edges`, `extracted`, `inferred`; the ledger note says how many files were left out, if any).
 
 **Acceptance criteria:**
+
 - [ ] A `REPOS.md` with 40 lines of text and a block of 10 edges, replaced by one with the same text and 2 edges, is refused. `shrink.Check` alone misses it.
 - [ ] Exactly half passes. A first block in a file with none passes. A `REPOS.md` that lost its block is refused.
 - [ ] An impact index of 20 edges replaced by one of 3 is refused; 10 passes; a damaged old index passes; an unreadable new one is refused.
@@ -7489,6 +7525,7 @@ makes the guard count edges. It also puts the generators into the move. One comm
 - [ ] The same run with a `REPOS.md` of 6 committed edges stops at `shrink-guard` in unattended mode; the gate file says `REPOS.md keeps 1 of its 6 rows`.
 
 **Review focus pinned by tests:**
+
 - The guard counts the index, not the prose around it: `TestGuardCountsTheWiringRowsNotTheProse`, `TestGuardRefusesAnImpactIndexThatLostEdges`.
 - A refusal stops the move for a person, in every mode: `TestAnIndexThatLostEdgesStopsAtTheShrinkGuard`.
 - The move ships both indexes and the ledger records them: `TestAPointerMoveShipsBothIndexesAndLogsThem`.
@@ -8007,10 +8044,12 @@ Spec §3.4 and §8.2. The gate sits before a pointer node and judges the move th
 changes (`0549cb7`), part 2 puts the judgement into the gate node (`5e76894`).
 
 **Files (in `odin`):**
+
 - Create: `internal/routing/contract.go`, `internal/routing/contract_test.go`, `internal/engine/contract.go`, `internal/engine/contract_test.go`
 - Modify: `internal/gate/decide.go`, `internal/gate/decide_test.go`, `internal/engine/gates.go`, `internal/engine/engine.go`
 
 **Interfaces:**
+
 - Consumes: `routing.Impact` (v0-T252), `gungnir.EventPointerContractChecked` with `Move`, `Evidence`, `Verdict` (v0-T245), `leaf.Git`.
 - Produces: `routing.Judge(ctx, imp, changes, differ) Judgement{Verdict, Evidence, Reason, Contracts}`. `Change{Path, Old, New}`: the path is from the project root; `Old` is nil for a file the move adds, `New` for one it deletes. Only a file whose name ends in `openapi.yaml` or `openapi.yml` can be a contract change. Per contract file:
   - oasdiff ran and finds no change: `pass`, evidence `oasdiff` (only the layout moved);
@@ -8024,6 +8063,7 @@ changes (`0549cb7`), part 2 puts the judgement into the gate node (`5e76894`).
 - The gate node: `reachGate(ctx, r, n)` calls `contractFacts` when `n.Gate` is `pointer-contract`. It finds the next pointer node of the same task, takes the commit the umbrella points at (`HEAD:<leaf>`) and the leaf's `main`, lists the changed files with `git diff --name-only` in the leaf's own git (`leaf.Git`, never the leaf's `.git` file), reads the old and the new content with `git show`, and reads the impact index shipped at `HEAD` of the umbrella. A move of more than 64 contract files escalates. It logs `pointer_contract_checked` and writes a `## Contract evidence` section into the gate file.
 
 **Acceptance criteria:**
+
 - [ ] Every row of `TestJudgeByTheEvidenceOfTheIndex` holds (11 rows: the cases above).
 - [ ] An inferred-only edge never gives `pass`, with oasdiff absent, failing, or the index empty.
 - [ ] `OasdiffCLI` returns `{}` for equal files, `Changed` for different files and `Breaking` when `breaking` exits 1, against a stand-in program; a missing binary is an error.
@@ -8033,12 +8073,12 @@ changes (`0549cb7`), part 2 puts the judgement into the gate node (`5e76894`).
 - [ ] A contract that only a guess reaches stops in both modes, with `inferred` and `escalate` in the ledger.
 
 **Review focus pinned by tests:**
+
 - A guess never passes: `TestAnInferredOnlyEdgeNeverGivesPass`, `TestAContractOnlyAGuessReachesEscalatesInEveryMode`, and the `Escalate` rows of `TestPointerContractFollowsTheJudgement`.
 - The 5b table still holds: `TestModeTimesApprovalPointTable` (unchanged).
 - The gate reads Odin's own git on the leaf and the index Odin shipped, not files in the leaf's working copy: `contractJudgement` uses `leaf.Git` and `git show HEAD:.ygg/impact.json`.
 
 **Named test:** `go test ./internal/routing ./internal/gate ./internal/engine -run 'Judge|Inferred|Oasdiff|PointerContract|AMoveThat|AContractOnly'`. **Layer:** `odin`. **Size:** M and M (295, 293). **Depends on:** v0-T252, v0-T253.
-
 
 #### Part 1: the judgement (`0549cb7`)
 
@@ -8825,14 +8865,17 @@ index. A scripted baseline (a grep over the leaves) gives the figure to beat. Th
 bench (`39ae718`), the gate on shipping (`bb841e2`).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/pack_routing_test.go`
 - Modify: `schema/pack.go`, `schema/pack.schema.json`
 
 **Files (in `odin`):**
+
 - Create: `internal/routing/bench.go`, `internal/routing/bench_test.go`, `testdata/routing/bench.yaml`
 - Modify: `internal/engine/routing.go`, `internal/engine/routing_test.go`
 
 **Interfaces:**
+
 - Produces (Gungnir): `schema.Pack.Routing *PackRouting{Threshold float64; Bench string}`, YAML key `routing`. `threshold` is above 0 and at most 1 and is required when the block is there. `bench` is a path inside the project and defaults to `schema.DefaultBenchPath` (`.ygg/routing-bench.yaml`). `PackRouting.BenchPath()`. A pack with no block has `Routing == nil`.
 - Produces: `routing.LoadBench(path)`: one YAML document, no unknown field, schema `ygg.routing-bench/v1`, 1 to 500 questions, unique ids, known kinds, from a regular file (not a link) of at most 1 MiB. A question is `{id, kind, about, arg?, answer[]}`. Kinds: `consumers`, `contract-owner`, `reached-by`, `contract-readers`, `pin` (needs `arg`), `services`.
 - Produces: `routing.Answerer`; `routing.IndexAnswerer(res, imp)` (one lookup per question, extracted edges only); `routing.GrepBaseline(dir, leaves)` (a scripted stand-in for an agent without an index: it searches the leaves' text for the name; it can only answer `consumers`, `reached-by`, `contract-owner` and `contract-readers`).
@@ -8841,6 +8884,7 @@ bench (`39ae718`), the gate on shipping (`bb841e2`).
 - The bench lives in the project umbrella. No agent mounts the umbrella, so an agent cannot write the answers it is scored on.
 
 **Acceptance criteria:**
+
 - [ ] The fixture bench has 8 questions. The index answers 8 of 8. The grep baseline answers 2 of 8.
 - [ ] An index that lost its `imports` and `needs` edges scores under 8/8 and does not ship at 0.9.
 - [ ] `Ships` is right at the edges: 7/8 at 0.875 ships, 7/8 at 0.9 does not, 4/5 at 0.8 ships, 0/0 never ships.
@@ -8849,13 +8893,13 @@ bench (`39ae718`), the gate on shipping (`bb841e2`).
 - [ ] In a run, an index at the threshold ships with the score in the ledger. A wrong answer, or no bench at all, fails the move, writes no `REPOS.md` and leaves the pointer.
 
 **Review focus pinned by tests:**
+
 - An index ships only at or above the threshold: `TestAnIndexShipsOnlyAtOrAboveTheThreshold`, `TestAnIndexUnderTheThresholdDoesNotShip`.
 - The bench runs with no model: `TestTheIndexAnswersTheFixtureBenchRightFirst` uses `IndexAnswerer` only.
 - The threshold and the list live in the repo: the pack block (`TestAPackSetsTheRoutingBenchThreshold`) and `testdata/routing/bench.yaml`.
 - A bench that cannot be read exactly is refused: `TestABenchThatIsNotExactIsRefused`.
 
 **Named test:** `go test ./internal/routing ./internal/engine -run 'Bench|Grep|Threshold|Unmeasured|ShipsOnly'` in `odin`, and `go test ./schema -run Routing` in `gungnir`. **Layer:** `gungnir` and `odin`. **Size:** S, M and S (73, 340, 76). **Depends on:** v0-T252, v0-T253.
-
 
 #### Part 1: the pack's `routing` block, in `gungnir` (`5a03331`)
 
@@ -9559,23 +9603,28 @@ through a workspace that holds the local Gungnir (`go.work`), because midgard-re
 **helheim-go has no graph** (its `pack.yaml` says: "A run takes its graph from its lead realm"; `TestThePackLoadsAndOffersTheRecipeEveryBuildRealmOffers` pins `Graph == ""`). So it gets no gate. What it owes routing is wired: a contract that Odin finds, and `oasdiff` in the image. A test pins both, and the architecture page documents routing.
 
 **Files (in `midgard-react`):**
+
 - Modify: `graph.yaml`, `pack_test.go`, `docs/architecture.md`
 
 **Files (in `helheim-go`):**
+
 - Modify: `pack_test.go`, `docs/architecture.md`
 
 **Interfaces:**
+
 - Consumes: the `pointer-contract` gate and the shipping of indexes at a move (v0-T253, v0-T254). No new field in Gungnir's graph schema: the `move` node uses `generated`, which exists.
 - Produces: in the task body of `midgard-react`'s graph, a node `{ id: contract-gate, kind: gate, gate: pointer-contract }` between `pointer-gate` and `move`, and `generated: [REPOS.md, .ygg/impact.json]` on `move`. The body is now `implement, feature-gate, merge-gate, land, pointer-gate, contract-gate, move`. The gate re-runs `implement` when a person rejects it (every gate gets the loop before it).
 - The pack of midgard-react sets **no** `routing` block (decision 6). The test says so, so that nobody turns the threshold on by accident.
 - The docs: a "Routing" section in each `docs/architecture.md`: what Odin builds, which files a leaf gives it, how a contract is named (a file name that ends in `openapi.yaml`), how the gate judges, and how a project turns the bench on.
 
 **Acceptance criteria:**
+
 - [ ] The graph loads with Gungnir's schema, and `contract-gate` is right before `move` and after `land`.
 - [ ] `move` lists both indexes in `generated`.
 - [ ] The web template holds one OpenAPI file and its name ends in `openapi.yaml`; the api template's OpenAPI files all do, and `go-contract.sh` runs `oasdiff breaking`.
 
 **Review focus pinned by tests:**
+
 - The gate judges the move after it, so its place matters: `TestTheContractGateComesBeforeTheMoveAndTheMoveShipsTheRoutingIndexes`.
 - A rename of a template contract would hide it from routing: `TestTheTemplatesContractIsNamedSoRoutingFindsIt` in both repos.
 
@@ -9885,6 +9934,7 @@ done
 ```
 
 (`gofmt -l .` and `go vet ./...` print nothing. The `go test -race ./...` lines above are those of the tree with all nine commits.)
+
 ### Task v0-T257: the dependency policy rung for a Go leaf (`go-deps.sh`): tagged releases, a minimum patched version, `govulncheck` and OSV
 
 Spec §9.6 says a dependency pins the minor version line, with a minimum patched version, and is gated on `govulncheck` and OSV. This task makes that a rung. The policy is a JSON file baked into the image beside the scripts, owned by root. The script passes its path to a small checker. The script never reads a policy file from the leaf. A leaf that carries its own `deps-policy.json` changes nothing.
@@ -9894,6 +9944,7 @@ For Go, "pinned to the minor line" means this: `go.mod` already names an exact v
 The rung is its own check, `deps`, and not a part of `security`. Why: it needs no network for its first half, so it fails fast and cheap before the audits run. Odin's `deps.checked` event (v0-T245) can name the check. The spec puts it in rung 4 with `security`, so `deps` sits directly before `security` in the leaf's list.
 
 **Files (in `helheim-go`):**
+
 - Modify: `checks_test.go`
 - Create: `deps_test.go`
 - Create: `devcontainer/checks/config/deps-policy.json`
@@ -9905,11 +9956,13 @@ The rung is its own check, `deps`, and not a part of `security`. Why: it needs n
 - Modify: `templates/api/AGENTS.md`
 
 **Interfaces:**
+
 - Consumes: the baked `devcontainer/checks/config/` folder (the B-049 pattern: `go-static.sh` reads `config/golangci.yml` from beside itself) and the module-cache check of `go-security.sh`.
 - Produces: the check `deps` in `pack.yaml` (`/opt/ygg/checks/go-deps.sh`), listed after `contract` and before `security`. The policy file `devcontainer/checks/config/deps-policy.json` with the contract shape `{"schema":"ygg.deps/v1","pin":"minor","minimum":{...},"audit":["govulncheck","osv"]}`. The checker `devcontainer/checks/lib/godeps.go` (`//go:build ignore`, standard library only, run with `go run`): `check <policy>` and `audit <policy>`. The checker refuses a policy with another schema, another pin, an unknown audit name, a bad minimum or an unknown field.
 - The policy file in this realm: `golang.org/x/text` at or above `0.42.0` (the version Phase 5b pinned for the two known vulnerabilities, decision 12), audits `govulncheck` and `osv`.
 
 **Acceptance criteria:**
+
 - [ ] A clean leaf passes, and the rung runs `govulncheck ./...`, `govulncheck -tags integration ./...` and `osv-scanner scan source -L go.mod`. An audit tool that exits non-zero fails the rung.
 - [ ] A direct requirement at a pseudo-version or a pre-release fails. A `replace` of any kind fails. A package below its minimum fails, also when it is indirect and also when it is a pre-release of the minimum. Each problem is printed, with a count.
 - [ ] When the policy fails, no audit tool runs.
@@ -10441,7 +10494,6 @@ index 114a23c..0f1c7b6 100644
    else from the environment that is not named in `docs/`.
 ```
 
-
 - [ ] **Step 6:** the task's ending (see "How each task lands" in the 5b plan), then commit in `helheim-go`.
 
 ```bash
@@ -10465,6 +10517,7 @@ The web rung is the twin of v0-T257. The policy file has the same shape and the 
 `web-deps.sh` starts with `web-protected.sh`, like every web rung. The audit names differ from the Go ones (`npm-audit` for `govulncheck`), because the contract shows only the Go list. The checker refuses a policy that names a tool of the other ladder.
 
 **Files (in `midgard-react`):**
+
 - Modify: `checks_test.go`
 - Create: `deps_test.go`
 - Create: `devcontainer/checks/config/deps-policy.json`
@@ -10476,11 +10529,13 @@ The web rung is the twin of v0-T257. The policy file has the same shape and the 
 - Modify: `templates/web/AGENTS.md`
 
 **Interfaces:**
+
 - Consumes: `web-protected.sh` (run first), `config/` (the baked folder; it now also holds `deps-policy.json`, which is data and not a tool config).
 - Produces: the check `deps` in `pack.yaml` (`/opt/ygg/checks/web-deps.sh`) after `contract` and before `security`. The policy `{"schema":"ygg.deps/v1","pin":"minor","minimum":{"vite":"8.3.2"},"audit":["npm-audit","osv"]}`. The checker `devcontainer/checks/lib/webdeps.mjs` (node modules only): `check <policy>` and `audit <policy>`.
 - The minimum in this realm is a floor, not a reaction to an advisory: `vite` at `8.3.2`, the version the template pins and the reviewed one. There is no advisory data in this environment to name a better number. **Decision for the founder:** which packages get a patched floor, and at which version.
 
 **Acceptance criteria:**
+
 - [ ] A clean leaf passes and the calls are, in order: `npm ci --ignore-scripts --no-audit --no-fund`, `npm audit --audit-level=high`, `osv-scanner scan source -L package-lock.json`. A failing audit tool fails the rung.
 - [ ] Each of these fails and runs neither `npm` nor an audit tool: `^19.3.0`, `*`, `latest`, `>=19.0.0`, `19.x`, a `github:` URL, a `file:` path, an `npm:` alias, a caret in `optionalDependencies`; a locked `vite` below the minimum; a nested copy of `vite` below the minimum (the message names the nested path). A package of another scope with the same last name is not matched.
 - [ ] A missing `package-lock.json` fails with "no package-lock.json".
@@ -10975,7 +11030,6 @@ index 90804e4..c567577 100644
  
 ```
 
-
 - [ ] **Step 6:** the task's ending, then commit in `midgard-react`.
 
 ```bash
@@ -10997,6 +11051,7 @@ Spec §9.6 says a version bump rolls to one canary product first, and does not r
 For each product the command does this, in this order. It reads the manifest (`go.mod` or `package.json`) and refuses a bump that goes down. It takes a snapshot of the product's files. It runs the ecosystem tool in the product's sandbox (`go get`, or `npm install`). It checks that only the manifest and its lock file changed, and that the manifest now names the new version. It runs the `deps` check, then the `unit` check, through the same check runner (`gleipnir/checks`) that the loop's ladder uses. On any failure it stops the sandbox, restores the snapshot byte for byte, and writes the `deps_bump` line with verdict `fail`. A canary failure ends the command: no rollout product is opened, read for change, or touched. A canary pass is written first (`deps_bump` stage `canary` verdict `pass`). Then each rollout product goes through the same steps, one at a time. The first rollout failure stops the command and restores that product only. The products that passed before it keep the new version. The command never writes a policy file.
 
 **Files (in `odin`):**
+
 - Create: `internal/deps/version.go`, `internal/deps/version_test.go`
 - Create: `internal/deps/manifest.go`, `internal/deps/manifest_test.go`
 - Create: `internal/deps/snapshot.go`, `internal/deps/snapshot_test.go`
@@ -11005,11 +11060,13 @@ For each product the command does this, in this order. It reads the manifest (`g
 - Modify: `internal/cli/cli.go` (usage, the command table, two fields of `flags`)
 
 **Interfaces:**
+
 - Consumes: `gleipnir/checks` (`Run`, `Spec`, `Result`), `gungnir.Runner`, `gungnir.Sandbox`, `gungnir.SandboxSpec`, `gungnir.Event` with `EventDepsBump` and `EventDepsChecked` (v0-T245), `internal/ledger`, `internal/lock` and `run.RunsLock`, `run.NewIDNow`, `internal/realm` (`Store`, `Load`), `internal/tree`.
 - Produces: package `internal/deps`. `Bumper{Open Opener; Log func(gungnir.Event) error; LogDir string; Timeout time.Duration}` and `(*Bumper).Bump(ctx, pkg, version, canary Product, rollout []Product) (Report, error)`. `Opener` is the interface the tests fake: `Open(ctx, Product) (gungnir.Runner, stop func(ctx) error, error)`. `Product{Name, Dir, Realm, Checks}`. `Report{Steps []Step}` with `Failed()`. `*Refusal` for a bump refused before it changed anything. `Find(dir, pkg) (Manifest, error)`, `Manifest.Command`, `ParseVersion`, `Version.Compare`, `ValidPackage`, `Take(dir) (*Snapshot, error)`, `Snapshot.Changes`, `Snapshot.Restore`. In `internal/cli`: the command `ygg deps bump`, and the variable `newDepsSandbox`, which tests replace with a fake.
 - The command line: `ygg deps bump <package> <version> --canary <leaf> [--rollout <leaf>]... [--project <dir>] [--config <factory.yaml>]`.
 
 **Acceptance criteria:**
+
 - [ ] `Find` reads a requirement from `go.mod` in the single-line form, in a `require (...)` block, and with `// indirect`. It reads `package.json` in `dependencies`, `devDependencies` and `optionalDependencies`. It refuses a pseudo-version, a `^` range, a tag, a URL, a package in neither file and a package in both.
 - [ ] Versions order by semantic-version rules, with pre-releases before their release. A name that starts with `-`, holds `..`, a space or a shell sign is not a package name.
 - [ ] A snapshot restores a changed file, a removed file, a created file and a created folder, a file mode and a symlink, byte for byte. It skips `.git` (also a `.git` file) and `node_modules`. It refuses a product over its size limit.
@@ -11024,6 +11081,7 @@ For each product the command does this, in this order. It reads the manifest (`g
 - [ ] `ygg deps bump` through the CLI: exit 0 with the change in both working copies and a verified ledger; exit 1 for a failed canary with all files as they were; exit 2 for each refusal, with no `.factory/deps` folder; in a project with a sandbox, one sandbox per product, with the stack, egress and git directory of the product, and every sandbox stopped.
 
 **Review focus pinned by tests:**
+
 - 1, a check an agent can weaken: a policy file, or any file that is not the manifest or its lock, that a tool changes fails the product and is put back (`TestAToolThatChangesAPolicyFileFailsTheProductAndTheFileIsPutBack`). The bump never reads a policy file of a product, and the realm's policy is baked (v0-T257).
 - New line proposed for 5c: **a bump that goes on after a failure, or leaves a product half changed.** A canary failure stops the command and touches no rollout product (`TestACanaryThatFailsIsPutBackByteForByteAndNoRolloutProductIsTouched`, `TestDepsBumpPutsAFailedCanaryBackAndTouchesNoRolloutProduct`, and with the real `go`, `TestTheRealGoCanaryThatBreaksTheBuildIsPutBackAndTheRolloutProductIsNotTouched`). A rollout failure stops at that product (`TestARolloutStopsAtTheFirstFailureAndPutsBackOnlyThatProduct`). A cancel restores (`TestACancelledBumpPutsTheProductBackAndStopsItsSandbox`). A product is restored byte for byte (`TestSnapshotRestoresChangedRemovedAndCreatedFilesByteForByte`).
 - New line proposed for 5c: **a bump that goes down, or a name the tool reads as an option.** `TestARefusalChangesNothingAndOpensNothing`, `TestValidPackageRefusesAnOptionAndAPathEscape`, `TestDepsBumpRefusalsExitTwoAndLeaveNoTrace`.
@@ -11454,7 +11512,6 @@ func TestFindRefusesWhatItWouldHaveToGuess(t *testing.T) {
 }
 ```
 
-
 #### Part 2: the snapshot
 
 A snapshot is how a failed bump gets back. It reads every file of the product into memory, with the mode and the target of each symlink. `Changes` says which files differ now. `Restore` writes the old bytes back, removes the files the tool created, and removes the folders it created when they are empty. A walk that meets a skipped file (a `.git` file in a leaf is one) must not return `SkipDir`: that would skip the other files of the folder. The first version of the code did, and `TestSnapshotRestoresChangedRemovedAndCreatedFilesByteForByte` found it, because its fixture has a `.git` file. The code below is the fixed one (`skip`).
@@ -11741,7 +11798,6 @@ func TestSnapshotRefusesAProductTooBigToUndo(t *testing.T) {
 	}
 }
 ```
-
 
 #### Part 3: `Bump`
 
@@ -12218,7 +12274,6 @@ func cut(s string, n int) string {
 }
 ```
 
-
 #### Part 4: the other tests of `Bump`, and the real `go`
 
 These tests pin behavior that part 3 already has. They were written after the code, so they have no red step. The Evidence lists the mutations that make them fail.
@@ -12591,7 +12646,6 @@ func TestTheRealGoCanaryThatBreaksTheBuildIsPutBackAndTheRolloutProductIsNotTouc
 }
 ```
 
-
 #### Part 5: the command
 
 `ygg deps bump` finds the project (`tree.FindRoot`), takes the runs lock, and turns each path into a `deps.Product`: the leaf node, its realm (pinned by the project, else the lead), and the realm's checks. It starts the sandbox driver only when `factory.yaml` has a `sandbox` section. The driver config is that of `prepareSandbox` (the operator's uid and gid, the mounts, the images of the first product's stack). `newDepsSandbox` is a variable so a test can put a fake there. Each product gets its own `SandboxSpec`: the product's leaf, git directory and parent, the egress of its realm's pack, its realm's stack and services. The ledger and its folder are made when the first line is written.
@@ -12927,7 +12981,6 @@ index 2e3203f..d8cdacc 100644
  
 ```
 
-
 #### Part 6: the command's tests
 
 The fixture is a project of three Go leaves, `repos/api`, `repos/web` and `repos/old`, pinned to a toy realm called `helheim-go` that is written into a temporary store. The toy realm's `deps` check is `test -f go.mod`, and its `unit` check is `test -f ok.txt`. A `go` script first on `PATH` stands for `go get`: it writes the version into `go.mod`. So the test needs no network. For the sandbox test the toy realm also names a stack, and `newDepsSandbox` returns the `sandboxfake` (which runs commands on the host, in the leaf's folder). A failed canary is made by removing `ok.txt` in `repos/api`.
@@ -13137,7 +13190,6 @@ func TestDepsBumpRunsToolAndChecksInTheSandboxOfEachLeafAndStopsIt(t *testing.T)
 }
 ```
 
-
 **Step: the end of the task.**
 
 ```bash
@@ -13148,11 +13200,12 @@ go test -count=1 -race ./...     # every package ok
 
 **Evidence (v0-T259):** built and run in the reference workspace on 2026-10-18 as the six commits above on branch `grader/odin` of `odin` (not pushed), through `go.work` (the local Gungnir with the events of v0-T245). Parts 1, 2, 3 and 5 had a red step with a build failure as shown. Parts 4 and 6 pin behavior of the code before them. `gofmt -l .` and `go vet ./...` print nothing. `go test -count=1 -race ./...` passes in every package of `odin` (`internal/cli` 47.7 s, `internal/engine` 112 s, `internal/deps` 6.2 s). The real `go` (1.26.4) ran in the two tests of `bump_go_test.go` with no network: a canary and a rollout product moved from 1.0.0 to 1.0.1 and the ledger had four lines; a canary moved to 1.1.0 failed its `unit` rung (`go build` fails, `F` is gone), was restored with every file of both products as before, and the ledger had two lines (`deps_checked` pass, `deps_bump` canary fail). Five mutations of `bump.go` were tried, each undone with `git checkout`, and each failed the tests named for it: the restore made never to run (five tests failed, among them `TestACanaryThatFailsIsPutBackByteForByteAndNoRolloutProductIsTouched` and the real-go canary test); the `break` after a failed product removed (three tests failed: the canary test, the rollout test and the real-go test); the check for files outside the manifest made never true (`TestAToolThatChangesAPolicyFileFailsTheProductAndTheFileIsPutBack` failed); the downgrade refusal made never true (`TestARefusalChangesNothingAndOpensNothing` failed); a failed `unit` check read as a pass (three tests failed). One real bug was found by a test and fixed in part 2: a walk that skipped a `.git` file with `SkipDir` skipped its whole folder. Not run: the real `npm` (decision 11); a real sandbox engine (the sandbox is the fake; the same `Up`, `Bind` and `Down` calls that a run makes); a real bump of a web or Go product of the factory (the policy rungs of v0-T257 and v0-T258 ran only in their own tests). `GOWORK=off go test` waits for the pins of v0-T245 (the pinned `gungnir` has no `EventDepsBump`).
 
-## Exit state of this part
+### Exit state of this part
 
 - `ygg deps bump <package> <version> --canary <leaf> [--rollout <leaf>...]` exists, with exit codes 0, 1 and 2, in `odin`.
 - A canary failure leaves every file as it was and writes one `deps_bump` line with stage `canary` and verdict `fail`. A pass writes `deps_bump` stage `canary` verdict `pass`, then one line for each rollout product.
 - Open questions for the founder: decisions 1, 3, 4 (doctor and status), 5 (a bump does not commit) and 12.
+
 ### Task v0-T260: the two-tenant authorisation harness: every route with a resource id has a registered cross-tenant test
 
 Spec §9.5 rung 4: "every OpenAPI route that takes a resource ID MUST have a registered test. In that test, user B requests user A's resource and gets 403/404." This task builds the harness in the Go realm.
@@ -13168,6 +13221,7 @@ Why a rung of its own, `authz`, and not a part of `security`: it compiles and ru
 **Limit, in plain words.** A test in the leaf can print a fake `YGG-AUTHZ` line, and the leaf writes `authztest` itself. The harness stops the case where nobody wrote the test, or the test never asked user B, or user B got the resource. It does not stop a hostile author. The reviewers of rung 6 read the test. Putting `authztest` in the image would not help: the leaf's test controls the handler and the requests.
 
 **Files (in `helheim-go`):**
+
 - Create: `authz_test.go`
 - Modify: `devcontainer/Containerfile`
 - Create: `devcontainer/checks/go-authz.sh`
@@ -13183,10 +13237,12 @@ Why a rung of its own, `authz`, and not a part of `security`: it compiles and ru
 - Create: `templates/api/internal/authztest/authztest_test.go`
 
 **Interfaces:**
+
 - Consumes: `openapi.yaml` of the leaf (the contract it owns); the module-cache check of the other Go rungs; the `go.yaml.in/yaml/v3 v3.0.5` hashes of the realm's `go.sum`.
 - Produces: the check `authz` in `pack.yaml` (`/opt/ygg/checks/go-authz.sh`); the command `ygg-authz plan|check` (stdout lines `require <op> <METHOD> <path> <test>`, `public <op>: <reason>`, `covered <op> (<test>: user A <n>, user B <n>)`, `missing <op> <METHOD> <path>: <why>`, then `authz: ok` or `authz: N problem(s)`); `authztest.Check`, `authztest.Case`, `authztest.T`, `authztest.UserA`, `authztest.UserB`, `authztest.Out`; the registry schema `ygg.authz/v1`; a rule in the template's `AGENTS.md` and the implementer prompt.
 
 **Acceptance criteria:**
+
 - [ ] A covered route passes and prints `covered getPhoto (TestCrossTenantGetPhoto: user A 200, user B 404)`; 403 also passes. A route with no resource id (`/healthz`) is never asked for a test.
 - [ ] A route with no test fails: `missing getPhoto GET /photos/{photoId}: no passing test TestCrossTenantGetPhoto`. A test of another name does not cover it.
 - [ ] User B getting 200, 500 or 401 fails. User A not getting a 2xx fails (in `authztest`).
@@ -14278,7 +14334,6 @@ index 0f1c7b6..9ccb9fe 100644
    query or a file path.
 ```
 
-
 - [ ] **Step 7:** the task's ending, then commit in `helheim-go`.
 
 ```bash
@@ -14292,6 +14347,7 @@ git commit -m "feat(checks): two-tenant authorisation harness go-authz.sh with a
 ```
 
 **Evidence (run 2026-10-18, commit 3d352bb in the reference clone):** `go vet ./...` clean, `go test -count=1 -race ./...` ok (32 s), with the real `go`, `git` and the real `ygg-authz` built by the test from the folder the Containerfile builds. `golangci-lint` (installed here) ran on the template through `go-static.sh` in `TestTheUnchangedTemplatePassesStaticAndTDDAndItsSqlcOutputIsOwned` and passed after three `gosec` and `errcheck` findings in `authztest` were fixed. **On a real engine (rootless Podman 5.8):** the Containerfile built with the new `COPY` and `go build` step (exit 0). `/usr/local/bin/ygg-authz` is `-rwxr-xr-x root root`. In a derived image holding a leaf with the route `GET /photos/{photoId}`, `/opt/ygg/checks/go-authz.sh` failed with the `missing` output above when the test was absent and printed `covered … authz: ok` when the test was added. **Not run:** the rung was not run by Odin in a sandbox with the firewall and the agent's user (that is v0-H14 and v0-H15 territory, and the firewall allows the Go proxy already); `oasdiff`, `vacuum` and `sqlc` are not used by this rung.
+
 ### Task v0-T261: the smoke task `smoke-notes`, its public sample suite and the task check
 
 Mimir's only task of this phase. Branch `smoke-notes` from `main` in `mimir`, before step 1. The grader (v0-T246 to
@@ -14301,6 +14357,7 @@ sample suite that tests the grader's wiring. The hidden suite of `smoke-notes` i
 the founder in `huldra` and no agent reads it.
 
 **Files (in `mimir`):**
+
 - Create: `smoke-notes/instruction.md`, `smoke-notes/task.toml`, `smoke-notes/environment/Dockerfile`,
   `smoke-notes/environment/package.json`, `smoke-notes/environment/package-lock.json`,
   `smoke-notes/sample-suite/README.md`, `smoke-notes/sample-suite/tests/manifest.json`,
@@ -14311,6 +14368,7 @@ the founder in `huldra` and no agent reads it.
 - Modify: `README.md`, `AGENTS.md`
 
 **Interfaces:**
+
 - Consumes: the task layout of `client-gallery-lite` (`task.toml` keys, the Dockerfile style, a pinned Playwright base by digest) and
   the grader contract: `tasks_dir/<task-id>/{task.toml,instruction.md,environment/}`, suite at `.../<suite>/tests/`,
   `bash /tests/test.sh`, `/logs/verifier/results.json` in Playwright's JSON format, `tests/manifest.json` (`ygg.suite/v1`).
@@ -14320,6 +14378,7 @@ the founder in `huldra` and no agent reads it.
   v0-T247 and v0-T248 may use `smoke-notes/sample-suite/` as a fixture; v0-T262 uses the task with scripted agents.
 
 **Acceptance criteria:**
+
 - [ ] `task.toml` has every key the grader reads; `brief_sha256` is the SHA-256 of `instruction.md`; `suite = "v1"`;
   `environment_mode = "separate"`; the weights are over `account`, `notes` and `security` and sum to 1; the limits are short
   (`budget_usd = 5`, agent 3600 s, verifier 300 s).
@@ -14341,6 +14400,7 @@ later tasks use its output).
 split the check script into its own task. The founder chooses; the text below is one commit as asked.
 
 **Review focus pinned by this task.**
+
 - The hidden suite never goes in `mimir`: the sample suite is labelled PUBLIC in its README, `AGENTS.md` says so, and the
   reference solution is outside `environment/`, so the grader's image (built from `environment/`) and any agent's machine
   never hold it. `scripts/check-task.test.sh` pins the shape; the label is by review.
@@ -15209,6 +15269,7 @@ git commit -m "Add the smoke-notes task, its public sample suite and scripts/che
 ```
 
 **Evidence.** Run on 2026-10-18 in a clone of `mimir` at `main` (`f8f2f6a`), commit `6fcc549`:
+
 - `bash scripts/check-task.test.sh`: 11 cases, all `ok`. `scripts/check-task.sh` passed on `smoke-notes` and on `client-gallery-lite`
   (the latter prints the "no sample suite" note). `shellcheck -s bash` on the three scripts printed nothing. `reuse lint -q`
   (`reuse==5.0.2` through `uvx`) passed.
@@ -15223,6 +15284,7 @@ git commit -m "Add the smoke-notes task, its public sample suite and scripts/che
   cannot mount this machine's folders; `create` and `cp` put the same files in the same places. The hidden suite of `smoke-notes`
   does not exist in this task and was not read or written. The brief is a new task, not a change to `client-gallery-lite`, so no
   existing task changed.
+
 ### Task v0-T262: the grader smoke on a real engine, with scripted agents and the PUBLIC sample suite
 
 Odin's task of Phase 5c, with one small change in Gungnir and one script in `ouroboric`. Branches: `grader/odin` in `odin` (the branch of the other Phase 5c tasks), `grader/limits-docs` from the routing branch in `gungnir`, `grader/scripts` from `main` in `ouroboric`. Needs v0-T245 to v0-T250 and v0-T261 in the tree. The unit tests of those tasks use a fake grader. This task runs the real one. It builds the image of `smoke-notes`, runs the sample suite of that task in a real container, and checks the score.
@@ -15230,11 +15292,13 @@ Odin's task of Phase 5c, with one small change in Gungnir and one script in `our
 The suite is the PUBLIC sample suite (`mimir/smoke-notes/sample-suite/tests`). The script copies it to a temp folder laid out as `<task>/<suite>/tests/`, and that folder is `grader.suite_dir`. No hidden suite exists for `smoke-notes`. Nobody reads or writes one in this task.
 
 **Files:**
+
 - `gungnir`: Modify `schema/factory.go`, `schema/factory.schema.json`, `schema/factory_grader_test.go` (commit `5988fdf`).
 - `odin`: Modify `internal/engine/grade.go`, `internal/engine/grade_test.go`, `internal/cli/doctor.go`, `internal/cli/grade_test.go`. Create `internal/cli/smoke_grade_test.go`, `testdata/smoke-grade/{pack.yaml,graph.yaml,prompts/build.md,prompts/review.md,templates/notes/LICENSE}` (commit `c523c83`).
 - `ouroboric`: Create `scripts/ygg-smoke-grade.sh`, `scripts/tests/ygg-smoke-grade.test.sh` (commit `8caf6a4`).
 
 **Interfaces:**
+
 - Consumes: `ygg run` with a graph that ends in a `grade` node (v0-T249), `ygg grade <run-id>` (v0-T250), `ygg doctor` (graders), `sandbox.Driver.Grade` (v0-T246), the task `smoke-notes` and its public suite (v0-T261).
 - Produces: `schema.Grader.Limits() (memory string, cpus int)` and the value `memory: none` (with `cpus: 0`) in `grader:`. Both mean "no limit". See decision 1.
 - Produces: the realm `odin/testdata/smoke-grade` (a loop with an implementer and a reviewer, a merge, a pointer move, then the `grade` node), and `ouroboric/scripts/ygg-smoke-grade.sh [--build] [--folder DIR] [--tasks DIR] [--odin DIR] [--limits] [--clip]`. It prints one PASS or FAIL line per check and exits 0 only when every check passes.
@@ -15248,6 +15312,7 @@ The suite is the PUBLIC sample suite (`mimir/smoke-notes/sample-suite/tests`). T
 5. **What the script checks, and how.** The engine is polled every second during each run. For every container, the poll records the label `ygg.grader` and the sources of the mounts. A container of this run without the label that holds the suite folder fails the smoke. The check is not empty: it needs at least one container of the run, and it prints the number it saw. The grader container is expected to hold the suite folder, and the script reports when the poll saw it. The poll can miss it (a grading run takes about 3 seconds), so a miss is a NOTE and not a failure.
 
 **Acceptance criteria:**
+
 - [ ] `ygg run` on the reference solution ends `done` and the grade node gives reward 1.0 with 6 of 6 fail-to-pass and 1 of 1 pass-to-pass. `ygg grade <run-id>` on the same run gives the same.
 - [ ] `ygg run` on a product that holds nothing gives a reward below 1 (0.0, 0 of 6).
 - [ ] After each run: no container with the label `ygg.grader` exists, `ygg doctor` finds 0 grader containers, no container of the run that is not a grader held `suite_dir`, and `score.json` exists once, in the run folder, and nowhere else under the project.
@@ -15999,6 +16064,7 @@ Run it and `shellcheck -s bash scripts/ygg-smoke-grade.sh scripts/tests/ygg-smok
 cd $REF/ouroboric
 scripts/ygg-smoke-grade.sh --build --odin $REF/odin
 ```
+
 ```output
 smoke-grade: made $HOME/ygg-it/smoke-grade-<time>
 smoke-grade: the suite is the PUBLIC sample suite $REF/mimir/smoke-notes/sample-suite/tests (suite v1)
@@ -16055,6 +16121,7 @@ git -C ouroboric commit -m "ygg-smoke-grade.sh: the grader smoke on a real engin
 ```
 
 **Evidence (v0-T262):** built and run in the reference workspace on 2026-10-18. Commits: `gungnir` `5988fdf` (branch `grader/limits-docs`), `odin` `c523c83` (branch `grader/odin`), `ouroboric` `8caf6a4` (branch `grader/scripts`). None is pushed.
+
 - **Real engine.** Podman 5.7.1 rootless on WSL (the user socket `podman-user.sock`), devcontainer CLI 0.89.0, the pinned Playwright 1.63.0 image pulled and built by `ygg sandbox build` and by the grader. The last full run is the output above: both cases, every check `PASS`, exit 0. The reference graded 1.0000 (6 of 6, 1 of 1) in about 3 seconds of container time, twice (the grade node, then `ygg grade`). The empty product graded 0.0000 (0 of 6, 0 of 1). Two agent containers of each run were seen by the poll, and none held the suite folder. The poll saw the grader container hold the suite folder in the first case and missed it in the second (the NOTE line): that is the expected miss.
 - **The grader container ran with no limit.** With `memory: 4g` and `cpus: 4` the same engine fails the container (`crun: open memory.max for writing`). This was tried by hand with `podman run --memory 512m` and `--cpus 2` on an image of the workspace. Each failed with the error above. The `--limits` flag was NOT run on a real engine: this engine cannot. It is run only by the fake test (`memory: 4g`).
 - **A first run found the stack missing** (`a sandbox image is missing: localhost/ygg-work:...`), hence `--build`. A second run found that `ygg grade` refuses a realm that changed (decision 4). Both are in the script's header now.
@@ -16067,10 +16134,12 @@ git -C ouroboric commit -m "ygg-smoke-grade.sh: the grader smoke on a real engin
 Odin's and `ouroboric`'s task of Phase 5c. It builds on v0-T262. The realm is the same: a real Claude Code implements `smoke-notes`, a real OpenCode on OpenRouter reviews it, and the grade node grades it with the public sample suite. This run costs money and needs credentials. **Nobody runs it in this task.** The task builds the script, the config and the tests, and it runs the script in `--dry-run` and with fake tools.
 
 **Files:**
+
 - `odin`: Create `testdata/smoke-grade/factory.real.example.yaml`, `internal/run/smoke_grade_test.go` (commit `3e4f99d`).
 - `ouroboric`: Create `scripts/ygg-smoke-real.sh`, `scripts/ygg-cost.sh`. Modify `scripts/tests/ygg-smoke-grade.test.sh`, `AGENTS.md` (commit `0302bc1`).
 
 **Interfaces:**
+
 - Consumes: the realm of v0-T262, `ygg doctor`, `ygg-evidence.sh`, `ygg-engine.sh`, the rules of change require-budget-caps (`schema.CapsError`).
 - Produces: `ygg-smoke-real.sh [--dry-run] [--build] [--folder DIR] [--env FILE] [--tasks DIR] [--odin DIR] [--wall TIME] [--clip]` and `ygg-cost.sh LEDGER [FACTORY_YAML]`.
 
@@ -16084,6 +16153,7 @@ Odin's and `ouroboric`'s task of Phase 5c. It builds on v0-T262. The realm is th
 6. **The public suite grades the real run.** No hidden suite of `smoke-notes` exists. The real agents never mount the suite folder, which is outside the project. When a hidden suite exists, put it in the `suite_dir` of a copy of this config.
 
 **Acceptance criteria:**
+
 - [ ] The example config loads with `claude-code` and `opencode`, and `Prepare` on the realm gives a loop, a grade node last, the egress of the two adapters only, and caps in tokens, turns and dollars. A config without a dollar cap or without a turn cap gives a `*CapsError`.
 - [ ] `ygg-smoke-real.sh --dry-run` exits 0, runs `ygg doctor` on the generated config, prints the caps and the command, and does not run `ygg run` or load the credentials.
 - [ ] A missing credentials file, a missing name and a name with no value are refused with exit 2, and no value is printed.
@@ -16574,6 +16644,7 @@ printf 'CLAUDE_CODE_OAUTH_TOKEN=dummy-value-one\nOPENROUTER_API_KEY=dummy-value-
 cd $REF/ouroboric
 scripts/ygg-smoke-real.sh --dry-run --env $REF/t/dummy.env --odin $REF/odin
 ```
+
 ```output
 smoke-real: made $HOME/ygg-it/smoke-real-<time>
 smoke-real: the suite is the PUBLIC sample suite $REF/mimir/smoke-notes/sample-suite/tests (suite v1)
@@ -16605,6 +16676,7 @@ git -C ouroboric commit -m "ygg-smoke-real.sh: the real-agent smoke with real ca
 ```
 
 **Evidence (v0-T263):** built in the reference workspace on 2026-10-18. Commits: `odin` `3e4f99d`, `ouroboric` `0302bc1`. None is pushed.
+
 - **What ran.** `bash scripts/tests/ygg-smoke-grade.test.sh`: 61 `ok`, no `FAIL`. `go test -race` of `TestTheGraderSmokeRealmPreparesWithRealAgentsAndRealCaps` and `TestTheRealExampleNeedsItsDollarCaps`: `ok`. The full `go test -race -count=1 ./...` of `odin` passes. `shellcheck -s bash` prints nothing for the new files. The dry run above ran the real `ygg doctor` against the real engine: the config is `OK`, the grader is `OK`, and the WARN for no limit shows.
 - **Mutations**, each undone: the check of the two names made always true failed three cases (`a credentials file with one name missing is refused`, `... names the missing variable`, `a name with no value is refused`); the dry run made never to stop failed three cases (it started the run and loaded the credentials).
 - **NOT run, on purpose:** the real run. No credential file was read or used. The dry run used a file of made-up values that the test workspace holds. Nothing was spent. The real Claude Code and OpenCode adapters were not started. The prompts of the realm (`build.md`, `review.md`) are therefore untested with a real model: the first real run is also their test.
@@ -16615,15 +16687,18 @@ git -C ouroboric commit -m "ygg-smoke-real.sh: the real-agent smoke with real ca
 The architecture pages and the README say what the code of Phase 5c does. Each page has a test that names the words it must keep.
 
 **Files:**
+
 - `odin`: Modify `README.md`, `docs/architecture.md`. Create `internal/cli/docs_test.go` (commit `b7ee9a5`).
 - `gleipnir`: Modify `docs/architecture.md`. Create `sandbox/docs_test.go` (commit `0e17275`).
 - `gungnir`: Modify `docs/architecture.md`. Create `docs_test.go` (commit `8063fcf`).
 
 **Interfaces:**
+
 - Consumes: the code of v0-T245 to v0-T263.
 - Produces: pages in the style of the existing ones (a bullet for each responsibility, short sentences). The 5b plan has no test for the docs: its v0-T243 only looked at `git diff --stat`. These tests are new and small. They keep a new command or a new event from reaching a repo with no line in its docs.
 
 **Acceptance criteria:**
+
 - [ ] The README of `odin` shows every command of the usage text, `ygg grade` and `ygg deps bump` among them, and the exit codes 4 and 5.
 - [ ] `docs/architecture.md` of `odin` describes: the `grade` node and the `ygg grade --task` command, the container and what an agent never sees, `score.json` and the reward, `grader.memory: none`, the leftover containers, the two routing indexes and their edge tags, the shrink guard, the bench and the pack's `routing` block, the `pointer-contract` gate, and `ygg deps bump --canary --rollout`.
 - [ ] `docs/architecture.md` of `gleipnir` describes `Grade`, `BuildGrader`, the three mounts, the label, the removal, `GraderLeftovers` and `RemoveGrader`.
@@ -16892,10 +16967,12 @@ git -C gungnir commit -m "Docs: the grader contract, the grade events and the ro
 The umbrella moves the pointers once, and the exit check runs on the merged code.
 
 **Files (in `yggdrasil`):**
+
 - Modify: the submodule pointers of `gungnir`, `gleipnir`, `helheim-go`, `midgard-react` and `odin`;
   `docs/2-engineering/backlog.md`.
 
 **Acceptance criteria:**
+
 - [ ] After all pull requests are merged, the pointers are at each repo's `main`, and `go.work` builds them
       together: `go vet ./...` and `go test ./...` pass in each repo with `go.work` and with `GOWORK=off`.
 - [ ] The exit criterion: `go test -run 'TestGraderCombinesPublicTaskAndHiddenSuite|TestGraderRefusesRetiredVersion|TestTheRealRealmsBuildAProductFromABriefWithScriptedAgents' ./...`
@@ -16951,6 +17028,7 @@ scripts/ygg-smoke-grade.sh --build --clip
 ```
 
 Expect, for the cases `reference` and `empty`: `PASS` on every line, `reward: 1.0000` with `fail-to-pass: 6/6` for the reference and `0.0000` for the empty product, and the last line `smoke-grade: every check passed`. A `NOTE` line about the watch missing the grader container is normal.
+
 - [ ] **Step 3:** if your engine applies cgroup limits, run it again with `--limits` (4 GB and 4 CPUs). Then the grader container runs with limits. Send the output of both runs. If a line says `FAIL`, send the folder it prints (`~/ygg-it/smoke-grade-<time>`): it holds `run.txt`, `grade.txt`, `doctor.txt` and `mounts.log` of each case.
 
 ### Task v0-H17 (founder): the real-agent smoke
@@ -16967,6 +17045,7 @@ scripts/ygg-smoke-real.sh --dry-run
 ```
 
 Expect `smoke-real: dry run: nothing was started and the credentials were not loaded` and exit code 0. Check the two cap lines.
+
 - [ ] **Step 2:** the real run. It stops after 90 minutes at most (`--wall`).
 
 ```zsh
@@ -16974,6 +17053,7 @@ scripts/ygg-smoke-real.sh --build --clip
 ```
 
 Expect an exit code of 0 (done), 5 (done, tasks given up), 3 (stopped at a gate), 4 (paused: the quota) or 124 (the wall clock). The script prints the evidence report (the credentials are removed from it), the line `smoke-real: score smoke-notes 1.0.0: reward ...`, and `ygg-cost: cost $...` with `the per_run cap is $3`.
+
 - [ ] **Step 3:** send back the report and the three last lines. The reward may be below 1: that is a finding about the agents and the brief, not a failure of the script. If `smoke-real: no score.json` shows, the run did not reach the grade node: send the report anyway.
 
 ---
@@ -17071,7 +17151,7 @@ holds the strengthened tests, so executing the plan gives them. Seven named a li
 layers on purpose) or were a mutation that cannot be seen from outside, and those rows were dropped or changed.
 
 | Task | Defence removed | Test that fails |
-|---|---|---|
+| --- | --- | --- |
 | v0-T245 | a grade node that is not the last node of the graph is refused | `TestAGradeNodeThatCouldRunBesideASandboxIsRefused` |
 | v0-T245 | a suite store inside the tasks folder (or the reverse) is refused | `TestTheGraderBlockIsRefusedWhenItIsNotExact` |
 | v0-T246 | the grader container has no network | `TestGradeBuildsTheImageThenRunsTheSuiteWithoutANetworkAndRemovesTheContainer` |
@@ -17128,7 +17208,7 @@ workspace is `go.work` of the REF folder: gleipnir on `grader/docs`, gungnir on 
 Tests that were weak. They are fixed in the code of this plan (the test in the task is the strengthened one):
 
 | Task | Defence | What was wrong | Fix |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T246 | an environment holding a symlink is refused; a changed file is a new image tag | no test of `GraderImage` beyond the tag format: a symlink in the task's environment was never offered, and no file change was checked against the tag | new test `TestGraderImageIsNamedForEveryFileOfTheEnvironmentAndRefusesWhatCouldLeadOutside` (gleipnir) |
 | v0-T247 | a manifest with a second document is refused | no such case in `TestAManifestThatCannotBeReadExactlyIsRefused` | case `a second document` |
 | v0-T248 | score.json is written to an absolute run folder only | `Write` was tested with an absolute folder only | new test `TestWriteRefusesARunFolderThatIsNotAbsoluteAndWritesNothing` |
@@ -17143,7 +17223,7 @@ Rows changed or dropped because another check covers the same line (the defence 
 removing one layer alone cannot fail a test; the plan text should say "two layers" where it describes them):
 
 | Task | Candidate | Why it cannot fail alone |
-|---|---|---|
+| --- | --- | --- |
 | v0-T245 | grader.timeout above zero in `Grader.check` | the JSON schema of the factory refuses it first; the row was dropped |
 | v0-T247 | the tests folder of a suite must exist | the `test.sh` check right after it refuses the same case with the same reason (`missing_suite`); the row names the `test.sh` check |
 | v0-T251 | wiring never follows a symlink / never reads a file over the limit | the walker skips links and `read` skips them again, and a size check sits in two places; dropped |
@@ -17159,15 +17239,15 @@ the context); only the project umbrella ships the routing indexes (`parent.Dir !
 
 **For the executor.**
 
-* `plan-defences.py` runs `go test` only. The 8 shell rows need a `"cmd"` key in a row (a shell command run in the repo
+- `plan-defences.py` runs `go test` only. The 8 shell rows need a `"cmd"` key in a row (a shell command run in the repo
   instead of `go test`; a row passes when it exits non-zero and prints a `FAIL` or `not ok` line). Until `plan-defences.py`
   takes `cmd`, they run with `shrun.py`. **Follow-up task (not part of 5c):** `shrun.py` is a reusable tool, so it moves
   into `ouroboric/scripts/` (as `cmd` support in `plan-defences.py`, or as its own script) with a test and a pull
   request; a reusable script never stays in the scratchpad (rule 13 of the invariants). Until then v0-T265 files it as a
   backlog item.
-* The v0-T260 rows need `YGG_REQUIRE_TEMPLATES` set in the environment: the test needs `go` and a module cache for
+- The v0-T260 rows need `YGG_REQUIRE_TEMPLATES` set in the environment: the test needs `go` and a module cache for
   `ygg-authz`, and it skips without the module proxy unless the variable is set. Without it the rows pass when skipped.
-* The v0-T256 row needs `midgard-react` on its branch `routing/pointer-contract` (on `main` of that clone the gate is
+- The v0-T256 row needs `midgard-react` on its branch `routing/pointer-contract` (on `main` of that clone the gate is
   not in the graph yet) and the workspace with `gungnir` at `grader/limits-docs`.
 
 ---
@@ -17224,7 +17304,7 @@ Each line is for the founder to confirm when the plan is merged.
 #### Sizes
 
 | Commit | Task | Insertions |
-|---|---|---|
+| --- | --- | --- |
 | `a82a0fb` | v0-T247 part 1: task.toml, brief hash, retired mark | 386 (384 without `go.sum`) |
 | `e0a136d` | v0-T247 part 2: the suite's folders and manifest | 134 (16 removed) |
 | `6d08bd9` | v0-T248 part 1: read the Playwright results | 232 |
@@ -17309,7 +17389,7 @@ Each line is for the founder to confirm when the plan is merged.
 #### Sizes
 
 | Commit | Task | Insertions |
-|---|---|---|
+| --- | --- | --- |
 | `0251122` | v0-T251 part 1: edges, the REPOS.md block | 171 |
 | `58aab31` | v0-T251 part 2: umbrella, packs, go.mod, package.json, lockfiles | 433 (fixture and tests are 270) |
 | `be6a9fa` | v0-T251 part 3: imports, contracts, copies, mentions, link safety | 282 |
@@ -17351,7 +17431,7 @@ Each line is for the founder to confirm when the plan is merged.
 #### Sizes
 
 | Part | Commit | Inserted lines |
-|---|---|---|
+| --- | --- | --- |
 | 1 versions and manifests | `88bb531` | 367 |
 | 2 snapshot and restore | `c0f3e13` | 262 |
 | 3 `Bump` and its core tests | `a312aa5` | 440 |

@@ -250,7 +250,7 @@ Each line is **Decided 2026-10-17** when the founder merges this plan.
 ## Order
 
 | Task | Repo | Size | Depends on |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v0-T142 a project records its lead realm, and each leaf its realm and what it consumes | `gungnir` | M | Phase 4 |
 | v0-T143 realm names and versions are checked in one place, and a repo a remote creates carries its pin | `gungnir` | M | v0-T142 |
 | v0-T144 a sandbox spec names its stack and services, and may hold a scratch folder instead of a leaf | `gungnir` | M | v0-T143 |
@@ -377,15 +377,18 @@ as Phase 2 to Phase 4 did, and add the pin as the last commit once it merges.
 Gungnir's first task. Branch `realms/contract` from `main` in `gungnir`, before step 1. Change `realm-leaf-naming` has the project decide its leaves and the realm of each. This task is where the project writes that down: in `umbrella.yaml`, beside the owner and the visibility Odin already keeps there (spec §3.1).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/umbrella_realm_test.go`
 - Modify: `schema/umbrella.go`, `schema/umbrella.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.Umbrella.Realm` and `RealmVersion` (the lead realm's pin, on the project's own umbrella); `schema.Child.Realm`, `RealmVersion` and `Consumes []string` (a leaf's realm pin and the sibling leaves it calls). A pin is both fields or neither.
 - Produces: `schema.Pin{Realm, Version, Where string}` and `(*Umbrella).Pins() []Pin`, the lead pin (where `"."`) and then each child's, by path.
 - `ParseUmbrella` refuses a realm without a version or the reverse, a realm name that is not lower case words joined by dashes, a version that is not `1.2.3`, a leaf that consumes itself, twice, a stranger or an umbrella, an umbrella that consumes, and leaves that consume each other in a ring.
 
 **Acceptance criteria:**
+
 - [ ] A project's `umbrella.yaml` round trips its lead pin, each leaf's pin and what a leaf consumes, through `Save` and `LoadUmbrella`.
 - [ ] A leaf with no pin stays without one: it is the lead realm's.
 - [ ] Every malformed pin and every bad consumer in the list above is refused.
@@ -712,14 +715,17 @@ index b7fde74..8182cb2 100644
 A remote that creates a leaf must record its pin in the same commit, or a leaf could exist without it (backlog B-003 is the warning). The checks of a pin move to the root package, where `Repo` lives.
 
 **Files (in `gungnir`):**
+
 - Create: `realm.go`, `realm_test.go`
 - Modify: `remote.go`, `schema/umbrella.go`
 
 **Interfaces:**
+
 - Produces: `gungnir.ValidRealm(string) bool` and `gungnir.ValidVersion(string) bool`; `schema.ValidRealm` and `schema.ValidVersion` go (the umbrella uses these).
 - Produces: `gungnir.Repo.Realm`, `RealmVersion` and `Consumes []string`; `Repo.Validate` refuses half a pin, a bad name or version, a consumer path that climbs, one listed twice, and the repo itself.
 
 **Acceptance criteria:**
+
 - [ ] `ValidRealm` and `ValidVersion` accept the names and versions of the realms and refuse capitals, dots, double dashes, a leading digit or dash, and a version with a prefix or a suffix.
 - [ ] A `Repo` with a pin and consumers validates; each of the malformed forms above is refused; a repo with no pin still validates.
 
@@ -926,15 +932,18 @@ index b918ab4..05f5e1b 100644
 Spec §6.1: a leaf's sandbox gets the stack layer of its realm and the services of its realm and of the leaves it consumes (§9.2). A planner works in a scratch folder, not a leaf (§3.3 rule 1). Both are in the sandbox spec Odin hands the driver.
 
 **Files (in `gungnir`):**
+
 - Create: `sandbox_services_test.go`
 - Modify: `sandbox.go`
 
 **Interfaces:**
+
 - Produces: `SandboxSpec.Stack` (an image pinned by digest; empty means the driver's own), `Services []Service` and `Scratch bool`; `Service{Name, Image string; Env map[string]string; Ports []int}`; `MaxServices` (8); `ValidImage(string) bool`; `ValidateServices([]Service) error`.
 - `SandboxSpec.Validate` accepts a scratch spec with no git dir and refuses one with a git dir; it refuses a leaf spec with none. `Layout()` of a scratch spec has no git dir.
 - `ValidateServices` refuses a name that is not lower case words, `work` and `fw`, a name twice, an image without a digest, no port or a port out of range or twice, an env name that is empty or holds `=`, an env name that names a credential (`PASSWORD`, `TOKEN`, `SECRET`, `API_KEY`, `CREDENTIAL`), and nine services.
 
 **Acceptance criteria:**
+
 - [ ] A spec with a stack and two services validates, and so does one with eight.
 - [ ] Each refusal in the list above is a test case.
 - [ ] A scratch spec validates only without a git dir, and its layout names only the folder.
@@ -1207,15 +1216,18 @@ index 8b24c83..c84d353 100644
 Change `realm-leaf-naming` says every build realm offers the same roles under standard names, which the graph names and Odin resolves in the realm of the task's leaf. A realm that is only a backend has no graph, and backlog B-036 says a realm may have no leaves and no stack at all.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/pack_recipe_test.go`
 - Modify: `sandbox.go`, `schema/pack.go`, `schema/pack.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.Pack.Leaf *PackRecipe{Description, Template, FirstCommit []string; Implementer string; Checks []string}`, the recipe; `Pack.Services map[string]PackService{Image; Env; Ports}`; `(*Pack).ServiceList() []gungnir.Service`, sorted by name. `Pack.Graph` is optional.
 - `LoadPack` refuses a template that is not a folder of the realm, a first-commit file that is not a regular file of the template, an implementer that is not a regular file of the realm, no checks, a check the pack does not define, a check twice, and every service `ValidateServices` refuses.
 - The pack's `leaves:` map stays, as the default leaves of a lead realm's own graph (decision 3).
 
 **Acceptance criteria:**
+
 - [ ] A pack with a recipe, services and no graph loads; a pack with none of those loads too (a documents realm, B-036).
 - [ ] Each refusal above is a test case.
 - [ ] The older tests of `LoadPack` and `leaves:` still pass.
@@ -1569,13 +1581,16 @@ index 5bff629..c9a32cc 100644
 `ygg run --realm midgard-react` has to find `midgard-react` somewhere. The operator says where once (the founder chose a local realm store on 2026-10-17, decision 2).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/factory_realms_test.go`
 - Modify: `schema/factory.go`, `schema/factory.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.Factory.Realms *Realms{Dir string}`. The folder holds one checkout of each realm leaf (`<dir>/midgard-react/pack.yaml`). It must be a clean, absolute path and not the root.
 
 **Acceptance criteria:**
+
 - [ ] A config with `realms: {dir: /abs}` parses; one without parses with `Realms == nil`.
 - [ ] A relative folder, an unclean one, `/`, no folder and an unknown field are refused.
 
@@ -1701,14 +1716,17 @@ index cecebb6..c3e3bcc 100644
 Spec §4.2: "for each ready task: implement ⇄ check ladder, merge gate, pointer move". A `foreach` node holds the shape once. Its body names no repo (the task's leaf is its repo), and its loop, merge and pointer nodes take their prompt and checks from the realm of that leaf (`realm: leaf`).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/graph_foreach_test.go`
 - Modify: `schema/graph.go`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `schema.KindForeach`; `Node.Over` (only `tasks`), `Node.Body []Node` (yaml `nodes`), `Node.RealmFrom` (yaml `realm`, `RealmLead` or `RealmLeaf`); internal, never read from a file: `Node.Realm` (the realm whose files a node uses; empty is the lead) and `Node.Task` (the task's node id). `(*Graph).All()`: every node, a foreach body after its foreach node.
 - Body rules, in the schema and `ParseGraph`: no repo; a loop has `realm: leaf`, a role, and no prompt and no checks; a merge and a pointer have `realm: leaf` and no checks; no nested foreach; ids are unique across the whole graph; a gate in the body re-runs a loop or agent of the body, the nearest before it by default, never a node outside.
 
 **Acceptance criteria:**
+
 - [ ] The gallery-shaped graph parses; its body gates re-run the body's loop.
 - [ ] Each rule above is refused, with the same messages as the graph's own nodes where the rule is the same.
 - [ ] `All()` lists the body after its foreach node.
@@ -2180,14 +2198,17 @@ index 2bda5e1..ddba842 100644
 The stages before the code (design, spec, plan, DoR, init: spec §4.2) write documents, and the planner "gets a scratch directory with the brief; Odin commits the planner's output into L1 after the `spec` approval point" (§3.3 rule 1). Four graph additions say so.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/graph_stages_test.go`
 - Modify: `schema/graph.go`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `Node.Scratch` and `Node.Inputs` on an agent (the agent works in a workspace of its own, with copies of the project paths it names, and writes under `out/`); `schema.KindPublish` with `From` (the scratch agent) and `To` (a folder of the project); `schema.KindTasks` and `schema.KindInit`, each with `From` (a project path: tasks takes a glob).
 - Rules: a scratch agent names no repo and is not read-only; inputs only on a scratch agent, each a project path outside `.git` and `.factory`, none twice; a publish reads a scratch agent that comes before it and writes to a folder of the project, never the project itself, `.git` or `.factory`.
 
 **Acceptance criteria:**
+
 - [ ] The front of a lead graph (design, spec, plan, tasks, init) parses, and a gate after a scratch agent re-runs it.
 - [ ] Every rule above is refused.
 
@@ -2464,13 +2485,16 @@ index ddba842..e6b8579 100644
 Spec §4.5: "any failure returns to the loop". A node that can refuse work names where the refusal goes: `back_to`, an earlier agent or loop node of its own scope, and how often (`returns`).
 
 **Files (in `gungnir`):**
+
 - Create: `schema/graph_returns_test.go`
 - Modify: `schema/graph.go`, `schema/graph.schema.json`
 
 **Interfaces:**
+
 - Produces: `Node.BackTo` and `Node.Returns` on a merge, a pointer and a tasks node (also in a foreach body); `DefaultReturns` (2) and `MaxReturns` (5). `returns` without `back_to` is refused; `back_to` must name an agent or loop node before the node, in its own scope (a body's node cannot go back outside the body).
 
 **Acceptance criteria:**
+
 - [ ] `back_to` sets `returns` to 2 when the node gives none, and a node may set 1 to 5.
 - [ ] A missing node, an exec node, a later node, the node itself, a node of another scope, `returns` alone and `back_to` on an agent or init node are refused.
 
@@ -2704,14 +2728,17 @@ index e6b8579..4acde6f 100644
 Spec §4.2 and the canonical artifacts: "Odin derives `features.json` from `tasks.md`", and "Odin rejects output that doesn't conform". The planner is an agent, so the file is data: it is read exactly and bounded.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/tasks.go`, `schema/tasks_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Feature{ID, Title; Criteria []string; Test, Layer, Size string; DependsOn []string; Line int}`; `(Feature).Slug()`, the id as a node id; `ParseTasks(file string, data []byte) ([]Feature, error)`; `MaxTasksFile` (1 MiB) and `MaxTasks` (200); `SizeS`, `SizeM`, `SizeL`.
 - A task is a heading of level two or three, `## <id>: <title>` or `### Task <id>: <title>`, with an id that holds a digit; its fields are the bullets `**Acceptance criteria:**` (a checkbox for each, continuation lines joined), `**Named test:**`, `**Layer:**` (`layer/x` reads as `repos/x`), `**Size:**` (the first letter) and `**Depends on:**` (`nothing`, `none` or a list of ids). Everything inside a code fence is ignored, and a heading that is not a task ends the task before it.
 - Refused: an id twice, a field twice, a checkbox outside the criteria, an unclosed fence, no task, more than `MaxTasks`, a file over `MaxTasksFile`. A task with fields missing parses: the readiness check refuses it, with the reasons.
 
 **Acceptance criteria:**
+
 - [ ] The canonical layout parses into the tasks, criteria, test, layer, size and dependencies it holds, and ignores a heading inside a fence.
 - [ ] A heading that is not a task ends the task before it.
 - [ ] Every refusal above is a test case.
@@ -3052,12 +3079,15 @@ func finish(f *Feature) {
 The DoR check (spec §4.2) rejects a task with no acceptance criteria, named test, layer or size, with an open blocker, or of size L, which "MUST be split, so it goes back to the planner". Its answer goes back into the planner's prompt, so it lists every problem and is bounded.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/ready.go`, `schema/ready_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.CheckReady(fs []Feature, leaves []string) error`, a `*ReadinessError{Problems []Problem}`; `Problem{Task, Text}`; `MaxReadinessText` (6,000 bytes); `ReadyOrder([]Feature) ([]Feature, error)`, the plan's order with each task after what it depends on. `leaves`, when not nil, are the layers a task may name.
 
 **Acceptance criteria:**
+
 - [ ] A plan of ready tasks passes. Each reason a task is not ready is listed: no criteria or blank ones, no test, no layer, a layer that is not one of `leaves`, no size, size L ("split it"), a size of words, a blocker that is not in the plan, a task that depends on itself, a ring, two ids that are one node id.
 - [ ] All the problems of all the tasks are listed, not the first; the text is cut at `MaxReadinessText`.
 - [ ] `ReadyOrder` keeps the file's order, holding a task back until its blockers are placed.
@@ -3310,12 +3340,15 @@ func ReadyOrder(fs []Feature) ([]Feature, error) {
 Change `realm-leaf-naming`: "the run's spec stage names the product's leaves and the realm that provides each one, and the operator approves it at the spec gate". The file is `leaves.yaml`.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/leaves.go`, `schema/leaves.schema.json`, `schema/leaves_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Leaves{Leaves map[string]LeafSpec}`, `LeafSpec{Realm, RealmVersion, Description string; Consumes []string}`; `ParseLeaves(file string, data []byte) (*Leaves, error)`; `(*Leaves).Paths()` and `Pins()`. Up to 20 leaves; each path inside the project, outside `.git` and `.factory`, none inside another; a description of one line up to 200 characters; consumers as in the umbrella (not itself, not twice, no ring among the listed leaves); a consumer the file does not list may be a leaf the project has.
 
 **Acceptance criteria:**
+
 - [ ] A file naming an API and a web leaf that consumes it parses; `Paths()` and `Pins()` give them sorted.
 - [ ] A missing realm, version or description, a description of two lines or over 200 characters, a path that climbs or sits in `.git` or `.factory`, a leaf inside a leaf, an unknown field, a self-consuming leaf, a consumer twice or that climbs, a ring and twenty-one leaves are refused.
 
@@ -3552,13 +3585,16 @@ Write `schema/leaves.schema.json`:
 Spec §10.1 lists the events a ledger holds. This phase adds the ones it needs to be audited: when a realm was loaded, when documents were published, when a plan's tasks were ready, when a refusal went back, and the life of a task.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/event_realms_test.go`
 - Modify: `event.go`, `schema/ledger-event.schema.json`
 
 **Interfaces:**
+
 - Produces: `EventRealmLoaded`, `EventDocsPublished`, `EventTasksReady`, `EventNodeReturned`, `EventTaskStarted`, `EventTaskDone`, `EventTaskBlocked`; the fields `Event.Realm`, `RealmVersion` and `Task` (`ygg.realm.name`, `ygg.realm.version`, `ygg.task.id`), and the ledger line schema that allows them (a realm name, a version and a node-id-shaped task).
 
 **Acceptance criteria:**
+
 - [ ] Every event name validates as a ledger line, and a line with the realm fields and one with a task validates.
 - [ ] A realm name in capitals is refused.
 
@@ -3711,12 +3747,15 @@ index e4955ac..ac0d59f 100644
 Spec §3.3 rule 2: Odin is the only writer of `features.json`. Its format is Gungnir's.
 
 **Files (in `gungnir`):**
+
 - Create: `schema/features.go`, `schema/features_test.go`
 
 **Interfaces:**
+
 - Produces: `schema.Features{Schema, Run, Source, SourceSHA256 string; Tasks []FeatureRecord}`; `FeatureRecord{Feature; Status TaskStatus; Why string}`; `TaskTodo`, `TaskDoing`, `TaskDone`, `TaskBlocked`; `(*Features).Save(path)` (atomic: a temporary file, synced, renamed) and `LoadFeatures(path)` (no unknown field, the schema `ygg.features/v1`, a known status).
 
 **Acceptance criteria:**
+
 - [ ] The file round-trips, and `Save` leaves no temporary file.
 - [ ] `LoadFeatures` refuses another schema, an unknown field, an unknown status and text that is not JSON; `Save` refuses a status nobody knows.
 
@@ -3916,12 +3955,15 @@ func LoadFeatures(path string) (*Features, error) {
 The plan check runs before `init` (spec §4.2: plan, DoR check, init), so the leaves a task names do not exist yet; the leaves file the spec stage wrote says which will.
 
 **Files (in `gungnir`):**
+
 - Modify: `schema/graph.go`, `schema/graph.schema.json`, `schema/graph_stages_test.go`
 
 **Interfaces:**
+
 - Produces: `Node.Leaves` on a tasks node, a project path outside `.git` and `.factory`.
 
 **Acceptance criteria:**
+
 - [ ] A tasks node may name a leaves file; one that climbs, or one on an init node, is refused.
 
 **Named test:** `go test ./schema -run 'TestAGraphWritesDocumentsInAScratchWorkspaceAndPublishesThemIntoTheProject|TestParseGraphRefusesBadStageNodes'` in `gungnir`. **Layer:** `gungnir`. **Size:** S (29). **Depends on:** v0-T148.
@@ -4070,9 +4112,11 @@ index 4acde6f..0219085 100644
 The architecture page says what the component now does for realms and tasks.
 
 **Files (in `gungnir`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` lists the project's pins, the pack's recipe and services, `leaves.yaml`, the graph's new nodes, `tasks.md` with the Definition of Ready and `features.json`, and the sandbox spec.
 
 **Named test:** `go test ./...` in `gungnir`. **Layer:** `gungnir`. **Size:** S (12). **Depends on:** v0-T155.
@@ -4118,13 +4162,16 @@ index 90e00db..85c5d9c 100644
 Gleipnir's first task. Branch `realms/sandbox` from `main` in `gleipnir`, before step 1. It needs v0-T156 merged and pinned. Backlog B-015: `Project()` and the configuration folder's name drop punctuation, so `repos/web-app` and `repos/webapp` are one compose project, and one leaf's `Down` stops the other's sandbox. A project with several leaves from several realms makes this likelier.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/names_test.go`
 - Modify: `sandbox/config.go`, `sandbox/config_test.go`, `sandbox/driver.go`, `sandbox/driver_test.go`
 
 **Interfaces:**
+
 - Produces: `sandbox.Project(spec)` ends in a hash of the run and the leaf's path (still lower-case letters and digits only); `sandbox.ConfigDir(work, spec) string`, the folder of a sandbox's configuration, named by its project; `Driver.Up` uses it.
 
 **Acceptance criteria:**
+
 - [ ] Leaves whose paths differ only in punctuation (`repos/web-app`, `repos/webapp`, `repos/web/app`, `repos/web.app`, `repos/web_app`) get five projects and five folders.
 - [ ] A project name is the same on every call and holds only lower-case letters and digits.
 
@@ -4311,15 +4358,18 @@ index f2e594c..1d630f3 100644
 Spec §6.1 and §9.3: a leaf's sandbox runs the realm's services, Postgres and SeaweedFS for the web realm, beside the work container. Nothing started one until now.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/services_test.go`
 - Modify: `sandbox/config.go`
 
 **Interfaces:**
+
 - Consumes: `gungnir.SandboxSpec.Services` (v0-T144).
 - Produces: one compose service for each `Service`, on the image pinned by digest (`pull_policy: never`), with the service's env, the sandbox's labels, `no-new-privileges`, no mount, no added capability, no published port and the image's own user and command; the firewall and the work container wait for them (`depends_on`). The `service` struct's optional fields are `omitempty`, so a service with no command does not override the image's.
 - `Validate` already scans every compose service, so a service the factory did not write (`privileged`, a swapped image) is refused or differs from what the factory generates.
 
 **Acceptance criteria:**
+
 - [ ] A spec with two services renders both, with the properties above, and the dependencies run fw and work after them.
 - [ ] A privileged service is refused with a message that names the service and the key; a swapped image is a difference; a service whose env names a credential is refused when the config is generated.
 
@@ -4523,13 +4573,16 @@ index b2adfee..e54315b 100644
 The work container shares the firewall sidecar's network and its egress is default-deny (spec §6.2). A service beside it is reachable only if the firewall says so, on the ports the realm listed.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/assets/egress.sh`, `sandbox/config.go`, `sandbox/firewall_test.go`, `sandbox/services_test.go`, `sandbox/validate.go`
 
 **Interfaces:**
+
 - Produces: `fw/services`, a file of `name port` lines (one for each port of each service, by name), written beside `fw/hosts` and checked like it; `Generated.Services`; the sidecar's command takes it as a second argument.
 - `egress.sh HOSTS [SERVICES]` resolves each service name (waiting up to `YGG_SERVICE_WAIT` tries, 30 by default, one a second, for a service that is still starting), and opens each listed port of its addresses, in the same chain as the hosts, swapped in without a gap. A name that never resolves exits 1 before any rule changes, so the sandbox never opens half closed.
 
 **Acceptance criteria:**
+
 - [ ] The script opens `5432` to the address of `postgres` and each listed port of `seaweedfs`, and neither opens `443` to them nor any other port; it opens the hosts as before.
 - [ ] A service that resolves on the third try is waited for; one that never resolves fails the script before a rule changes and the firewall never says it is ready.
 - [ ] A port added to `fw/services` after the config was generated is a difference that `Validate` finds.
@@ -4866,13 +4919,16 @@ index 51425b7..4afc343 100644
 Change `realm-leaf-naming`: "the leaf's sandbox gets that realm's stack layer". A run with a React leaf and a Go leaf starts two kinds of work container.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/stack_test.go`
 - Modify: `sandbox/config.go`, `sandbox/driver.go`
 
 **Interfaces:**
+
 - Produces: `Config.ImagesOf(spec) Images`, the images of `spec.Stack` (`ImagesFor`), or the config's own when the spec names none; the compose file and `Up`'s check that the images exist use it. The firewall image does not depend on the stack.
 
 **Acceptance criteria:**
+
 - [ ] Two specs with two stacks get two work images and one firewall image; a spec with none gets the config's.
 - [ ] `Up` checks the images of the stack it was given, and a missing one is `ErrNoImage` naming it.
 - [ ] A config with no images and a spec with no stack is refused; a spec with a stack needs no images in the config.
@@ -5063,14 +5119,17 @@ index 1d630f3..dc502fc 100644
 Spec §3.3 rule 1: a planner gets a scratch directory, never an umbrella and never a leaf. Its sandbox mounts that folder and nothing else.
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/scratch_test.go`
 - Modify: `sandbox/config.go`
 
 **Interfaces:**
+
 - Consumes: `SandboxSpec.Scratch` (v0-T144).
 - Produces: for a scratch spec, one work volume (the folder, read-write, at `/u/<its path under the parent>`), no git dir mounted or looked up, and the same hardening, firewall and validation as a leaf's.
 
 **Acceptance criteria:**
+
 - [ ] A scratch spec renders a work container with the one volume, a devcontainer whose workspace is that folder, and no mention of a git dir; `Validate` accepts what `Generate` wrote.
 - [ ] A scratch folder the engine cannot see is refused ("can't see"); `Up` starts a scratch sandbox and reports the workspace as its working directory.
 
@@ -5228,13 +5287,16 @@ index 79884c2..1ab51be 100644
 Phase 3's integration tests of the driver run on a real engine behind the `sandbox` tag (spec §13). Services and scratch folders need the same kind of test: only a real engine shows that the work container reaches a service by name, through the firewall, on its ports only. This task writes the tests; the founder runs them (v0-H12).
 
 **Files (in `gleipnir`):**
+
 - Create: `sandbox/integration_services_test.go`
 
 **Interfaces:**
+
 - Consumes: the environment of Phase 3's tests (`YGG_SANDBOX_ENGINE`, `YGG_SANDBOX_TREE`, `YGG_SANDBOX_TREE_ENGINE`), plus `YGG_SANDBOX_SERVICE_IMAGE` (an image pinned by digest that listens on a port) and `YGG_SANDBOX_SERVICE_PORT`.
 - Tests: a service is reachable by name on its listed port and on no other port, the open internet stays closed beside it, and `Down` leaves nothing; a scratch sandbox holds the folder and nothing beside it, no git dir, and writes in it reach the host.
 
 **Acceptance criteria:**
+
 - [ ] The tests compile and vet under `-tags sandbox`, and skip without the environment.
 - [ ] The founder's run (v0-H12) passes.
 
@@ -5399,12 +5461,15 @@ func TestSandboxScratchHoldsOneFolderAndNothingElse(t *testing.T) {
 A sandbox's compose file uses a service's image with `pull_policy: never`, because a run never pulls (spec §16 item 7). Something must pull it, with the isolated registry auth, and a run must say so when it was not pulled.
 
 **Files (in `gleipnir`):**
+
 - Modify: `sandbox/driver.go`, `sandbox/images.go`, `sandbox/services_test.go`
 
 **Interfaces:**
+
 - Produces: `Driver.Pull(ctx, image) error`: `podman pull -q` with the isolated `--authfile`, and only for an image pinned by digest; `Driver.Up` refuses, before it starts anything, a service whose image the engine lacks: `ErrNoImage`, naming the image and `ygg sandbox build`.
 
 **Acceptance criteria:**
+
 - [ ] `Up` with a service image the engine lacks returns `ErrNoImage` naming it, and starts nothing.
 - [ ] `Pull` calls the engine with the isolated auth and never with the shell's, and refuses a tag, a bare name, an empty string and a short digest.
 
@@ -5545,9 +5610,11 @@ index 7339761..481f510 100644
 The architecture page says what the component now does for realms and tasks.
 
 **Files (in `gleipnir`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says a sandbox starts its leaf's services and opens their ports only, starts on the stack of its spec, and may hold a scratch folder.
 
 **Named test:** `go test ./...` in `gleipnir`. **Layer:** `gleipnir`. **Size:** S (5). **Depends on:** v0-T163.
@@ -5586,13 +5653,16 @@ index cf253d9..0e6f9e5 100644
 Jormungandr's first task. Branch `realms/loop` from `main` in `jormungandr`, before step 1. It needs v0-T156 merged and pinned only for the module's own build (it uses Gungnir alone). Spec §4.5: the merge gate's failure "returns to the loop". A loop that passed is finished (`Run` returns at once), so the work needs a way back in.
 
 **Files (in `jormungandr`):**
+
 - Create: `reopen_test.go`
 - Modify: `loop.go`
 
 **Interfaces:**
+
 - Produces: `(*State).Reopen(cfg Config)`. A passed loop starts the next attempt as a new one, with the limit raised to a full set of attempts from there, the findings as they were, no failure and no unreadable reviewer. A loop that is not finished is extended as an operator's rejection extends it.
 
 **Acceptance criteria:**
+
 - [ ] A loop that passed at attempt 1 and is reopened runs the implementer once more as attempt 2, with the findings it held open, and passes in attempt 2.
 - [ ] An escalated loop that is reopened has a full set of attempts again.
 
@@ -5701,12 +5771,15 @@ index eecee0a..cea00f8 100644
 An implementer reopened by a refusal needs to read it, and not as the operator's words.
 
 **Files (in `jormungandr`):**
+
 - Modify: `prompt.go`, `prompt_test.go`
 
 **Interfaces:**
+
 - Produces: `jormungandr.Refusal(text string) string`, a block that tells the implementer that its work passed and a later step refused it, to fix what the step says and not to say it is fixed (the step decides); empty for no refusal.
 
 **Acceptance criteria:**
+
 - [ ] `Refusal` carries the step's words under a heading of its own, and says nothing for blank text.
 
 **Named test:** `go test . -run 'TestARefusalGoesIntoTheNextAttemptsPrompt'` in `jormungandr`. **Layer:** `jormungandr`. **Size:** S (24). **Depends on:** v0-T165.
@@ -5788,9 +5861,11 @@ index 50af841..c8353f5 100644
 The architecture page says what the component now does.
 
 **Files (in `jormungandr`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says a loop that passed is reopened by `Reopen`, and `Refusal` is the text the next prompt carries.
 
 **Named test:** `go test ./...` in `jormungandr`. **Layer:** `jormungandr`. **Size:** S (3). **Depends on:** v0-T166.
@@ -5827,13 +5902,16 @@ index 1893582..3b6b023 100644
 Odin's first task. Branch `realms/phase-5a` from `main` in `odin`, before step 1. It needs gungnir's, gleipnir's and jormungandr's pull requests merged and pinned. A run loads its lead realm and the realm of each leaf, each at a pinned version (change `realm-leaf-naming`, backlog B-035). Until now `--realm` was a folder. This task is the loading: find a realm leaf by name in the operator's store, read its pack, and hash what a run could read, so a resume can tell nothing changed under it.
 
 **Files (in `odin`):**
+
 - Create: `internal/realm/realm.go`, `internal/realm/realm_test.go`
 
 **Interfaces:**
+
 - Produces: `realm.Realm{Name, Version, Dir, Hash string; Pack *schema.Pack}`; `realm.Load(dir)`; `realm.Hash(dir)`, a SHA-256 over every file but `.git`'s (its path, its executable bit, its bytes) and every symlink (path and target), in path order, refusing a folder of more than 5,000 files or 64 MiB (a build output, not a realm).
 - Produces: `realm.Store{Dir}` with `Find(name)`: `<dir>/<name>`, whose pack must name itself that; `realm.Resolve(ref, store) (dir, byName, err)`: a value with a path separator or a leading dot is a path, anything else a name found in the store; a name with no store says where to set one.
 
 **Acceptance criteria:**
+
 - [ ] `Load` reads the pack and hashes the realm; the hash is stable, and changes when a prompt changes, a file is added or removed, a file becomes executable, or a symlink appears or changes target; it does not follow `.git`.
 - [ ] `Find` refuses a name that is not a realm name, a realm the store lacks, and a folder that holds another realm than its name says; `Resolve` takes a path or a name.
 
@@ -6151,12 +6229,15 @@ func Resolve(ref string, store *Store) (dir string, byName bool, err error) {
 Change `realm-leaf-naming`: "each realm leaf loads once per run, at a pinned version; two pins of one realm leaf that disagree stop the run before any sandbox comes up".
 
 **Files (in `odin`):**
+
 - Create: `internal/realm/set.go`, `internal/realm/set_test.go`
 
 **Interfaces:**
+
 - Produces: `realm.Set{Lead *Realm; Realms map[string]*Realm}` with `Names()`; `realm.Collect(lead, pins []schema.Pin, load) (*Set, error)`. `load` is called once for each realm but the lead. Every problem is listed: two pins of one realm at two versions ("midgard-react is pinned at 0.1.0 by . and at 0.2.0 by repos/web"), a pin of the lead (where `.`) that names another realm than `--realm`, a realm the store cannot load, and a store whose version is not the pinned one.
 
 **Acceptance criteria:**
+
 - [ ] Five pins over three realms load two realms (the lead is loaded already) and give a set of three.
 - [ ] Each problem above is reported, with the pin that caused it, and a set with problems is not returned.
 
@@ -6367,15 +6448,18 @@ func Collect(lead *Realm, pins []schema.Pin, load func(name string) (*Realm, err
 This is where `Prepare` uses the realm store. `ygg run --realm midgard-react` finds the realm in `factory.yaml`'s `realms.dir`; the project's pins say which realm each leaf has; the run records every realm with its version and hash, and a resume refuses one that changed.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/realms_test.go`
 - Modify: `internal/run/run.go`, `internal/run/state.go`, `internal/tree/treetest/treetest.go`
 
 **Interfaces:**
+
 - Consumes: `schema.Factory.Realms` (v0-T146), `realm.*` (v0-T168, v0-T169), `schema.Umbrella.Pins()` (v0-T142).
 - Produces: `run.Options.Realms` (a resume's recorded folders) and `Leaves`; `Setup.Lead`, `Setup.Realms` and `Setup.RealmOf(repo)`, `Setup.Realm(name)` ("" is the lead); `State.Realms map[string]RealmRecord{Version, Dir, SHA256}`; `State.checkRealms`. A lead realm needs a graph. A leaf with no pin is the lead realm's. `treetest.Node` can carry a pin and consumers.
 - A resume loads the realms from the folders `run.json` recorded, and refuses, after the graph's own check, a realm whose version or hash changed.
 
 **Acceptance criteria:**
+
 - [ ] `--realm` takes a name found in the store, or a path; a name with no store is refused with a hint; a realm with no graph cannot lead.
 - [ ] Each leaf uses the realm the project pins for it; pins that disagree, a lead pin that names another realm and a store at another version stop `Prepare` and `Start` with nothing created.
 - [ ] `run.json` records every realm, and a resume refuses a prompt that changed in a leaf's realm.
@@ -6844,12 +6928,15 @@ index c5e6207..1014476 100644
 "The lead realm is pinned in the project like a leaf's realm." The first run pins it; later runs must agree with it.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/realms_test.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Produces: when `--realm` is a name and the project's umbrella pins no lead realm, `Start` writes the pin to `umbrella.yaml` and commits it (`Pin the lead realm midgard-react 0.1.0`), by path, and refuses if `umbrella.yaml` has uncommitted changes. A realm given as a path pins nothing. The first ledger line (`run_started`) carries the lead realm, its version and a note listing every realm with its hash.
 
 **Acceptance criteria:**
+
 - [ ] A first run pins and commits the lead; a second run finds the pin and commits nothing; a run with a path pins nothing; an uncommitted `umbrella.yaml` refuses the start and leaves no run behind.
 
 **Named test:** `go test ./internal/run -run 'TestTheFirstRunPinsTheLeadRealmItWasGivenByName|TestARealmGivenByPathIsNotPinned|TestARunWontPinOverUncommittedWork'` in `odin`. **Layer:** `odin`. **Size:** M (125). **Depends on:** v0-T170.
@@ -7083,13 +7170,16 @@ index 1149ba4..363d2af 100644
 Spec §4.2: "for each ready task". A pure function turns the foreach node and the tasks in build order into the nodes of the run.
 
 **Files (in `odin`):**
+
 - Create: `internal/plan/expand.go`, `internal/plan/expand_test.go`
 
 **Interfaces:**
+
 - Produces: `plan.Recipe{Realm, Implementer string; Checks []string}`; `plan.Expand(fe, tasks, g, recipeOf) ([]schema.Node, error)`. Task `gallery-T1` is the node-id slug `gallery-t1`; its nodes are `gallery-t1-implement` and so on, each with `Task` set and `Repo` the task's layer. A `realm: leaf` loop takes its prompt and its checks from the recipe of the task's leaf; a merge and a pointer take its checks; `Realm` names that realm. A body gate's `reruns` and a node's `back_to` point at the task's own node. A reviewer's session key is `<node>-<reviewer>`. Nothing in the graph changes, and no slice is shared between expansions.
 - Expand refuses a node id, or a reviewer's session key, that the graph or another task already uses; a layer `recipeOf` does not know; and a realm that offers no recipe.
 
 **Acceptance criteria:**
+
 - [ ] Two tasks over two leaves of two realms give ten nodes in order, with the prompts, checks and realms of their leaves; the input is unchanged.
 - [ ] Each refusal above is a test case; no tasks give no nodes.
 
@@ -7348,13 +7438,16 @@ func Expand(fe schema.Node, tasks []schema.Feature, g *schema.Graph, recipeOf fu
 An expanded node carries `Realm`. The engine used to read every prompt from the one realm of the run and every check from its pack.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/realms_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/loop.go`
 
 **Interfaces:**
+
 - Produces: `runAgent` and a loop's implementer read their prompt file from `Setup.Realm(n.Realm).Dir`; `runChecks` and a loop's `Check` run `Setup.Realm(n.Realm).Pack.Checks`. A loop's reviewers keep the lead realm's prompts. A node with no realm is the lead's, as before.
 
 **Acceptance criteria:**
+
 - [ ] A node with `Realm: helheim-go` reads that realm's prompt and runs that realm's check; one with none, the lead's.
 
 **Named test:** `go test ./internal/engine -run 'TestANodeReadsItsPromptAndRunsItsChecksFromItsOwnRealm'` in `odin`. **Layer:** `odin`. **Size:** M (161). **Depends on:** v0-T170.
@@ -7617,13 +7710,16 @@ index 0549b8f..45f7c09 100644
 Change `realm-leaf-naming`: "a sandbox gets its realm's services plus those of each leaf it consumes (`web` gets `helheim-go`'s Postgres and SeaweedFS)"; spec §9.2.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/sandbox_realms_test.go`
 - Modify: `internal/run/prepare.go`, `internal/run/sandbox.go`
 
 **Interfaces:**
+
 - Produces: `SandboxSetup.Hosts` (the model APIs of the roles any node uses, bodies included); `(*Setup).SandboxFor(repo) (stack, egress, services, err)`: the stack and registries of the leaf's realm, the model APIs, and the services of its realm and of each leaf it consumes, sorted. Two realms offering different services of one name, and a realm with no stack when a sandbox is on, stop `Prepare` for every leaf the run has. `Run.Runner` starts the sandbox with them.
 
 **Acceptance criteria:**
+
 - [ ] The web leaf and the API leaf start on the stacks and with the registries of their own realms.
 - [ ] The web leaf, which consumes the API, gets the API's realm's services; the API gets its own.
 - [ ] A service named twice with different images, env or ports, and a realm that names no stack, are refused before any sandbox starts.
@@ -7962,13 +8058,16 @@ index 2553bd8..8f36079 100644
 The project decides its leaves, so the graph can no longer name them all. A task works in the leaf its plan names, and init creates leaves the graph never heard of.
 
 **Files (in `odin`):**
+
 - Create: `internal/run/addleaf_test.go`
 - Modify: `internal/run/run.go`
 
 **Interfaces:**
+
 - Produces: `(*Run).AddLeaf(ctx, repo)`: a leaf of the project becomes part of the run (resolved in the tree, its sandbox checked against its realm, the run's branch started in it, a record in run.json); a leaf the run has is left alone; a path that is not a leaf of the project, climbs, or is the project, is refused. `Options.Leaves` makes a resume resolve the leaves the run recorded.
 
 **Acceptance criteria:**
+
 - [ ] A run adds `repos/extra`, which no node names; it is on the run's branch; a second add is nothing; a resume knows the leaf.
 - [ ] `repos/nope`, `../outside` and `.` are refused and change nothing.
 
@@ -8157,14 +8256,17 @@ index 363d2af..ea82124 100644
 Spec §4.2: "DoR check (exec): every task MUST have acceptance criteria, a named test, a layer and a size... Odin derives `features.json` from `tasks.md`". The node finds the plan, applies the Definition of Ready against the project's leaves and the leaves the spec stage named, and records the tasks in build order.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/stages.go`, `internal/engine/tasks_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/gates.go`, `internal/engine/realms_test.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `engine.runTasks`; `engine.FeaturesFile`; `State.Features []FeatureRecord`, `PlanSource`, `PlanSHA256`; `(*Run).Nodes()`, the nodes the run walks (the graph's, for now); `Prepare` accepts the nodes that work in the project, not in a leaf (`tasks`, `publish`, `init`). The plan is the one regular file the glob matches, reached through no symlink, under 1 MiB; the leaves it may name are the project's and those of the leaves file the node names.
 - A plan that cannot be read or is not ready fails the node with the problems listed (v0-T177 sends it back to the planner). A ready plan writes `.factory/features.json` (all tasks to do) and a `tasks_ready` line.
 
 **Acceptance criteria:**
+
 - [ ] A ready plan becomes features in the order they are built, in run.json and in features.json.
 - [ ] A plan that is not ready fails the node with every problem; no features.json is written.
 - [ ] Not one file, or a symlink, is not a plan; a layer named by the spec stage's leaves file passes, one that no leaf has does not.
@@ -8701,13 +8803,16 @@ index 1014476..ecd5dd2 100644
 Spec §4.5 and §4.2: a refusal "returns to the loop", and a task of size L "goes back to the planner". One mechanism does both: the refusing node names where it goes (`back_to`) and how often (`returns`).
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/returns.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/loop.go`, `internal/engine/stages.go`, `internal/engine/tasks_test.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `engine.sendBack(r, n, refusal) (bool, error)`: at most `n.Returns` times it logs `node_returned`, makes the refusal the target's input for its next attempt (`State.Refusals`, shown in the prompt as `jormungandr.Refusal`), reopens a loop target, starts over every loop between the target and the node, moves Position back and saves; it returns a `*sentBack` that `Advance` treats as "go on from Position". `State.Returns`, `State.Refusals`. The tasks node uses it.
 
 **Acceptance criteria:**
+
 - [ ] A plan with an L task and a missing blocker goes back to the planner, whose second prompt lists every problem; the second plan passes; the ledger has `node_returned`.
 - [ ] With `returns: 1` a plan that stays bad fails the node after one return; with no `back_to` it fails at once; no features.json is written for a plan that is not ready.
 
@@ -9000,14 +9105,17 @@ index ecd5dd2..b82ac06 100644
 Spec §4.2 and §7.3: the per-task graph. The foreach node, when the walk reaches it, takes every leaf the tasks work in into the run and is replaced by its tasks' nodes; a task is todo, doing, then done.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/foreach_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/stages.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `(*Run).Expand(ctx, id)`, `(*Setup).NodesFor(state)`, `State.Expanded`; `Run.Nodes()` returns the expanded list, and a resume makes the same nodes from the recorded tasks (`State.check` uses it). `engine.expandForeach` fails a foreach with no plan, a task in a leaf the project lacks and a realm with no recipe, and records nothing then. `Prepare` checks a body's roles and its reviewers' prompts (the lead realm's); the prompt and checks of a leaf's loop come from its realm, where `Expand` finds them.
 - `settleTasks` keeps each task's status, features.json and `task_started` / `task_done` lines in step with Position.
 
 **Acceptance criteria:**
+
 - [ ] Two tasks in two leaves of two realms each run their shape in their leaf with their realm's implementer prompt; the work lands on each leaf's main and the project points at it; statuses go todo, doing, done.
 - [ ] A run stopped at the first task's feature gate resumes with the same nodes and finishes the rest.
 - [ ] A foreach with no plan, and a task whose realm offers no recipe, fail the node.
@@ -9536,13 +9644,16 @@ index b82ac06..7f97ccb 100644
 Backlog B-010, three gaps around landings, which merge-gate loops and more leaves make matter: a shrink-guard stop never closes the attempt its `node_started` opened; a pointer move that committed but whose record was lost has no `pointer_moved` line on the next attempt; and a waiver outlives a failed move.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/ledgergaps_test.go`
 - Modify: `internal/engine/land.go`, `internal/ledger/ledger.go`, `internal/ledger/ledger_test.go`
 
 **Interfaces:**
+
 - Produces: `ledger.Has(path, match) (bool, error)`; in `runPointer`: `node_failed` before the shrink-guard stop; on an attempt after the first, a pointer already at the target with no `pointer_moved` line of the node gets one that says so; the waiver is cleared whatever became of the move.
 
 **Acceptance criteria:**
+
 - [ ] A shrink-guard stop's lines for the move are `node_started`, the check, `node_failed`, `gate_pending`.
 - [ ] An approved waiver followed by a failed move is gone, and the next move meets the guard again.
 - [ ] A move an earlier attempt made and the ledger lacks is logged on the next attempt.
@@ -9829,13 +9940,16 @@ index 0a405ff..026d6ce 100644
 Spec §4.5: "re-run the checks... any failure returns to the loop"; Phase 4 left this to the graph of Phase 5.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/loopback_test.go`
 - Modify: `internal/engine/land.go`
 
 **Interfaces:**
+
 - Produces: `failLanding(r, n, ev, err)` sends the refusal back (v0-T177) when the gate refused because the checks fail on the branch with the base merged in, or a pointer move's checks or acceptance failed. After a merge refusal the leaf's checkpoint is the merged head the checks ran on. A base that does not merge cleanly, a target another process holds and an Odin failure fail the node as before: the implementer cannot fix them.
 
 **Acceptance criteria:**
+
 - [ ] A merge gate whose late check fails sends the work back; the second attempt's prompt carries the refusal; the work lands.
 - [ ] A refusal that keeps coming back fails the node after its returns, and nothing of it lands on main.
 - [ ] A conflict with the base is not sent back (the implementer is not run again); a pointer move whose acceptance fails goes back and the project then points at main.
@@ -10082,13 +10196,16 @@ index 1d16d84..5f4202e 100644
 Spec §7.3, second half: "unattended: mark the task `blocked`. Continue with tasks that do not depend on it. List it first in the run report." Phase 4 decision 7 stopped every mode at the escalation because a linear graph had no rest to go on with; now it has.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/blocked_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/stages.go`
 
 **Interfaces:**
+
 - Produces: in unattended mode, a loop escalation inside a task blocks the task (`blockTask`): features.json and the ledger say so with the loop's reason; the leaf is put back to its main and what the task did is kept on `refs/ygg/<run>/blocked/<task>`; Position moves past the task's nodes. `skipBlocked` blocks, without starting, each task that depends on a blocked one when the walk reaches it. The run finishes `done`, and its `run_finished` line lists the blocked tasks. The other modes stop at the escalation as before; every other failure still fails or stops the run.
 
 **Acceptance criteria:**
+
 - [ ] Four tasks, the second given up and the third depending on it, the fourth independent: the first and fourth are done, the second and third blocked; the third was never started; the web leaf is back at main; the blocked work is on its ref; the fourth landed.
 - [ ] Step-by-step and key-points stop at the loop that gave up.
 
@@ -10401,13 +10518,16 @@ index 3e59df3..435dc0a 100644
 Spec §3.3 rule 1: "A planner gets a scratch directory with the brief." The stages that write documents (design, spec, plan) run as agents in a workspace under the run, in a scratch sandbox when the run has one.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/scratch.go`, `internal/engine/scratch_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/session.go`, `internal/run/run.go`, `internal/run/sandbox.go`
 
 **Interfaces:**
+
 - Produces: `(*Run).ScratchDir(node)` (`<run>/scratch/<node>`) and `(*Run).ScratchRunner(ctx, node)`; `engine.runScratch`: the workspace is made again for every attempt and every retry (the brief as `brief.md`, a copy of each input that exists, an empty `out/`); an input that is, or holds, a symlink or any file but a regular one is refused, and so is more than 2,000 files or 16 MiB; `.git` inside an input is left out; the prompt is the node's prompt, its skills, a note on the workspace, the brief and any rejection or refusal. The session runs with `sessionSpec.scratch`. `Prepare` accepts a scratch agent, which names no repo. No checkpoint, no secret scan, no leaf.
 
 **Acceptance criteria:**
+
 - [ ] The agent writes `out/docs/design.md`; the brief and the inputs are in the workspace; a change to an input's copy leaves the project's file alone.
 - [ ] A second attempt after a rejection starts from a fresh workspace and its prompt carries the reason.
 - [ ] An input that holds a symlink is refused before the agent runs.
@@ -10901,13 +11021,16 @@ index 8f36079..b5d2417 100644
 Spec §3.3 rule 1: "Odin commits the planner's output into L1 after the `spec` approval point." The planner's output is data from an agent; it becomes part of the project only through this node.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/publish.go`, `internal/engine/publish_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/gates.go`
 
 **Interfaces:**
+
 - Produces: `engine.runPublish`, `listDocuments`, `scanDocuments`, `copyDocument`. Only regular files under `out/`, named with letters, digits, dots, dashes and underscores and not starting with a dot, ending in `.md .yaml .yml .json .txt .toml .d2 .mmd`, at most 500 files, 1 MiB each and 8 MiB in all. With a sandbox the documents are scanned for secrets in the scratch sandbox of the agent that wrote them; a secret is a hard stop at `real-secrets-or-user-data`, with nothing published (the gate file names the folder; approve once it is clean and the node runs again). The files are written under the node's `to` folder and committed with `git add` and `git commit` by explicit paths, with hooks off; staged work Odin did not make refuses the node; identical documents commit nothing.
 
 **Acceptance criteria:**
+
 - [ ] The agent's two documents land under `docs/` in one commit, and `docs_published` is logged.
 - [ ] Publishing the same documents again makes no commit.
 - [ ] A script, a hidden file or folder, a name with a space or a dollar, a symlink, a file over the limit and more than 500 files are refused.
@@ -11360,12 +11483,15 @@ func copyDocument(src, dst string) error {
 A leaf must never exist without its pin: the same commit that adds the submodule writes `realm`, `realm_version` and `consumes` in `umbrella.yaml`.
 
 **Files (in `odin`):**
+
 - Modify: `internal/remote/local.go`, `internal/remote/local_test.go`
 
 **Interfaces:**
+
 - Produces: `remote.Local.Create` writes `Repo.Realm`, `RealmVersion` and `Consumes` into the child entry; it refuses, before it creates anything, a consumer the umbrella does not list as a leaf.
 
 **Acceptance criteria:**
+
 - [ ] Two leaves are created with pins, the second consuming the first; `umbrella.yaml` is committed with them.
 - [ ] A leaf that consumes a leaf the umbrella lacks is refused, with no commit, no folder and a clean umbrella.
 
@@ -11482,12 +11608,15 @@ index 5ce6b1e..53e1cd1 100644
 Init learns which realms the product needs only after the spec stage: the run takes them then.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/realms_test.go`, `internal/run/run.go`
 
 **Interfaces:**
+
 - Produces: `(*Run).AddRealms(extra []schema.Pin) error`: loads the realms the pins name that the run lacks, after checking every pin of the project, old and new, against each other and the store; records each in run.json and a `realm_loaded` line; a refused call changes nothing. `(*Setup).loadRealm` finds a realm already loaded, a recorded folder, or the store.
 
 **Acceptance criteria:**
+
 - [ ] A new pin loads its realm and records it; a second realm already held is not loaded or logged again; a pin at another version changes nothing.
 
 **Named test:** `go test ./internal/run -run 'TestARunTakesTheRealmsNewPinsNameAfterItStarted'` in `odin`. **Layer:** `odin`. **Size:** S (92). **Depends on:** v0-T170.
@@ -11677,13 +11806,16 @@ index e25a7f9..9935fac 100644
 Spec §4.2: "init (agent + exec): scaffolds leaves from templates." Change `realm-leaf-naming`: "`init` creates each missing leaf from its realm's template and records the leaf's realm and version in the project". The spec stage's `leaves.yaml`, approved at the spec gate and published into the project, is what init reads.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/init.go`, `internal/engine/init_test.go`
 - Modify: `internal/engine/engine.go`, `internal/engine/foreach_test.go`
 
 **Interfaces:**
+
 - Produces: `engine.runInit`. It reads the leaves file (one regular file, under 1 MiB), takes the realms it names (v0-T185), creates each leaf the project lacks through the remote with the recipe's first-commit files, the realm, the version and the consumers (leaves a leaf consumes first), makes the leaf part of the run (v0-T175) and, while the leaf holds only its first commit, copies the rest of the realm's template to the run's branch in a checkpoint of its own. A leaf with history keeps what it has. It logs `repo_created` for each leaf, with the realm.
 
 **Acceptance criteria:**
+
 - [ ] The API leaf is created from the second realm's template and the web leaf from the lead's; `umbrella.yaml` records each pin and the consumer; each leaf's main holds only the first commit and the run's branch holds the template; the run knows both realms and leaves, and a resume does too.
 - [ ] A leaf that consumes a leaf sorting after it is created after it.
 - [ ] A realm without a leaf recipe is refused and nothing is created.
@@ -12094,12 +12226,15 @@ func copyTemplate(tmpl, dst string, first []string) error {
 The leaves file is an agent's output, approved by a person who may not read every line. Init checks what it can before it changes the project.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/init.go`, `internal/engine/init_test.go`
 
 **Interfaces:**
+
 - Produces: `engine.checkLeaves`: every problem is listed — a pin of the lead realm at another version, a realm the store lacks or that offers no recipe, a leaf the project has as an umbrella, as another realm or version, or consuming other leaves than the file says, and a consumed leaf that neither the file nor the project has. Nothing is created if any is found.
 
 **Acceptance criteria:**
+
 - [ ] Each of those leaves the project with no new leaf.
 - [ ] A second pass over a finished project creates nothing and keeps what is there; a leaf that exists as another realm is refused.
 
@@ -12272,13 +12407,16 @@ index e03a4ae..1c57fc8 100644
 Each realm has a stack layer, and only `ygg sandbox build` pulls and builds images (a run never does: spec §16 item 7).
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/sandbox_realms_test.go`
 - Modify: `internal/cli/cli.go`, `internal/cli/sandbox.go`
 
 **Interfaces:**
+
 - Produces: `ygg sandbox build (--realm <name|dir>)... | --all`: the distinct stacks of the realms named, or of every realm of the store (a realm without a stack is skipped, with a line, under `--all`, and is an error when named). `--realm` takes a name found in `realms.dir` or a folder; `run`'s usage says so too.
 
 **Acceptance criteria:**
+
 - [ ] Two realms named build two stacks; `--all` builds each stack once and says which realm it skipped.
 - [ ] Neither or both of `--realm` and `--all`, an unknown name, a name with no store, `--all` with no store and a named realm with no stack are refused.
 
@@ -12588,13 +12726,16 @@ index 4de8479..5c542ae 100644
 Change `realm-leaf-naming`: "`run.json` and the status line record the lead realm with its graph version and each leaf's realm with its version". Spec §7.3: the tasks given up come first.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/status_realms_test.go`
 - Modify: `internal/cli/cli.go`, `internal/cli/doctor.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `LeafRecord.Realm` and `RealmVersion` (set when a leaf joins the run); `ygg status` prints each leaf with its realm, a `blocked:` line for each task given up (before the leaves) and a line with the tasks' counts; `ExitBlocked` (5): a run that finished with tasks given up prints them first and exits 5; `ygg doctor` lists the realm store (`OK realms: <dir> (name version, ...)`), reports a realm that does not load or whose folder holds another realm as an error, an empty store as an error and a config with no realms section as a warning.
 
 **Acceptance criteria:**
+
 - [ ] Status shows `(toy 0.3.0)` after a leaf, the blocked task with its reason before the leaves, and `tasks: 3 (1 done, 0 doing, 1 to do, 1 blocked)`; the usage text lists exit code 5.
 - [ ] Doctor lists the store, and fails on a pack that does not parse and on a folder named for another realm.
 
@@ -12928,12 +13069,15 @@ index 7f97ccb..05cda67 100644
 Found by the end-to-end test of v0-T192: the last task that ran stayed `doing` when the tasks after it were skipped because they depend on a blocked one.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/blocked_test.go`, `internal/engine/engine.go`, `internal/engine/stages.go`
 
 **Interfaces:**
+
 - Produces: `settleTasks` becomes `finishTask`, which runs before `skipBlocked`, and `startTask`, which runs after it, in `Advance`'s loop: a task is finished by the node the walk has just left, before any task is skipped past it.
 
 **Acceptance criteria:**
+
 - [ ] The task before skipped tasks is done at the end of the run.
 
 **Named test:** `go test ./internal/engine -run 'TestATaskDoneJustBeforeTasksThatAreSkippedIsStillDone|TestAnUnattendedRunGivesUpATaskWhoseLoopGaveUpAndGoesOnWithTheRest'` in `odin`. **Layer:** `odin`. **Size:** S (38). **Depends on:** v0-T181.
@@ -13079,12 +13223,15 @@ index 435dc0a..f302ce1 100644
 Found by the end-to-end test of v0-T192: a body pointer's acceptance checks run in the project, but its node carried the leaf's realm, which lacked the check.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/engine.go`, `internal/engine/loop.go`, `internal/engine/realms_test.go`
 
 **Interfaces:**
+
 - Produces: `runChecks` uses the lead realm's checks when it is given no repo (the pointer's acceptance), and returns a node failure naming the realm and the check when a realm does not define a check, in `runChecks` and in a loop's `Check`, instead of running an empty command.
 
 **Acceptance criteria:**
+
 - [ ] A pointer node of another realm runs its acceptance check from the lead's pack; an undefined check is a `nodeFailure`, not a panic.
 
 **Named test:** `go test ./internal/engine -run 'TestAPointersAcceptanceChecksAreTheLeadRealmsEvenInALeafOfAnotherRealm|TestACheckTheRealmDoesNotDefineIsAnErrorNotAPanic'` in `odin`. **Layer:** `odin`. **Size:** S (47). **Depends on:** v0-T173.
@@ -13216,12 +13363,15 @@ index b1cdfb9..307c968 100644
 The change's task T004 as a test: a run with `--realm midgard-toy` walks that realm's graph; the spec stage names the leaves and their realms; init creates the API from `helheim-toy`'s template and the web leaf from `midgard-toy`'s; each task runs in its leaf with its realm's recipe; run.json and the status line record every realm. The scripts write what a planner would: the second plan has a task in a leaf nobody named, and goes back once.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/realms_e2e_test.go`, `testdata/realms-scripts/gallery.yaml`, `testdata/realms/helheim-toy/pack.yaml`, `testdata/realms/helheim-toy/prompts/implementer.md`, `testdata/realms/helheim-toy/templates/api/AGENTS.md`, `testdata/realms/helheim-toy/templates/api/LICENSE`, `testdata/realms/midgard-toy/graph.yaml`, `testdata/realms/midgard-toy/pack.yaml`, `testdata/realms/midgard-toy/prompts/design.md`, `testdata/realms/midgard-toy/prompts/implementer.md`, `testdata/realms/midgard-toy/prompts/plan.md`, `testdata/realms/midgard-toy/prompts/spec.md`, `testdata/realms/midgard-toy/templates/web/AGENTS.md`, `testdata/realms/midgard-toy/templates/web/LICENSE`
 
 **Interfaces:**
+
 - Produces: `testdata/realms/{midgard-toy,helheim-toy}`, `testdata/realms-scripts/gallery.yaml`, and three tests through `ygg`: the whole run with an approval at the design gate; an unattended run that gives up a task, finishes with exit code 5 and lists the task; and a run refused for pins that disagree, with nothing created.
 
 **Acceptance criteria:**
+
 - [ ] The documents of three stages are published and committed; the plan went back to the planner once; the project pins the lead realm, each leaf's realm and the consumer; the leaves are made from their realms' templates; four tasks are done, landed on each leaf's main, and the project points at them.
 - [ ] The unattended run exits 5, lists `gallery-T2` and `gallery-T4`, and runs the API's tasks.
 - [ ] A pin the store lacks exits 2 and leaves no `.factory`.
@@ -13666,12 +13816,15 @@ MIT
 Backlog B-036: the Asgard, Alfheim and Vanaheim realms make documents, not code. With scratch agents and publish the engine can do that; this test says so.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/docsrealm_test.go`
 
 **Interfaces:**
+
 - Produces: a test only: a lead realm with a pack that names nothing but its graph, a graph of a scratch agent, a gate and a publish, and a project with no leaves, runs to done and publishes its document.
 
 **Acceptance criteria:**
+
 - [ ] The run has no leaf, no recipe and no stack, and its document is in the project.
 
 **Named test:** `go test ./internal/engine -run 'TestARealmWithNoLeavesNoStackAndNoRecipeRunsInAnUmbrellaWithNoLeaves'` in `odin`. **Layer:** `odin`. **Size:** S (41). **Depends on:** v0-T183.
@@ -13737,13 +13890,16 @@ func loadStatus(t *testing.T, r *run.Run) (string, error) {
 Review focus 1: a symlink anywhere on the path of a file the engine reads from, or writes into, the project would carry the access out of it. The planner cannot make one (publish refuses non-regular files), but the project is a tree of git repos that other hands touch.
 
 **Files (in `odin`):**
+
 - Create: `internal/engine/symlinks_test.go`
 - Modify: `internal/engine/init.go`, `internal/engine/publish.go`, `internal/engine/scratch.go`, `internal/engine/stages.go`
 
 **Interfaces:**
+
 - Produces: `engine.noSymlinks(project, path)` refuses a path of which any existing part under the project is a symlink; publish uses it for every file it writes, the scratch workspace for every input it copies, the tasks node for every plan file its glob finds and every leaves file, init for the leaves file.
 
 **Acceptance criteria:**
+
 - [ ] A `docs` that is a link, and a link deeper in the path, write nothing outside the project and stage nothing.
 - [ ] An input reached through a linked folder is refused; a plan behind a linked folder is not a plan; a leaves file that is a link is not read.
 
@@ -14017,12 +14173,15 @@ index f302ce1..d3c0789 100644
 Spec §4.4: a session reads its task, and Odin is the only reader of features.json, so the task goes into the prompt: the implementer's and the reviewers'.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/engine.go`, `internal/engine/foreach_test.go`, `internal/engine/loop.go`, `internal/engine/stages.go`
 
 **Interfaces:**
+
 - Produces: `engine.taskBlock(r, n)`: "Your task" with the id and title, the leaf, the acceptance criteria, the named test and what it builds on; the title is cut at 200 characters, a field at 1,000 and the criteria at 30 (the rest counted). It is empty for a node with no task. It is added to a loop's implementer and reviewers and to a body agent.
 
 **Acceptance criteria:**
+
 - [ ] The implementer's and the reviewer's prompts of a task hold its criteria and test.
 - [ ] A task of 5,000-character fields and 40 criteria gives a block with nothing over 1,000 characters and `... and 10 more in the plan`.
 
@@ -14220,12 +14379,15 @@ index d3c0789..a4fc766 100644
 Acceptance checks run in the project umbrella, over several leaves, so no leaf sandbox holds them; Phase 3 refused them with a sandbox on, until a snapshot sandbox exists. `Prepare` looked only at the graph's top-level nodes.
 
 **Files (in `odin`):**
+
 - Modify: `internal/run/prepare.go`, `internal/run/prepare_test.go`
 
 **Interfaces:**
+
 - Produces: `Prepare` looks at every node, a foreach body's too. (The snapshot sandbox that lets the real graph use acceptance tests is 5b's rung 5.)
 
 **Acceptance criteria:**
+
 - [ ] A task shape with a pointer that has acceptance checks, and a sandbox section, is refused naming the node.
 
 **Named test:** `go test ./internal/run -run 'TestPrepareRefusesWhatWouldRunOutsideTheSandbox'` in `odin`. **Layer:** `odin`. **Size:** S (8). **Depends on:** v0-T178.
@@ -14295,12 +14457,15 @@ index 7edc7e7..0f8b9d9 100644
 A rejection at a gate is the operator starting the stages after its target over; a refusal that spent its returns before should be able to go back again.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/gates.go`, `internal/engine/tasks_test.go`
 
 **Interfaces:**
+
 - Produces: `Reject` clears `State.Returns` for the nodes from the target up to the gate.
 
 **Acceptance criteria:**
+
 - [ ] A plan check that used its one return, a rejection at the plan gate, and the check goes back to the planner again.
 
 **Named test:** `go test ./internal/engine -run 'TestARejectionGivesARefusalItsReturnsAgain'` in `odin`. **Layer:** `odin`. **Size:** S (22). **Depends on:** v0-T177.
@@ -14380,12 +14545,15 @@ index dff1462..1d7bb89 100644
 The real-agent check of this plan (v0-H13). The smoke realms ask a real Claude Code, in sandboxes, to write the leaves file and the plan exactly as given, then to build `hello.txt` in each leaf. The run tests the machinery, not the model's judgment; this task is the realms, the example config, and a test that runs the same graph with scripted agents that write exactly what the prompts say, so a prompt that asks for a file Odin would refuse fails here, not on the founder's tokens.
 
 **Files (in `odin`):**
+
 - Create: `internal/cli/smoke_realms_test.go`, `testdata/smoke-realms/factory.example.yaml`, `testdata/smoke-realms/smoke-api/pack.yaml`, `testdata/smoke-realms/smoke-api/prompts/implementer.md`, `testdata/smoke-realms/smoke-api/templates/leaf/LICENSE`, `testdata/smoke-realms/smoke-lead/graph.yaml`, `testdata/smoke-realms/smoke-lead/pack.yaml`, `testdata/smoke-realms/smoke-lead/prompts/implementer.md`, `testdata/smoke-realms/smoke-lead/prompts/plan.md`, `testdata/smoke-realms/smoke-lead/prompts/spec.md`, `testdata/smoke-realms/smoke-lead/templates/leaf/LICENSE`
 
 **Interfaces:**
+
 - Produces: `testdata/smoke-realms/{smoke-lead,smoke-api}` (packs with a leaf recipe and a stack, the lead with a graph of two scratch agents, two publishes, the plan check, init and a task shape of a loop, a merge and a pointer move), `factory.example.yaml` (unattended, Claude Code for both roles, the realms folder), and two tests.
 
 **Acceptance criteria:**
+
 - [ ] The scripted run is done: the leaves file and the plan the prompts ask for are accepted, two leaves are made from two realms, and both tasks are done.
 - [ ] The example config, with its placeholders filled, prepares with the real adapter, finds the realm, and opens `api.anthropic.com` only.
 
@@ -14687,12 +14855,15 @@ MIT
 Found in review of v0-T186: init took the realms into the run before it checked the leaves file, so a refused file, or an init that stopped half way, left realms in run.json that the project did not yet pin, and a resume refused them.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/init.go`, `internal/engine/init_test.go`, `internal/run/run.go`, `internal/run/state.go`
 
 **Interfaces:**
+
 - Produces: `(*Run).PlanRealms(extra)` loads and checks the realms, changing nothing; init checks the leaves file against them, then takes them; a resume loads every realm `run.json` recorded, pinned by the project yet or not.
 
 **Acceptance criteria:**
+
 - [ ] An init that fails after it made one leaf resumes and finishes; a refused leaves file leaves run.json with the realms it had.
 
 **Named test:** `go test ./internal/engine -run 'TestAnInitThatStopsHalfWayCanBeResumedAndFinishes|TestARefusedLeavesFileDoesNotMakeTheRunTakeItsRealms'` in `odin`. **Layer:** `odin`. **Size:** S (78). **Depends on:** v0-T187.
@@ -14901,12 +15072,15 @@ index 05cda67..b533225 100644
 A child is never inside another (the umbrella's own rule), but `Create` learned that only when it saved `umbrella.yaml`, after `git submodule add` had staged the leaf (backlog B-003). A leaves file from a planner can name such a path.
 
 **Files (in `odin`):**
+
 - Modify: `internal/remote/local.go`, `internal/remote/local_test.go`
 
 **Interfaces:**
+
 - Produces: `Local.Create` checks the path against the umbrella's children before it makes anything.
 
 **Acceptance criteria:**
+
 - [ ] A leaf inside a leaf is refused with "never inside another", with no commit and a clean umbrella.
 
 **Named test:** `go test ./internal/remote -run 'TestLocalCreateRefusesALeafInsideAnotherChildOrHoldingOne'` in `odin`. **Layer:** `odin`. **Size:** S (31). **Depends on:** v0-T184.
@@ -15002,12 +15176,15 @@ index 53e1cd1..1bb73e7 100644
 `CheckReady` skips the layer check when it is given no list. A project with no leaf and no leaves file gave it none.
 
 **Files (in `odin`):**
+
 - Modify: `internal/engine/stages.go`, `internal/engine/tasks_test.go`
 
 **Interfaces:**
+
 - Produces: the tasks node always gives a list, empty when there is no leaf.
 
 **Acceptance criteria:**
+
 - [ ] A task naming a layer in a project with no leaf is refused: `layer "repos/anything" is not a leaf of this project ()`.
 
 **Named test:** `go test ./internal/engine -run 'TestAPlanInAProjectWithNoLeafIsCheckedAgainstNoLeavesNotNotAtAll'` in `odin`. **Layer:** `odin`. **Size:** S (11). **Depends on:** v0-T176.
@@ -15076,12 +15253,15 @@ index a4fc766..f025d77 100644
 A sandbox refuses a service whose image was never pulled (the task before this one in Gleipnir), and only `ygg sandbox build` may reach a registry.
 
 **Files (in `odin`):**
+
 - Modify: `internal/cli/sandbox.go`, `internal/cli/sandbox_realms_test.go`
 
 **Interfaces:**
+
 - Produces: after the stacks, `ygg sandbox build` pulls each distinct service image of the realms it built, through `Driver.Pull`, and prints a line for each. A realm with no stack is skipped under `--all` and its services with it.
 
 **Acceptance criteria:**
+
 - [ ] Two realms that share one service image pull it once; a realm with none pulls nothing.
 
 **Named test:** `go test ./internal/cli -run 'TestSandboxBuild'` in `odin`. **Layer:** `odin`. **Size:** S (46). **Depends on:** v0-T188, v0-T163.
@@ -15267,9 +15447,11 @@ index 5c542ae..99327e6 100644
 The architecture page says what the component now does.
 
 **Files (in `odin`):**
+
 - Modify: `docs/architecture.md`
 
 **Acceptance criteria:**
+
 - [ ] `docs/architecture.md` says how a run loads realms, runs the stages before the code, repeats a task shape, sends a refusal back, gives a task up, and starts each leaf's sandbox.
 
 **Named test:** `go test ./...` in `odin`. **Layer:** `odin`. **Size:** S (16). **Depends on:** v0-T202.
@@ -15319,10 +15501,12 @@ index 0d99df1..c967a34 100644
 The umbrella moves the four pointers once, and the exit check runs on the merged code.
 
 **Files (in `yggdrasil`):**
+
 - Modify: the submodule pointers of `gungnir`, `gleipnir`, `jormungandr` and `odin`;
   `docs/2-engineering/backlog.md`.
 
 **Acceptance criteria:**
+
 - [ ] After all four pull requests are merged, the pointers are at each repo's `main`, and `go.work`
       builds them together: `go vet ./...` and `go test ./...` pass in each repo with `go.work` and with
       `GOWORK=off`.
@@ -15450,7 +15634,7 @@ test was run, and it failed; then the code was restored. (`scripts/plan-defences
 rows in `defences.json` of the SDD folder; an executor can run it again on the merged code.)
 
 | Task | Defence removed | Test that fails |
-|---|---|---|
+| --- | --- | --- |
 | v0-T142 | leaves that consume each other in a ring | `TestParseUmbrellaRefusesBadRealmPins` |
 | v0-T144 | a service env that names a credential | `TestASandboxSpecMayCarryAStackAndServices` |
 | v0-T150 | a heading inside a code fence is not a task | `TestParseTasksReadsTheCanonicalLayout` |

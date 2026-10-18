@@ -43,7 +43,7 @@ leaf is named `<realm>-<flavor>`. The web realm's leaf `realm-web` splits into `
 All nine are decided by the founder (2026-10-17).
 
 | Realm | Domain | Myth, in one sentence | Flavors (examples) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Asgard** | kickstart: charters, brands, legal basics, roadmaps | Where the gods decide direction | (one leaf: `asgard`) |
 | **Midgard** | web frontends | The human world, the part people live in and see | `react`, `vue`, `next` |
 | **Helheim** | backend: services, APIs, workers | Below the world, behind the bridge Gjallarbru, where the guard Modgud asks every traveller their name and errand: the part no user sees, where every request is checked and every record is kept | `go` |

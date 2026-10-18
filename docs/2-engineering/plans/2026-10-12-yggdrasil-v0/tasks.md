@@ -100,11 +100,13 @@ also read them.
 (founder-run, once), `scripts/as-bot.sh` (agent-run), and their tests in `scripts/tests/`.
 
 **Interfaces:**
+
 - Produces: `as-bot.sh [--read] <repo[,repo...]|all> <command...>` (see Global constraints), and the
   bot's key in `~/.config/ouroboric/pr-bot/` (`key.pem`, mode `0600`, and `app.env`), which only
   `as-bot.sh` reads.
 
 **Acceptance criteria:**
+
 - [ ] No GitHub login is left in the agent environment: the classic token and the GitHub CLI's
       OAuth grant are revoked, `gh` holds no stored login, and `GITHUB_TOKEN` is unset.
 - [ ] `ouroboric-pr-bot` exists, created from `pr-bot.json`: private to `ouroboric-dev`, installed on
@@ -118,6 +120,7 @@ also read them.
       It lives only in the shell that runs `create-repo.sh` or `setup-repo.sh`, and is deleted after.
 
 **Named test (agent-run), in a new shell:**
+
 - `[ -z "${GITHUB_TOKEN:-}" ] && echo unset` prints `unset`.
 - `env -u GH_TOKEN gh auth status` fails with "not logged in".
 - `ssh -T -o BatchMode=yes git@github.com` fails with `Permission denied (publickey)`.
@@ -150,13 +153,16 @@ scripts, merged.
 Closes RB-13 and part of RB-14. Follows `ouroboric/docs/1-company/budget.md`.
 
 **Files:**
+
 - Create (outside every repo): `~/.config/ouroboric/factory.env`
 
 **Interfaces:**
+
 - Produces: `~/.config/ouroboric/factory.env`, mode `0600`, defining `CLAUDE_CODE_OAUTH_TOKEN` and
   `OPENROUTER_API_KEY`. Only founder-run steps read it; agents never open it.
 
 **Acceptance criteria:**
+
 - [ ] The factory uses the founder's personal Claude subscription started for Ouroboric, never an
       employer's account (budget doc, decided 2026-10-13).
 - [ ] `claude setup-token` was run signed in to that subscription; the token is in the env file.
@@ -194,19 +200,23 @@ that session is `~/ygg-h02-handoff.md`.
 The benchmark is split (change `2026-10-14-benchmark-split`):
 
 **Files in `ouroboric-dev/mimir`** (public, a standard repo, on the pr-bot's installation):
+
 - Create: `client-gallery-lite/instruction.md` (the frozen one-page brief)
 - Create: `client-gallery-lite/task.toml`, `client-gallery-lite/environment/Dockerfile`
 
 **Files in `ouroboric-dev/huldra`** (private, never on the pr-bot's installation; cloned to
 `~/brunogbv/ouroboric-private/huldra`, outside `~/brunogbv/ouroboric/`):
+
 - Create: `client-gallery-lite/v1/tests/` (Playwright, black-box, against a URL)
 
 **Interfaces:**
+
 - Produces: the brief's SHA-256 and the scenario count, which v0-T015 records publicly. Nothing from
   `huldra` leaves it. In Phase 2 both repos become submodules of the L0 instance (spec §11).
 - `mimir`'s licences are set in its scaffold PR.
 
 **Acceptance criteria:**
+
 - [ ] `instruction.md` restates design doc §4 as a brief: the photographer, client and dashboard
       journeys; the out-of-scope list; no implementation hints.
 - [ ] `tests/` covers every journey and the traps in design doc §4 (guessable gallery links, public
@@ -216,6 +226,7 @@ The benchmark is split (change `2026-10-14-benchmark-split`):
 - [ ] Against an empty app, every test fails ("fail to pass").
 
 **Named test:**
+
 - **Founder-run, in the `huldra` clone:**
   - `npx playwright test --list | tail -1` shows the scenario count.
   - With an empty server at the base URL,
@@ -255,6 +266,7 @@ with only the licence files, then `setup-repo.sh`'s settings and ruleset, so age
 protected repo. The script moves into Yggdrasil later (`remote-creates-repos-T002`).
 
 **Acceptance criteria:**
+
 - [ ] Six public repos exist: `gungnir`, `odin`, `gleipnir`, `jormungandr`, `realm-web`, `havamal`,
       each with its job sentence (table below) as its description.
 - [ ] Each `main` holds one commit: `LICENSE`, `LICENSES/AGPL-3.0-only.txt`,
@@ -292,17 +304,20 @@ unset GH_TOKEN
 Answers spec §16 items 1, 5, 6 and 7.
 
 **Files:**
+
 - Create: `yggdrasil/docs/5-research/<date>-sandbox-spike.md` (style `research`; the date the spike
   runs), with the probe script in an appendix
 - Scratch, never committed: `$SPIKE` from `mktemp -d`; an umbrella with one submodule leaf under
   `~/ygg-spike/`
 
 **Interfaces:**
+
 - Produces: **Decided** lines naming the sandbox driver (`devcontainer` or `podman`), the engine
   setup (version, rootless or not, where it runs) and the mount method (`mount` or `copy`). Phase 3's
   tasks are written from them.
 
 **Acceptance criteria:**
+
 - [ ] The report answers items 1, 5, 6 and 7, each with the command run and its output.
 - [ ] Every probe ran on a submodule leaf under the WSL home directory (review focus 3).
 - [ ] If the chosen engine is rootful, the report records the risk and its mitigation (item 5).
@@ -398,15 +413,18 @@ Answers spec §16 item 2. The agent prepares the scripts; **the founder runs the
 token** (they read `factory.env`).
 
 **Files:**
+
 - Modify: the spike report (a section, with `hook-check.sh` in the appendix)
 - Scratch: `$SPIKE/claude/`
 
 **Interfaces:**
+
 - Consumes: `factory.env` (v0-H01, founder-run only); the sandbox from v0-T001.
 - Produces: **Decided** lines for how the `claude-code` adapter blocks repo hooks and project MCP
   servers, and the exact stream-json fields that carry tokens, turns and cost.
 
 **Acceptance criteria:**
+
 - [ ] A **control run** without protection shows the planted hook and MCP server do run (markers
       appear), so the test can fail.
 - [ ] The **protected run** (with `--bare`, or with the managed settings named in the report) leaves
@@ -463,14 +481,17 @@ ls /work/.hook-session /work/.hook-tool /work/.mcp-ran 2>/dev/null && exit 1 || 
 Answers spec §16 item 3. **The founder runs the request** (it reads `factory.env`).
 
 **Files:**
+
 - Modify: the spike report (a section, with `openrouter-strict.sh` in the appendix)
 
 **Interfaces:**
+
 - Consumes: `OPENROUTER_API_KEY` from `factory.env` (founder-run only).
 - Produces: the exact request settings that implement `privacy: strict`, and whether `opencode run`
   can send them.
 
 **Acceptance criteria:**
+
 - [ ] The report names OpenRouter's provider settings for no training and no retention, linking their
       documentation.
 - [ ] One request with those settings succeeds; the report shows which provider served it and the
@@ -508,10 +529,12 @@ curl -sS --fail-with-body https://openrouter.ai/api/v1/chat/completions \
 ### Task v0-T004: repo checks and setup scripts
 
 **Files:**
+
 - Create: `ouroboric/scripts/check-repos.sh`, `ouroboric/scripts/setup-repo.sh`
 - Modify: `ouroboric/docs/4-ways-of-working/docs-standard.md` (a short "Repository setup" section)
 
 **Interfaces:**
+
 - Produces: `check-repos.sh [--check <name>]... [repo...]`. Checks: `settings`, `security`,
   `ruleset`, `reuse`, `agents`, `gitleaks`. Prints `PASS|FAIL <repo> <check>: <detail>`; exits 1 if
   any check fails or an unknown check is named. Default repos: `.github ouroboric yggdrasil asgard
@@ -521,6 +544,7 @@ curl -sS --fail-with-body https://openrouter.ai/api/v1/chat/completions \
   Founder-run with `GH_TOKEN` set to the admin token.
 
 **Acceptance criteria:**
+
 - [ ] `--check settings --check security` passes for the five existing repos.
 - [ ] `--check ruleset` fails for `ouroboric` (its extra empty `required_status_checks` rule) and
       passes for the other four: the check catches drift.
@@ -650,12 +674,14 @@ echo "set up ${1}"
 ### Task v0-T005: bring the existing repos to standard
 
 **Files:**
+
 - Delete: `yggdrasil/LICENSES/AGPL-3.0-only.txt`, `asgard/LICENSES/AGPL-3.0-only.txt` (unused until
   code lands; the component repos and later code PRs add it back where used)
 - Modify: `yggdrasil/REUSE.toml`, `asgard/REUSE.toml` (drop annotations that reference the removed
   licence, if any)
 
 **Acceptance criteria:**
+
 - [ ] `reuse lint` passes in `yggdrasil` and `asgard`.
 - [ ] **founder:** `setup-repo.sh ouroboric` resets its ruleset; `--check ruleset` passes for all five
       repos.
@@ -681,13 +707,16 @@ Closes RB-05. Spec §3.2: each umbrella owns the invariants for its subtree; chi
 them, never loosen them.
 
 **Files:**
+
 - Create: `ouroboric/AGENTS.md`, `yggdrasil/AGENTS.md`, `asgard/AGENTS.md`
 
 **Interfaces:**
+
 - Produces: the anchor `https://github.com/ouroboric-dev/yggdrasil/blob/main/AGENTS.md#invariants`,
   which every component repo's `AGENTS.md` links.
 
 **Acceptance criteria:**
+
 - [ ] Each file has a `## Invariants` section of short imperative rules (style `agent-facing`).
 - [ ] The invariants hold for **every** agent: those running inside factory runs and those building
       the factory. Rules that differ between the two are in separate, clearly named lists, so no
@@ -765,7 +794,7 @@ S="$(mktemp -d /tmp/claude-1000/-home-brunogbv-brunogbv/f88e5d74-7aed-40b9-9087-
 git clone -q "https://github.com/ouroboric-dev/<r>.git" "$S/<r>" && cd "$S/<r>" && git switch -c scaffold
 ```
 
-2. **Scaffold** on that branch, then push it and open a PR through `as-bot.sh <r>`:
+1. **Scaffold** on that branch, then push it and open a PR through `as-bot.sh <r>`:
    - `go.mod`: `module github.com/ouroboric-dev/<r>` and `go 1.26`;
    - `README.md` (what the repo is, how to build, where the docs are);
    - `AGENTS.md`:
@@ -786,17 +815,18 @@ This file only adds rules for this repo.
 - Architecture: `docs/architecture.md`.
 ```
 
-   - `docs/architecture.md` (front matter with `style: reference`; the component's responsibilities
+- `docs/architecture.md` (front matter with `style: reference`; the component's responsibilities
      and dependencies from spec §2.1);
-   - `.devcontainer/devcontainer.json` with the Go image pinned by digest
+- `.devcontainer/devcontainer.json` with the Go image pinned by digest
      (`podman image inspect docker.io/library/golang:1.26 --format '{{.Digest}}'` after pulling);
-   - `.gitignore`.
-3. **Check:** `as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset <r>`
+- `.gitignore`.
+
+1. **Check:** `as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset <r>`
    passes now; `--check reuse --check agents <r>` passes once the submodule exists (v0-T013) and the
    PR has merged.
 
 | Task | `<r>` | `<job>` |
-|---|---|---|
+| --- | --- | --- |
 | v0-T007 | `gungnir` | The contract: Go interface types and JSON schemas for ledger events, `graph.yaml`, `pack.yaml` and `factory.yaml`. |
 | v0-T008 | `odin` | The orchestrator: the graph engine and the `ygg` CLI, with routing and the ledger as packages. |
 | v0-T009 | `gleipnir` | The harness: agent adapters, the devcontainer sandbox driver, policies and the check runner. |
@@ -807,6 +837,7 @@ This file only adds rules for this repo.
 ### Tasks v0-T007 to v0-T012: one component repo each
 
 **For each task:**
+
 - **Files:** the files in step 2 (scaffold PR) of the procedure, in repo `<r>`. `realm-web`
   (v0-T011) also adds `templates/README.md`, `LICENSES/MIT.txt` (copied from
   `asgard/LICENSES/MIT.txt`), and a third `REUSE.toml` annotation making `templates/**` MIT.
@@ -825,9 +856,11 @@ This file only adds rules for this repo.
 ### Task v0-T013: wire the umbrella
 
 **Files:**
+
 - Modify: `yggdrasil/.gitmodules`; Create: `yggdrasil/go.work`; submodules at `yggdrasil/<r>`
 
 **Acceptance criteria:**
+
 - [ ] The six repos are submodules of `yggdrasil` at their merged scaffold commits.
 - [ ] `go work sync && go list -m all` in `yggdrasil` prints the six module paths.
 - [ ] `scripts/check-repos.sh --check reuse --check agents` passes for the six component repos.
@@ -857,10 +890,12 @@ git add .gitmodules go.work gungnir odin gleipnir jormungandr realm-web havamal
 Closes the scanning half of RB-14.
 
 **Files (in each of the eleven repos):**
+
 - Create: `.pre-commit-config.yaml`
 - Modify: `README.md` (one line: run `uvx pre-commit install` once after cloning)
 
 **Acceptance criteria:**
+
 - [ ] Every repo has a `.pre-commit-config.yaml` with the gitleaks hook pinned to `v8.30.1`.
 - [ ] A full-history scan of every repo reports no leaks.
 - [ ] **founder:** the hook is installed in each local working copy.
@@ -901,6 +936,7 @@ done
   A `git bundle` carries the full history even for submodules, whose `.git` is a file. Any `LEAKS`
   stops the task: the founder revokes the key first; history is rewritten only with the founder's
   approval.
+
 - [ ] **Step 4 (founder):** run `uvx pre-commit install` in each local working copy.
 - [ ] **Step 5:** run the named test; expect exit 0. Commit per repo; open the PRs.
 
@@ -909,9 +945,11 @@ done
 ### Task v0-T015: re-run readiness and record the gate
 
 **Files:**
+
 - Modify: `ouroboric/docs/1-company/readiness/2026-10-11-ready-to-build.md`
 
 **Acceptance criteria:**
+
 - [ ] RB-05, RB-12, RB-13, RB-14, RB-18, RB-19 and RB-20 are `met`, each with evidence: PR links,
       the spike report, the plan's merge (RB-18), the brief's hash and the hidden suite's scenario
       count (never its contents).
@@ -957,9 +995,11 @@ Harbor drives `docker compose`. Compose v5 builds images with `buildx`, which Po
 task image is built with `podman build`, and Compose only runs it.
 
 **Files:**
+
 - Create: `bench/harbor/harbor-podman.sh`, `bench/harbor/tests/harbor-podman.test.sh`
 
 **Interfaces:**
+
 - `harbor-podman.sh setup`: creates the tools folder `${YGG_HARBOR_HOME:-~/.cache/yggdrasil-harbor}`
   with `bin/docker-compose` (Docker Compose v5.5.1, SHA-256
   `db1889184726840f75c4f9c001048430d4f25b3be3cb084d3ddd762bc0aed576`; any other hash is refused
@@ -979,6 +1019,7 @@ task image is built with `podman build`, and Compose only runs it.
 - The founder's `~/.docker` and Podman configuration are never read or changed.
 
 **Acceptance criteria:**
+
 - [ ] A Compose download with the wrong hash is refused, and `bin/docker-compose` doesn't exist
       afterwards.
 - [ ] `exec` refuses when the installed Compose binary's hash is wrong.
@@ -1002,9 +1043,11 @@ the unprivileged user `app`, with a clean environment. A build checks itself the
 finishes.
 
 **Files:**
+
 - Create: `bench/harbor/selfcheck.sh`, `bench/harbor/tests/selfcheck.test.sh`
 
 **Interfaces:**
+
 - `selfcheck.sh <image> <app dir>`: starts a fresh container from `<image>` (never pulling), copies
   in only `<app dir>` as `/app`, runs `chown -R app:app /app`, and runs `/app/start.sh` as `app`
   with `env -i` plus `HOME`, `USER`, a UTF-8 locale and the standard `PATH`. It passes when port
@@ -1014,6 +1057,7 @@ finishes.
   always removes its container.
 
 **Acceptance criteria:**
+
 - [ ] An app that serves on `0.0.0.0:3000` passes.
 - [ ] Each of these fails, with its reason: `start.sh` missing or not executable; the server bound
       to `127.0.0.1` only; a dependency installed outside `/app` during the build; a write outside
@@ -1034,11 +1078,13 @@ Keep it thin: the adapter hands the brief to Yggdrasil and carries out what Yggd
 task environment. All factory logic stays in Yggdrasil.
 
 **Files:**
+
 - Create: `bench/harbor/pyproject.toml`, `bench/harbor/uv.lock`, `bench/harbor/ygg_harbor/__init__.py`,
   `bench/harbor/ygg_harbor/agent.py`, `bench/harbor/tests/test_agent.py`,
   `bench/harbor/tests/fake_factory.py`
 
 **Interfaces:**
+
 - Produces: `ygg_harbor.agent:YggdrasilAgent`, a `harbor.agents.base.BaseAgent`. Options (`--ak`):
   `command` (required: the factory command, run on the host), `budget_usd` (default 100, from the
   task's `[metadata] budget_usd`), `secret_env` (names of host variables whose values must never
@@ -1055,6 +1101,7 @@ task environment. All factory logic stays in Yggdrasil.
   benchmark runs (plan Phase 6); until then, `tests/fake_factory.py` speaks it.
 
 **Acceptance criteria:**
+
 - [ ] Each `op` reaches the environment with its arguments, and its reply carries the result.
 - [ ] `done` ends the run: the adapter runs a final self-check (v0-T017) on the downloaded `/app`,
       records the result, and stops the factory process.
@@ -1081,9 +1128,11 @@ task environment. All factory logic stays in Yggdrasil.
 ### Task v0-T019: smoke runs through Harbor
 
 **Files:**
+
 - Create: `bench/harbor/tests/smoke.sh`
 
 **Acceptance criteria:**
+
 - [ ] `smoke.sh <task dir> <brief sha256>` prepares a throwaway copy with `harbor-podman.sh prepare`,
       adds a trivial `tests/test.sh` that only checks `/app/start.sh` answers on port 3000 and writes
       `{"reward": 1}` (or 0) to `/logs/verifier/reward.json`, and runs Harbor twice with a fresh jobs

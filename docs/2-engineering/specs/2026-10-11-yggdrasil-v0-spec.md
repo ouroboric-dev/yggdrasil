@@ -8,7 +8,7 @@ related: [../../1-product/design/2026-10-11-yggdrasil-v0-design.md, ../../1-prod
 # Yggdrasil v0 engineering spec
 
 | | |
-|---|---|
+| --- | --- |
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from brainstorming sessions held 2026-10-10 and 2026-10-11 |
 | **Implements** | [v0 design doc](../../1-product/design/2026-10-11-yggdrasil-v0-design.md), within the [charter](../../1-product/charter.md) |
 | **Scope** | the factory core, the web realm and metrics. The game realm and the benchmark kit (Mimir) get their own design docs and specs |
@@ -23,7 +23,7 @@ Names follow [`naming-and-mythology.md`](https://github.com/ouroboric-dev/ourobo
 umbrella of repos in the `ouroboric-dev` GitHub org:
 
 | Repo | Role |
-|---|---|
+| --- | --- |
 | `yggdrasil` | umbrella: AGENTS.md, docs (specs, research, naming), `go.work`, submodule pointers. Holds no code |
 | `gungnir` | the contract: Go interface types and JSON schemas (ledger events, `graph.yaml`, `pack.yaml`, `factory.yaml`) |
 | `odin` | the orchestrator: graph engine and the `ygg` CLI. Routing (§8) and the ledger (§10) start as packages here |
@@ -52,7 +52,7 @@ umbrella** (L0, §3) that pins a Yggdrasil version and lists their projects.
   <img alt="Yggdrasil architecture: the ygg CLI, factory.yaml and the web realm feed Odin; Odin drives Jormungandr and Gleipnir&#x27;s agent adapters and devcontainer driver; adapters load skills from Havamal; Odin is the only writer of the instance tree; every component implements Gungnir" src="../../assets/diagrams/rendered/architecture.svg">
 </picture>
 
-```
+```text
                  ygg CLI  (run · resume · approve · reject · status · board · report · metrics · doctor)
                                    │
                          ┌─────────▼──────────┐
@@ -71,7 +71,7 @@ umbrella** (L0, §3) that pins a Yggdrasil version and lists their projects.
 ### 2.1 Component responsibilities
 
 | Component | Does | Depends on |
-|---|---|---|
+| --- | --- | --- |
 | **Odin** | loads realm graphs and `factory.yaml`; walks the graph; runs exec, agent, loop and gate nodes; checkpoints and resumes; walks the repo tree and moves pointers; writes the ledger; serves the CLI | Gungnir interfaces |
 | **Gleipnir** | turns a task into an agent session (context assembly, adapter call, usage capture); runs commands in sandboxes; applies policies (devcontainer hardening, managed settings, firewall); runs checks | Gungnir; Podman and the devcontainer CLI on the host |
 | **Jormungandr** | runs a bounded loop: implement → check ladder → feed failures back → retry, up to N attempts; then escalates; enforces per-loop budgets | Gungnir; called by Odin |
@@ -116,7 +116,7 @@ The operator's instance is a **tree of nodes**. Each node is either:
 - an **umbrella**: has children, holds no product code; or
 - a **leaf**: holds product code; it is the only node an agent ever mounts.
 
-```
+```text
 L0  instance umbrella (private, per operator)
     ├─ yggdrasil/          (submodule: pinned factory version)
     ├─ benchmarks/         (submodule, PRIVATE: frozen briefs + hidden suites)
@@ -143,7 +143,7 @@ project names leak through `.gitmodules`.
 ### 3.2 Per-umbrella responsibilities
 
 | Each umbrella owns | for |
-|---|---|
+| --- | --- |
 | `AGENTS.md` invariants | its subtree; children MAY tighten them but MUST NOT loosen them |
 | routing for its direct children | a generated `REPOS.md` and a routing bundle (§8) |
 | integration and acceptance tests | contracts between its children, run at their pinned SHAs |
@@ -196,7 +196,7 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
   <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report" src="../../assets/diagrams/rendered/web-realm-graph.svg">
 </picture>
 
-```
+```text
 design ─► [gate: design] ─► spec ─► conformance review ─► [gate: spec] ─► plan + reuse review ─► DoR check
 agent                       agent    agent (read-only)                    agent + Ponytail       exec
   ─► init ─► [gate: plan] ─► for each ready task:
@@ -274,7 +274,7 @@ A bisecting merge queue (for batches of branches) comes with parallel agents.
 Checks and reviewers report **findings**, a Gungnir type, not free text:
 
 | Field | Meaning |
-|---|---|
+| --- | --- |
 | `id` | stable across fix attempts: the same problem keeps the same id |
 | `source` | which rung or reviewer raised it |
 | `severity` | blocker, major, minor |
@@ -296,7 +296,7 @@ Checks and reviewers report **findings**, a Gungnir type, not free text:
 v0 ships three adapters:
 
 | Adapter | Invokes | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `claude-code` | `claude -p` with streaming JSON output | read-only roles get read/search tools only |
 | `opencode` | `opencode run` | OpenRouter models; proves the swap |
 | `scripted` | replays canned actions | tests only (§13) |
@@ -327,7 +327,6 @@ privacy: standard   # strict → only providers with no training and no retentio
   and no retention. The adapter does this through OpenRouter's provider data-policy settings (the
   exact options are verified when the adapter is built). Policy MUST only tighten going down:
   factory defaults → L0 → L1 → leaf.
-
 
 ### 5.1 Skills and writing styles
 
@@ -398,7 +397,7 @@ The rule behind the table: **humans approve direction; deviations from approved 
 building within it is automatic.**
 
 | Approval point | When | step-by-step | key-points (default) | unattended |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `design` | design doc ready | stop | stop | stop (default; explicit override only) |
 | `spec` | spec passed the design-conformance review | stop | auto; stop on deviation (option `spec: stop`) | auto; stop on deviation |
 | `plan` | tasks passed DoR, init done | stop | auto | auto |
@@ -460,7 +459,7 @@ Routing follows marola's
 ### 8.2 v0 indexes
 
 | Index | Answers | Used by |
-|---|---|---|
+| --- | --- | --- |
 | wiring / contracts | who produces, consumes or pins each artifact or contract file (`REPOS.md` block) | Odin, agents |
 | impact | what a change to a file or contract affects (reverse references + contract readers); always labelled "lower bound" | Odin: which acceptance tests run, and whether a pointer move is `pointer-contract` |
 | doc↔code | which code implements which task or acceptance criterion, and the reverse | spec-compliance reviewer |
@@ -500,7 +499,7 @@ it.
 ### 9.2 Stack
 
 | Leaf | Stack |
-|---|---|
+| --- | --- |
 | `api` | Go `net/http` (deployable with Vercel's Go preset; listens on `PORT`), sqlc, Postgres. Owns `openapi.yaml` |
 | `web` | React, Vite, TypeScript, Tailwind, shadcn/ui, TanStack Router and Query; Uppy for presigned resumable uploads; API client generated from `openapi.yaml` |
 
@@ -516,7 +515,7 @@ runs it as a read-only service in `web`'s sandbox.
 </picture>
 
 | Concern | Development (in the sandbox) | Production target (deployment is outside v0) |
-|---|---|---|
+| --- | --- | --- |
 | Web | Vite dev server | Vercel (static build) |
 | API | Go server | Vercel Go preset (beta) |
 | Database | Postgres container | Neon (free tier; suspends when idle, keeps data) |
@@ -539,7 +538,7 @@ Design rules:
 
 ### 9.4 Pack layout
 
-```
+```text
 realm-web/
   pack.yaml        name, version, default roles/models, check commands
   graph.yaml       the graph in §4.2
@@ -699,7 +698,7 @@ The format follows **Harbor's task layout** (used by Terminal-Bench 2) wherever 
 factories' tasks can then run on Yggdrasil, and ours on theirs. Exact field names are checked against
 Harbor's documentation during implementation.
 
-```
+```text
 benchmarks/<task-id>/
   instruction.md   the brief, frozen; any change is a new version
   task.toml        id, version, budget and time limits, scoring weights, grader settings
@@ -727,7 +726,7 @@ benchmarks/<task-id>/
 ## 12. Error handling
 
 | Failure | Response |
-|---|---|
+| --- | --- |
 | Transient (HTTP 429, network, CLI crash at start) | retry with backoff, up to 3 times; not a loop attempt |
 | Provider quota exhausted | pause the run, resumable, reason recorded |
 | Agent failure (non-zero exit, timeout, malformed output) | counts as a loop attempt |
@@ -768,7 +767,7 @@ The adversaries are named in the [naming record](https://github.com/ouroboric-de
 **Loki** (prompt injection), **Nidhogg** (entropy), **Ragnarok** (the cascade).
 
 | Threat | Example | Control |
-|---|---|---|
+| --- | --- | --- |
 | Prompt injection steals credentials (Loki) | a poisoned README makes the agent post `~/.aws` to a server | sandbox with no home mount, egress allowlist, dedicated revocable model tokens, no git credentials in sandboxes |
 | Sandbox escape through config | agent adds `initializeCommand` to `devcontainer.json`; next `up` runs it on the host | factory-owned config outside the mount, validated before every `up` |
 | Sandbox escape through git | agent plants `.git/hooks/pre-commit`; host commit runs it | git dir out of the mount or read-only; host git with hooks disabled |
@@ -891,7 +890,7 @@ If (1) fails, the fallback is a plain Podman sandbox driver behind the same inte
 ## 17. Prior art
 
 | Project | What we take |
-|---|---|
+| --- | --- |
 | Anthropic, long-running agent harnesses | initializer vs coding sessions, progress files, JSON feature lists, browser verification, separate evaluators |
 | OpenAI, harness engineering | short AGENTS.md as a map, mechanical enforcement, cleanup work against entropy |
 | StrongDM software factory | hidden scenario tests, digital-twin services |
@@ -919,7 +918,7 @@ Yggdrasil to publish their source. That would make the factory unusable for most
 ## 18. Decision log
 
 | Decision | Chosen | Main alternatives |
-|---|---|---|
+| --- | --- | --- |
 | Orchestrator approach | own orchestrator | LangGraph.js; Claude Code native features |
 | Language | Go | TypeScript, Python, Rust, Elixir, Java + Pekko |
 | Frameworks | none as core | CrewAI, LangGraph, AutoGen, ADK |

@@ -41,7 +41,7 @@ These settle what the proposal left to the builder. Each follows the founder's r
 when the house style has a real reason, otherwise change the files to the default.
 
 | Finding | Decision | Reason |
-|---|---|---|
+| --- | --- | --- |
 | MD010 tabs in code blocks | bend: `MD010: {code_blocks: false}` | gofmt requires tabs; the plan tools copy plan code verbatim |
 | MD033 `<picture>`, `<source>`, `<img>` | bend: `allowed_elements` | the docs standard prescribes `<picture>` for themed images; the org profile opens with `<img>` |
 | MD041 first line not an H1 | bend: `MD041: false` | the formats that open without an H1 are deliberate: journal entries (front matter, then `##` sections), PR templates, Claude skill files, the org profile banner. Every other doc's title is already checked by the docs standard's front matter rule |
@@ -152,11 +152,13 @@ More decisions:
 ### Task base-ci-T001: the shared markdownlint bends, and proof that exclusions keep the rules
 
 **Files (in `ouroboric`):**
+
 - Modify: `scripts/templates/ci/pieces/markdown.files/.markdownlint.yaml`,
   `scripts/templates/ci/README.md`
 - Test: `scripts/tests/lint-config.test.sh` (new)
 
 **Interfaces:**
+
 - Produces: the final shared `.markdownlint.yaml`, which every later task relies on:
 
   ```yaml
@@ -176,6 +178,7 @@ More decisions:
 - Produces: the two exclusion mechanisms, as tested file shapes (see the decisions).
 
 **Acceptance criteria:**
+
 - [ ] A tab inside a fenced Go block passes. A tab in prose fails.
 - [ ] `<picture>` passes. `<div>` fails.
 - [ ] A file that opens with `## Challenge` after front matter passes.
@@ -214,12 +217,14 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-T002: add-ci.sh --upgrade replaces the known gitleaks-only config
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/templates/ci/upgrade/gitleaks-only.yaml`, byte for byte
   `git show a6be975:scripts/templates/go-component/pre-commit-config.yaml.tmpl`
 - Modify: `scripts/add-ci.sh`, `scripts/templates/ci/README.md`
 - Test: `scripts/tests/add-ci.test.sh`
 
 **Interfaces:**
+
 - Produces: `add-ci.sh (--org|--config) [--ci <piece>,...] [--upgrade] (--check | <dir>)`.
   - With `--upgrade`, an existing `<dir>/.pre-commit-config.yaml` is allowed only if
     `cmp -s` finds it equal to `templates/ci/upgrade/gitleaks-only.yaml`. It is then replaced.
@@ -229,6 +234,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
   - Without `--upgrade`, behaviour is unchanged.
 
 **Acceptance criteria:**
+
 - [ ] With `--upgrade`, a folder holding the known file ends up with the full config, `lint.yml` and
       the piece files.
 - [ ] With `--upgrade`, a known file plus one extra hook line exits 2. So does the known file with a
@@ -253,11 +259,13 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-T003: md-same-text.sh proves a Markdown change is formatting only
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/md-same-text.sh`, `scripts/md-same-text.py` (the renderer, run with
   `python3 -I` through `uvx`)
 - Test: `scripts/tests/md-same-text.test.sh`
 
 **Interfaces:**
+
 - Produces: `md-same-text.sh <base-ref> <head-ref>`, run inside a git repo.
   - It takes every `.md` file changed between the refs: `git diff --name-only --diff-filter=M`.
   - For each file, it compares the two versions:
@@ -270,6 +278,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
   - Agent-run, with no token.
 
 **Acceptance criteria:**
+
 - [ ] These count as the same:
   - a heading with blank lines added around it;
   - `|---|` changed to `| --- |`;
@@ -296,12 +305,14 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-T004: rollout-ci.sh, the founder's two commands, and the docs
 
 **Files (in `ouroboric`):**
+
 - Create: `scripts/rollout-ci.sh`
 - Modify: `docs/4-ways-of-working/docs-standard.md` (§9), `AGENTS.md` (the scripts table and the
   founder-only line), `scripts/templates/ci/README.md` (the existing-repos section)
 - Test: `scripts/tests/rollout-ci.test.sh`
 
 **Interfaces:**
+
 - Consumes: `repo-config.sh`'s `repo_config_args`, `repo_config_load` and `RC_ORG`; `setup-repo.sh`;
   `check-repos.sh --check ruleset <repo>`; `as-bot.sh <repo> gh …`.
 - Produces: `GH_TOKEN=... rollout-ci.sh (--org <name>|--config <path>) push|protect <repo>...`
@@ -333,6 +344,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
   - `ROOT` is `${ROLLOUT_ROOT:-<dir>/../../rollout}`. `exec </dev/null`. It never prompts.
 
 **Acceptance criteria:**
+
 - [ ] `push` on two prepared repos pushes both `base-ci` branches to the fake remotes, opens two PRs
       through the bot stub, and prints both URLs.
 - [ ] `push` run again with nothing changed prints `up to date`, and opens no second PR.
@@ -377,10 +389,12 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 **Files:** in `$ROLLOUT_ROOT/gungnir`, on branch `base-ci`.
 
 **Interfaces:**
+
 - Consumes: T001's configs and T002's `add-ci.sh --upgrade`, from `ouroboric` `main` after the
   tooling PR merges.
 
 **Acceptance criteria:**
+
 - [ ] The branch holds:
   - the full config: `add-ci.sh --org ouroboric-dev --ci reuse,markdown,shell,actions,yaml --upgrade .`;
   - the `AGENTS.md` bare-URL fix (`<…>`);
@@ -407,6 +421,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 **Files:** in `$ROLLOUT_ROOT/<repo>`, each on branch `base-ci`.
 
 **Acceptance criteria:**
+
 - [ ] Each repo has the full config through `--upgrade`, and passes the three landing commands.
 - [ ] **odin:** `.markdownlint-cli2.yaml` with `ignores: ["testdata/**"]`, and `.yamllint` with
       `extends: .yamllint.yaml` and `ignore: testdata/`. These are its only exclusions.
@@ -433,6 +448,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 **Files:** in `$ROLLOUT_ROOT/<repo>`, each on branch `base-ci`.
 
 **Acceptance criteria:**
+
 - [ ] Each has the full config through `--upgrade`, and passes the three landing commands.
 - [ ] **mimir and ouroboric-packages:** the MD060 tables (6 and 14 findings) are made consistent by
       hand (`--fix` leaves them). ouroboric-packages's one MD040 fence gets a language.
@@ -452,11 +468,13 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-T008: ouroboric
 
 **Files:**
+
 - In `ouroboric`:
   - the formatting fixes, via pr-bot PRs on branches `base-ci-fix-<area>`;
   - then `$ROLLOUT_ROOT/ouroboric` on branch `base-ci`.
 
 **Acceptance criteria:**
+
 - [ ] **The fix PRs come first,** opened and pushed with `as-bot.sh`, each passing `md-same-text.sh
       origin/main HEAD`:
   1. `docs/` without the journal, then `docs/6-journal/`. These are the `--fix` output, plus the four
@@ -488,11 +506,13 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-T009: yggdrasil
 
 **Files:**
+
 - In `yggdrasil`:
   - the formatting fixes, via pr-bot PRs on branches `base-ci-fix-<area>`;
   - then `$ROLLOUT_ROOT/yggdrasil` on branch `base-ci`.
 
 **Acceptance criteria:**
+
 - [ ] **The fix PRs come first,** each passing `md-same-text.sh`:
   1. `docs/2-engineering/`, including the phase plans. The code-block rule in `md-same-text.sh` is
      the guarantee that the plan code is untouched.
@@ -517,6 +537,7 @@ first time, as `add-ci.test.sh` does. **Size:** S.
 ### Task base-ci-H01 (founder): done for all ten
 
 **Acceptance criteria:**
+
 - [ ] This run prints only `PASS` lines:
 
   ```zsh

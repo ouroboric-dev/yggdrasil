@@ -26,6 +26,7 @@ Verification (script `style-pass/check_spec.py`): front matter, all 58 heading l
 ## (a) Per-file summary
 
 ### specs/2026-10-11-yggdrasil-v0-spec.md
+
 - Requirements now use RFC 2119 keywords. This covers isolation rules (§3.3), pointer-move rules (§3.4), DoR and spec-deviation rules (§4.2), checkpoints (§4.3), the merge gate (§4.5), typed findings (§4.6), adapters and privacy (§5), skills (§5.1), sandbox hardening and credentials (§6.2, §6.3), approval mechanics (§7.2), the budget cap (§7.4), routing guards (§8), web-realm design rules (§9.3), check-ladder security rungs (§9.5), dependency policy (§9.6), the ledger (§10.1), the tracker (§10.4), journal scrubbing (§10.5), benchmark isolation (§11), `run.json` atomicity (§12), test expectations (§13), GitHub identities (§15.1, §15.2), self-hosting guardrails (§15.4), docs (§15.5) and the licence rule (§17).
 - Long sentences split, so each sentence carries one rule or fact. Conditions now come first ("If a leaf does not exist, create it…").
 - Passive voice changed to active where the actor is stated in the original (for example, "The implementation plan settles the exact method sets"). Where the original names no actor, the passive stays, so that no actor is invented.
@@ -34,15 +35,19 @@ Verification (script `style-pass/check_spec.py`): front matter, all 58 heading l
 - Tables: the only cell changed is §3.2 ("children MAY tighten them but MUST NOT loosen them"). The other cells were already short or are lists of facts, so I left them alone.
 
 ### specs/README.md
+
 - Added a subject ("This folder holds…"). "linked to the design doc" became "Each spec MUST link to…". "Not edited after acceptance" became "A spec MUST NOT be edited after acceptance."
 
 ### changes/README.md
+
 - Turned the noun phrase into full sentences. "Merged proposals move to `archive/`…" became "A merged proposal MUST move to `archive/` after its delta is folded into `../system/`."
 
 ### plans/README.md
+
 - Added a subject. "Every task passes the Definition of Ready" became "Every task MUST pass the Definition of Ready".
 
 ### system/README.md
+
 - Added a subject. "Updated only through…" became "It MUST be updated only through…". The empty-until-v0 sentence is now two sentences.
 
 ## (b) Requirements whose meaning might have shifted
