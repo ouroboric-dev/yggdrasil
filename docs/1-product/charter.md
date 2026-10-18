@@ -18,6 +18,10 @@ takes over the direction of the superseded
 Amended again on 2026-10-17 (founder): Yggdrasil is **the agentic factory**, since its nine realms
 make more than software (see
 [the realms](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/story/naming-and-mythology.md#the-realms)).
+Amended on 2026-10-18 (founder) to admit **Ginnungagap**, the realm whose domain is realms. It stands
+outside the nine domain realms and creates realm leaves through `ygg run`, checked against a realm
+readiness checklist (see the
+[Ginnungagap and Voluspa design doc](design/2026-10-18-ginnungagap-design.md)).
 
 ## Vision
 
@@ -70,7 +74,8 @@ ground and brand, and pay for it later.
   Products may be public or private, and hosted anywhere, at each operator's choice.
 - **Narrow first.** Grow from specific realms and extract what is truly shared; no "one factory for
   everything" up front. The Asgard realm kickstarts every company and product (tier 0); the build
-  realms follow: web SaaS, then games, then mobile.
+  realms follow: web SaaS, then games, then mobile. Ginnungagap makes new realms from what the
+  existing realms truly share, once the web realms have run with real agents.
 - **Direction is human, and Asgard is not a lawyer.** The Asgard realm drafts and checks; founders
   decide, and charter approval stops for a human in every mode. It scaffolds legal material and flags
   what needs a qualified person; it never presents its output as legal advice.

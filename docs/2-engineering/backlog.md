@@ -229,7 +229,7 @@ Source of items B-015 to B-031: the final review of Phase 3 (2026-10-16), one fr
 Source of items B-035 to B-039: the
 [Asgard v0 design doc §10](../1-product/design/2026-10-17-asgard-v0-design.md#10-what-yggdrasil-needs-later)
 (accepted 2026-10-17). They are not review findings: they are what Yggdrasil must support before the
-Ginnungagap graph can run on Odin. None is Yggdrasil v0 work. Pick them up with the Asgard realm's
+`kickstart` graph (named Ginnungagap until 2026-10-18) can run on Odin. None is Yggdrasil v0 work. Pick them up with the Asgard realm's
 graph, or earlier when a phase touches the code they name.
 
 ### B-037: gate nodes assume an operator at a terminal

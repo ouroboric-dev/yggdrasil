@@ -15,6 +15,11 @@ style: direction
 | **Engineering spec** | to be written after this design doc is accepted |
 | **Process** | tier 3, [spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md) |
 
+**Note added 2026-10-18** (the [Ginnungagap and Voluspa design doc](2026-10-18-ginnungagap-design.md),
+§8.3 and §9): Asgard's kickstart graph is now named **`kickstart`**, because Ginnungagap became the
+realm that creates realms. The readiness check script of §8 is `ygg readiness`, built once for Asgard
+and Ginnungagap, and it keeps the offline rules of §8. The text below keeps the old name.
+
 ## 1. Summary
 
 Asgard becomes a **realm of Yggdrasil**: the realm that kickstarts companies and products (tier 0).
