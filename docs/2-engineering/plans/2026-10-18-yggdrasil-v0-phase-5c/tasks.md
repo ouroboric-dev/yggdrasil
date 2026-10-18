@@ -104,8 +104,9 @@ Each line is **Decided 2026-10-18** when the founder merges this plan. The draft
     touches nothing else. After a pass it bumps and checks each rollout product, one at a time. The tool may
     change the manifest and its lock file and nothing else. It does not commit.
 15. **The two-tenant check is its own rung, `authz`,** after `security` in helheim-go. A Go tool reads
-    `openapi.yaml` and wants a passing `TestCrossTenant<OperationId>` for each route with an id-like path
-    variable. User A must get 2xx and user B 403 or 404. A route may be marked public in `authz.json` with a reason.
+    `openapi.yaml` and wants a passing `TestCrossTenant<OperationId>` for each route with a path
+    variable (any variable; the first draft took only id-like names, and the founder closed that on 2026-10-18, see the
+    errata note below). User A must get 2xx and user B 403 or 404. A route may be marked public in `authz.json` with a reason.
 16. **The smoke task is `smoke-notes`** in `mimir`, with a PUBLIC sample suite and a reference solution kept out
     of `environment/`. The real hidden suite for any task plugs in through the same config.
 17. **The real-agent smoke is a script and an example config with real caps** (v0-T263): $3 a run and $6 a day,
@@ -246,6 +247,16 @@ indexes (spec §8.2) and the routing summary injected into a session (§8.1); th
 a TypeScript import graph; `ygg routing build|bench` as commands; a per-agent token cap; the `github` remote
 and fetching a realm by tag; a second flavor of Midgard or Helheim; deploying anything; the backlog items of
 decision 19. Asgard as a realm is next after this phase.
+
+## Errata found while executing
+
+- **The smoke brief's hash.** markdownlint (MD060) rejects the compact table separators of `smoke-notes/instruction.md`.
+  The two separator rows are now `| --- |`, and the pinned SHA-256 is `637d14af…0ef82` (was `2ec48a63…c003`) in v0-T261
+  (`task.toml`, the README row and the check output). No markdownlint ignore is added. v0-T262 and later tasks read
+  the hash from `task.toml`, so they do not change.
+- **The two-tenant rule (decision 15).** `ygg-authz` takes every path variable as a resource id, not only id-like names
+  (`{photoId}`, `*_id`). A route is excused only by a public mark with a reason in `authz.json`. The code of v0-T260 in
+  this file still shows the first draft's `idName` filter; the merged helheim-go code is the reference.
 
 ## How each task lands
 
@@ -14373,7 +14384,7 @@ the founder in `huldra` and no agent reads it.
   the grader contract: `tasks_dir/<task-id>/{task.toml,instruction.md,environment/}`, suite at `.../<suite>/tests/`,
   `bash /tests/test.sh`, `/logs/verifier/results.json` in Playwright's JSON format, `tests/manifest.json` (`ygg.suite/v1`).
 - Produces: task id `smoke-notes`, version `1.0.0`, suite `v1`, brief SHA-256
-  `2ec48a63bd3abef7dca7022b61b9f5e2b50087eabb889c08ec83fa113121c003`, weights `account=0.3,notes=0.3,security=0.4`.
+  `637d14afbc4140df9ce586123a51804ddfc81a70ef1e91ae6fa1662a92f0ef82`, weights `account=0.3,notes=0.3,security=0.4`.
   `scripts/check-task.sh <task-dir>` exits 0 when the task is well formed, 1 when a check fails, 2 on wrong usage.
   v0-T247 and v0-T248 may use `smoke-notes/sample-suite/` as a fixture; v0-T262 uses the task with scripted agents.
 
@@ -14670,7 +14681,7 @@ factory can build, start and secure a whole product.
 The page at `/` holds everything. Use these names exactly.
 
 | Where | Element | Name |
-|---|---|---|
+| --- | --- | --- |
 | Signed out | fields; buttons | "Email", "Password"; "Sign up", "Log in" |
 | Signed in | button | "Log out" |
 | Signed in | field; button | "Note"; "Add note" |
@@ -14682,7 +14693,7 @@ The page at `/` holds everything. Use these names exactly.
 All bodies are JSON. A missing or wrong session answers 401.
 
 | Request | Answer |
-|---|---|
+| --- | --- |
 | `POST /api/signup` `{"email","password"}` | 201 and a session cookie. 400 for a bad email or a short password. 409 for a used email. |
 | `POST /api/login` `{"email","password"}` | 200 and a session cookie. 401 for a wrong email or password. |
 | `POST /api/logout` | 204. The cookie stops working. |
@@ -14713,7 +14724,7 @@ sha256sum smoke-notes/instruction.md
 ```
 
 ```output
-2ec48a63bd3abef7dca7022b61b9f5e2b50087eabb889c08ec83fa113121c003  smoke-notes/instruction.md
+637d14afbc4140df9ce586123a51804ddfc81a70ef1e91ae6fa1662a92f0ef82  smoke-notes/instruction.md
 ```
 
 Write `smoke-notes/task.toml`:
@@ -14736,7 +14747,7 @@ category = "web-app"
 difficulty = "easy"
 tags = ["yggdrasil-v0", "smoke"]
 # SHA-256 of instruction.md. Any change to the brief makes a new task version.
-brief_sha256 = "2ec48a63bd3abef7dca7022b61b9f5e2b50087eabb889c08ec83fa113121c003"
+brief_sha256 = "637d14afbc4140df9ce586123a51804ddfc81a70ef1e91ae6fa1662a92f0ef82"
 # Hidden suite version that scores runs of this task version.
 suite = "v1"
 # Spend limit for one factory build (model and infrastructure costs).
@@ -15152,7 +15163,7 @@ index e9165f1..b1b5ad8 100644
  | Task | Version | Brief SHA-256 |
  |---|---|---|
  | [`client-gallery-lite`](client-gallery-lite/) | 4.0.0 | `bd4b2c7aaf532d51acb3a7edfd5b193d368db8445093b7a24cd80b7ee24d8319` |
-+| [`smoke-notes`](smoke-notes/) | 1.0.0 | `2ec48a63bd3abef7dca7022b61b9f5e2b50087eabb889c08ec83fa113121c003` |
++| [`smoke-notes`](smoke-notes/) | 1.0.0 | `637d14afbc4140df9ce586123a51804ddfc81a70ef1e91ae6fa1662a92f0ef82` |
  
  A task holds:
  
