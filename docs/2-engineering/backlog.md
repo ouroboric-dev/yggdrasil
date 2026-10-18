@@ -339,7 +339,7 @@ SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
 - **Where:** as listed; `odin` is `internal/...`, `gleipnir` is `sandbox/...`.
 - **Problem and fix, one line each:**
   - The parked Important finding (config protection is a path list) is B-049.
-  - M-1 `run/sandbox.go`: the snapshot takes each other leaf at its working copy's `HEAD`, not the commit the
+  - **Fixed (odin #15, 2026-10-18).** M-1 `run/sandbox.go`: the snapshot takes each other leaf at its working copy's `HEAD`, not the commit the
     umbrella records, and skips a leaf that is not checked out silently: use the gitlink, refuse an absent leaf.
   - M-2 `egress.sh`: on a refresh, old addresses leave the rules before dnsmasq gets the HUP: keep both for a cycle.
   - M-3 `egress.sh`: `server=/<service>/` forwards a service name's subtree to the podman resolver: write the
@@ -372,7 +372,12 @@ SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
 - **Fix:** run the linters with configs baked into `/opt/ygg/checks`, where the agent cannot write, and pass them
   explicitly (`golangci-lint --config`, `eslint --no-config-lookup -c`, and so on); recompute sqlc's output path
   from the generator (`sqlc diff`) instead of a path list. Test: each of the three bypasses above fails its rung.
-- **Status:** proved (the re-reviewer reproduced the symlink, `.gitignore` and `src/eslint.config.js` cases).
+- **Status:** fixed (helheim-go #4, midgard-react #8, 2026-10-18). Each ladder now uses the lint and build configs
+  baked into `/opt/ygg/checks/config` and passes them explicitly; the template copies are pinned to them by a test.
+  helheim-go decides what sqlc owns by regenerating from the base commit's `sqlc.yaml` (`sqlc-owned.sh`) and
+  comparing bytes. Open consequence: in midgard-react an edit to a tool config is now ignored, not refused, and the
+  template's `AGENTS.md` does not say so. Not run: the image build and `web-e2e.sh`/`accept-e2e.sh` end to end.
+  (Was: proved, the re-reviewer reproduced the symlink, `.gitignore` and `src/eslint.config.js` cases.)
 
 Source of items B-050 and B-051: the founder's runs v0-H14 and v0-H15 on a real engine (2026-10-18).
 
@@ -386,7 +391,10 @@ Source of items B-050 and B-051: the founder's runs v0-H14 and v0-H15 on a real 
   when the realm folder is a git repository, so ignored and untracked files are not part of it; keep the symlink
   refusal for the committed files. Test: a realm folder with an ignored `node_modules/.bin/x` symlink loads, and a committed symlink is still refused.
   Until then, the tests of a template must build in a copy (v0-T225's build test does; the in-place `vitest` runs of v0-T224 did not).
-- **Status:** proved (v0-H15 stopped on it).
+- **Status:** fixed (odin #15, 2026-10-18). A realm folder that is a git repository is hashed from `HEAD`; a
+  committed symlink is still refused. Added with it: a tracked file that differs from `HEAD` is refused, because a
+  run reads the folder but the hash is of the commit. Not tested: a realm that is a submodule (`.git` is a file).
+  (Was: proved, v0-H15 stopped on it.)
 
 ### B-051: the first `devcontainer up` of a run hangs about half the time, cause unknown
 
@@ -404,7 +412,29 @@ Source of items B-050 and B-051: the founder's runs v0-H14 and v0-H15 on a real 
 - **Not known:** whether the CLI does not read the events or podman does not write them (the bytes-written
   probe was armed after the hang). Next step: catch a hang with `/proc/<pid>/io` (`wchar`) of the events process
   and the unread bytes of its stdout pipe, and try a newer devcontainer CLI or `--docker-compose-path` with `podman compose` itself.
-- **Status:** proved (a hang, not its cause).
+- **What the CLI does (read from the 0.89.0 source, 2026-10-18):** `devcontainer up` starts
+  `podman events --format json --filter event=start` before the compose build, then waits for one `start` event
+  whose container carries the compose project and service labels (the labels come from the event's
+  `Actor.Attributes`, or from an inspect of the container). Nothing else ends that wait: if the event is not
+  delivered or not matched, the CLI waits until `UpTimeout`.
+- **Session of 2026-10-18 (time-box of two hours, used about 1.5):** `ouroboric/scripts/ygg-events-watch.sh`
+  (ouroboric #44) samples the events process from before the run. 23 trials of `TestSandboxBuildsARealmsStackAndStartsALeafOnIt`:
+  one hang (trial 1 of the first batch, 140 s: the 120 s wait, `Down`, a retry that took 2 s), 22 passes of about 15 s.
+  - At the hang the events process sat in `futex_do_wait` for 118 s with `unread=0` (nothing waiting in its stdout).
+    So the CLI had left no bytes unread: either podman delivered nothing, or the CLI read the lines and did not
+    accept them (not matched, or an inspect that threw: its `catch` only calls `console.error`). `/proc/PID/io` does not
+    exist on this kernel, so `wchar` could not tell the two apart.
+  - Ruled out: a plain subscribe race (earlier, 20 trials); an engine that was idle for 15 min (one cold trial: 16 s);
+    an events stream that was idle for 13 min before the next container start (an independent subscriber got both
+    `start` events 5 s after the trial began).
+  - The rate was about 1 in 23 here, against about 5 in 9 in v0-H14. What differed in H14 is not known; the hang may
+    need the full run of the three engine tests, or a first build of the images.
+- **Next step:** catch another hang with a second, independent subscriber running (`podman events` with a time
+  stamp per line, as in this session) so that its log shows whether podman delivered the events; run the CLI with
+  `--log-level trace` (it then logs `startEventSeen#data`); try a newer devcontainer CLI. Try the first run after
+  building the images, and the three engine tests together.
+- **Status:** proved (a hang, not its cause); not reproduced at the H14 rate on 2026-10-18. The retry of gleipnir #10
+  still limits it to a two-minute delay.
 
 ## Done
 
