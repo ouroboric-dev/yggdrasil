@@ -48,8 +48,20 @@ modular script gives every new repo a base CI, built from pre-commit hooks that 
 
 ## Non-goals
 
-- **Language CI.** A Go or React service gets its CI (for example the Go `test` job) from its realm's
-  templates. The founder is adding CI to the existing realms in another session.
+- **Language CI**, in both of its forms, which the realm-creation design (in progress) covers:
+  - **A realm repo's own CI.** `midgard-react` and `helheim-go` have no `ci.yml` today, so their
+    pack, checks, template and Containerfile tests run only by hand.
+  - **The CI a realm's template gives the products it creates.** `midgard-react/templates/web` and
+    `helheim-go/templates/api` have no `.github/` today.
+
+  This proposal is the first of three layers. The realm-creation design builds on it without
+  changing it:
+
+  | Layer | What it gives | Where |
+  |---|---|---|
+  | 1. Every repo | created, licences, base CI (`lint`), protected | this proposal |
+  | 2. Every realm repo | the realm contract, the realm repo's own `test` CI, readiness | the realm-creation design |
+  | 3. Each flavor | language checks, stack, template, the CI a template gives products | the realm itself |
 - **Rolling the base CI out to existing repos.** The founder is handling this in another session.
   [Future work](#future-work-documented-not-built) says how the scripts could support it.
 - **Making `check-repos.sh` org-agnostic.** It stays Ouroboric's own check. It changes only to match
@@ -150,7 +162,13 @@ their `CREATE_REPO_*` overrides (API, git host, setup script) so the tests can u
   | `yaml` | yamllint | off |
 
   The default column is the proposal's call. `--ci reuse,markdown,shell` replaces the config's
-  defaults for one repo.
+  defaults for one repo. A caller (such as a realm-making run) passes the full list it wants. For
+  example, a realm adds `shell`, because every realm ships `devcontainer/checks/*.sh`.
+- **The piece format is a contract**, documented in `scripts/templates/ci/README.md`, so that realms
+  can ship their own pieces later (`gofmt`, `golangci-lint`, `eslint`) without a change to `add-ci.sh`:
+  - one YAML fragment per piece, in one file;
+  - the file name, without `.yaml`, is the piece's name;
+  - a fragment holds exactly one `repos:` entry, with a `repo:` URL, a pinned `rev:` and its `hooks:`.
 - `add-ci.sh` writes `.github/workflows/lint.yml` with one job, `lint`. The job runs
   `pre-commit run --all-files --show-diff-on-failure` on `pull_request` and on `push` to `main`. Its
   actions are pinned by SHA, with a version comment, the same way the Go leaves pin theirs. It has
@@ -160,7 +178,10 @@ their `CREATE_REPO_*` overrides (API, git host, setup script) so the tests can u
 ### Requirements
 
 - `new-repo.sh` MUST check all inputs before it creates a repo.
-- `new-repo.sh` MUST stop at the first error.
+- `new-repo.sh` MUST stop at the first error, with a non-zero exit status.
+- `new-repo.sh` MUST NOT prompt for input.
+- `new-repo.sh` MUST print only progress lines and the after-create message. A caller parses no output.
+- Each piece file MUST follow the piece format in `scripts/templates/ci/README.md`.
 - A new repo's first commit MUST hold the licence files and the base CI files.
 - `setup-repo.sh` MUST run after the first push and before the wrapper reports success.
 - The ruleset MUST require `lint` when `.github/workflows/lint.yml` exists.
@@ -183,6 +204,16 @@ fragile.) It keeps #31's rule: only a 404 means "no such workflow", and any othe
 script with the ruleset unchanged. `check-repos.sh`'s `ruleset` check builds its expected rules the
 same way.
 
+The map is also a **convention** that every repo follows, and the docs standard's repo section
+states it:
+
+- The base CI is `.github/workflows/lint.yml`, with one required job, `lint`.
+- Language CI is `.github/workflows/ci.yml`, with one required job, `test`. This applies to a realm
+  repo's own CI, and to the CI that a realm's template gives a product.
+
+So a realm or product created later gets its `test` check required without a change to
+`setup-repo.sh`.
+
 ### The token
 
 One fine-grained token, short-lived, owned by the org, with access to **all repositories**:
@@ -197,7 +228,8 @@ One fine-grained token, short-lived, owned by the org, with access to **all repo
 ### Docs to update
 
 - `ouroboric/docs/4-ways-of-working/docs-standard.md`, the repo section: the founder runs
-  `new-repo.sh`, the token's permissions, and the base CI.
+  `new-repo.sh`, the token's permissions, the base CI, and the `lint.yml`/`ci.yml` convention.
+- `ouroboric/scripts/templates/ci/README.md` (new): the piece format.
 - `ouroboric/AGENTS.md`, the scripts table: `new-repo.sh`, `add-ci.sh` and `add-licences.sh`
   (founder-run, like `create-repo.sh`).
 - Each script's header.
@@ -219,7 +251,10 @@ Follow the tree's rule: write each test first and watch it fail. Use the existin
   result passes `reuse lint`; the `ouroboric-dev` config gives today's files byte for byte.
 - `add-ci.sh`: each piece alone and in combination; an unknown piece fails; `gitleaks` can't be
   removed; an existing file stops it; the result passes `pre-commit validate-config`; the workflow
-  passes actionlint.
+  passes actionlint; every shipped piece follows the piece format, and a piece with two `repos:`
+  entries or an unpinned `rev` fails.
+- `new-repo.sh`: it never reads standard input (run it with `</dev/null`), and every failure exits
+  non-zero.
 - `setup-repo.sh`: no workflow, `lint.yml` only, `ci.yml` only, and both; a non-404 failure leaves the
   ruleset unchanged; issues follow the config.
 - One real run (founder, by hand): create a throwaway public repo with `new-repo.sh`, confirm its
@@ -242,9 +277,16 @@ Follow the tree's rule: write each test first and watch it fail. Use the existin
 ## Interactions
 
 - **`scaffold-component.sh`** writes a `.pre-commit-config.yaml` holding only gitleaks, and never
-  overwrites. After `new-repo.sh`, that file already exists, so the scaffold skips it. The other
-  session's realm templates should add their language hooks to the existing file, or drop it from the
-  scaffold.
+  overwrites. After `new-repo.sh`, that file already exists, so the scaffold skips it. Anything that
+  scaffolds later, such as the realm scaffold that will probably replace `--mit-templates`, MUST add
+  to the existing `.pre-commit-config.yaml` and never write it whole.
+- **A realm-making `ygg run`** will use `new-repo.sh` as its first step. Until the `github` remote
+  ports it, the founder runs it at a gate, because the token is founder-only and agents never get
+  Administration. This is why `new-repo.sh` takes no prompts and its output needs no parsing.
+- **The realm readiness checklist** will run the same checks as `check-repos.sh` (licences, REUSE,
+  `lint` and `test` required, gitleaks present) rather than copy them. `check-repos.sh` already runs
+  one check on one repo (`check-repos.sh --check <name> <repo>`). When it changes for the ruleset, it
+  MUST keep that.
 - **Realm CI** stays in `ci.yml` with its `test` job. The base CI's `lint.yml` sits beside it. Each is
   a separate required check.
 
@@ -261,9 +303,10 @@ future session. `delta.md` and `tasks.md` for this change come with its implemen
 2. **Picking pieces from a repo's contents.** For existing repos, `add-ci.sh --detect` could turn on
    `shell` when `*.sh` files exist, `yaml` when YAML exists, and so on. A new repo is empty, so it
    needs explicit pieces.
-3. **Pieces from realms.** A realm could ship its own pieces (for example `gofmt` or `eslint`) in its
-   templates folder, and `add-ci.sh` could search there too. Language checks would then also run in
-   pre-commit.
+3. **Pieces from realms.** A realm (and each product a realm creates) ships its own pieces (for
+   example `gofmt`, `golangci-lint` or `eslint`) in a folder the realm contract names, in the piece
+   format above, and `add-ci.sh` searches there too. Language checks would then also run in
+   pre-commit. This is the seam with the realm-creation design.
 4. **The phone workflow (B-040)** runs `new-repo.sh` with the GitHub App's token.
 5. **The `github` remote** ports `new-repo.sh`, the org config and the CI pieces. The org config
    becomes part of the operator's instance config.
