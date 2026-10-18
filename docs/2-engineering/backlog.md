@@ -8,7 +8,9 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 # Engineering backlog
 
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
-phase. Each item is graded **Minor** by its effect on a person using the factory.
+phase, with one exception: [B-061](#b-061-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
+blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
+**Minor** by its effect on a person using the factory.
 
 ## How to use this file
 
@@ -307,12 +309,23 @@ Source of items B-042 to B-047: the Phase 5b plan (2026-10-17), where each was l
 
 - **Problem:** `helheim-go` and `midgard-react` each hold a copy of `docs.sh` and other shared scripts, and they drift.
 - **Fix:** one home for them (a realm both depend on, or a vendored directory with a drift check). **Status:** requirement.
+- **Interim fix (2026-10-18):** helheim-go's copy is the source. midgard-react's `docs.sh` is the same file byte
+  for byte (midgard-react #9), and `check-repos.sh --check shared` fails when a realm's copy differs (ouroboric #48).
+  The readiness assessments of 2026-10-18 find RR-09 met in both realms.
+- **Full fix:** Ginnungagap's shared base stage (Ginnungagap design §7). Every realm's Containerfile starts from
+  it, so the shared check scripts have one source. **Status:** narrowed to the full fix.
 
 ### B-044: packages in the stack images are not pinned
 
 - **Problem:** the images pin their bases and downloads but install apt packages (and Chromium through
   `playwright install --with-deps`, with no hash) at whatever version the mirror serves.
 - **Fix:** pin apt packages by version, and the browser download by hash. **Status:** requirement.
+- **Readiness (2026-10-18):** this is midgard-react RR-14 (`partial`). The web stage installs `ca-certificates`,
+  `curl` and `git` with `apt-get` at the mirror's version, and `playwright install --with-deps chromium` adds
+  Chromium's system libraries the same way. `npm install -g` names exact versions of Prism and Playwright, but
+  their own dependencies have no lock file. The realm's own CI (`.github/workflows/ci.yml`, step `apt`) installs
+  six packages with `apt-get` at the mirror's version too. helheim-go's stack installs no packages: RR-14 is
+  `met` there.
 
 ### B-045: TypeScript is held at 5.9 by `openapi-typescript`
 
@@ -478,6 +491,135 @@ its tooling review and its final steps (2026-10-18). Lines are at `ouroboric` `7
   `rollout-ci.sh push`: that opens pull requests as the pr-bot, which must never have access to `huldra`. After the
   merge, run `scripts/rollout-ci.sh --org ouroboric-dev protect huldra`, which uses the founder's token only.
 - **Status:** open, by design.
+
+Source of items B-055 to B-062: the realm readiness assessments of 2026-10-18 (`readiness/2026-10-18-*.md`),
+over `helheim-go` `60731f6`, `midgard-react` `26ca85e` and `asgard` `3e614b4`. Each item names the realm and the
+checklist item ([realm-readiness.md](realm-readiness.md)).
+
+### B-055: a product's own CI reads the tool configs that the ladder ignores
+
+- **Where:** `helheim-go/templates/api/.github/workflows/ci.yml` (`golangci-lint run --config .golangci.yml`);
+  `midgard-react/templates/web/.github/workflows/ci.yml` (`npm run lint`, `typecheck`, `test` and `build` read
+  `eslint.config.js`, `tsconfig.json` and `vite.config.ts`). Readiness: helheim-go and midgard-react, RR-15 and
+  RR-18.
+- **Problem:** since B-049, the ladder runs the configs baked into `/opt/ygg/checks/config` and ignores the leaf's
+  copies. It does not refuse a change to them. The product's CI runs the leaf's copies. So a factory run can
+  weaken a product's own CI config, for example an ESLint rule turned off, and every rung stays green. Only the
+  reviewers would see it. A test pins the template's copies to the baked ones, but only in the realm, not in a
+  product.
+- **Why it matters:** the product CI is the second line of defence (Ginnungagap design §8.1). It is only as strong
+  as the configs an agent may edit.
+- **Fix:** one founder decision for both realms. Either the ladder refuses a change to the tool configs (as it
+  refuses a change to `.github/`), or the product CI runs the factory's configs, not the leaf's. Then say it in each
+  template's `AGENTS.md` (B-049's open consequence).
+- **Status:** reasoned.
+
+### B-056: the leaf templates carry no "Built with Ouroboric" notice
+
+- **Where:** `helheim-go/templates/api`, `midgard-react/templates/web`. Readiness: helheim-go and midgard-react,
+  RR-18.
+- **Problem:** each template has the MIT `LICENSE`, but no file carries the notice that the
+  [licence map](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/1-company/legal/README.md) promises:
+  "Templates include a 'Built with Ouroboric' notice by default". `grep -ri 'built with ouroboric'` finds it in
+  neither template.
+- **Fix:** add the notice where a product shows it (for example the template's `README.md` or the web app's
+  footer), and a template test that finds it. **Status:** proved (the grep).
+
+### B-057: helheim-go's own CI skips the tests that need sqlc and golangci-lint
+
+- **Where:** `helheim-go/.github/workflows/ci.yml` (the plain `golang` image). Readiness: helheim-go, RR-04.
+- **Problem:** five tests of the check ladder skip in CI, because the image has neither tool:
+  `TestTDDExemptsOnlyWhatSqlcGeneratesAndCountsItsSQLAsCode`, `TestSqlcOwnedListsOnlyFilesThatAreByteForByteWhatSqlcGenerates`,
+  `TestStaticLintsWithTheBakedConfigAndSkipsOnlyVerifiedSqlcOutput`, `TestStaticLintsWhatTheLeafTriedToHide` and
+  `TestTheUnchangedTemplatePassesStaticAndTDDAndItsSqlcOutputIsOwned`. The run on `main` (39166450363) shows
+  `--- SKIP` for each. They pass on a machine with sqlc 1.31.1 and golangci-lint 2.14.0, the stack's pins.
+- **Why it matters:** these tests guard B-049's fix (the sqlc and lint bypasses). The required check `test` passes
+  without them, so a change that breaks that fix can merge.
+- **Fix:** run the realm CI in the built stack image, or install sqlc and golangci-lint at the stack's pins and
+  hashes in the job. Then make the five tests fail, not skip, when `YGG_REQUIRE_TEMPLATES` (or a new variable) is
+  set. **Status:** proved (the CI log).
+
+### B-058: helheim-go's product CI has no SeaweedFS, and its test does not check the steps
+
+- **Where:** `helheim-go/templates/api/.github/workflows/ci.yml`, `helheim-go/ci_test.go` (`TestTemplateCI`).
+  Readiness: helheim-go, RR-18.
+- **Problem and fix, one line each:**
+  - The pack gives the leaf Postgres and SeaweedFS. The product CI starts only Postgres, because a GitHub service
+    container cannot take SeaweedFS's `command`. Today's template has no S3 test, so nothing fails yet. A product
+    that adds S3 integration tests fails in CI. Fix: start SeaweedFS in a step (`docker run` with the pinned digest
+    and its command), or say in the template's `AGENTS.md` that S3 tests stay out of the product CI.
+  - `TestTemplateCI` checks the image, the services, the pins and the permissions, but not the step commands.
+    midgard-react's test checks each `run:` line. Inside the realm, `templates/api/.github/` is not under rung 1, so
+    the test is the only guard: a change that drops the lint or the integration step passes. Fix: check each step's
+    command, as midgard-react's test does.
+- **Status:** reasoned.
+
+### B-059: two base images were pinned when they were less than two weeks old, and no check reads an image's age
+
+- **Where:** `midgard-react/devcontainer/Containerfile` and both realms' CI (`node@sha256:efd0ab57…`);
+  `helheim-go` and `midgard-react` (`golang:1.26.9-bookworm@sha256:d9c68c2c…`). Readiness: midgard-react, RR-13.
+- **Problem:** the registry gives the Node image's creation time as 2026-10-06. Phase 3's plan (2026-10-16) took
+  it from spike B and says it was more than two weeks old when pinned. It was at most 10 days old then, and 11 days
+  old when midgard-react pinned it on 2026-10-17. The Go image was made on 2026-10-08 and pinned at 9 days old, under the founder's waiver (Phase 5b
+  plan, decision 12), because 1.26.9 fixes standard-library vulnerabilities. Both are older than two weeks from
+  2026-10-22. The checklist asks for each digest's age, and no script reads it: the assessment read the image
+  config from the registry by hand.
+- **Fix:** a script in `ouroboric/scripts`, with a test, that prints each digest's creation time from its registry
+  and fails under two weeks unless a waiver is named. RR-13 then runs it. **Status:** proved (the registry's
+  creation times).
+
+### B-060: asgard is not a realm leaf yet
+
+- **Where:** the `asgard` repo, `yggdrasil/.gitmodules`, `ouroboric/scripts/check-repos.sh` (the lists).
+  Readiness: asgard, RR-04, RR-05, RR-07, RR-08, RR-10 and RR-22.
+- **Problem:** asgard is still a product umbrella. It has no `pack.yaml` (RR-08, RR-22) and no `ci.yml` (RR-04).
+  Its `AGENTS.md` has its own invariants and links the company's, not the `yggdrasil` umbrella's (RR-05: the agents
+  check passes because `check-repos.sh` lists asgard as an umbrella). It holds a charter in `docs/1-product/` and
+  has no `docs/architecture.md` (RR-07). It is not a submodule of the umbrella (RR-10).
+- **Why it is so:** this is the plan, not drift. The Asgard v0 design (§5.2) makes asgard a leaf and waits to wire
+  it in until Yggdrasil v0 ships. Asgard v0 (roadmap step 2) builds the pack, with no stack and document checks.
+- **Fix:** in Asgard v0, the pack and a `ci.yml` with a job `test`; the leaf layout of the docs standard; an
+  `AGENTS.md` that links the `yggdrasil` invariants (decide where Asgard's three principles go, because a leaf must
+  not define its own); a decision whether its document checks use the shared `docs.sh` (then asgard joins
+  `REALMS` in `check-repos.sh`, and RR-09 applies); then the wiring pull request (submodule, and asgard moved to
+  `LEAVES` in `check-repos.sh`). **Status:** requirement.
+
+### B-061: since odin #15, the first task's acceptance run sees the other new leaf without its template
+
+- **Where:** `odin/internal/engine/init.go` (`initLeaf`, `mainToTemplate`), `odin/internal/run/sandbox.go`
+  (`snapshotSources`, `recordedCommit`). Readiness: helheim-go and midgard-react, RR-21.
+- **Problem:** `initLeaf` creates a leaf with its first commit (the pack's `first_commit`, here only `LICENSE`),
+  and the project's umbrella records that commit. Then it commits the template and moves the leaf's `main` to it,
+  but the umbrella's gitlink stays on the first commit. Since odin #15 (B-048 M-1), a snapshot takes each other leaf at its
+  gitlink. So the acceptance run of the first task's pointer move sees the other leaf as `LICENSE` alone.
+- **Proved:** the content smoke run (v0-H15's mode) at odin `6829cfb`, gleipnir `f362ea2`, helheim-go `60731f6` and
+  midgard-react `26ca85e`, on 2026-10-18. Task 1 (the API leaf) passed its loop and its landing. Its pointer move
+  failed: `accept: the web leaf has no repos/web/contracts/api.openapi.yaml`. The snapshot's `repos/web` held only
+  `LICENSE`, and the umbrella's gitlink for `repos/web` was the first commit, `454b811`. The run gave up both tasks
+  (exit 5).
+- **Control (v0-H15):** v0-H15 ran on 2026-10-18 at 09:37 UTC, before odin #15 (`6829cfb`) merged at 11:28 UTC.
+  In its project (`~/ygg-it/content/smoke-realms-20261018-113734`), `repos/web` was also recorded at its first
+  commit (`d2a944d`) when `version-t1-move` ran, and that move's `accept` passed (exit 0). So the change is odin
+  #15's, not the realms'.
+- **Why it matters:** it fails any run whose first pointer move runs an acceptance check that reads another new
+  leaf. The client gallery's order is such a run: the API task is first, and midgard-react's `accept-e2e.sh` reads
+  the web leaf beside the API leaf. **It blocks real runs of the gallery, and Phase 5c's real runs, until it is
+  fixed.**
+- **Fix:** when `initLeaf` moves `main` to the template, move the umbrella's gitlink to it too; or let the snapshot
+  take a leaf that this run created, and that has had no pointer move yet, at its `main`. Test: the content smoke
+  run passes, and a unit test of `snapshotSources` on a new leaf finds its template. **Status:** proved.
+
+### B-062: the build realms' packs give no reason for each egress host
+
+- **Where:** `helheim-go/pack.yaml` and `midgard-react/pack.yaml` (`sandbox.egress`). Readiness: helheim-go and
+  midgard-react, RR-19.
+- **Problem:** each pack lists its egress hosts and nothing else. The reason for each host is only in the check
+  scripts that use it, so a person who reviews the list, or a later change to it, must find the reasons again.
+  The founder judged both lists minimal (2026-10-19).
+- **Fix:** a reason per host. Gungnir's schema (`schema/pack.go` at `cb1dc0e`) has `egress` as a plain list of host
+  names, and it decodes a pack with `KnownFields(true)`, so a reason field would be refused. Write each reason as a
+  YAML comment beside its host in `pack.yaml`, or add a reason field to the schema in Gungnir first (a schema
+  change) if the reasons should be checked. **Status:** requirement.
 
 ## Done
 
