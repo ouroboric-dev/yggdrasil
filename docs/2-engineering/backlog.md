@@ -335,11 +335,7 @@ SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
 
 - **Where:** as listed; `odin` is `internal/...`, `gleipnir` is `sandbox/...`.
 - **Problem and fix, one line each:**
-  - **Important, parked after two fix rounds:** the ladder's config protection is a list of paths, so it is
-    incomplete. Go: a config replaced by a symlink, or hidden by `.gitignore`, passes. Web: ESLint 10 obeys an
-    added `src/eslint.config.js`. A handwritten `internal/store/querier.go` with a forged sqlc header gets no
-    test, lint or sqlc check. Fix: run the linters with configs baked into `/opt/ygg/checks`, and recompute
-    sqlc's output path from the generator.
+  - The parked Important finding (config protection is a path list) is B-049.
   - M-1 `run/sandbox.go`: the snapshot takes each other leaf at its working copy's `HEAD`, not the commit the
     umbrella records, and skips a leaf that is not checked out silently: use the gitlink, refuse an absent leaf.
   - M-2 `egress.sh`: on a refresh, old addresses leave the rules before dnsmasq gets the HUP: keep both for a cycle.
@@ -357,8 +353,23 @@ SDD workspace (`final-review/review.md`, `re-review.md`, `re-review2.md`).
     SeaweedFS up until `Advance` returns, and the database's state carries over between attempts.
   - Residual (re-review 2): the scripts honour a `YGG_CHECKS_PATH` override that the engine never sets; keep it
     out of the images or drop it once the stubs have another seam.
-- **Status:** reasoned, except the parked Important finding, the module-cache and I-3 reproductions, which the
-  reviewers proved.
+- **Status:** reasoned.
+
+### B-049: the check ladder protects its lint and build configs by a list of paths, which is incomplete
+
+- **Where:** `helheim-go/devcontainer/checks/go-static.sh`, `go-tdd.sh` and `.golangci.yml`;
+  `midgard-react/devcontainer/checks/web-protected.sh`. Found by Phase 5b's final review (2026-10-18), parked
+  after two fix rounds (`final-review/re-review.md`, `re-review2.md` in the SDD workspace).
+- **Problem:** the agent can edit the config files the ladder reads, and the checks refuse changes to a list of
+  paths. The list is incomplete: a Go config replaced by a symlink, or hidden by `.gitignore`, passes; ESLint 10
+  obeys an added `src/eslint.config.js`; a handwritten `internal/store/querier.go` with a forged sqlc header
+  gets no test, lint or sqlc check (the lint path list skips it).
+- **Why it matters:** rung 1 (and the TDD check) can be turned green by an agent that tampers with its own
+  config. The reviewers still read the diff, which is the only net left.
+- **Fix:** run the linters with configs baked into `/opt/ygg/checks`, where the agent cannot write, and pass them
+  explicitly (`golangci-lint --config`, `eslint --no-config-lookup -c`, and so on); recompute sqlc's output path
+  from the generator (`sqlc diff`) instead of a path list. Test: each of the three bypasses above fails its rung.
+- **Status:** proved (the re-reviewer reproduced the symlink, `.gitignore` and `src/eslint.config.js` cases).
 
 ## Done
 
