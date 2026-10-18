@@ -15,6 +15,7 @@ The plugin was read at commit `2e41b44` (2026-10-17). Stars, forks and release d
 GitHub REST API on the same day.
 
 **How to read the evidence labels** (the same as in [research-loops-graphs](research-loops-graphs.md))
+
 - **[PROVEN]**: primary source with concrete numbers, a reproducible artifact, or official
   documentation. Here it mostly means "read in the plugin's source".
 - **[CREDIBLE]**: primary source, but self-reported by an interested party with no independent check.
@@ -48,8 +49,8 @@ GitHub REST API on the same day.
 ## 1. What Compound Engineering is
 
 | Field | Value |
-|---|---|
-| URL | https://github.com/EveryInc/compound-engineering-plugin |
+| --- | --- |
+| URL | <https://github.com/EveryInc/compound-engineering-plugin> |
 | Maintainers | Kieran Klaassen and Trevin Chow, at Every |
 | Origin | Klaassen developed the practice while building Cora, Every's AI email assistant ([aibuilderclub](https://www.aibuilderclub.com/blog/compound-engineering-vs-loop-engineering)) **[EARLY / HYPE]** |
 | Stars / forks | 25,571 / 2,079 |
@@ -168,7 +169,7 @@ TerminalBench2, ReplicationBench and MLGym-Bench **[CREDIBLE]**.
 Average Pass@3 with GPT-5-mini (the paper's Table 1):
 
 | Memory | Average |
-|---|---|
+| --- | --- |
 | none (zero-shot) | 0.523 |
 | trajectory (raw trace) | 0.534 |
 | workflow | 0.538 |
@@ -228,7 +229,7 @@ Yggdrasil has raw evidence, the hash-chained ledger (spec §10.1), and a narrati
 §10.5). Nothing sits between them: no typed, searchable, refreshable store of lessons. The
 self-improvement loop needs that middle step.
 
-```
+```text
 ledger (Odin) → distil a lesson → propose a factory change → A/B bench → guardrail-change approval → journal
                 ^^^^^^^^^^^^^^^ CE's compound step
 ```
