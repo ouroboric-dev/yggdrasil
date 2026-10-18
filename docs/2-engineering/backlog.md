@@ -10,7 +10,8 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
 phase, with one exception: [B-061](#b-061-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
 blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
-**Minor** by its effect on a person using the factory.
+**Minor** by its effect on a person using the factory. [B-063](#b-063-the-web-ladder-does-not-protect-devcontainer)
+is a guardrail gap, not a blocker: it should land before Phase 5c adds more web changes.
 
 ## How to use this file
 
@@ -312,6 +313,8 @@ Source of items B-042 to B-047: the Phase 5b plan (2026-10-17), where each was l
 - **Interim fix (2026-10-18):** helheim-go's copy is the source. midgard-react's `docs.sh` is the same file byte
   for byte (midgard-react #9), and `check-repos.sh --check shared` fails when a realm's copy differs (ouroboric #48).
   The readiness assessments of 2026-10-18 find RR-09 met in both realms.
+- **Not run in CI (2026-10-19):** nothing runs `check-repos.sh --check shared` on a schedule or on a change. See
+  [B-068](#b-068-nothing-in-ci-runs-check-repossh---check-shared).
 - **Full fix:** Ginnungagap's shared base stage (Ginnungagap design §7). Every realm's Containerfile starts from
   it, so the shared check scripts have one source. **Status:** narrowed to the full fix.
 
@@ -496,7 +499,7 @@ Source of items B-055 to B-062: the realm readiness assessments of 2026-10-18 (`
 over `helheim-go` `60731f6`, `midgard-react` `26ca85e` and `asgard` `3e614b4`. Each item names the realm and the
 checklist item ([realm-readiness.md](realm-readiness.md)).
 
-### B-055: a product's own CI reads the tool configs that the ladder ignores
+### B-055: a product's own CI reads the tool configs that the ladder ignores, and the lint config files that no rung protects
 
 - **Where:** `helheim-go/templates/api/.github/workflows/ci.yml` (`golangci-lint run --config .golangci.yml`);
   `midgard-react/templates/web/.github/workflows/ci.yml` (`npm run lint`, `typecheck`, `test` and `build` read
@@ -512,6 +515,15 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
 - **Fix:** one founder decision for both realms. Either the ladder refuses a change to the tool configs (as it
   refuses a change to `.github/`), or the product CI runs the factory's configs, not the leaf's. Then say it in each
   template's `AGENTS.md` (B-049's open consequence).
+- **Widened (2026-10-19, the realm-readiness final review):** the same hole covers the files of the base CI that
+  every product gets. The repo-bootstrap `init` (change `repo-bootstrap`, delta §4.2) gives each product a
+  `.github/workflows/lint.yml` and a `.pre-commit-config.yaml`. `go-static.sh` (helheim-go, `devcontainer/checks`)
+  and `web-protected.sh` (midgard-react, `devcontainer/checks`) protect `.github/`, which covers `lint.yml`. But
+  `lint.yml` runs whatever `.pre-commit-config.yaml` says, and no rung refuses a change to that file. The same holds
+  for `.gitleaksignore` and `.gitleaks.toml`, `.markdownlint*.yaml`, `.yamllint*`, `.shellcheckrc`, `REUSE.toml`,
+  `LICENSES/` and `LICENSE`. So a factory run could neuter the product's required `lint` check, gitleaks included,
+  with every rung green. The decision above covers this whole set: it is one founder decision. Only the reviewers
+  would see it.
 - **Status:** reasoned.
 
 ### B-056: the leaf templates carry no "Built with Ouroboric" notice
@@ -538,6 +550,11 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
 - **Fix:** run the realm CI in the built stack image, or install sqlc and golangci-lint at the stack's pins and
   hashes in the job. Then make the five tests fail, not skip, when `YGG_REQUIRE_TEMPLATES` (or a new variable) is
   set. **Status:** proved (the CI log).
+- **Amended (2026-10-19, the realm-readiness final review):** one of the five, `TestTheUnchangedTemplatePassesStaticAndTDDAndItsSqlcOutputIsOwned`,
+  is a template test (`-run Template` matches it). It skips in CI through `needTools` (`checks_test.go`), which
+  ignores `YGG_REQUIRE_TEMPLATES`. So the change's delta §9.4 ("the template tests MUST NOT skip") is not met in
+  helheim-go until this item lands. Also, helheim-go's `docs/architecture.md` does not say that five tests skip in
+  CI: it says only that `YGG_REQUIRE_TEMPLATES` makes the template tests fail instead of skipping. Say it there.
 
 ### B-058: helheim-go's product CI has no SeaweedFS, and its test does not check the steps
 
@@ -552,6 +569,16 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
     midgard-react's test checks each `run:` line. Inside the realm, `templates/api/.github/` is not under rung 1, so
     the test is the only guard: a change that drops the lint or the integration step passes. Fix: check each step's
     command, as midgard-react's test does.
+  - **Widened (2026-10-19, the realm-readiness final review):** align `TestTemplateCI` with midgard-react's test in
+    these gaps:
+    - It does not read govulncheck's version from the Containerfile (the Containerfile pins `v1.8.0`, and the
+      template's `ci.yml` repeats it).
+    - The Postgres env and `YGG_DATABASE_URL` are literals checked with `strings.Contains`. Read them as whole lines
+      from `pack.yaml` and `go-integration.sh`.
+    - The `uses:` regex misses `-   uses:` (more than one space after the dash), and the pin regex is not anchored
+      to the value.
+    - It checks no triggers, no `timeout-minutes` and no step commands.
+    - The hash is not tied to the `sha256sum -c` line.
 - **Status:** reasoned.
 
 ### B-059: two base images were pinned when they were less than two weeks old, and no check reads an image's age
@@ -564,6 +591,9 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   plan, decision 12), because 1.26.9 fixes standard-library vulnerabilities. Both are older than two weeks from
   2026-10-22. The checklist asks for each digest's age, and no script reads it: the assessment read the image
   config from the registry by hand.
+- **Amended (2026-10-19):** the Node digest was first pinned in the sandbox spike
+  (`docs/5-research/2026-10-12-sandbox-spike.md`, the `FROM` line at about line 489), at about 6 days old, not in
+  Phase 3.
 - **Fix:** a script in `ouroboric/scripts`, with a test, that prints each digest's creation time from its registry
   and fails under two weeks unless a waiver is named. RR-13 then runs it. **Status:** proved (the registry's
   creation times).
@@ -620,6 +650,91 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   names, and it decodes a pack with `KnownFields(true)`, so a reason field would be refused. Write each reason as a
   YAML comment beside its host in `pack.yaml`, or add a reason field to the schema in Gungnir first (a schema
   change) if the reasons should be checked. **Status:** requirement.
+
+Source of items B-063 to B-070: the final review of the realm-readiness plan (2026-10-19), one fresh reviewer
+over the checklist, the three assessments, `helheim-go` and `midgard-react`. Each item is a realm-side fix that this
+documentation pass does not make. B-055, B-057, B-058, B-059 and B-043 were widened by the same review. The code
+facts were read at each realm's `main` after Phase 5c's first commits.
+
+### B-063: the web ladder does not protect `.devcontainer/`
+
+- **Where:** `midgard-react/devcontainer/checks/web-protected.sh` (`files=('.npmrc' '.github/')`),
+  `midgard-react/templates/web/.devcontainer/devcontainer.json`, `midgard-react/prompts/implementer.md`.
+  Compare `helheim-go/devcontainer/checks/go-static.sh` (`protected=('.devcontainer/' '.github/')`).
+- **Problem:** the Go ladder refuses a change to `.devcontainer/`. The web ladder does not. The web template's
+  `devcontainer.json` reaches every web product, and the implementer prompt tells the agent not to change it, but
+  nothing enforces that. `go-static.sh` says why it matters: the dev container is what a person's editor runs. This
+  predates the plan, but the plan's decision ("protected like the dev container") assumed parity.
+- **Fix:** add `'.devcontainer/'` to `files` in `web-protected.sh`, with one refusal-test case. Fold in the deferred
+  minors: the header of `web-protected.sh` does not name `.github/`; no test covers a deleted or gitignored
+  workflow; `hasLine` in `ci_test.go` (a closure in `TestTemplateCI`) does not check parent keys.
+- **Timing:** a guardrail gap, not a blocker. It should land before Phase 5c adds more web changes.
+- **Status:** proved (the file list, read at `main`).
+
+### B-064: no test pins either realm's own root `ci.yml` to its stack
+
+- **Where:** `helheim-go/.github/workflows/ci.yml` (the Go image) and `midgard-react/.github/workflows/ci.yml` (the
+  Node image, and `go-version: 1.26.9`). Their tests read the template's `ci.yml`, not these.
+- **Problem:** a digest bump in a Containerfile leaves the realm's own CI on the old image, and nothing fails.
+- **Fix:** a test in each realm that the root `ci.yml` image (and midgard-react's Go version) equals the
+  Containerfile's. **Status:** reasoned.
+
+### B-065: midgard-react skips tests without honouring `YGG_REQUIRE_TEMPLATES`
+
+- **Where:** `midgard-react/checks_test.go` (`realLeaf`, `skipOffline`) and `e2e_test.go` (`needPython`).
+- **Problem:** each skips when its tool or network is missing, and none checks `YGG_REQUIRE_TEMPLATES`. If `python3`
+  is ever dropped from the root `ci.yml`, the e2e tests skip and `test` stays green.
+- **Fix:** fail, not skip, when `YGG_REQUIRE_TEMPLATES` is set. Test: run with the variable set and the tool absent.
+  **Status:** reasoned.
+
+### B-066: midgard-react's workflow refusal test lists its rungs by hand
+
+- **Where:** `midgard-react/checks_test.go` (`TestEveryRungRefusesAWorkflowChange`).
+- **Problem:** the test names its rungs in a list. Phase 5c's `web-deps.sh` went into the `.npmrc` test and not into
+  this one.
+- **Fix:** derive the rungs from `pack.yaml` `leaf.checks`, in both tests. **Status:** proved (the diff of Phase 5c's
+  #13).
+
+### B-067: the realms' base CI never actionlints the templates' workflows
+
+- **Where:** `helheim-go` and `midgard-react`, `.pre-commit-config.yaml` (the `actionlint` hook, which has
+  no `files:` of its own and so takes the hook's default, `^\.github/workflows/`), `templates/*/.github/workflows/ci.yml`.
+- **Problem:** the default matches only the realm's own `.github/workflows/`, so the template workflows that every
+  product receives are not linted.
+- **Fix:** set the hook's `files` to `^(templates/[^/]+/)?\.github/workflows/`, and fix what it then flags.
+  **Status:** reasoned.
+
+### B-068: nothing in CI runs `check-repos.sh --check shared`
+
+- **Where:** `ouroboric/scripts/check-repos.sh`, the CI of `ouroboric` and `yggdrasil`.
+- **Problem:** the `shared` check (RR-09, ouroboric #48) runs only when a person runs it. A realm's copy of `docs.sh`
+  can drift without a failing check. This is the interim fix of B-043.
+- **Fix:** run it in the `yggdrasil` CI over the submodules, or on a schedule. **Status:** reasoned.
+
+### B-069: a documentation pass in each build realm
+
+- **Where:** `helheim-go` and `midgard-react`: `README.md`, `docs/architecture.md`, `prompts/implementer.md`.
+- **Problem and fix, one line each:**
+  - Both READMEs ("The required check `test`…", line 16 and 17) and both `docs/architecture.md` pages call `test`
+    "the required check". `lint` is required too.
+  - Both READMEs say "so `gitleaks` checks each commit". The pre-commit config runs six tools (gitleaks, reuse, markdownlint, shellcheck, actionlint, yamllint): say so.
+  - Neither implementer prompt names `.github/` as refused.
+  - helheim-go's `docs/architecture.md` lacks the B-055 caveat that midgard-react's has (its line about the
+    leaf's tool configs, which the ladder ignores).
+- **Status:** proved (the greps).
+
+### B-070: helheim-go's `go-static.sh` protects less than midgard-react's `web-protected.sh`
+
+- **Where:** `helheim-go/devcontainer/checks/go-static.sh` (the `== protected paths` block),
+  `helheim-go/checks_test.go` (`TestStaticRefusesAWorkflowChange`).
+- **Problem:** four differences, all in the weaker direction:
+  - With no `main`, `go-static.sh` skips the protection (`if base="$(git merge-base HEAD main …)"`). The web script
+    fails closed.
+  - `--diff-filter=AMD` drops a type change, so a symlink swap is not listed.
+  - `git ls-files --others --exclude-standard` ignores gitignored files.
+  - The test has no delete case and no untracked case, and the script's comment names only the dev container.
+- **Fix:** copy the web script's behaviour (fail closed, no diff filter, untracked files including ignored ones),
+  with a test case for each. **Status:** proved (the reading of both scripts).
 
 ## Done
 

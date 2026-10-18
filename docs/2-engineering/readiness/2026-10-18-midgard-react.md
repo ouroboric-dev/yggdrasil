@@ -17,7 +17,7 @@ human items on 2026-10-19.
   realm and the client gallery's lead realm. This pull request moves the umbrella's pointer to that commit.
 - **Checklist:** [realm readiness checklist](../realm-readiness.md), all 22 items.
 - **How it was run:** as for [helheim-go](2026-10-18-helheim-go.md): the local checks of `check-repos.sh` on a clone,
-  the controller's evidence file for the GitHub items (2026-10-18T21:44:40Z, under `as-bot.sh --read all`), the Go
+  an agent's run of the GitHub items (2026-10-18T21:44:40Z, under `as-bot.sh --read all`), the Go
   tests on this machine with the realm CI's settings, and the CI log of `main` read with a read-only `gh run view`.
   The [evidence](#evidence) section holds each command and its decisive lines.
 
@@ -61,7 +61,7 @@ human items on 2026-10-19.
 
 ### E1: GitHub settings and runs
 
-The controller's evidence file (2026-10-18T21:44:40Z), lines 2 to 5, 12 to 16, 25 and 26:
+The agent's run of 2026-10-18T21:44:40Z, under `as-bot.sh --read all`. The decisive output, with the run URLs:
 
 ```text
 $ scripts/as-bot.sh --read all scripts/check-repos.sh --check settings --check security --check ruleset midgard-react helheim-go asgard

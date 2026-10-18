@@ -1,6 +1,6 @@
 ---
 title: The realm readiness checklist and the first assessments
-status: draft
+status: accepted
 date: 2026-10-18
 related: [../../../1-product/design/2026-10-18-ginnungagap-design.md, delta.md, tasks.md, ../2026-10-18-repo-bootstrap/proposal.md, ../../backlog.md]
 style: spec

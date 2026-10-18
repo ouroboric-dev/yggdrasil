@@ -1,6 +1,6 @@
 ---
 title: Delta for the realm readiness checklist and the first assessments
-status: draft
+status: accepted
 date: 2026-10-18
 related: [proposal.md, tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../2026-10-18-repo-bootstrap/delta.md]
 style: spec
