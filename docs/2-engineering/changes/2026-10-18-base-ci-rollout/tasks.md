@@ -52,6 +52,10 @@ when the house style has a real reason, otherwise change the files to the defaul
 | `<issue>`-style placeholders in `.github`'s PR template | default: wrap them in backticks | they are placeholders, not HTML |
 | odin `testdata/` (YAML fixtures, prompt `.md`) | bend: excluded from markdownlint and yamllint | test inputs read by code |
 | ouroboric `scripts/templates/ci/pieces/*.yaml` | bend: excluded from yamllint | fragments indented for `repos:` by the piece contract, not YAML documents |
+| havamal `skills/ponytail-review/**` (added in execution) | bend: excluded from markdownlint only | vendored from upstream and pinned by sha256 in `skills.lock`; its bytes must not change |
+| long pinned `image:` lines (added in execution) | default: fold as `image: >-` | the parsed value stays byte-identical; an inline `disable-line` with a reason only where a tool reads the line as text |
+| a plan code block that CommonMark closes early (added in execution) | default: a four-backtick outer fence | `plan-blocks.py` accepts `{3,4}` backticks, so the extracted code is unchanged; markdownlint then sees the block whole |
+| MD038 edge space that carries meaning (added in execution) | default, reworded: say the space in words | trimming the space after `^    rev:` or a two-space indent would change what the text says |
 | gleipnir `scan/scan.sh` (shellcheck can't parse it) | default: make the template parse | the `@CONFIG@` placeholder sits on the heredoc's opening line; see T007 |
 | shellcheck info notes (SC2329, SC2015, SC2016) | per file or per line `disable`, each with its reason, as the repo-bootstrap tests do | the house idioms (functions called by name, `cond && ok \|\| bad` reporting, literal single quotes) are deliberate; a global disable would hide real cases elsewhere |
 | SC1091, SC2155, SC2012, SC2086, SC2116 | default: fix the code (`source-path=SCRIPTDIR` directive, split `local`, glob or `find`, quote, drop `echo`) | real fixes, all small |
