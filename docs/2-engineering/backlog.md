@@ -492,7 +492,7 @@ its tooling review and its final steps (2026-10-18). Lines are at `ouroboric` `7
   merge, run `scripts/rollout-ci.sh --org ouroboric-dev protect huldra`, which uses the founder's token only.
 - **Status:** open, by design.
 
-Source of items B-055 to B-061: the realm readiness assessments of 2026-10-18 (`readiness/2026-10-18-*.md`),
+Source of items B-055 to B-062: the realm readiness assessments of 2026-10-18 (`readiness/2026-10-18-*.md`),
 over `helheim-go` `60731f6`, `midgard-react` `26ca85e` and `asgard` `3e614b4`. Each item names the realm and the
 checklist item ([realm-readiness.md](realm-readiness.md)).
 
@@ -608,6 +608,18 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
 - **Fix:** when `initLeaf` moves `main` to the template, move the umbrella's gitlink to it too; or let the snapshot
   take a leaf that this run created, and that has had no pointer move yet, at its `main`. Test: the content smoke
   run passes, and a unit test of `snapshotSources` on a new leaf finds its template. **Status:** proved.
+
+### B-062: the build realms' packs give no reason for each egress host
+
+- **Where:** `helheim-go/pack.yaml` and `midgard-react/pack.yaml` (`sandbox.egress`). Readiness: helheim-go and
+  midgard-react, RR-19.
+- **Problem:** each pack lists its egress hosts and nothing else. The reason for each host is only in the check
+  scripts that use it, so a person who reviews the list, or a later change to it, must find the reasons again.
+  The founder judged both lists minimal (2026-10-19).
+- **Fix:** a reason per host. Gungnir's schema (`schema/pack.go` at `cb1dc0e`) has `egress` as a plain list of host
+  names, and it decodes a pack with `KnownFields(true)`, so a reason field would be refused. Write each reason as a
+  YAML comment beside its host in `pack.yaml`, or add a reason field to the schema in Gungnir first (a schema
+  change) if the reasons should be checked. **Status:** requirement.
 
 ## Done
 

@@ -8,9 +8,9 @@ related: [../realm-readiness.md, ../backlog.md, 2026-10-18-helheim-go.md, 2026-1
 
 # Realm readiness: midgard-react, 2026-10-18
 
-**Bottom line: not ready yet.** Of 22 items, 13 are met, 5 are partial, 3 are missing and 1 is `n/a`. The
-partial items are in the backlog: B-044, B-055, B-056, B-059 and B-061. The three missing items are the human
-items. They wait for the founder's judgement in this pull request.
+**Bottom line: not ready yet.** Of 22 items, 15 are met, 6 are partial, 0 are missing and 1 is `n/a`. The
+partial items are in the backlog: B-044, B-055, B-056, B-059, B-061 and B-062. The founder judged the three
+human items on 2026-10-19.
 
 - **Realm:** [`midgard-react`](https://github.com/ouroboric-dev/midgard-react) at
   [`26ca85e`](https://github.com/ouroboric-dev/midgard-react/commit/26ca85e3dfab42e65f5162f093d3719ddf2da1a7), a build
@@ -25,9 +25,9 @@ items. They wait for the founder's judgement in this pull request.
 
 | Status | Count | Items |
 | --- | --- | --- |
-| met | 13 | RR-01 to RR-10, RR-12, RR-16, RR-17 |
-| partial | 5 | RR-13, RR-14, RR-15, RR-18, RR-21 |
-| missing | 3 | RR-11, RR-19, RR-20 (human items) |
+| met | 15 | RR-01 to RR-12, RR-16, RR-17, RR-20 |
+| partial | 6 | RR-13, RR-14, RR-15, RR-18, RR-19, RR-21 |
+| missing | 0 | — |
 | n/a | 1 | RR-22 |
 
 ## Items
@@ -44,7 +44,7 @@ items. They wait for the founder's judgement in this pull request.
 | RR-08 | met | `go test -run Pack ./...`: `--- PASS: TestThePackLoadsAsTheLeadRealmWithTwoStacksFromOneContext`, `ok` ([E3](#e3-go-tests)). The pack loads with Gungnir `cb1dc0e`, the version `go.mod` requires (the umbrella's pointer too). | — |
 | RR-09 | met | `PASS midgard-react shared` ([E2](#e2-local-repo-checks)): `devcontainer/checks/docs.sh` is helheim-go's byte for byte ([B-043](../backlog.md)). | — |
 | RR-10 | met | The umbrella's `.gitmodules` (lines 13 to 15) and `go.work` (line 9) hold `midgard-react`. `check-repos.sh` lists it in `LEAVES` (line 12) and `REALMS` (line 14). | — |
-| RR-11 | missing | Name: `midgard-react`, `<realm>-<flavor>` (Midgard, web frontends; flavor React). Screening: the [realm-leaf-naming proposal](../changes/2026-10-17-realm-leaf-naming/proposal.md) records a web screening on 2026-10-17 that "found no collision that matters". It notes that Midgard is also an open-source content framework, mostly dormant since 2012, and that every new leaf name is free in the `ouroboric-dev` org. Awaiting the founder's judgement in this PR. | — |
+| RR-11 | met | Name: `midgard-react`, `<realm>-<flavor>` (Midgard, web frontends; flavor React). Screening: the [realm-leaf-naming proposal](../changes/2026-10-17-realm-leaf-naming/proposal.md) records a web screening on 2026-10-17 that "found no collision that matters". It notes that Midgard is also an open-source content framework, mostly dormant since 2012, and that every new leaf name is free in the `ouroboric-dev` org. The founder judged the name and its screening acceptable (2026-10-19). | — |
 | RR-12 | met | `pack.yaml` names `leaf.template: templates/web`, `leaf.implementer: prompts/implementer.md` and `leaf.checks`. Gungnir's `LoadPack` refuses a template that is not a folder or a prompt that is not a file, and the pack test passes ([E3](#e3-go-tests)). | — |
 | RR-13 | partial | Every base is pinned by digest; the pack has no services of its own ([E5](#e5-image-digests-and-their-age)). The Node image (`node@sha256:efd0ab57…`, Node 22.23.3) was made on 2026-10-06 and pinned here on 2026-10-17, at 11 days old, with no waiver. The Go image of the acceptance stage was made on 2026-10-08, under the founder's waiver for Go 1.26.9 ([Phase 5b plan](../plans/2026-10-17-yggdrasil-v0-phase-5b/tasks.md), decision 12). Both are two weeks old from 2026-10-22. No script checks an image's age. | [B-059](../backlog.md) |
 | RR-14 | partial | The release binaries are checked against a SHA-256, and Prism and Playwright are at exact versions. But `apt-get install ca-certificates curl git` and `playwright install --with-deps chromium` take what the mirror serves, the browser has no hash, and the global npm packages' own dependencies have no lock file. The realm's own CI also installs six packages with `apt-get` (step `apt`). | [B-044](../backlog.md) |
@@ -52,8 +52,8 @@ items. They wait for the founder's judgement in this pull request.
 | RR-16 | met | `pack.yaml` names `static`, `unit`, `tdd`, `contract`, `security` and `e2e` (rungs 1 to 5), and `accept` for the pointer move, each one script in `/opt/ygg/checks`. The pack test checks that `devcontainer/checks/` holds each as an executable, and that no other script is baked in unused ([E3](#e3-go-tests)). | — |
 | RR-17 | met | `YGG_REQUIRE_TEMPLATES=1 go test -run Template ./...` passes its six tests, among them `TestRealRungsPassOnTheUnchangedTemplate` (the static and unit rungs on the unchanged template) and `TestTheWebTemplateBuildsAndPassesItsOwnChecks` ([E3](#e3-go-tests)). The same tests pass in CI. | — |
 | RR-18 | partial | `templates/web/.github/workflows/ci.yml` has the one job `test`, and `TestTemplateCI` checks each of its steps; `LICENSE` is MIT. The template's CI steps pass on a product's first commit, run on this machine in the job's pinned image ([E6](#e6-a-products-first-commit)); no product on GitHub has run it yet. Gaps: no "Built with Ouroboric" notice ([B-056](../backlog.md)); the product CI reads the leaf's own tool configs ([B-055](../backlog.md)). | [B-055](../backlog.md), [B-056](../backlog.md) |
-| RR-19 | missing | Egress (`pack.yaml`): `registry.npmjs.org`, `api.osv.dev`. The pack states no reasons. What the check scripts use each host for: `registry.npmjs.org`, the clean `npm ci` that every web rung runs first, and `npm audit` (`web-security.sh`); `api.osv.dev`, `osv-scanner` (`web-security.sh`). The acceptance sandbox (`sandbox.acceptance`) names no hosts of its own. Awaiting the founder's judgement in this PR. | — |
-| RR-20 | missing | Prompt: [`prompts/implementer.md`](https://github.com/ouroboric-dev/midgard-react/blob/26ca85e/prompts/implementer.md). No record of a person's review. The Phase 5b final review (an agent) read it in the diff, and `TestThePromptsNameOnlyScriptsAndCommandsThatExist` checks what it names. Awaiting the founder's judgement in this PR. | — |
+| RR-19 | partial | Egress (`pack.yaml`): `registry.npmjs.org`, `api.osv.dev`. The pack states no reasons. What the check scripts use each host for: `registry.npmjs.org`, the clean `npm ci` that every web rung runs first, and `npm audit` (`web-security.sh`); `api.osv.dev`, `osv-scanner` (`web-security.sh`). The acceptance sandbox (`sandbox.acceptance`) names no hosts of its own. The founder judged the lists minimal (2026-10-19). | [B-062](../backlog.md) |
+| RR-20 | met | Prompt: [`prompts/implementer.md`](https://github.com/ouroboric-dev/midgard-react/blob/26ca85e/prompts/implementer.md). Before this PR, no record of a person's review. The Phase 5b final review (an agent) read it in the diff, and `TestThePromptsNameOnlyScriptsAndCommandsThatExist` checks what it names. The founder reviewed `prompts/implementer.md` and accepted it (2026-10-19). | — |
 | RR-21 | partial | `ygg-smoke-realms.sh` includes the realm in its content mode (`--realm midgard-react --brief … --tag h15`), as the lead realm. It does not pass at this commit: task 1's pointer move failed this realm's acceptance check, `accept: the web leaf has no repos/web/contracts/api.openapi.yaml` (exit 5). The cause is in Odin, not in the realm: the snapshot took the new web leaf at its first commit. The run and its output are in [helheim-go's E7](2026-10-18-helheim-go.md#e7-the-smoke-run). | [B-061](../backlog.md) |
 | RR-22 | n/a | A build realm: the item is for document realms. | — |
 

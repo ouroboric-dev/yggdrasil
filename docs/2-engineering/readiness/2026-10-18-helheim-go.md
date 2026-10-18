@@ -8,9 +8,9 @@ related: [../realm-readiness.md, ../backlog.md, 2026-10-18-midgard-react.md, 202
 
 # Realm readiness: helheim-go, 2026-10-18
 
-**Bottom line: not ready yet.** Of 22 items, 14 are met, 4 are partial, 3 are missing and 1 is `n/a`. The
-partial items are in the backlog: B-055, B-056, B-057, B-058 and B-061. The three missing items are the human
-items. They wait for the founder's judgement in this pull request.
+**Bottom line: not ready yet.** Of 22 items, 16 are met, 5 are partial, 0 are missing and 1 is `n/a`. The
+partial items are in the backlog: B-055, B-056, B-057, B-058, B-061 and B-062. The founder judged the three
+human items on 2026-10-19.
 
 - **Realm:** [`helheim-go`](https://github.com/ouroboric-dev/helheim-go) at
   [`60731f6`](https://github.com/ouroboric-dev/helheim-go/commit/60731f68cd463e12b62f2eafdac0b812bed69467), a build
@@ -26,9 +26,9 @@ items. They wait for the founder's judgement in this pull request.
 
 | Status | Count | Items |
 | --- | --- | --- |
-| met | 14 | RR-01 to RR-03, RR-05 to RR-10, RR-12 to RR-14, RR-16, RR-17 |
-| partial | 4 | RR-04, RR-15, RR-18, RR-21 |
-| missing | 3 | RR-11, RR-19, RR-20 (human items) |
+| met | 16 | RR-01 to RR-03, RR-05 to RR-14, RR-16, RR-17, RR-20 |
+| partial | 5 | RR-04, RR-15, RR-18, RR-19, RR-21 |
+| missing | 0 | — |
 | n/a | 1 | RR-22 |
 
 ## Items
@@ -45,7 +45,7 @@ items. They wait for the founder's judgement in this pull request.
 | RR-08 | met | `go test -run Pack ./...`: `--- PASS: TestThePackLoadsAndOffersTheRecipeEveryBuildRealmOffers`, `ok` ([E3](#e3-go-tests)). The pack loads with Gungnir `cb1dc0e`, the version `go.mod` requires (the umbrella's pointer too). | — |
 | RR-09 | met | `PASS helheim-go shared` ([E2](#e2-local-repo-checks)). helheim-go's `docs.sh` is the source ([B-043](../backlog.md)). | — |
 | RR-10 | met | The umbrella's `.gitmodules` (lines 19 to 21) and `go.work` (line 7) hold `helheim-go`. `check-repos.sh` lists it in `LEAVES` (line 12) and `REALMS` (line 14). | — |
-| RR-11 | missing | Name: `helheim-go`, `<realm>-<flavor>` (Helheim, backend; flavor Go). Screening: the [realm-leaf-naming proposal](../changes/2026-10-17-realm-leaf-naming/proposal.md) records a web screening on 2026-10-17 that "found no collision that matters", and that every new leaf name is free in the `ouroboric-dev` org. Awaiting the founder's judgement in this PR. | — |
+| RR-11 | met | Name: `helheim-go`, `<realm>-<flavor>` (Helheim, backend; flavor Go). Screening: the [realm-leaf-naming proposal](../changes/2026-10-17-realm-leaf-naming/proposal.md) records a web screening on 2026-10-17 that "found no collision that matters", and that every new leaf name is free in the `ouroboric-dev` org. The founder judged the name and its screening acceptable (2026-10-19). | — |
 | RR-12 | met | `pack.yaml` names `leaf.template: templates/api`, `leaf.implementer: prompts/implementer.md` and `leaf.checks`. `TestThePackLoadsAndOffersTheRecipeEveryBuildRealmOffers` checks all three ([E3](#e3-go-tests)). | — |
 | RR-13 | met | Every base and service is pinned by digest ([E5](#e5-image-digests-and-their-age)). Postgres was made on 2026-08-05 and SeaweedFS on 2026-09-01. The Go image was made on 2026-10-08 and pinned at 9 days old, under the founder's recorded waiver: Go 1.26.9 fixes standard-library vulnerabilities ([Phase 5b plan](../plans/2026-10-17-yggdrasil-v0-phase-5b/tasks.md), decision 12). It is two weeks old from 2026-10-22. No script checks an image's age yet. | [B-059](../backlog.md) (the check) |
 | RR-14 | met | The stack installs no system packages. Five release binaries are each checked against a SHA-256, and govulncheck v1.8.0 comes through the module proxy and its checksum database. The template's modules are in `go.sum`. ([B-044](../backlog.md) is midgard-react's.) | — |
@@ -53,8 +53,8 @@ items. They wait for the founder's judgement in this pull request.
 | RR-16 | met | `pack.yaml` names `static`, `unit`, `tdd`, `contract`, `security` and `integration` (rungs 1 to 5), each one script in `/opt/ygg/checks`. `TestEveryCheckRunsAScriptThatTheStackImageBakesIn` passes, here and in CI ([E3](#e3-go-tests)). `devcontainer/checks/` holds each script. | — |
 | RR-17 | met | `YGG_REQUIRE_TEMPLATES=1 go test -run Template ./...` passes its five tests on this machine, with `TestTheUnchangedTemplatePassesStaticAndTDDAndItsSqlcOutputIsOwned` ([E3](#e3-go-tests)). CI skips that one (RR-04). | — |
 | RR-18 | partial | `templates/api/.github/workflows/ci.yml` has the one job `test`; `LICENSE` is MIT. The template's CI steps pass on a product's first commit, run on this machine in the pinned images ([E6](#e6-a-products-first-commit)); no product on GitHub has run it yet. Gaps: no "Built with Ouroboric" notice ([B-056](../backlog.md)); the product CI reads the leaf's own lint config ([B-055](../backlog.md)); no SeaweedFS in the product CI, and `TestTemplateCI` does not check the steps ([B-058](../backlog.md)). | [B-055](../backlog.md), [B-056](../backlog.md), [B-058](../backlog.md) |
-| RR-19 | missing | Egress (`pack.yaml`): `proxy.golang.org`, `sum.golang.org`, `vuln.go.dev`, `api.osv.dev`. The pack states no reasons. What the check scripts use each host for: `proxy.golang.org`, `go mod download` in every Go rung; `sum.golang.org`, the checksum database that `go mod download` and `go mod verify` consult; `vuln.go.dev`, govulncheck's database (`go-security.sh`); `api.osv.dev`, `osv-scanner` (`go-security.sh`). Awaiting the founder's judgement in this PR. | — |
-| RR-20 | missing | Prompt: [`prompts/implementer.md`](https://github.com/ouroboric-dev/helheim-go/blob/60731f6/prompts/implementer.md). No record of a person's review. The Phase 5b final review (an agent) read it in the diff, and `TestTheImplementerPromptTellsWhatTheFactoryChecksAndWhatNotToDo` checks that it names the ladder's commands. Awaiting the founder's judgement in this PR. | — |
+| RR-19 | partial | Egress (`pack.yaml`): `proxy.golang.org`, `sum.golang.org`, `vuln.go.dev`, `api.osv.dev`. The pack states no reasons. What the check scripts use each host for: `proxy.golang.org`, `go mod download` in every Go rung; `sum.golang.org`, the checksum database that `go mod download` and `go mod verify` consult; `vuln.go.dev`, govulncheck's database (`go-security.sh`); `api.osv.dev`, `osv-scanner` (`go-security.sh`). The founder judged the lists minimal (2026-10-19). | [B-062](../backlog.md) |
+| RR-20 | met | Prompt: [`prompts/implementer.md`](https://github.com/ouroboric-dev/helheim-go/blob/60731f6/prompts/implementer.md). Before this PR, no record of a person's review. The Phase 5b final review (an agent) read it in the diff, and `TestTheImplementerPromptTellsWhatTheFactoryChecksAndWhatNotToDo` checks that it names the ladder's commands. The founder reviewed `prompts/implementer.md` and accepted it (2026-10-19). | — |
 | RR-21 | partial | `ygg-smoke-realms.sh` includes the realm in its content mode (`--realm midgard-react --brief … --tag h15`): the run takes helheim-go for the API leaf. It does not pass at this commit. Task 1 passed all six rungs in its loop and at landing, and then its pointer move failed the acceptance check: `accept: the web leaf has no repos/web/contracts/api.openapi.yaml` (exit 5, both tasks given up). The cause is in Odin, not in the realm ([E7](#e7-the-smoke-run)). | [B-061](../backlog.md) |
 | RR-22 | n/a | A build realm: the item is for document realms. | — |
 
