@@ -9,7 +9,7 @@ style: direction
 # Asgard v0 design doc
 
 | | |
-|---|---|
+| --- | --- |
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from a brainstorming session held 2026-10-17 |
 | **Within** | the [charter](../charter.md), as amended to admit the Asgard realm (§5.3); a new roadmap step (§5.3) |
 | **Engineering spec** | to be written after this design doc is accepted |
@@ -138,7 +138,7 @@ A **tier** is how much process a piece of work gets. A **realm** is a recipe for
 Each realm implements the tiers it needs as graphs. No realm has a tier 0 graph yet; Asgard adds it.
 
 | Realm | Tier 0: kickstart | Tiers 1–2: fix, change | Tier 3: initiative |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Asgard** (direction) | Ginnungagap (v0: by hand) | later: amend a charter or a brand | — |
 | **Web** | — | the change graph (later) | the web graph (Yggdrasil v0) |
 | Game, mobile | — | later | later |
@@ -187,7 +187,7 @@ Each step feeds the next: the business comes before the brand, and the name come
 is understood.
 
 | # | Step | The founder describes or decides | Output | Stop |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | **Intent** | what she wants to do and why; her time, money, country; solo or with a partner | intent notes in `5-research/` | — |
 | 2 | **Customers and offer** | who her clients are, the moment they need her, what she sells and roughly for how much | customers, offer and a competitor brief (the agent researches) | — |
 | 3 | **Charter** | edits the agent's draft from steps 1–2 | vision, mission, principles, products, north star, boundaries | **`charter`** |
@@ -248,7 +248,7 @@ Ouroboric is the floor. The template keeps its structure without its content, an
 company needs. It has a **core** that every company gets and **add-ons**.
 
 | Area | Document | From Ouroboric | New |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Direction | charter, roadmap | yes | — |
 | Business | customers, offer and pricing, first customers | — | yes |
 | Research | intent notes, competitor brief, name checks | name checks | yes |

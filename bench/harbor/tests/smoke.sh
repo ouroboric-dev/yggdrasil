@@ -14,6 +14,7 @@ TASK="$1" SHA="$2"
 T="$(mktemp -d)"
 JOBS="$(mktemp -d /mnt/wsl/ygg-harbor-jobs.XXXXXX)"
 IMAGE=""
+# shellcheck disable=SC2329  # called by the EXIT trap below
 cleanup() {
   # Containers write the jobs folder as root, so a container from the task image empties it.
   [ -n "$IMAGE" ] && "$HP" exec podman run --rm --pull=never -v "$JOBS:/jobs" --entrypoint sh "$IMAGE" \

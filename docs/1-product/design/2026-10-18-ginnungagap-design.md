@@ -9,7 +9,7 @@ style: direction
 # Ginnungagap and Voluspa design doc
 
 | | |
-|---|---|
+| --- | --- |
 | **Author** | Bruno Valério, with Claude Code (Opus 5.5), from a brainstorming session held 2026-10-18 |
 | **Within** | the [charter](../charter.md)'s "narrow first" rule: grow from specific realms and extract what is truly shared. Admitting Ginnungagap amends the charter (§9) |
 | **Engineering specs** | one change proposal per step (§8), each written when its step starts |
@@ -99,7 +99,7 @@ The work fails, even if every test passes, when any of these is true:
 The work splits into three layers. Each layer builds on the one below it and does not change it.
 
 | Layer | What it gives | Where |
-|---|---|---|
+| --- | --- | --- |
 | 1. Every repo | created, licences, base CI (`lint`), protected | `ouroboric/scripts`, change [repo-bootstrap](../../2-engineering/changes/2026-10-18-repo-bootstrap/proposal.md) (`new-repo.sh`) |
 | 2. Every realm repo | the realm contract, the realm repo's own `test` CI, readiness | this design |
 | 3. Each flavor | language checks, stack, template, the CI that its template gives products | the realm itself |
@@ -117,7 +117,7 @@ The repo-bootstrap change already states two things this design relies on:
 ### 5.1 Where each piece lives
 
 | Piece | Home | Why |
-|---|---|---|
+| --- | --- | --- |
 | The software graph, and the prompts that are not tied to a leaf (design, spec, plan, conformance, reuse review, the three reviewers) | **Voluspa**, folder `software/` | The graph is the same for all software (founder). |
 | Flavor content: stack, implementer prompt, leaf template, leaf checks, acceptance check, the CI its template gives products | each realm | This is what a flavor swaps. |
 | Contract, machine part: the standard role names, stack, services, a graph-only pack | **Gungnir** (most of it is there) | It is the interface between realms and Odin. Gungnir validates it. |
@@ -184,7 +184,7 @@ The checklist follows the shape of Asgard's: an ID, an area, a question, the che
 and its output, or a person's judgement. This is the first draft. Step 1 refines it.
 
 | ID | Applies to | Area | Question | Check |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | RR-01 | all | repo | Does the repo pass `check-repos.sh` (settings, security, ruleset), with `lint` required, and `test` where `ci.yml` exists? | auto |
 | RR-02 | all | licence | Does `reuse lint` pass, with MIT on everything copied into products? | auto |
 | RR-03 | all | CI | Does `lint.yml` exist, and does it pass on `main`? | auto |

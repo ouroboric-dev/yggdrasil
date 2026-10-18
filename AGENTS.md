@@ -7,7 +7,7 @@ code lives in the components. Start with `docs/README.md`.
 ## Invariants
 
 These rules apply to every repo in this tree. They include the company invariants:
-https://github.com/ouroboric-dev/ouroboric/blob/main/AGENTS.md#invariants
+<https://github.com/ouroboric-dev/ouroboric/blob/main/AGENTS.md#invariants>
 A child `AGENTS.md` may add rules; it must not loosen these.
 
 ### Every agent
@@ -23,20 +23,20 @@ A child `AGENTS.md` may add rules; it must not loosen these.
 
 ### Agents inside factory runs
 
-9. Never commit or push. Odin commits from the host.
-10. Work only in the leaf you are given. Never open an umbrella or another leaf.
-11. Never edit `features.json`, the ledger, gate files or run reports.
+1. Never commit or push. Odin commits from the host.
+2. Work only in the leaf you are given. Never open an umbrella or another leaf.
+3. Never edit `features.json`, the ledger, gate files or run reports.
 
 ### Agents building the factory
 
-12. Work on a branch, stage files by path, and open a pull request for every change.
-13. Use the tree's scripts, not hand-made commands, for GitHub, the container engine and plans:
+ 1. Work on a branch, stage files by path, and open a pull request for every change.
+ 2. Use the tree's scripts, not hand-made commands, for GitHub, the container engine and plans:
     `ouroboric/scripts/` (`as-bot.sh`, `ygg-engine.sh`, `ygg-smoke-realms.sh`, `plan-*`). The table is in
-    https://github.com/ouroboric-dev/ouroboric/blob/main/AGENTS.md#scripts. A reusable script you write goes
+    <https://github.com/ouroboric-dev/ouroboric/blob/main/AGENTS.md#scripts>. A reusable script you write goes
     there, with a test, in a pull request.
 
 ## Map
 
 - Product direction: `docs/1-product/` (charter, design docs, roadmap).
 - Engineering: `docs/2-engineering/` (specs, plans, change proposals, living spec).
-- Standards: https://github.com/ouroboric-dev/ouroboric/tree/main/docs/4-ways-of-working
+- Standards: <https://github.com/ouroboric-dev/ouroboric/tree/main/docs/4-ways-of-working>

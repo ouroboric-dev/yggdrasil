@@ -7,7 +7,7 @@ sandboxes, through loops and human approval points. Start with the [charter](doc
 the [v0 design doc](docs/1-product/design/2026-10-11-yggdrasil-v0-design.md).
 
 | Folder | What's there |
-|---|---|
+| --- | --- |
 | [`1-product/`](docs/1-product/charter.md) | direction: vision, users, roadmap, design docs |
 | [`2-engineering/`](docs/2-engineering/specs/README.md) | living spec, specs, change proposals, plans |
 | [`3-using/`](docs/3-using/README.md) | for operators (Diátaxis) and runbooks |
