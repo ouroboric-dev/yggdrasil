@@ -8,7 +8,9 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 # Engineering backlog
 
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
-phase. Each item is graded **Minor** by its effect on a person using the factory.
+phase, with one exception: [B-058](#b-058-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
+blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
+**Minor** by its effect on a person using the factory.
 
 ## How to use this file
 
@@ -594,9 +596,15 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   midgard-react `26ca85e`, on 2026-10-18. Task 1 (the API leaf) passed its loop and its landing. Its pointer move
   failed: `accept: the web leaf has no repos/web/contracts/api.openapi.yaml`. The snapshot's `repos/web` held only
   `LICENSE`, and the umbrella's gitlink for `repos/web` was the first commit, `454b811`. The run gave up both tasks
-  (exit 5). v0-H15 passed on 2026-10-18 at 09:37 UTC, before odin #15 merged (11:28 UTC).
-- **Why it matters:** every run with two new leaves fails the first pointer move, so the client gallery cannot
-  finish.
+  (exit 5).
+- **Control (v0-H15):** v0-H15 ran on 2026-10-18 at 09:37 UTC, before odin #15 (`6829cfb`) merged at 11:28 UTC.
+  In its project (`~/ygg-it/content/smoke-realms-20261018-113734`), `repos/web` was also recorded at its first
+  commit (`d2a944d`) when `version-t1-move` ran, and that move's `accept` passed (exit 0). So the change is odin
+  #15's, not the realms'.
+- **Why it matters:** it fails any run whose first pointer move runs an acceptance check that reads another new
+  leaf. The client gallery's order is such a run: the API task is first, and midgard-react's `accept-e2e.sh` reads
+  the web leaf beside the API leaf. **It blocks real runs of the gallery, and Phase 5c's real runs, until it is
+  fixed.**
 - **Fix:** when `initLeaf` moves `main` to the template, move the umbrella's gitlink to it too; or let the snapshot
   take a leaf that this run created, and that has had no pointer move yet, at its `main`. Test: the content smoke
   run passes, and a unit test of `snapshotSources` on a new leaf finds its template. **Status:** proved.
