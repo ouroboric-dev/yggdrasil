@@ -214,7 +214,7 @@ acceptance criteria with the named tests' output.
 
 - [ ] **Step 1: Write the failing tests.**
   - `TestTemplateCI` reads `templates/api/.github/workflows/ci.yml` as text and asserts:
-    - it has the line `test:` under `jobs:`, and no other job;
+    - it has the line `test:`, indented two spaces, under `jobs:`, and no other job;
     - each `uses:` line matches `@[0-9a-f]{40} # v`;
     - the container image is the `FROM` image of `devcontainer/Containerfile`'s `stack` stage;
     - the Postgres service image is `pack.yaml`'s `services.postgres.image`, and its env holds

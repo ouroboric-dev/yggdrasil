@@ -16821,7 +16821,7 @@ Expect each test to fail with `does not mention ...` (or `does not show ...`).
 
 Apply to `odin`:
 
-```diff
+````diff
 diff --git a/README.md b/README.md
 index 64c3601..bc284b4 100644
 --- a/README.md
@@ -16891,7 +16891,7 @@ index adfb5f1..4555f04 100644
  - Walks the instance tree and moves pointers. It is the only writer of umbrellas, `features.json`,
    the ledger, gate files and reports (spec §3.3).
  - Does every git operation, from the host (spec §6.3).
-```
+````
 
 Apply to `gleipnir`:
 

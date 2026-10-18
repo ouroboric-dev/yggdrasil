@@ -402,7 +402,7 @@ SPDX-License-Identifier = "<docs_licence>"
 - **The piece contract**, which `templates/ci/README.md` documents and `add-ci.sh` enforces:
   - one file per piece; its name without `.yaml` is the piece's name (`^[a-z0-9-]+$`);
   - exactly one line matching `^  - repo: https://`;
-  - exactly one line matching `^    rev:` , whose value matches
+  - exactly one line matching `^    rev:` followed by one space, whose value matches
     `^v?[0-9]+(\.[0-9]+)+([.-][0-9A-Za-z]+)*$`;
   - a line `^    hooks:`;
   - no tabs.
