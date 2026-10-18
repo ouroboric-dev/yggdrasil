@@ -15,6 +15,7 @@ BMAD Method was read at commit `cfba3ff` (2026-10-16) on `main`, which carries t
 was read from its README. Stars, forks and release data come from the GitHub REST API on 2026-10-17.
 
 **How to read the evidence labels** (the same as in [research-loops-graphs](research-loops-graphs.md))
+
 - **[PROVEN]**: primary source with concrete numbers, a reproducible artifact, or official
   documentation. Here it mostly means "read in the project's source or docs".
 - **[CREDIBLE]**: primary source, but self-reported by an interested party with no independent check.
@@ -47,8 +48,8 @@ was read from its README. Stars, forks and release data come from the GitHub RES
 ## 1. What BMAD Method is
 
 | Field | Value |
-|---|---|
-| URL | https://github.com/bmad-code-org/BMAD-METHOD |
+| --- | --- |
+| URL | <https://github.com/bmad-code-org/BMAD-METHOD> |
 | Owner | BMad Code, LLC |
 | Stars / forks | 54,264 / 6,098 |
 | Created | 2025-04-13 |
@@ -111,8 +112,8 @@ From `docs/build/autonomous-development-loops.md` **[PROVEN]**:
 ## 4. The orchestrator: bmad-loop
 
 | Field | Value |
-|---|---|
-| URL | https://github.com/bmad-code-org/bmad-loop |
+| --- | --- |
+| URL | <https://github.com/bmad-code-org/bmad-loop> |
 | Stars | 160 |
 | Created | 2026-06-19 |
 | Activity | Last push 2026-10-17. Latest release `v0.13.2` (2026-10-10). The README says "early open beta" with "breaking changes in any pre-1.0 release." |

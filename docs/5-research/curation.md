@@ -19,8 +19,8 @@ Yggdrasil layer key: **Odin** (graph engine), **Gleipnir** (harness: adapters, s
 ## 1. Evaluation: EricTechPro/super-board
 
 | Field | Value |
-|---|---|
-| URL | https://github.com/EricTechPro/super-board |
+| --- | --- |
+| URL | <https://github.com/EricTechPro/super-board> |
 | What it is | A Claude Code skill/plugin pack (Codex also supported). It drains a GitHub Project board through **Build → QA → Review** lanes and merges when checks are green. It has 8 skills, 9 commands and 6 Python guard hooks. |
 | Stars / forks | 167 / 53 |
 | Created | 2026-05-24 (about 4.5 months old) |
@@ -69,7 +69,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.1 Agent orchestrators over CLIs and multi-agent coding
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [gastownhall/gastown](https://github.com/gastownhall/gastown) (was steveyegge/gastown) | Go multi-agent workspace manager: Mayor, Rigs, Polecats, Witness, Refinery | 18.3k | push 2026-10-08, rel v1.2.1 (2026-06-06) | MIT | **Odin, Gates, Tree.** Several pieces: the **Refinery** (a per-rig Bors-style bisecting merge queue); a **three-tier watchdog** (Witness per rig, Deacon patrol, Dogs) for stuck-agent detection; **persistent identity with ephemeral sessions**; "molecules" (TOML formula → instantiated step workflow) as a model for graph templates. It is Go, so the code is directly readable for you. | MUST |
 | [gastownhall/gascity](https://github.com/gastownhall/gascity) | Gas Town rewritten as an orchestration-builder SDK (Go): `city.toml`, runtime providers (tmux, subprocess, exec, **ACP**, Kubernetes), a reconcile loop | 1.4k | push 2026-10-11 | MIT | **Odin, Gleipnir.** A **declarative desired state plus a controller reconcile loop** for agents, and a pluggable runtime provider interface. This is the closest existing design to Odin plus Gleipnir, in Go. | MUST |
 | [gastownhall/beads](https://github.com/gastownhall/beads) (bd) | Dependency-graph issue tracker for agents, on Dolt (versioned SQL) | 27.8k | push 2026-10-11, rel v1.3.1 (2026-09-30) | MIT | **Tracker, Ledger.** The commands `bd ready` (unblocked work), `--claim` (atomic claim) and `bd remember`. The rule "no markdown TODOs" works well as an agent instruction. Consider a beads-like local graph as the source of truth, with GitHub Issues as a *projection*. | MUST |
@@ -101,7 +101,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 | [snarktank/ralph](https://github.com/snarktank/ralph) | Minimal PRD-driven Ralph loop | 21.9k | push 2026-02-02 | MIT | Read once in 10 minutes; nothing beyond the essay. | SKIP |
 | [ClaytonFarr/ralph-playbook](https://github.com/ClaytonFarr/ralph-playbook) | Guide to Ralph loops | 1.0k | push 2026-03-06 | MIT | A concise write-up of "backpressure" (tests, types, lints) as the loop governor. | WATCH |
 | [umputun/ralphex](https://github.com/umputun/ralphex) | Go extended Ralph loop for plan execution | 1.5k | push 2026-10-05 | MIT | Go reference for a plan-driven loop with review phases. | WATCH |
-| Claude Code `plugins/ralph-wiggum` ([link](https://github.com/anthropics/claude-code/tree/main/plugins)) | Official Ralph plugin using a Stop hook | (in claude-code) | active | see repo | **Jormungandr.** It shows how a **Stop hook** can re-inject the prompt to keep a headless session looping, which is an alternative to an outer bash loop. | WATCH |
+| Claude Code `plugins/ralph-wiggum` ([claude-code plugins folder](https://github.com/anthropics/claude-code/tree/main/plugins)) | Official Ralph plugin using a Stop hook | (in claude-code) | active | see repo | **Jormungandr.** It shows how a **Stop hook** can re-inject the prompt to keep a headless session looping, which is an alternative to an outer bash loop. | WATCH |
 | [automazeio/ccpm](https://github.com/automazeio/ccpm) | PM skill system: PRD → epic → GitHub Issues plus worktrees | 8.4k | push 2026-03-18 | MIT | **Tracker.** Its mapping of PRD to epic to issues, with sub-issues, is close to your GitHub projection. | WATCH |
 | [humanlayer/humanlayer](https://github.com/humanlayer/humanlayer) | Started as human-approval SDK; now "CodeLayer" agent IDE | 11.7k | push 2026-06-19 | Apache-2.0 | **Gates.** Its original `require_approval` / human-as-tool idea is worth knowing. The current product is less relevant. | WATCH |
 | [manaflow-ai/cmux](https://github.com/manaflow-ai/cmux) | Ghostty-based macOS terminal for agent sessions | 28.1k | push 2026-10-11 | GPL-3.0+ (client) | Mac terminal UX; not relevant to a headless Linux factory. | SKIP |
@@ -109,7 +109,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.2 Harness-engineering learning resources
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Course: five subsystems (instructions, tools, environment, state, feedback); lectures on loop engineering (L13) and graph engineering (L14); breakdowns of Claude Code, Codex, Pi and DeepSeek harnesses | 19.7k | push 2026-10-01 | MIT | **All layers.** L14 ("a loop is a graph with one node") is the *exact* thesis behind Odin plus Jormungandr. `skills/harness-creator/` scaffolds AGENTS.md, a feature list, init.sh and verification steps. Also the maker/checker templates. | MUST |
 | [walkinglabs/awesome-harness-engineering](https://github.com/walkinglabs/awesome-harness-engineering) | Curated list | 4.4k | push 2026-08-19 | CC0 | A discovery index. | WATCH |
 | [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) | Curated list: tools, patterns, evals, memory, permissions | 4.8k | push 2026-10-11 | CC0 | A fresher discovery index than walkinglabs'. | WATCH |
@@ -128,7 +128,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.3 Spec-driven development
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [github/spec-kit](https://github.com/github/spec-kit) | `specify` CLI: constitution → spec → plan → tasks → implement, under `.specify/` and `specs/NNN-feature/` | 140.8k | rel v1.1.3 (2026-10-09) | MIT | **Spec (your chosen layout).** Track its template changes. The **constitution** maps to umbrella-level policy, and `tasks.md` with `[P]` parallel markers maps to Odin fan-out. | MUST |
 | [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) | Lightweight SDD: `openspec/specs` (current truth) plus `openspec/changes/<id>` (proposals as deltas) | 71.6k | rel v1.14.1 (2026-10-06) | MIT | **Spec and Tree.** The **change-as-delta** model (ADDED, MODIFIED, REMOVED requirements, archived on merge) fits brownfield leaf repos better than Spec Kit's per-feature folders. Consider it for changes to existing leaves. | MUST |
 | [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) | Agile AI-driven development. v6 was a persona pipeline (analyst, PM, architect, SM, dev, QA). The v7 preview on `main` is a set of right-sized skills: `bmad-spec` → `bmad-ticket` → `bmad-build`, with optional personas | 54.3k (2026-10-17) | rel v6.12.4 (2026-10-14); v7 preview alpha, breaking changes | MIT; "BMad" in any casing is a trademark | **Odin, Gleipnir, Havamal.** Re-read 2026-10-17; see [research-bmad](research-bmad.md). Borrow: `bmad-build-auto`'s worker contract (one unit per run, typed `blocked` reasons, `risk`, deferred findings "not a backlog", a patch saved on an intent gap); `bmad-retrospective`'s "what would prevent the next one" and its follow-through check on the last retro; `bmad-eval`'s baseline/variant/quality/trigger modes, clean rooms, three runs, one change per round with revert on regression; the theory of project context. Skills render at run time through `uv`, which fits Havamal's pinned copies poorly. | MUST (concepts) |
@@ -140,7 +140,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.4 Sandboxing
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [devcontainers/cli](https://github.com/devcontainers/cli) | Reference implementation of devcontainer.json (`devcontainer up/exec`) | 3.0k | push 2026-10-08 | MIT | **Gleipnir sandbox (core dependency).** Supports `--docker-path podman`. Learn its features, lifecycle hooks and `remoteUser` behaviour under rootless Podman. | MUST |
 | [podman-container-tools/podman](https://github.com/podman-container-tools/podman) (was containers/podman) | Rootless OCI engine | 33.0k | push 2026-10-10 | Apache-2.0 | **Gleipnir.** `--userns=keep-id`, `--network=none` or pasta, and the `podman machine` / socket API. Note the org move. | MUST |
 | [anthropics/sandbox-runtime](https://github.com/anthropics/sandbox-runtime) (srt) | OS-level filesystem and network sandbox (bubblewrap on Linux, sandbox-exec on macOS) plus a domain-allowlist proxy | 5.5k | rel v0.0.79 (2026-10-07), beta | Apache-2.0 | **Gleipnir policies.** A **second layer inside the container**: an egress allowlist proxy and denial of reads to `~/.ssh`. Its config schema is a good model for Yggdrasil's per-node policy files. | MUST |
@@ -160,7 +160,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.5 Evals and benchmarks
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [harbor-framework/harbor](https://github.com/harbor-framework/harbor) | Eval framework from the Terminal-Bench team: runs Claude Code, Codex, OpenHands… against containerised tasks, locally or in the cloud | 6.0k | rel v0.24.0 (2026-10-05) | Apache-2.0 | **Bench (format).** The task layout: instruction plus `task.toml`, `environment/Dockerfile`, `tests/`, and an oracle `solution/`. It already has **agent adapters for the same CLIs** Gleipnir drives. Make Yggdrasil's benchmark format Harbor-compatible, or at least exportable to it. | MUST |
 | [harbor-framework/terminal-bench-2](https://github.com/harbor-framework/terminal-bench-2) / [terminal-bench-1](https://github.com/harbor-framework/terminal-bench-1) | Terminal task benchmark | 425 / 2.6k | push 2026-04-30 / 07-11 | Apache-2.0 | Example tasks with hidden tests: a model for your hidden Playwright suites. | MUST (with Harbor) |
 | [SWE-bench/SWE-bench](https://github.com/SWE-bench/SWE-bench) | Issue → patch benchmark (Full, Lite, Verified, Multimodal) | 6.0k | push 2026-09-18 | MIT | **Bench.** FAIL_TO_PASS and PASS_TO_PASS test splits are the right grading model: hidden tests that must flip, plus regression tests that must stay green. Multimodal is the visual front-end variant. | MUST (concepts) |
@@ -180,7 +180,7 @@ Tier legend: **MUST** = study and borrow from now. **WATCH** = useful, check bac
 ### 2.6 Observability and tracing for agents
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [open-telemetry/semantic-conventions-genai](https://github.com/open-telemetry/semantic-conventions-genai) | GenAI semantic conventions (moved out of the main semconv repo): agent spans, events, metrics, MCP | 424 | push 2026-10-10 | Apache-2.0 | **Ledger.** Name ledger fields after `gen_ai.*` attributes (e.g. `gen_ai.usage.input_tokens`, `gen_ai.agent.name`, `gen_ai.operation.name`) so you can export to any OTel backend later. Most of the spec is still **Development** status (about 305 Development, 20 Stable markers in the agent-spans doc), so expect churn. | MUST |
 | [traceloop/openllmetry](https://github.com/traceloop/openllmetry) | OTel instrumentation for LLM SDKs | 7.5k | push 2026-10-11 | Apache-2.0 | Reference for how GenAI spans are emitted in practice. | WATCH |
 | [langfuse/langfuse](https://github.com/langfuse/langfuse) | Tracing, evals and prompt management; OTel ingest | 35.6k | push 2026-10-11 | MIT core plus a commercial `ee/` folder (now owned by ClickHouse) | **Ledger viewer.** Self-host it as the UI over OTel exports from your ledger. Its trace → observation → score model is worth copying. | MUST |
@@ -196,7 +196,7 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 ### 2.7 Code-graph routing and context
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) | Codebase → knowledge graph (tree-sitter for code, LLM pass for docs); `graph.json`, `GRAPH_REPORT.md`, `explain` / `path` / `query` | 125.4k | rel v0.9.85 (2026-10-10) | Apache-2.0 | **Tree (your "graphify-like" index).** Borrow: an **EXTRACTED vs INFERRED** confidence tag on every edge; `graph.schema_version`; community detection to get module boundaries; the `GRAPH_REPORT.md` digest as the per-umbrella routing summary. Python, with a cloud upsell; the star count is inflated, but the core ideas are sound. | MUST |
 | [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) | Native (C) tree-sitter knowledge graph in SQLite, 162 languages, 17 MCP tools (trace, impact analysis, Cypher, dead code, cross-service HTTP links) | 46.3k | rel v0.11.0 (2026-09-15) | MIT | **Tree (impact analysis and wiring tables).** Its **cross-service HTTP route linking** and IaC (Dockerfile, K8s) nodes map to your umbrella "wiring tables". It ships a [preprint](https://arxiv.org/abs/2603.27277). Claims like "120x fewer tokens" are self-reported. | MUST |
 | [Aider repo-map](https://github.com/Aider-AI/aider) (`aider/repomap.py`) | tree-sitter tags plus PageRank, budgeted to tokens | (aider) | — | Apache-2.0 | **Tree.** The cheapest working routing index. Port it to Go as the baseline ranking for leaf selection. | MUST |
@@ -213,7 +213,7 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 ### 2.8 Durable workflow and graph engines (learn from them, even if you do not adopt them)
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [temporalio/temporal](https://github.com/temporalio/temporal) | Durable execution (Go server) | 23.6k | push 2026-10-10 | MIT | **Odin.** Event-sourced history plus deterministic replay, activity retries/timeouts/heartbeats, signals for **human approval**. Odin's run log should be a replayable event history, not mutable state. | MUST (concepts) |
 | [dbos-inc/dbos-transact-golang](https://github.com/dbos-inc/dbos-transact-golang) | Durable workflows as a Go library on Postgres (or SQLite) | 851 | push 2026-10-08 | MIT | **Odin.** The lightest "durable steps in-process" model in Go: checkpoint every step's output and resume after a crash. The closest fit for an embedded engine. | MUST |
 | [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | Graph of nodes over shared state, with checkpoints and `interrupt()` | 43.1k | push 2026-10-11 | MIT | **Odin and Gates.** `interrupt()`/resume for human-in-the-loop, per-node checkpoints, time travel. The API shape for approval gates. | MUST (concepts) |
@@ -226,7 +226,7 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 ### 2.9 Go agent libraries
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk) | Official MCP Go SDK (with Google) | 5.2k | push 2026-10-11 | MIT → Apache-2.0 (in transition) | **Gleipnir.** Use it to expose Yggdrasil tools (index queries, ledger writes, gate requests) to agents as an MCP server. | MUST |
 | [anthropics/anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go) | Official Anthropic Go SDK | 1.2k | push 2026-10-09 | MIT | For Odin's own small LLM calls (routing, grading, summaries) outside the CLIs. | MUST |
 | [openai/openai-go](https://github.com/openai/openai-go) | Official OpenAI Go SDK | 3.5k | push 2026-10-11 | Apache-2.0 | Same role, for an OpenAI-compatible judge model. | WATCH |
@@ -242,7 +242,7 @@ Also: Claude Code and Codex both ship native OpenTelemetry export (Codex has `ot
 ### 2.10 Game-dev agent tooling (future game realm)
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [hi-godot/godot-ai](https://github.com/hi-godot/godot-ai) | MCP server plus tools for Godot (GDScript) | 2.9k | push 2026-10-10 | MIT | **Realms (games).** The most active Godot MCP. Covers scene, node and script ops, and running the game. | WATCH (MUST when the realm starts) |
 | [Coding-Solo/godot-mcp](https://github.com/Coding-Solo/godot-mcp) | Godot MCP: launch editor, run project, capture debug output | 6.0k | push 2026-04-16 (slowing) | MIT | Simple design: run headless and capture stdout as feedback. | WATCH |
 | [ee0pdt/Godot-MCP](https://github.com/ee0pdt/Godot-MCP) | Early Godot MCP | 618 | push 2025-03-19 (dormant) | MIT | Dormant. | SKIP |
@@ -264,7 +264,7 @@ Added 2026-10-17; the GitHub API data in this section is from that day. The full
 > `ygg metrics --compare` would supply that half.
 
 | Project | What it is | Stars | Activity | Licence | Informs → what to borrow | Tier |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin) | Skill pack (36 skills, 14 hosts): brainstorm → plan → work → simplify → review → **compound**; learnings go to `docs/solutions/` as markdown with typed YAML frontmatter | 25.6k | push 2026-10-17, rel v3.31.0 (2026-10-16) | MIT | **Ledger, Odin (change graph), Gleipnir (skills).** Borrow: the "durable bar" counterfactual for whether a lesson is worth writing; the schema (bug vs knowledge track, `applies_when`, `retire_when`); grep-first retrieval over frontmatter; the refresh outcomes (Keep, Update, Consolidate, Replace, Delete) with "age alone is not staleness" and "unverifiable is not false"; the promotion ladder learning → pattern → Compound Pack; `ce-retune`'s refusal to tune without an A/B harness. Do not install it whole: it is tied to its own skills and host UIs, and it releases almost daily. | MUST (concepts) |
 | [iwe-org/memory-bench](https://github.com/iwe-org/memory-bench) | Benchmark of a markdown knowledge graph as agent memory (LOCOMO, HotPotQA) with Claude Code | 3 | push 2026-07-19 | none stated | **Tree, Bench.** On sealed LOCOMO data, grep over raw transcripts (0.812) beat grep over curated notes (0.764); the graph won on cost, not accuracy. A ready-made reason to gate any lessons graph behind the routing bench. Conversational recall, not coding. No licence, so read only. | WATCH |
 
@@ -292,7 +292,7 @@ Added 2026-10-17; the GitHub API data in this section is from that day. The full
 The "Why it matters" column is **[ANALYSIS]**.
 
 | # | Reading | Date | Why it matters to the OSS list |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Anthropic, [Building effective agents](https://www.anthropic.com/research/building-effective-agents) | 2024-12-19 | The five workflow patterns (chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer) are the node types Odin composes. |
 | 2 | Anthropic, [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | 2025-09-29 | Just-in-time context, compaction and sub-agents. This is the reason for the routing indexes. |
 | 3 | Anthropic, [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | 2025-11-26 | Initializer agent, feature list JSON, one feature per session, browser E2E checks. |

@@ -32,7 +32,7 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 ## 1. What AI app builders and agent workflows generate by default
 
 | Builder / source | Frontend | Backend / data | Auth | Confidence |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **Lovable** | **TanStack Start** with SSR for apps created from 2026-05-13 (Enterprise from 2026-06-22). Older apps use React + Vite (browser-rendered). Code is TypeScript + Tailwind + shadcn/ui. | Built-in "Cloud" backend: managed Postgres, login, file storage. You can also use your own Supabase. "Lovable does not offer a choice of framework or database." | Built in: email/password, Google, Apple, Microsoft, SAML | Primary: [Lovable FAQ](https://docs.lovable.dev/introduction/faq), [Lovable blog](https://lovable.dev/blog/building-apps-using-tanstack-start). Lovable cites SSR for crawlers, end-to-end types as "guardrails" for the AI, and host portability. [TanStack partnership post](https://tanstack.com/blog/lovable-partnership) |
 | **Vercel v0** | "v0 uses Next.js, React, TypeScript, Tailwind CSS, and shadcn/ui", and "runs on Next.js" | "Connect databases…", with no specific DB named in the FAQ | — | Primary: [v0 FAQ](https://v0.app/docs/faqs) |
 | **Bolt.new** | Any browser-runnable JS framework. Node backends only (no PHP/Python). Expo for mobile. | Bolt Cloud (Aug 2025) adds managed DB and hosting | — | [Bolt support: supported technologies](https://support.bolt.new/faq/supported-technologies). The React/Node/Postgres default is **[UNVERIFIED]** ([banani review](https://www.banani.co/./blog/bolt-new-ai-review-and-alternatives)) |
@@ -41,7 +41,8 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 | **Cursor / Claude Code / Codex (unopinionated agents)** | No default stack. What agents actually touch: Next.js is the largest framework by agent-PR volume (16%), with React at 15.9%. | — | — | [Amplifying, "Coding agents by framework" (2026-09-14 → 10-04)](https://s.amplifying.ai/coding-agents/frameworks). This is "portfolio tilt, not market share". |
 | **Auth library trend (TS)** | Auth.js/NextAuth has been maintained by the Better Auth team since 2025-09-22, and Better Auth is recommended for new projects. **Better Auth joined Vercel on 2026-07-07**; Vercel commits to keeping it "framework and platform agnostic". | | | [Better Auth: Auth.js joins](https://www.better-auth.com/blog/authjs-joins-better-auth), [Better Auth joins Vercel](https://better-auth.com/blog/better-auth-joins-vercel) |
 
-**Surveys**
+### Surveys
+
 - **State of JS 2025:**
   - Next.js is used by 59% of respondents, with 21% positive and 17% negative sentiment. It drew the most comments of any project, with complaints about complexity and Vercel's motives ([InfoQ](https://www.infoq.com/news/2026/03/state-of-js-survey-2025)).
   - Next.js's satisfaction is 39% below Astro's, the leader. TanStack Start is "going to make a very strong entrance" next year ([stateofjs](https://2025.stateofjs.com/en-US/libraries/meta-frameworks/)).
@@ -57,7 +58,7 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 ## 2. Evidence on how well agents write each framework, and the tooling available
 
 | Framework | Measured evidence | Agent tooling |
-|---|---|---|
+| --- | --- | --- |
 | **Next.js** | [Next.js agent evals](https://nextjs.org/evals) (pass@4, last run 2026-09-25): Claude Opus 5.5 + Claude Code 97%, GPT 6 Sol + Codex 97%, OpenCode + Grok 4.7 94%. Bundled docs/AGENTS.md lift weaker models, e.g. Composer 2.5 from 81% to 94%; earlier Sonnet 4.6 went from 45% to 74%. | Next 16.2+ bundles version-matched docs in `node_modules/next/dist/docs`. 16.3+ writes a managed AGENTS.md block ("This is NOT the Next.js you know"). Also available: `next upgrade --agent`, Skills such as `next-dev-loop`, and `agent-browser` ([AI agents guide](https://nextjs.org/docs/app/guides/ai-agents)). The dev server exposes MCP at `/_next/mcp` (`get_errors`, `get_routes`, `get_compilation_issues`…) via `next-devtools-mcp` ([MCP guide](https://nextjs.org/docs/app/guides/mcp)). |
 | **React + Vite / TanStack** | No public framework eval found. Lovable chose TanStack Start partly because end-to-end types give its AI "tighter guardrails" ([Lovable](https://lovable.dev/blog/building-apps-using-tanstack-start)). | Official TanStack MCP serves version-specific docs ([TanStack MCP](https://tanstack.com/mcp/latest/docs)). TanStack "Intent" skills ([blog index](https://tanstack.com/blog)). |
 | **SvelteKit** | None found. | Official Svelte MCP (`@sveltejs/mcp` / `mcp.svelte.dev`) with a `svelte-autofixer` static-analysis loop ([svelte.dev/docs/ai](https://svelte.dev/docs/ai/tools)). |
@@ -73,6 +74,7 @@ Research date: 2026-10-11. Every factual claim has a source link. Items marked *
 ## 3. Comparison of options for the client-gallery product
 
 Product requirements, checked against the [Pixieset Client Gallery page](https://pixieset.com/client-gallery/):
+
 - Galleries with password protection and download PINs.
 - Single-photo and full-gallery downloads at selectable sizes.
 - Favourites and comments.
@@ -83,7 +85,7 @@ Product requirements, checked against the [Pixieset Client Gallery page](https:/
 Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited facts in 3.2.
 
 | Criterion | (a) Next.js full-stack + Drizzle + Better Auth + S3 | (b) Next.js FE + Go API | (c) React+Vite SPA (TanStack) + Go API | (d) TanStack Start full-stack | (e) SvelteKit | (f1) Rails 8 / Laravel 13 | (f2) Supabase-as-backend (Lovable-style) |
-|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | Agent proficiency / training data | **5** (evals, MCP, AGENTS.md, top agent-PR share) | 4 (two codebases, two mental models) | **4–5** (React is ubiquitous; Go is strong; no published eval) | 3–4 (Lovable bet; less training data; still "RC" label) | 3 (Svelte 7.2% SO; good MCP) | 3 (Boost for Laravel; new language for factory) | 4 (very common in builders) |
 | Large uploads (presigned multipart) | 4 (Route Handler signs; Uppy) | 5 (Go signs) | 5 (Go signs) | 4 | 4 | 4 (Active Storage direct uploads) | 3 (Supabase Storage; TUS) |
 | Thumbnails / responsive serving | 3: `next/image` + sharp works but carries an RCE/SSRF/DoS history. Use imgproxy/custom loader instead. | 4 (Go worker / imgproxy) | **5** (Go worker / imgproxy) | 4 (bring your own) | 4 (bring your own) | 4 (libvips variants) | 2 (transforms on Pro: $5 per 1k origin images, 25 MB / 50 MP caps) |
@@ -96,7 +98,8 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
 
 ### 3.2 Per-option notes, with sources
 
-**(a) Next.js App Router full-stack (Tailwind, shadcn, Drizzle, Postgres, Better Auth, S3)**
+#### (a) Next.js App Router full-stack (Tailwind, shadcn, Drizzle, Postgres, Better Auth, S3)
+
 - **Pros:**
   - Best measured agent performance and tooling ([evals](https://nextjs.org/evals), [AI guide](https://nextjs.org/docs/app/guides/ai-agents)).
   - It is v0's native stack ([v0 FAQ](https://v0.app/docs/faqs)).
@@ -110,11 +113,13 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Better Auth is now Vercel-owned ([post](https://better-auth.com/blog/better-auth-joins-vercel)). That is not lock-in by itself, but it is worth noting **[ANALYSIS]**.
 - **Image specifics:** Do not route user uploads through `/_next/image`. Use a custom loader pointing at imgproxy, or pre-generated renditions **[ANALYSIS]**. This is also how Netlify avoided the AVIF RCE: it rewrites `/_next/image` to its own image CDN ([Netlify changelog](https://www.netlify.com/changelog/2026-08-25-nextjs-security-vulnerabilities.md)).
 
-**(b) Next.js frontend + Go API**
+#### (b) Next.js frontend + Go API
+
 - **Pros:** Go owns data, auth, presigning, ZIP streaming and image workers, which suits the factory's language **[ANALYSIS]**.
 - **Cons [ANALYSIS]:** You inherit Next.js's patch treadmill while using little of its server value. Auth spans two runtimes, so cookie and session sharing becomes a source of bugs. There are two test harnesses. If Next.js is only a BFF/SSR shell, its compromise is less catastrophic as long as it holds no DB credentials. React2Shell still gave RCE on the Next.js box ([Next.js advisory](https://nextjs.org/blog/CVE-2025-66478)).
 
-**(c) React 19 + Vite SPA (TanStack Router/Query) + Go API**
+#### (c) React 19 + Vite SPA (TanStack Router/Query) + Go API
+
 - **Pros:**
   - The same stack as the user's projects.
   - It was Lovable's stack until May 2026 ([Lovable FAQ](https://docs.lovable.dev/introduction/faq)).
@@ -128,7 +133,8 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Better Auth is TS-only, so Go needs its own session code. This is small for this product: photographer accounts plus gallery tokens **[ANALYSIS]**.
   - Marketing/SEO pages, if needed, can be a separate static site **[ANALYSIS]**.
 
-**(d) TanStack Start full-stack**
+#### (d) TanStack Start full-stack
+
 - **Pros:**
   - Lovable's 2026 default ([Lovable blog](https://lovable.dev/blog/building-apps-using-tanstack-start)).
   - Typed server functions.
@@ -139,14 +145,16 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Critical reflected XSS in server-function responses: CVE-2026-102989, fixed in react-start 1.168.60 ([TanStack advisory](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)).
   - Less training data than Next.js **[ANALYSIS]**.
 
-**(e) SvelteKit**
+#### (e) SvelteKit
+
 - **Pros:** Official MCP with an autofixer loop ([svelte docs](https://svelte.dev/docs/ai/tools)). Small bundles. Adapters for many hosts.
 - **Cons:**
   - **SvelteKit 3.0 shipped 2026-10-01** (npm) after an August RC. It moves config into `vite.config`, changes `$lib`→`#lib`, and requires Node 22.17 and TS 6 ([RC post](https://svelte.dev/blog/sveltekit-3-release-candidate)). Agents' training data is mostly SvelteKit 2 / Svelte 4–5 **[ANALYSIS]**.
   - Five CVEs in January 2026: devalue DoS, kit SSRF/DoS, svelte XSS ([Svelte blog](https://svelte.dev/blog/cves-affecting-the-svelte-ecosystem), [Netlify](https://www.netlify.com/changelog/2026-01-15-sveltekit-security-vulnerabilities/)).
   - Smallest usage share of the JS options (SO 7.2%).
 
-**(f1) Rails 8 / Laravel 13 (batteries included)**
+#### (f1) Rails 8 / Laravel 13 (batteries included)
+
 - **Pros:**
   - Rails 8 ships an auth generator, Solid Queue/Cache (DB-backed, no Redis) and Kamal deploys ([Rails 8 announcement](https://rubyonrails.org/2024/11/7/rails-8-no-paas-required)).
   - Active Storage does browser-to-S3-compatible direct uploads and proxy or redirect serving ([Rails guide](https://guides.rubyonrails.org/active_storage_overview.html)).
@@ -156,7 +164,8 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
   - Lower agent-PR volume.
   - Active Storage controllers are "publicly accessible by default", and redirect URLs are "permanent" signed IDs ([Rails guide](https://guides.rubyonrails.org/active_storage_overview.html)). That is the wrong default for private galleries unless overridden **[ANALYSIS]**.
 
-**(f2) Supabase-as-backend (Lovable-style)**
+#### (f2) Supabase-as-backend (Lovable-style)
+
 - **Pros:** The fastest path to auth + Postgres + storage **[ANALYSIS]**. A common builder default.
 - **Cons:**
   - Image transformations require Pro, cost $5 per 1,000 origin images beyond 100, cap at 25 MB and 50 MP, and resize up to 2,500 px ([Supabase docs](https://supabase.com/docs/guides/storage/serving/image-transformations)). High-resolution cameras routinely exceed 50 MP **[ANALYSIS / general knowledge]**, so this is a poor fit for a photographer product.
@@ -178,12 +187,14 @@ Scores run 1 (worst) to 5 (best) and are **[ANALYSIS]** grounded in the cited fa
 ### 4.2 Thumbnails and responsive serving
 
 Two viable patterns **[ANALYSIS]**:
+
 1. **Pre-generate a fixed set of renditions.** For example, long edge 400 / 1200 / 2048 in WebP, plus a JPEG fallback and watermarked variants. A Go worker built on libvips does this, triggered after the upload completes. Bindings: [vipsgen](https://github.com/cshum/vipsgen) or the maintained [govips fork](https://pkg.go.dev/github.com/getshuttle/govips/v2). Benefit: predictable cost, CDN-friendly immutable URLs, and no public transform endpoint.
 2. **On-the-fly with imgproxy** behind a CDN. [imgproxy](https://github.com/imgproxy/imgproxy) is Apache-2.0, written in Go and uses libvips. It offers **signed URLs**, image-bomb protection (it checks real dimensions before decoding), source restriction and watermarking in OSS.
 
 **Recommendation [ANALYSIS]:** use imgproxy, with signed URLs only and source restricted to your bucket, behind a CDN. Optionally pre-warm the 2–3 gallery sizes at upload time. This works the same for every option (a)–(e) and keeps image decoding out of the web-app process.
 
 **Avoid `next/image`'s built-in optimizer for user content** **[ANALYSIS]**. Its history includes:
+
 - An AVIF/libheif RCE (GHSA-2xp9-vwfh-vxw4, CVSS 9.5).
 - SSRF via `remotePatterns`, where DNS changes on an allow-listed host lead to internal requests (CVE-2026-94483).
 - An SVG DoS (CVE-2026-64644) ([advisories](https://github.com/vercel/next.js/security/advisories), [July release](https://nextjs.org/blog/july-2026-security-release)).
@@ -191,6 +202,7 @@ Two viable patterns **[ANALYSIS]**:
 **The decoder risk applies to every libvips-based tool, Go included** **[ANALYSIS]**. The August 2026 bug was in **libheif**, which sharp bundles: CVE-2026-84383, a heap overflow and possible RCE on glibc Linux, fixed in sharp 0.35.4 / libheif 1.23.2 ([sharp advisory](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c)). sharp also had libvips CVEs in July 2026 and a librsvg CVE in Sep 2026 ([sharp advisories](https://github.com/lovell/sharp/security/advisories)).
 
 **Mitigations [ANALYSIS]:**
+
 - Run the image worker or imgproxy in its own container with no DB credentials. Give it read access to originals and write access to derivatives only, and no egress.
 - Allow-list input formats; for example, block HEIF/AVIF/SVG decoding unless needed. sharp's own workaround is `sharp.block({ operation: ["VipsForeignLoadHeif"] })`.
 - Cap pixel count.
@@ -203,6 +215,7 @@ Two viable patterns **[ANALYSIS]**:
 **[ANALYSIS]** Stream a ZIP from Go: read objects from S3 and write `archive/zip` entries with the Store method, since JPEGs are already compressed. For very large galleries, build the ZIP asynchronously into S3 and email a short-lived presigned GET link.
 
 **Gallery access [ANALYSIS]:**
+
 - An unguessable slug plus an optional password hashed with argon2id.
 - A short-lived, signed, HttpOnly gallery cookie scoped to that gallery.
 - Every image and download URL is a short-lived presigned or signed URL.
@@ -213,7 +226,7 @@ Two viable patterns **[ANALYSIS]**:
 The Verdict column is **[ANALYSIS]**.
 
 | Option | Status / license | S3 features relevant here | Verdict |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **MinIO (community)** | Console stripped May 2025. Binaries and Docker images stopped Oct 2025. Maintenance mode Dec 2025. **Repo archived 2026-04-25.** "Distributed as source code only"; AGPLv3 ([GitHub](https://github.com/minio/minio), [InfoQ](https://infoq.com/news/2025/12/minio-s3-api-alternatives/)) | Full | **Do not use.** A pinned image never gets patches. |
 | **SeaweedFS** | Apache-2.0, Go ([InfoQ](https://infoq.com/news/2025/12/minio-s3-api-alternatives/)) | Presigned, multipart, CORS, POST policy, versioning, lifecycle (no transitions) ([wiki](https://github.com/seaweedfs/seaweedfs/wiki/Amazon-S3-API)) | **Recommended** for the devcontainer |
 | **Garage** | AGPLv3, Rust, small/self-hosted ([InfoQ](https://infoq.com/news/2025/12/minio-s3-api-alternatives/)) | Presigned, multipart, CORS, PostObject. Lifecycle partial (Expiration, AbortIncompleteMultipartUpload). **No versioning** ([Garage docs](https://garagehq.deuxfleurs.fr/documentation/reference-manual/s3-compatibility/)) | Good alternative |
@@ -234,6 +247,7 @@ The Verdict column is **[ANALYSIS]**.
 - Vercel-hosted apps were protected automatically. The workaround for unpatched apps is to strip the `x-middleware-subrequest` header at the edge ([advisory](https://github.com/vercel/next.js/security/advisories/GHSA-f82v-jwr5-mffw)).
 
 **What went wrong** ([discoverer write-up](https://zhero-web-sec.github.io/research-and-things/nextjs-and-the-corrupt-middleware)):
+
 - Next.js used an internal header, `x-middleware-subrequest`, to mark recursive internal calls and skip middleware. It **trusted that header on external requests**.
 - Sending `x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware` reached `MAX_RECURSION_DEPTH = 5`. With a `src/` directory the value is `src/middleware` repeated. Next.js then skipped middleware entirely.
 - That disables auth checks, redirects and rewrites, and security headers such as CSP. It can also poison a CDN cache with a 404.
@@ -302,7 +316,7 @@ The Verdict column is **[ANALYSIS]**.
 ## 6. Current versions (npm registry, queried 2026-10-11)
 
 | Package | Version and date |
-|---|---|
+| --- | --- |
 | next | 16.4.0 (2026-10-06); canary 16.5.0-canary.8; backport line 15.5.27 |
 | react | 19.3.0 |
 | @tanstack/react-start | 1.168.61 (2026-10-10); no 1.0 GA tag |

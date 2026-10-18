@@ -17,7 +17,7 @@ Research date: 2026-10-10. Repo languages come from the GitHub REST API (`langua
 ## 1. What real tools are written in
 
 | Tool | Category | Language (verified) | Notes / stated reasons |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Claude Code | coding-agent CLI | TypeScript (React + Ink, built with Bun) | Chosen to be "on distribution", so that "Claude Code could build itself" ([Pragmatic Engineer](https://newsletter.pragmaticengineer.com/p/how-claude-code-is-built)). Anthropic acquired Bun in Dec 2025, and that work "drove the recent launch of Claude Code's native installer" ([Anthropic](https://www.anthropic.com/news/anthropic-acquires-bun-as-claude-code-reaches-usd1b-milestone)). The public repo shows TypeScript ([GitHub](https://github.com/anthropics/claude-code)). |
 | Codex CLI | coding-agent CLI | Rust | Rewritten from TS/Node to Rust (May 2025) for a zero-dependency install (no Node 22 requirement), native sandbox bindings, no GC (lower memory) and an extensible wire protocol ([discussion #1174](https://github.com/openai/codex/discussions/1174); [repo](https://github.com/openai/codex)). |
 | OpenCode | coding-agent CLI + server | TypeScript (Bun) | Repo moved from sst/opencode to [anomalyco/opencode](https://github.com/anomalyco/opencode). It has `bun.lock`/`bunfig.toml`, a headless `opencode run --format json` and an HTTP `opencode serve` ([docs](https://opencode.ai/docs/cli/)). |
@@ -53,6 +53,7 @@ Research date: 2026-10-10. Repo languages come from the GitHub REST API (`langua
 **Pattern.** The vendor agent CLIs are TypeScript (Anthropic, Google, OpenCode) or Rust (OpenAI, Goose). The orchestrators that sit on top of those CLIs and supervise processes, worktrees and containers are mostly **Go**: Gas Town, Claude Squad, container-use, AgentAPI and Dagger.
 
 All the major CLIs support headless use, so the orchestrator never has to link a vendor SDK **[ANALYSIS]**:
+
 - `claude -p --output-format json|stream-json`. The JSON output includes `total_cost_usd`, and runs can be continued with `--resume <id>`. SIGTERM exits with code 143 and kills Bash process trees ([docs](https://code.claude.com/docs/en/headless)).
 - `codex exec --json` prints a JSONL event stream and supports `codex exec resume <id>` ([docs](https://learn.chatgpt.com/docs/non-interactive-mode)).
 - `opencode run --format json` ([docs](https://opencode.ai/docs/cli/)).
@@ -64,7 +65,7 @@ The Claude docs recommend running the CLI as a subprocess when you work outside 
 ## 2. SDK availability by language
 
 | SDK | Go | TS | Python | Rust | Elixir | JVM |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | Claude Agent SDK | no | **yes** | **yes** | no | no | no |
 | Anthropic API SDK (official) | **yes** | yes | yes | **no** | no | Java yes |
 | OpenAI API SDK (official) | yes (docs say beta) | yes | yes | **no** | no | Java yes (beta) |
@@ -76,6 +77,7 @@ The Claude docs recommend running the CLI as a subprocess when you work outside 
 | TUI | Bubble Tea | Ink | Textual | Ratatui | weak | Lanterna, Mosaic (experimental) |
 
 Sources:
+
 - **Claude Agent SDK:** "programmable in Python and TypeScript" ([docs](https://code.claude.com/docs/en/agent-sdk/overview)).
 - **Anthropic client SDKs:** "Python, TypeScript, C#, Go, Java, PHP, and Ruby", so there is no official Rust SDK ([docs](https://platform.claude.com/docs/en/cli-sdks-libraries/overview); [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go); [anthropic-sdk-java](https://github.com/anthropics/anthropic-sdk-java), Maven 2.71.0).
 - **OpenAI:** official SDKs are JS/TS, Python, .NET, Java (beta), Go (beta) and Ruby. The Agents SDK is TS and Python only ([docs](https://developers.openai.com/api/docs/libraries); [openai-go](https://github.com/openai/openai-go); [openai-java](https://github.com/openai/openai-java), Maven 4.80.0; [agents-python](https://github.com/openai/openai-agents-python); [agents-js](https://github.com/openai/openai-agents-js)).
@@ -90,6 +92,7 @@ Sources:
 - **TUIs:** [Bubble Tea](https://github.com/charmbracelet/bubbletea), [Ink](https://github.com/vadimdemedes/ink), [Textual](https://textual.textualize.io/) (which also serves to a browser), [Ratatui](https://ratatui.rs/), [Lanterna](https://github.com/mabe02/lanterna) and [Mosaic](https://github.com/jakewharton/mosaic) ("experimental").
 
 ### SDK gaps per language
+
 - **Go:** no Claude Agent SDK and no OpenAI Agents SDK. Everything else is official: the Anthropic, OpenAI, MCP (Tier 1) and Temporal SDKs, plus the Podman bindings.
 - **TypeScript:** no real gaps. It is the best-covered language **[ANALYSIS]**.
 - **Python:** no real gaps. It ties with TypeScript and has the most agent frameworks **[ANALYSIS]**.
@@ -104,7 +107,7 @@ Sources:
 Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYSIS]**. Sections 4.1 to 4.6 give the evidence behind each cell.
 
 | Criterion | Go | TypeScript (Node/Bun) | Python | Rust | Elixir/BEAM | JVM: Pekko (Java) |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | Subprocess supervision & concurrency | 5: goroutines; `exec.CommandContext` + `Cancel`/`WaitDelay` | 3: event loop + `child_process`, single-threaded | 3: asyncio subprocess, GIL | 4: tokio; children **not** killed on drop by default | 5 for supervision trees; 3 for OS processes (ports don't kill children; needs MuonTrap/erlexec) | 4: typed supervision; `ProcessHandle` (Java 9+) kills process trees; virtual threads |
 | Durable state / resume | 3: DIY file + git journal, or Temporal/DBOS/Restate Go SDKs | 4: Temporal, Restate, Inngest, Mastra | 5: LangGraph SQLite checkpointer, Pydantic AI + Temporal/DBOS/Prefect/Restate | 3: Temporal and Restate Rust SDKs, otherwise DIY | 4: Oban on SQLite; DIY via OTP | 5: Pekko Persistence event sourcing (JDBC; local snapshot store) + Temporal Java |
 | LLM/agent SDK fit | 4 (no agent SDKs, all API/MCP SDKs) | 5 | 5 | 2 | 2 | 4 |
@@ -115,6 +118,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 | Ecosystem precedent for *this* kind of tool | 5 (Gas Town, Claude Squad, container-use, Crush, AgentAPI) | 4 (Claude Code, OpenCode, Gemini CLI) | 3 (Aider, Sculptor) | 4 (Codex, Goose, Vibe Kanban) | 2 (Jido) | 2 (Akka SDK, enterprise/cloud) |
 
 **Variant (6th option): Go + a workflow engine as the backbone.** This means Temporal, DBOS or Restate under Go.
+
 - **Temporal:** `temporal server start-dev --db-filename x.db` runs locally with SQLite persistence and a web UI at :8233. The dev server is "not intended for production use" ([docs](https://docs.temporal.io/cli/server)).
 - **DBOS:** has a Go SDK, but it is Postgres-backed ([repo](https://github.com/dbos-inc/dbos-transact-golang); [docs](https://docs.dbos.dev/)).
 - **Restate:** has SDKs for TS, Java, Kotlin, Python, Go, Rust and Ruby ([docs](https://docs.restate.dev/)).
@@ -127,6 +131,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 ## 4. Per-option detail
 
 ### 4.1 Go
+
 - **Process supervision:** `exec.CommandContext` interrupts the process "if the context becomes done", `Cmd.Cancel` overrides the kill, and `WaitDelay` bounds waits on stuck I/O ([pkg.go.dev/os/exec](https://pkg.go.dev/os/exec)). Goroutines and channels fit naturally with fan-out to parallel agents **[ANALYSIS]**.
 - **Agent proficiency:** "I strongly recommend Go for new backend projects." Ronacher's reasons are explicit context passing, fast incremental tests, structural interfaces and a stable ecosystem ([Ronacher, Jun 2025](https://lucumr.pocoo.org/2025/6/12/agentic-coding/)). Counterpoint: on AutoCodeBench's single-shot problems, Go scored 37.2% Pass@1 for Claude Opus 4 versus 40.3% for Python ([arXiv 2508.09101](https://arxiv.org/html/2508.09101)). Problems differ per language, so cross-language comparison is indicative only **[ANALYSIS]**.
 - **Distribution and dashboard:** a native static binary, plus `embed` for bundling a web dashboard ([pkg.go.dev/embed](https://pkg.go.dev/embed)).
@@ -136,6 +141,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 **Cons [ANALYSIS]:** no vendor agent SDKs (you must parse CLI JSON streams); durable execution is DIY or needs an external engine; fewer LLM frameworks than Python or TS.
 
 ### 4.2 TypeScript (Node/Bun)
+
 - **Distribution:** Bun compiles to one executable that bundles "a copy of the Bun runtime", with cross-compile targets for Linux, Windows and macOS. Bun's docs say binaries are "still way too big" ([Bun docs](https://bun.com/docs/bundler/executables)). Node SEA ([docs](https://nodejs.org/api/single-executable-applications.html)) and `deno compile` ([docs](https://docs.deno.com/runtime/reference/cli/compile/)) are alternatives.
 - **SDK coverage:** the Claude Agent SDK, OpenAI Agents SDK, OpenRouter SDK and MCP Tier 1 SDK all exist in TS, along with Temporal, Restate, Inngest AgentKit and Mastra.
 - **Agent proficiency:** Claude Code picked TS so the model "could build itself" ([Pragmatic Engineer](https://newsletter.pragmaticengineer.com/p/how-claude-code-is-built)).
@@ -144,6 +150,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 **Cons [ANALYSIS]:** single-threaded event loop for CPU work; `child_process` supervision is more manual ([Node docs](https://nodejs.org/api/child_process.html)); large binaries; npm supply-chain surface.
 
 ### 4.3 Python
+
 - **Durable state:** LangGraph checkpointers give "human-in-the-loop workflows, time travel, and fault tolerance", and `SqliteSaver` provides local file storage ([docs](https://docs.langchain.com/oss/python/langgraph/persistence)). Pydantic AI co-maintains Temporal, DBOS, Prefect and Restate integrations ([docs](https://pydantic.dev/docs/ai/integrations/durable_execution/overview/)).
 - **Subprocesses:** asyncio subprocesses ([docs](https://docs.python.org/3/library/asyncio-subprocess.html)).
 - **Agent proficiency:** Ronacher says "Agents struggle with Python's magic" and that the agent loop is slow because of startup time ([Ronacher](https://lucumr.pocoo.org/2025/6/12/agentic-coding/)).
@@ -153,6 +160,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 **Cons [ANALYSIS]:** weakest distribution; runtime type safety is weaker, so refactors are riskier; slower agent loop.
 
 ### 4.4 Rust
+
 - **Process supervision:** a tokio `Child` "will, by default, continue to execute even after the Child handle has been dropped". `kill_on_drop` is false by default, and zombies are a known caveat ([docs.rs](https://docs.rs/tokio/latest/tokio/process/struct.Command.html)).
 - **SDK coverage:** official MCP (`rmcp` 3.5.1) and Temporal Rust SDKs exist. There are no official Anthropic or OpenAI SDKs.
 - **Precedent:** Codex moved to Rust for native sandboxing, no GC and a zero-dependency install ([#1174](https://github.com/openai/codex/discussions/1174)).
@@ -161,6 +169,7 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 **Cons [ANALYSIS]:** LLM SDK gaps; slower iteration and compiles in the agent loop (Ronacher notes `cargo test` friction); overkill for an I/O-bound orchestrator.
 
 ### 4.5 Elixir/BEAM
+
 - **Supervision:** OTP supervisors restart failed processes ([Supervisor docs](https://elixir.hexdocs.pm/Supervisor.html)).
 - **Caveat on OS processes:** when the VM dies, a port's external program "won't be automatically terminated", and the docs suggest a wrapper script ([Port docs](https://elixir.hexdocs.pm/Port.html)). MuonTrap fixes this: it "kills OS processes if the Elixir process running them crashes" and can apply cgroups ([repo](https://github.com/fhunleth/muontrap)). [erlexec](https://github.com/saleyn/erlexec) is an alternative.
 - **Durable state:** Oban jobs run on Postgres, **SQLite3** or MySQL ([docs](https://oban.hexdocs.pm/installation.html)).
@@ -174,18 +183,21 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 
 ### 4.6 JVM actor model: Apache Pekko (recommended language: **Java 21+**)
 
-**Licensing**
+#### Licensing
+
 - **Akka:** Akka switched to BSL 1.1 starting with v2.7 (Sep 2022) ([Akka blog](https://akka.io/blog/lightbend-changes-its-software-licensing-model-for-akka-technology)). The current FAQ says BSL "freely allows usage ... for development and other non-production work". "Production use of Akka requires a commercial license", and each release reverts to Apache 2.0 after three years ([Akka BSL FAQ](https://akka.io/bsl-license-faq)).
 - **Akka artifacts:** binaries now come from a tokenized repo (`repo.akka.io/<token>/secure`) ([doc.akka.io](https://doc.akka.io/docs/akka-dependencies/current/)). Recent versions require a license key in production ([discuss.akka.io](https://discuss.akka.io/t/akka-license-key/10972)). Maven Central's last `akka-actor-typed_3` is 2.9.0-M2 from Oct 2024 (maven metadata).
 - **Akka positioning:** Akka now markets itself as "the Agentic AI Platform for Enterprises", with an Akka SDK offering Agents, Workflows, Event Sourced Entities and MCP Endpoints in Java ([akka.io](https://akka.io/); [SDK docs](https://doc.akka.io/sdk/index.html)). It is aimed at its own cloud and runtime, not at a local CLI orchestrator **[ANALYSIS]**.
 - **Pekko is the Apache-2.0 fork, and it is active.** Releases on Maven Central: 1.3.0 (2025-11-16), 1.4.0 (2025-12-07), 1.5.0 (2026-03-23), 1.6.0 (2026-04-24), 1.7.0 (2026-08-16), 1.7.1 (2026-09-04). The 2.0.0 milestones are M1 (2025-12) through M4 (2026-08-18) ([Maven Central](https://repo1.maven.org/maven2/org/apache/pekko/pekko-actor-typed_3/); [GitHub](https://github.com/apache/pekko)).
 
-**Typed actors and supervision**
+#### Typed actors and supervision
+
 - The default is to stop on exception. `Behaviors.supervise(...).onFailure(SupervisorStrategy.restart())` adds restarts with limits (for example, at most 10 restarts in 10 seconds) ([docs](https://pekko.apache.org/docs/pekko/current/typed/fault-tolerance.html)).
 - Children are stopped on parent restart by default.
 - The docs show the Java API alongside Scala ([typed docs](https://pekko.apache.org/docs/pekko/current/typed/index.html)). Kotlin is not mentioned.
 
-**Persistence for checkpoint/resume**
+#### Persistence for checkpoint/resume
+
 - Event-sourced behaviors are a natural fit for a run ledger (every step is an event) **[ANALYSIS]**.
 - **Built-in options:** the local LevelDB journal is **deprecated**. A local file snapshot store exists ([plugins](https://pekko.apache.org/docs/pekko/current/persistence-plugins.html)).
 - **Recommended path [ANALYSIS]:** pekko-persistence-jdbc, which supports "JDBC-compliant databases" ([docs](https://pekko.apache.org/docs/pekko-persistence-jdbc/current/overview.html)). SQLite would mean using [sqlite-jdbc](https://github.com/xerial/sqlite-jdbc) with a custom schema, because it is not a documented target.
@@ -193,7 +205,8 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
 
 **Subprocesses:** `ProcessHandle` (Java 9+) provides `descendants()`, `destroy()`/`destroyForcibly()` and `onExit()` as a `CompletableFuture` ([JDK docs](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ProcessHandle.html)). This is the cleanest process-tree kill among the options **[ANALYSIS]**. Virtual threads make blocking reads of agent stdout cheap ([JEP 444](https://openjdk.org/jeps/444)).
 
-**SDKs and frameworks**
+#### SDKs and frameworks
+
 - **Official API and protocol SDKs:**
   - Anthropic Java SDK (2.71.0)
   - OpenAI Java SDK (4.80.0, beta per OpenAI docs)
@@ -205,12 +218,14 @@ Scores run from 1 to 5, where 5 is best for this orchestrator, and are **[ANALYS
   - **LangChain4j** (1.22.0): 20+ providers, MCP and agentic modules ([repo](https://github.com/langchain4j/langchain4j)).
 - Versions are from Maven Central metadata.
 
-**Startup and distribution**
+#### Startup and distribution
+
 - **Default:** a JVM fat JAR plus a JRE.
 - **GraalVM native-image:** "starts in milliseconds", but it needs reachability metadata for reflection ([GraalVM docs](https://www.graalvm.org/latest/reference-manual/native-image/)).
 - **Pekko has no first-class native-image support.** A community PR adding metadata was still under discussion ([pekko notifications archive](https://www.mail-archive.com/notifications@pekko.apache.org/msg26123.html)). Akka (BSL) ships partial metadata ([Akka docs](https://doc.akka.io/libraries/akka-core/current/additional/native-image.html)). Expect to maintain your own reflect-config **[ANALYSIS]**.
 
-**Which JVM language**
+#### Which JVM language
+
 - **Scala** is Pekko's native language. On AutoCodeBench, Claude Opus 4 scored Kotlin 72.5%, Java 55.9% and Scala 50.3% Pass@1 ([arXiv](https://arxiv.org/html/2508.09101)). These are per-language problem sets, so treat them as directional only **[ANALYSIS]**.
 - **Recommendation [ANALYSIS]: Java 21+.** Pekko's Java API is documented side by side with Scala. Records, sealed interfaces and pattern matching model actor message protocols well. The Anthropic and OpenAI SDKs and the Akka SDK are Java-first. You also avoid sbt and Scala implicits, which agents handle poorly.
 - **Kotlin alternative:** Kotlin works through the Java API with nicer syntax, but there are no Kotlin-specific Pekko docs. Choose Kotlin if you would rather use **Koog + coroutines instead of actors** **[ANALYSIS]**.

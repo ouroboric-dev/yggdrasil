@@ -18,7 +18,7 @@ and the rootless results on 2026-10-14; the commands are in the appendix. Items 
 ## Starting point
 
 | What | Value |
-|---|---|
+| --- | --- |
 | Host | WSL2, Ubuntu 22.04, kernel 6.18.40.1-microsoft-standard-WSL2 |
 | `podman` client | 5.8.3 (Homebrew, first on the `PATH`) |
 | Engine | 5.7.1 in the Podman Desktop machine, reached through `CONTAINER_HOST` and the connection `podman-wsl` (`/mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock`) |
@@ -36,7 +36,7 @@ The test tree is an umbrella at `~/ygg-spike/umbrella` with the leaf as a real s
 
 The first probe run failed before any mount test:
 
-```
+```text
 ERROR: (gcloud.auth.docker-helper) There was a problem refreshing your current auth tokens ...
 Error: error getting credentials - err: exit status 1, out: ``
 FAIL container: podman run failed:
@@ -54,7 +54,7 @@ runs `podman` itself, so it must inherit the same environment.
 ### Item 6: mounting the leaf
 
 | Option | Result |
-|---|---|
+| --- | --- |
 | Leaf under the WSL home, mounted into the machine | `Error: statfs /home/brunogbv/ygg-spike/umbrella/.git/modules/leaf: no such file or directory` (as expected) |
 | 1. Native rootless Podman in WSL | not taken (see the rootless results below) |
 | 2a. Umbrella on `/mnt/wsl` (shared between WSL distros) | the mount works; `/mnt/wsl` is a 7.6 GB **tmpfs**, emptied when WSL shuts down |
@@ -99,7 +99,7 @@ worked; the next `devcontainer up` succeeded in seconds. The cause is unknown.
 Podman passes added capabilities to non-root users, so uid 1000 had `CapEff: 0000000000001000`
 (`NET_ADMIN`). After root applied the egress rules:
 
-```
+```text
 example-blocked
 anthropic-http-404
 agent-flushed-policy      # uid 1000 ran: iptables -P OUTPUT ACCEPT
@@ -111,7 +111,7 @@ namespace; the work container joins it with `network_mode: "service:fw"` and get
 capabilities. Root in `fw` applied deny-all output with an allowlist (DNS, `api.anthropic.com` on
 443, `db`, `s3`):
 
-```
+```text
 CapEff: 0000000000000000          # uid 1000 in work
 example-blocked
 anthropic-http-404                # connected; 404 is the API's answer to a bare HEAD
@@ -154,7 +154,7 @@ rootless socket to WSL, owned by the operator:
 `/mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock`.
 
 | Probe, rootless socket | Result |
-|---|---|
+| --- | --- |
 | `podman info` | rootless, Podman 5.7.1, cgroup v2, network backend `netavark`, `pasta` |
 | `sandbox-check.sh --mode copy` | `registry-isolated`, `rootless`, `copy-roundtrip`: all PASS |
 | `--mode mount`, leaf on `/mnt/wsl` | all six PASS, including `keep-id-ownership`, which needs no `--user` workaround here |
@@ -174,7 +174,7 @@ sudo mount --bind /home/brunogbv/ygg-spike/umbrella /mnt/wsl/ygg-bind
 and `work` both need `userns_mode: keep-id`, because a container can join only the network namespace
 of a container in the same user namespace. After root in `fw` applied the egress rules:
 
-```
+```text
 CapEff: 0000000000000000          # the agent (uid 1000) in work
 example-blocked
 anthropic-http-404
@@ -241,7 +241,7 @@ out. The `flags` mode below is the protection to confirm. A sandbox must never c
 **Dry run without any token** (the session fails to authenticate, so no tool runs):
 
 | Mode | Flags | Markers | Exit |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `control` | none | `.hook-session`, `.mcp-ran` | 1 |
 | `protected` | `--bare` | none | 0 |
 | `flags` | `--setting-sources user --strict-mcp-config` | none | 0 |
@@ -258,7 +258,7 @@ and still exited 0. The script now checks each marker.
 Ouroboric subscription) passed into the container:
 
 | Mode | Flags | `claude` exit | Markers | Script exit |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `control` | none | 0 | `.hook-session`, `.hook-tool`, `.mcp-ran` | 1 |
 | `protected` | `--bare` | 1 (no credential: 0 API time, $0) | none | 0 |
 | `flags` | `--setting-sources user --strict-mcp-config` | 0 | none | 0 |
@@ -270,7 +270,7 @@ the subscription. `--bare` can't authenticate with the token, as the docs say.
 The result events (model `claude-sonnet-5-5`, Claude Code's default; 2 turns each):
 
 | Mode | `input_tokens` | `cache_creation_input_tokens` | `cache_read_input_tokens` | `output_tokens` | `total_cost_usd` | `duration_ms` |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | `control` | 4 | 5,104 | 25,176 | 94 | 0.0264 | 2,926 |
 | `flags` | 4 | 3,134 | 26,776 | 97 | 0.0189 | 2,523 |
 
@@ -303,7 +303,7 @@ was pointed at a local listener that records request bodies (no real key, nothin
 OpenRouter). With `options.provider` set on the model:
 
 | Requests | Model | `provider` sent |
-|---|---|---|
+| --- | --- | --- |
 | 6 | `openai/gpt-4o-mini` (the configured model) | `{"data_collection":"deny","zdr":true,"allow_fallbacks":false}` |
 | 3 | `google/gemini-nano-banana-2.1` (opencode's small model, for titles) | **none**, and the body holds the user's prompt |
 
@@ -317,7 +317,7 @@ tool may call has the settings.
 toggles were set to "Zero retention only" for every model group.
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | Provider | OpenInference, on OpenRouter's ZDR endpoint list for `deepseek-v4-flash-20260423` |
 | Tokens | 87 prompt (80 of them cached by the provider), 5 completion (all 5 reasoning) |
 | Cost | $0.0000069 (`is_byok: false`) |
