@@ -266,6 +266,9 @@ graph, or earlier when a phase touches the code they name.
   as required reviewer. The pr-bot gets `Actions: write` on `ouroboric` only, so an agent starts a run and
   the founder approves it with one tap in GitHub mobile. The founder adds the workflow file (the bot can't
   push workflows); the script changes go in an `ouroboric` PR with tests.
+- **Update (2026-10-18, change `repo-bootstrap`):** the workflow runs `new-repo.sh --org ouroboric-dev`,
+  which replaces `create-repo.sh` then `setup-repo.sh`. The App also needs Contents and Workflows write,
+  because the first push holds `.github/workflows/lint.yml`.
 - **Status:** requirement (the founder follows up later).
 
 Source of item B-041: the final review of Phase 5a (2026-10-17), one fresh Opus reviewer over `gungnir`,
