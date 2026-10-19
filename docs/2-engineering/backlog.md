@@ -343,6 +343,8 @@ Source of items B-042 to B-047: the Phase 5b plan (2026-10-17), where each was l
 
 - **Problem:** a task states what it needs, and the design documents live outside the leaf.
 - **Fix:** a way for a task to name the documents it needs and have them copied into the scratch input. **Status:** requirement.
+- **Note (2026-10-19):** Phase 5c did not change this. The real-agent run (v0-H17) is the place to watch it: see
+  whether an implementer of the smoke task misses a document the brief cites.
 
 Source of item B-048: the final review of Phase 5b (2026-10-18), one fresh Opus reviewer over the six repos and
 two scoped re-reviews of its fix wave. The review found 2 Critical and 6 Important findings. The Critical ones
@@ -720,7 +722,193 @@ facts were read at each realm's `main` after Phase 5c's first commits.
 - **Fix:** copy the web script's behaviour (fail closed, no diff filter, untracked files including ignored ones),
   with a test case for each. **Status:** proved (the reading of both scripts).
 
+Source of items B-071 to B-089: Phase 5c (2026-10-19), the task reviews and the final review. The reports are in the
+SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**. The pull requests are
+gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #18, ouroboric#59.
+
+### B-071: `Advance` has no default case, so an unknown node kind passes silently
+
+- **Where:** `odin/internal/engine` (`Advance`).
+- **Problem:** a graph node of a kind the engine does not know is skipped as if it had passed.
+- **Fix:** a `default` case that stops the run with `bad_manifest`. Test: a graph with a made-up kind stops.
+- **Status:** proved (the reading of `Advance`).
+
+### B-072: an unattended run stops at a contract change
+
+- **Where:** `odin/internal/gate` (`Decide`), `odin/internal/engine` (`reachGate`).
+- **Problem:** `gate.Decide` returns `Block` for a contract change in unattended mode, and `reachGate` stops the
+  run. The `pointer-contract` gate needs a person to say yes, so an unattended run that changes a contract ends there.
+- **Fix:** decide with the founder whether unattended mode should escalate to a named person and wait, or end
+  `blocked` with a clear line in the report. Test: the chosen behaviour.
+- **Status:** proved (the gate tests).
+
+### B-073: `.factory/runs/` is untracked but not ignored in a project
+
+- **Where:** the umbrella template (`odin/internal/engine/init.go`, the files `ygg init` writes).
+- **Problem:** the run folder shows in `git status` of the project. Compare B-001.
+- **Fix:** the umbrella template writes `.factory/` into `.gitignore`. Test: after `ygg init`, `git check-ignore .factory/runs` succeeds.
+- **Status:** proved (v0-T262's smoke).
+
+### B-074: `ygg doctor` and `ygg status` do not list `.factory/deps/` or leftover bump sandboxes
+
+- **Where:** `odin/internal/cli/doctor.go`, `odin/internal/deps`.
+- **Problem:** a bump killed halfway leaves a ledger and a sandbox that nothing reports. A bump that stopped
+  before it restored the leaf leaves the leaf changed, and `doctor` says nothing.
+- **Fix:** both commands list an unfinished bump ledger and the containers of a bump sandbox, and say what to run.
+- **Status:** reasoned.
+
+### B-075: the indexes are built from the leaves' working copies, not from their pointers
+
+- **Where:** `odin/internal/routing`.
+- **Problem:** the wiring and impact indexes read the files on disk. A leaf with uncommitted or newer commits
+  than the umbrella's pointer gives an index for a tree no one can check out.
+- **Fix:** read the files at the commit the umbrella records (`git ls-tree`, `git cat-file`, as the snapshot export does).
+- **Status:** reasoned.
+
+### B-076: `ygg routing build|bench` does not exist
+
+- **Where:** `odin/internal/cli`.
+- **Problem:** the indexes are built and benched inside a run. A person cannot build or bench them by hand.
+- **Fix:** add the two verbs, with the same shrink guard and the same exit codes as the run.
+- **Status:** requirement.
+
+### B-077: the first routing bench of a project has no author
+
+- **Where:** `odin/internal/routing` (the bench).
+- **Problem:** the bench needs questions with known answers. The first run of a project has none, so the bench
+  compares two empty lists and passes.
+- **Fix:** a first-run rule: the bench writes the questions from the extracted graph and a person confirms them; until then routing does not ship.
+- **Status:** proved (the engine bench is two `[]` questions).
+
+### B-078: the grader's `/app` needs a `start.sh` that a real project does not yet provide
+
+- **Where:** `gleipnir/sandbox/grade.go`, the leaf templates of both realms.
+- **Problem:** the grader starts the product with a `start.sh` at the root. The smoke project has one. A real
+  project made from a template has none, so `ygg grade` on it fails to start the app.
+- **Fix:** the templates ship a `start.sh` and the realms' prompts name it. Decide who writes it for a new leaf.
+- **Status:** reasoned (the first real run is where to see it).
+
+### B-079: the real version floors of the two policy files
+
+- **Where:** `helheim-go` (`go-deps.sh`), `midgard-react` (`web-deps.sh`, the policy file).
+- **Problem:** the floors in the policy files were written to test the rungs. A real policy needs the lines the
+  factory supports today.
+- **Fix:** the founder names the minimum minor of each pinned toolchain package; set them and add a test per floor.
+- **Status:** requirement.
+
+### B-080: no per-agent token cap
+
+- **Where:** `gungnir` (the factory file's caps), `odin/internal/engine`.
+- **Problem:** the caps count the whole run. One agent can spend the run's tokens before the next starts.
+- **Fix:** a `max_tokens` per node kind, counted from the usage lines. Needed before v0-H17 runs at scale.
+- **Status:** requirement.
+
+### B-081: `oasdiff` is not proven against 1.33.0 on the host
+
+- **Where:** `odin/internal/gate` (the `oasdiff diff --fail-on-diff` mapping), the realm images.
+- **Problem:** the exit codes and output were modelled on the real output of an older run, and the stand-in
+  in the tests copies them. The realm images do not pin `oasdiff`.
+- **Fix:** pin `oasdiff` in both realm images, and run the gate tests once against the real binary in CI.
+- **Status:** reasoned.
+
+### B-082: `govulncheck` and `osv-scanner` were not run for the policy rungs
+
+- **Where:** `helheim-go/devcontainer/checks/go-deps.sh`, `midgard-react/devcontainer/checks/web-deps.sh`.
+- **Problem:** the tests use stubs for both tools. Nothing has run the real ones on a real module.
+- **Fix:** one test per realm that runs the real tool against a known-vulnerable fixture, behind `YGG_REQUIRE_TEMPLATES`.
+- **Status:** reasoned.
+
+### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
+
+- **Where:** `odin/internal/realm`, `odin/internal/engine/grade.go`.
+- **Problem:** `ygg grade` checks the realm hash the run recorded. A fix to a realm between the run and the grade
+  refuses the grade.
+- **Fix:** say so in the refusal, or let `grade` accept a realm whose changes do not touch the grader's inputs.
+- **Status:** proved (v0-T262's smoke).
+
+### B-084: the decisions parked in odin#18 for the founder
+
+- **Where:** `odin/internal/deps`, `odin/internal/gate`, `odin/internal/engine/grade.go`.
+- **Problem and fix, one line each:**
+  - `ygg deps bump` without a `sandbox:` section runs on the host with the full network and the operator's uid.
+    Fix: refuse unless `--host` is given.
+  - A contract split across files, or behind a symlink, passes the `pointer-contract` gate unseen. Fix: escalate on a
+    changed YAML or JSON under a listed contract's folder, or on mode 120000.
+  - The graded app can overwrite `results.json`. Fix: write the file where the app cannot, or read the scores from the grader's own stdout.
+  - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the founder asked for it).
+- **Status:** proved (the reviewers' probes). Each needs the founder's answer.
+
+### B-085: gleipnir's grader, minors
+
+- **Where:** `gleipnir/sandbox/grade.go`, `driver.go`.
+- **Problem and fix, one line each:**
+  - Output of the grader is buffered in host memory without a bound (as B-021 was for sessions): bound it.
+  - `TestGradeNeverMountsAnythingButTheThreePaths` misses `--flag=value` spellings: use an allow-list of flags.
+  - The grader does not pass `--pull=never`: pass it.
+- **Status:** reasoned.
+
+### B-086: odin's Phase 5c minors
+
+- **Where:** `odin/internal/{task,score,engine,routing,gate,deps,cli}`.
+- **Problem and fix, one line each:**
+  - `grader.suite_dir` is not checked to lie outside the project: refuse a suite folder inside it.
+  - `hostExec` is duplicated in two packages: one copy.
+  - A run without a `Judged` entry skip the contract check silently: fail closed when the task has a `pointer-contract` gate before the pointer.
+  - The refusal "run the gate again" names no such command: rewind to the gate and judge again.
+  - An empty contract file reads as no contract (`Old == nil`): treat it as a change.
+  - The docs say "refusal before building", but a `bad_manifest` can follow `grade_started`: say so.
+  - A refused pointer move leaves a thinned index on disk: restore it.
+  - A bare-repo-shaped folder (`HEAD`, `objects`, `refs`, `config`) planted under `node_modules` passes `checkNested`.
+  - A product-caused FIFO or over-cap file after the ladder ends as exit 1, not a failing verdict.
+  - The vacuous `none` answers of the routing bench are not checked against a real leaf.
+  - Tests ignore the errors of `os.WriteFile` and `os.Symlink`, and the `LimitReader` and `SameFile` branches have no test.
+  - A leftover `.impact-*.tmp` stays after a kill, a FIFO can hang the open, `chmod` ignores the umask and the directory is not synced.
+- **Status:** reasoned (from the reviews).
+
+### B-087: realm scripts' minors
+
+- **Where:** `helheim-go`, `midgard-react`, `mimir`.
+- **Problem and fix, one line each:**
+  - The user's or global npm config (`~/.npmrc`, the environment) can change what `npm audit` reports, in `web-deps.sh` and `web-security.sh`: run with `--userconfig` and `--globalconfig` pointing at an empty file.
+  - The error "no package-lock.json" is misleading when the cause is a bad path.
+  - `mimir`'s `check-task.sh` and the smoke notes have loose test assertions.
+- **Status:** reasoned.
+
+### B-088: the Phase 5c scripts in `ouroboric`, minors
+
+- **Where:** `ouroboric/scripts/ygg-smoke-grade.sh`, `ygg-smoke-real.sh`, `ygg-cost.sh` and their test.
+- **Problem and fix, one line each:**
+  - The credentials check accepts `NAME=abc def` and `NAME=""`: use a strict pattern.
+  - `score.json` is searched only in the case folder: search the run folder.
+  - A mount of the parent folder is not flagged: flag it.
+  - The default paths do not exist in every workspace: say so in the usage line.
+  - Two runs in one second share a folder: add the process id.
+  - Weak assertions: "the first doctor is not preceded by `loaded:`" (line 1 is the args line); the `bash -x` test has no positive control; the count of two source lines does not prove both are in subshells.
+  - `ygg-cost.sh` fails on a number that arrives as a string.
+- **Status:** reasoned.
+
+### B-089: the plan tools, kept in the workspace
+
+- **Where:** `.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/tools/{check.py,shrun.py}`.
+- **Problem:** the checker that applies a plan's blocks to fresh clones lives only in the workspace.
+- **Fix:** move both into `ouroboric/scripts` with tests and a pull request (as `plan-*` were).
+- **Status:** requirement.
+
 ## Done
+
+### The Phase 5b notes that Phase 5c closed
+
+- **Rung 7 and the isolated grader** (5b "Not here"): `gungnir` schemas and events (v0-T245),
+  `gleipnir` `Grade` (v0-T246), `odin` `ygg grade` (v0-T247 to T250, T262). The grade node runs last, the hidden suite is mounted
+  read-only in its own container with no network, and the score is in the run folder only.
+- **The two-tenant authorisation harness:** `helheim-go` and `midgard-react` (v0-T260), with the
+  decision that every path variable is a resource id.
+- **The routing indexes and bench:** `odin/internal/routing` (v0-T251 to T253, T255), gated by the bench before they ship.
+  The verbs and the first bench are open: see B-076 and B-077.
+- **The `pointer-contract` gate:** `odin/internal/gate` (v0-T254) and the realm graphs (v0-T256); see B-072, B-081 and B-084 for what is open.
+- **The dependency policy:** `go-deps.sh` and `web-deps.sh` (v0-T257, T258) and `ygg deps bump` with a canary (v0-T259); see B-079, B-082 and B-084.
+- The grader smoke and the real-agent smoke: `ouroboric` `ygg-smoke-grade.sh` and `ygg-smoke-real.sh` (v0-T262, T263,
+  [ouroboric#59](https://github.com/ouroboric-dev/ouroboric/pull/59)). Whether the real run happened is in the pull request.
 
 ### B-041, first part: file handling, engine environment and service egress (Phase 5a's final review)
 
