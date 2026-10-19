@@ -109,7 +109,8 @@ not to use Voluspa as a standalone product brand, not a reason to drop it as a c
 ## Verdict
 
 **A common word from myth, usable under the Ouroboric umbrella** as the name of the graph-library component
-(`ouroboric-dev/voluspa`, Go module), not as a product brand. No collision blocks it. The founder decides in the
-[Voluspa proposal](../2-engineering/changes/2026-10-19-voluspa/proposal.md#name). If Voluspa ever becomes
+(`ouroboric-dev/voluspa`, Go module), not as a product brand. No collision blocks it. The founder took the name
+on 2026-10-19, with no registry claims ([Voluspa proposal](../2-engineering/changes/2026-10-19-voluspa/proposal.md#name)).
+If Voluspa ever becomes
 something Ouroboric markets on its own, a formal search in the official registers comes first, as the 2026-10-12
 decisions require for "Ouroboric".

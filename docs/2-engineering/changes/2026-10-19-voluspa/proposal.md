@@ -15,12 +15,10 @@ graph `software`. A run names its graph with `--graph software`, and the project
 The lead realm ends. A realm keeps only its flavor: stack, implementer prompt, template, checks, acceptance check
 and services.
 
-**Decided 2026-10-19 (founder):** the move is its own change, done **before Phase 5c starts**. The Phase 5c plan
-(`status: proposed`) is amended so that its remaining graph and routing tasks target Voluspa. The graph changes
-already on `midgard-react`'s `main` move with the graph, unchanged.
-
-Every open choice below is marked **Open (founder):**, with the options and a recommendation. The tasks follow
-the answers.
+**Decided (founder, 2026-10-19):** the graph moves now, as its own change, before Phase 5c is closed. Its Odin
+tasks change the lead-realm reads that 5c added, on Odin's `main` as it is now. The graph changes already on
+`midgard-react`'s `main` move with the graph, unchanged. The founder also decided every choice this proposal left
+open, each as recommended. Each decision is recorded where it applies.
 
 ## Why
 
@@ -29,10 +27,10 @@ the answers.
   its graph from its lead realm"). The founder decided (2026-10-18) that one graph serves all software and that
   only the loop inside it is specific to a stack.
 - **The lead realm does too many jobs.** Today it supplies the graph, the stage prompts, the reviewers' prompts,
-  the scratch sessions' stack and egress, the acceptance check and its stack, and the default realm of an
-  unpinned leaf. Each job needs one clear owner.
-- **5c builds on the lead realm.** Its Odin part reads the routing threshold and a leaf's default realm from the
-  lead realm. Moving before 5c starts means 5c's runs, and its baselines, use the final model.
+  the scratch sessions' stack and egress, the acceptance check and its stack, the routing threshold, and the
+  default realm of an unpinned leaf. Each job needs one clear owner.
+- **5c's code reads the lead realm.** Moving before 5c is closed means its founder steps, and Phase 6's first
+  client-gallery baselines, run on the final model.
 
 ## What changes
 
@@ -48,7 +46,7 @@ the answers.
   voluspa/
     software/
       pack.yaml      name: software, version, graph: graph.yaml
-      graph.yaml     the graph of spec §4.2
+      graph.yaml     schema: 1, and the graph of spec §4.2
       prompts/       design, spec, conformance, plan, reuse-review, reviewer-spec, reviewer-simplicity,
                      reviewer-quality
     *_test.go        the graph and prompt tests that move from midgard-react
@@ -60,27 +58,17 @@ the answers.
 - **A graph states the Gungnir schema version it needs.** Odin refuses a graph it can't run, before any sandbox
   starts.
 
-  **Open (founder):** where the schema version lives.
-  - (a) one integer in `graph.yaml` (`schema: 1`). Gungnir bumps it on a change an older graph can't follow.
-    Realm packs keep relying on their `go.mod` pin for now.
-  - (b) the same integer in every `pack.yaml` too, graph packs and realm packs.
-  - (c) none: `go.mod`'s Gungnir pin, as today. Odin can't read it at run time.
+  **Decided (founder, 2026-10-19):** one integer in `graph.yaml`, `schema: 1`. Gungnir bumps it on a change an
+  older graph can't follow. Why: it is what the design asks for, and it is one field. Realm packs keep relying on
+  their `go.mod` pin for now (backlog, below).
 
-  Recommended: (a). It is what the design asks for, and it is one field. (b) goes to the backlog for when a
-  second schema version exists.
+- **A pack may hold both a graph and a leaf recipe.** Odin's test realms (`smoke`, `smoke-loop`, `smoke-realms`,
+  `smoke-content`, `smoke-grade`) do.
 
-- **May a pack hold both a graph and a leaf recipe?** Odin's test realms (`smoke`, `smoke-loop`, `smoke-realms`,
-  `smoke-grade`) do.
-
-  **Open (founder):**
-  - (a) the schema allows it. "A realm leaf holds no graph" is a rule for the realm leaves in the umbrella,
-    checked by each realm's tests and by readiness item RR-12. The test data stays as it is, and a leaf that
-    pins no realm takes that pack's recipe.
-  - (b) the schema forbids it. Every test realm splits into a graph pack and a realm pack, and every test
-    project pins its leaves.
-
-  Recommended: (a). It keeps the test data and the smoke scripts small, and the rule that matters is about the
-  real leaves.
+  **Decided (founder, 2026-10-19):** the schema allows it. "A realm leaf holds no graph" is a rule for the realm
+  leaves in the umbrella, checked by each realm's tests and by readiness item RR-12. A leaf that pins no realm
+  takes the recipe of such a pack. Why: the test data and the smoke scripts stay small, and the rule that matters
+  is about the real leaves.
 
 ### What moves, and what stays
 
@@ -119,14 +107,11 @@ benchmark baseline.
   stops before anything starts.
 - **Every leaf pins its realm (call made while writing).** A leaf with no pin was the lead realm's. With no lead
   realm, Odin refuses a leaf with no pin before anything starts. `init` already writes the pin into the commit
-  that creates a leaf. The one exception is a test pack that holds both a graph and a leaf recipe (below).
+  that creates a leaf. The one exception is a pack that holds both a graph and a leaf recipe (above).
 
-  **Open (founder):** the pin's fields in `umbrella.yaml`.
-  - (a) new fields at the top, `graph` and `graph_version`. The top-level `realm` and `realm_version` go.
-    Leaves keep `realm` and `realm_version`.
-  - (b) keep the top-level `realm` and `realm_version`, and let them name the graph pack.
-
-  Recommended: (a). A field named `realm` that holds a graph would mislead every reader of the file.
+  **Decided (founder, 2026-10-19):** new top-level fields in `umbrella.yaml`, `graph` and `graph_version`. The
+  top-level `realm` and `realm_version` go. Leaves keep `realm` and `realm_version`. Why: a field named `realm`
+  that holds a graph would mislead every reader of the file.
 
   ```yaml
   graph: software
@@ -136,28 +121,21 @@ benchmark baseline.
     repos/web: { kind: leaf, realm: midgard-react, realm_version: 0.1.0, consumes: [repos/api] }
   ```
 
-  **Open (founder):** where Odin finds a graph by name.
-  - (a) a `graphs` section in `factory.yaml`, `graphs: {dir: <a Voluspa checkout>}`. `--graph software` finds
-    `<dir>/software/pack.yaml`.
-  - (b) the realm store: `realms.dir` holds a `voluspa` checkout, and Odin looks in `<realms.dir>/voluspa/<name>`.
+  **Decided (founder, 2026-10-19):** Odin finds a graph by name through a new `factory.yaml` section,
+  `graphs: {dir: <a Voluspa checkout>}`. `--graph software` finds `<dir>/software/pack.yaml`. Why: a graph and a
+  realm are found the same way, but not in one folder, and the store's layout does not depend on one repo's name.
+  `ygg doctor` checks the `graphs` section as it checks `realms`.
 
-  Recommended: (a). A graph and a realm are found the same way, but not in one folder. (b) ties the store's
-  layout to one repo's name.
+  A graph pack lives in a subfolder of a git repo. Odin's committed-files hash (B-050) only works on a repo's top
+  folder today. It MUST hash the subfolder's committed files, or a graph would be hashed with its untracked files,
+  as a plain folder is.
 
-  Either way, a graph pack lives in a subfolder of a git repo. Odin's committed-files hash (B-050) only works on a
-  repo's top folder today. It MUST hash the subfolder's committed files, or a graph would be hashed with its
-  untracked files, as a plain folder is.
+- **`--realm` on `ygg run`.**
 
-- **`--realm` on `ygg run`.** The design leaves open whether it stays as an alias.
-
-  **Open (founder):**
-  - (a) remove it. `ygg run --realm` stops with "use `--graph`; a leaf's realm is pinned in the project". A
-    resume of a run that recorded a lead realm stops with a reason.
-  - (b) keep it one release as an alias that loads the named realm's graph.
-
-  Recommended: (a). No project outside the tests has runs to resume, and (b) keeps the lead realm alive. The
-  smoke scripts change in the same change. `--realm` stays on `ygg sandbox build`, where it names a realm whose
-  stack to build.
+  **Decided (founder, 2026-10-19):** it goes. `ygg run --realm` stops with "use `--graph`; a leaf's realm is
+  pinned in the project". A resume of a run that recorded a lead realm stops with a reason. Why: no project
+  outside the tests has runs to resume, and an alias would keep the lead realm alive. The smoke scripts change in
+  the same change. `--realm` stays on `ygg sandbox build`, where it names a realm whose stack to build.
 
 ### Who owns each job of the lead realm
 
@@ -167,66 +145,49 @@ benchmark baseline.
 | Prompts of agent nodes and loop reviewers | the lead realm | the graph pack |
 | The implementer prompt, the leaf's checks and template | the leaf's realm | unchanged |
 | The realm of a leaf with no pin | the lead realm | none: the leaf is refused |
-| Scratch sessions' stack and egress | the lead realm's | see below |
-| The acceptance check and its stack | the lead realm's | each leaf realm's (§5.4, below) |
-| The routing threshold (`routing:` block) | the lead realm's pack | see below |
+| Scratch sessions' stack and egress | the lead realm's | the factory layer alone, model APIs only |
+| The acceptance check and its stack | the lead realm's | each leaf realm's |
+| The routing threshold (`routing:` block) | the lead realm's pack | the graph pack |
 
 **Where scratch sessions run.** The design, spec, conformance, plan and reuse-review sessions run in a scratch
 sandbox on the lead realm's stack, with its egress (`registry.npmjs.org`, `api.osv.dev`) and the model APIs. No
 stage prompt runs a command; they read and write documents.
 
-**Open (founder):**
+**Decided (founder, 2026-10-19):** they run on the factory layer alone, on the Node image Gleipnir already pins,
+with the model APIs as the only egress. Gleipnir and Odin learn to start a sandbox with no stack. Why: a planner
+needs no package registry, so its egress shrinks, and a graph pack stays a graph and its prompts. The stage
+sessions' sandbox changes; their prompts do not.
 
-- (a) the factory layer alone, on the Node image Gleipnir already pins, with the model APIs as the only egress.
-  Gleipnir and Odin learn to start a sandbox with no stack.
-- (b) Voluspa's `software` pack names a small stack of its own, for its scratch sessions.
-- (c) the stack of one realm that the project names for its stage sessions.
+**The routing threshold.** Gungnir's `routing:` block (5c plan v0-T255, merged in `gungnir` #14) sits in a pack.
+Odin reads it from the lead realm's pack. No pack sets it yet.
 
-Recommended: (a). A planner needs no package registry, so its egress shrinks, and a graph pack stays a graph and
-its prompts. It changes the sandbox of the stage sessions, not their prompts. If the founder reads that as a
-change of behaviour, (b) with the same Containerfile stage as `midgard-react`'s web stack keeps it exact.
+**Decided (founder, 2026-10-19):** the graph pack holds it. Why: the code path stays the same, with another pack.
+The project's `umbrella.yaml` is the better home once a project writes its own bench (backlog, below). The test
+that pins "the pack sets no `routing` block" moves with the graph and checks Voluspa's `software` pack.
 
-**The routing threshold.** Gungnir's `routing:` block (5c plan v0-T255, merged in `gungnir` #14) sits in a pack,
-and the 5c plan reads it from the lead realm's. No pack sets it yet.
-
-**Open (founder):**
-
-- (a) the graph pack holds it. The code path stays the same, with another pack.
-- (b) the project holds it in `umbrella.yaml`, beside the bench it measures (`.ygg/routing-bench.yaml`).
-
-Recommended: (a) now. (b) is the better home once a project writes its own bench (5c plan question 8), and it
-goes to the backlog.
+**The `pointer-contract` gate needs no lead realm.** It reads the moving leaf's own git, picks the changed files
+by name (`*openapi.yaml`, `*openapi.yml`), and judges them by the impact index shipped in the project and by the
+host's `oasdiff`. No realm's pack plays a part.
 
 ### Acceptance without a lead realm
 
 Today a pointer move runs the lead realm's `accept` check on the lead realm's acceptance stack. For the client
 gallery that is `midgard-react`'s `accept-e2e.sh`, and it also runs for the `api` leaf's moves.
 
-The design's call (§5.4): every pointer move runs the acceptance check of **every leaf realm in the project that
-has one**. Each runs on its own realm's acceptance stack, over the same snapshot, with the services of every
-leaf's realm. A realm with no acceptance check adds none. The graph's `acceptance: [accept]` on `move` then means
-"the check `accept` of each leaf realm that defines it", in realm-name order, stopping at the first failure.
+**Decided (founder, 2026-10-19), confirming the design's call (§5.4):** every pointer move runs the acceptance
+check of **every leaf realm in the project that has one**. Each runs on its own realm's acceptance stack, over the
+same snapshot, with the services of every leaf's realm. A realm with no acceptance check adds none. The graph's
+`acceptance: [accept]` on `move` means "the check `accept` of each leaf realm that defines it", in realm-name
+order, stopping at the first failure. Why: it keeps today's coverage, and it puts the check with the flavor that
+knows the product's stack.
 
 For the client gallery this runs exactly what runs today: `helheim-go` has no acceptance check, so every move
 runs `midgard-react`'s `accept-e2e.sh` on its acceptance stack, with Postgres and SeaweedFS.
 
-**Open (founder):** confirm or replace the design's call.
-
-- (a) confirm it, as above.
-- (b) the graph pack names one acceptance check and stack. It would hold product-specific scripts.
-- (c) the project names one realm whose acceptance check runs on every move.
-
-Recommended: (a). It keeps today's coverage, and it puts the check with the flavor that knows the product's
-stack.
-
-**Open (founder):** a project where no leaf realm has an acceptance check (a backend-only product today).
-
-- (a) refuse the run before it starts, while the graph's `move` asks for acceptance: "no realm of this project
-  has an acceptance check".
-- (b) run the move with no acceptance check, and say so in the ledger.
-
-Recommended: (a). (b) would let a move pass with less checking than today, which the design's anti-goals forbid.
-Such a project can't run today either: `helheim-go` has no graph.
+**Decided (founder, 2026-10-19):** a project where no leaf realm has an acceptance check (a backend-only product
+today) is refused before the run starts, while the graph's `move` asks for acceptance: "no realm of this project
+has an acceptance check". Why: a move with no acceptance check would check less than today, which the design's
+anti-goals forbid. Such a project can't run today either: `helheim-go` has no graph.
 
 ### The spec sections the leaf-naming change touched
 
@@ -237,31 +198,40 @@ every line.
 
 ## How this fits with Phase 5c
 
-The 5c plan is `status: proposed`. Some of its tasks have landed in the component repos as groundwork:
-`gungnir` #14 (v0-T245, the `routing` block of v0-T255, the limits of v0-T262, docs of v0-T264), `gleipnir` #12
-(v0-T246), `helheim-go` #8 (v0-T256's docs and test, v0-T257, v0-T260), `midgard-react` #13 (v0-T256's graph
-change, v0-T258) and `mimir` #4 (v0-T261). Odin's part (`odin` #18) is open. It adds the `grade` node kind, the
-`pointer-contract` gate's engine code, the routing indexes, `ygg deps bump`, and a test realm `smoke-grade` with
-its own small graph, pack and prompts. It does not change how a graph loads.
+Most of 5c has merged: `gungnir` #14 (v0-T245, the `routing` block of v0-T255, the limits of v0-T262, docs of
+v0-T264), `gleipnir` #12 (v0-T246), `helheim-go` #8 (v0-T256's docs and test, v0-T257, v0-T260),
+`midgard-react` #13 (v0-T256's graph change, v0-T258), `mimir` #4 (v0-T261) and `odin` #18 (v0-T247 to v0-T264:
+the `grade` stage, the routing indexes and the `pointer-contract` gate, `ygg deps bump`, and a test realm
+`smoke-grade` with its own small graph, pack and prompts). What is left is the `ouroboric` scripts of v0-T262
+and v0-T263, v0-T265, and the founder steps v0-H16 and v0-H17.
 
 **This change owns the whole move:** the graph, the stage prompts, the test that pins #13's gate, and the docs.
-The 5c plan stays the record. The pre-5c session corrects it with an erratum, not a rewrite. The founder decides
-who edits the plan's `tasks.md`.
+The 5c plan stays the record, corrected by an erratum (below).
 
 - **What moves with the graph:** #13's `contract-gate` node, the `generated` list on `move`, and
   `TestTheContractGateComesBeforeTheMoveAndTheMoveShipsTheRoutingIndexes`. Unchanged.
-- **What this change's Odin tasks change,** on Odin's `main` as they find it (with #18 if it has merged):
-  - the routing threshold is read from the graph pack (or the project, by the answer above), not from
-    `Setup.Lead.Pack` (v0-T255);
-  - `ygg deps bump` takes a leaf's realm from its pin only, not from the lead realm (v0-T259);
-  - the tests, the smoke scripts and the example configs call `ygg run --graph` (v0-T262, v0-T263).
-- **What the 5c erratum carries** (the pre-5c session's): the plan text of v0-T251 (the fixture pins a graph),
-  v0-T255, v0-T256, v0-T259, v0-T262 to v0-T264 (`--graph`, the graph pack), and v0-T265 (the `voluspa`
-  pointer).
+- **The lead-realm reads that 5c added**, which this change's Odin tasks change on Odin's `main` (with #18):
+  - `internal/engine/routing.go`: the routing threshold, `r.Setup.Lead.Pack.Routing` (v0-T255), is read from the
+    graph pack;
+  - `internal/cli/deps.go`: `ygg deps bump` falls back to the umbrella's lead pin (`project.Umbrella.Realm`) for a
+    leaf with no pin (v0-T259). The fallback goes: the bump takes a leaf's realm from its pin only;
+  - `internal/routing/wiring.go`: the wiring index gives an unpinned leaf the umbrella's lead pin
+    (`cmpOr(c.Realm, u.Realm)`) for its `uses-realm` and `needs` edges (v0-T251). The fallback goes, and the
+    fixture `testdata/routing/project/umbrella.yaml` pins a graph and every leaf;
+  - `ygg run --realm` in the tests, the smoke scripts (`ygg-smoke-grade.sh`, `ygg-smoke-real.sh`) and the example
+    configs (`testdata/smoke-grade/factory.real.example.yaml` and the others) becomes `--graph`, and the configs
+    set `graphs.dir` (v0-T262, v0-T263).
+- **The lead-realm reads from before 5c**, which this change also replaces: `run.Prepare` loading `--realm` and
+  its graph, `checkSession` and `checkBody` finding prompts and acceptance checks in the lead pack,
+  `prepareSandbox` and `ScratchRunner` (the lead realm's stack and egress), `SnapshotSandbox`, `runChecks` and
+  `runAcceptance` (the lead realm's acceptance check and stack), `RealmOf` and `init` (an unpinned leaf is the lead
+  realm's), the loop's reviewer prompts, `pinLead`, `realm.Collect`'s lead pin check, and a resume's `RealmDir`.
+- **The 5c plan's erratum** is the pre-5c session's:
+  [yggdrasil #67](https://github.com/ouroboric-dev/yggdrasil/pull/67).
 - **Test graphs after the move.** A test or test-data graph (`smoke`, `smoke-loop`, `smoke-realms`,
-  `smoke-grade`) loads by path, `ygg run --graph <folder>`, as `--realm <folder>` loads it today. With the answer
-  (a) on packs that hold both, such a folder stays one pack: it gives the graph and the leaf recipe, and a leaf
-  that pins no realm takes the recipe of that pack. A real project pins every leaf.
+  `smoke-content`, `smoke-grade`) loads by path, `ygg run --graph <folder>`, as `--realm <folder>` loads it today.
+  Such a folder stays one pack: it gives the graph and the leaf recipe, and a leaf that pins no realm takes the
+  recipe of that pack. A real project pins every leaf.
 - **The grade node** (v0-T245) is a node kind. If a later phase adds `grade` to the software graph, it goes into
   Voluspa.
 
@@ -278,7 +248,7 @@ The plan has a docs task. It starts from this list (design §8.2):
   `helheim-go`, and Voluspa's own `README.md`, `AGENTS.md` and `docs/architecture.md`;
 - `yggdrasil/docs/3-using/`: `--graph` and the graph pin, for operators;
 - `docs/2-engineering/realm-readiness.md`: RR-12 adds "and holds no graph";
-- `docs/2-engineering/backlog.md`: the items this change parks;
+- `docs/2-engineering/backlog.md`: the items below;
 - in `ouroboric`: the naming doc's component table (Voluspa built, screened) and long-term map, `docs/README.md`'s
   map, `check-repos.sh`'s lists, the smoke scripts' `--realm`, and a journal entry in `docs/6-journal/`.
 
@@ -290,9 +260,9 @@ candles, fragrances and their retail, not software. No package registry holds th
 Labs, publishes developer tools under `@voluspalabs` on npm. The name is usable under the Ouroboric umbrella as a
 component name, not as a product brand.
 
-**Open (founder):** take the name `voluspa` for the repo and the Go module, and claim nothing on package
-registries? Recommended: yes. Voluspa ships as a Go module under `github.com/ouroboric-dev/`, as the other
-components do (the 2026-10-12 name-check decisions).
+**Decided (founder, 2026-10-19):** the repo and the Go module are named `voluspa`, and nothing is claimed on
+package registries. Why: Voluspa ships as a Go module under `github.com/ouroboric-dev/`, as the other components
+do (the 2026-10-12 name-check decisions).
 
 ## Success criteria
 
@@ -302,6 +272,7 @@ components do (the 2026-10-12 name-check decisions).
 - Acceptance checks no less than before: on that run, every move runs the same `accept` check, on the same
   stack, with the same services, as the ledger of the last run before the change shows.
 - Every moved prompt has the same SHA-256 in Voluspa as in `midgard-react` before the move.
+- No Odin code reads a lead realm: a search for `Setup.Lead`, `Umbrella.Realm` and `Realm("")` finds nothing.
 - The docs above match.
 
 ## Not in this change
@@ -309,17 +280,23 @@ components do (the 2026-10-12 name-check decisions).
 - **General stage prompts**, and whether a flavor may add text to them or add reviewers. A later proposal.
 - **The `kickstart` graph.** It comes with Asgard's automation.
 - **Shared domain pieces** (Midgard's contract copy and web acceptance run), design §10.
-- **A schema version in realm packs**, if the founder picks (a) above.
 - **Fetching a graph by tag.** Graphs come from a local store, as realms do, until iteration 2's `github` remote.
+
+### Backlog
+
+- **A schema version in every pack** (realm packs too, not only `graph.yaml`), when a second schema version
+  exists.
+- **The routing threshold in the project** (`umbrella.yaml`, beside `.ygg/routing-bench.yaml`), once a project
+  writes its own bench (5c plan question 8).
 
 ## Impact
 
-- **Repos:** `voluspa` (new), `gungnir` (graph schema version, graph pins in `umbrella.yaml`, the graph-store
+- **Repos:** `voluspa` (new), `gungnir` (graph schema version, graph pins in `umbrella.yaml`, the `graphs`
   section of `factory.yaml`), `odin` (`--graph`, the graph store and pin, prompts from the graph pack, acceptance
-  per leaf realm, no lead realm), `gleipnir` (a sandbox with no stack, if scratch option (a)), `midgard-react`
-  (the graph and stage prompts leave, tests split), `helheim-go` (pack comment, docs), `ouroboric` (scripts,
-  docs), `yggdrasil` (submodule, `go.work`, docs).
+  per leaf realm, no lead realm), `gleipnir` (a sandbox with no stack), `midgard-react` (the graph and stage
+  prompts leave, tests split), `helheim-go` (pack comment, docs), `ouroboric` (scripts, docs), `yggdrasil`
+  (submodule, `go.work`, docs).
 - **Founder:** creates `voluspa` with `new-repo.sh`, pushes its `ci.yml` (the pr-bot has no Workflows
   permission), and runs `setup-repo.sh` so that `test` is required.
 - **Approval points:** none added. None loosened.
-- **Phase 5c:** starts after this change lands, on its amended plan.
+- **Phase 5c:** its remaining steps run on the model this change leaves, and the plan gets its erratum.
