@@ -19,3 +19,6 @@
 [submodule "helheim-go"]
 	path = helheim-go
 	url = https://github.com/ouroboric-dev/helheim-go.git
+[submodule "voluspa"]
+	path = voluspa
+	url = https://github.com/ouroboric-dev/voluspa.git
