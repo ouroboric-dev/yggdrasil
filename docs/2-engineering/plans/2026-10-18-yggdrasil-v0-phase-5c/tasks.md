@@ -257,6 +257,45 @@ decision 19. Asgard as a realm is next after this phase.
 - **The two-tenant rule (decision 15).** `ygg-authz` takes every path variable as a resource id, not only id-like names
   (`{photoId}`, `*_id`). A route is excused only by a public mark with a reason in `authz.json`. The code of v0-T260 in
   this file still shows the first draft's `idName` filter; the merged helheim-go code is the reference.
+- **The software graph moves out of `midgard-react` into Voluspa** (founder, 2026-10-19; Ginnungagap design §5.2 to §5.4
+  and §8.2). The move is its own change (the Voluspa change proposal), not a task of this plan; it follows the
+  Phase 5c repos, which were executed before it landed, and it carries the graph and the stage prompts unchanged. What it means for this plan:
+  - **Done and merged before the move:** v0-T256's `midgard-react` part (the `contract-gate` node with
+    `gate: pointer-contract` between `pointer-gate` and `move`, and `generated: [REPOS.md, .ygg/impact.json]` on `move`)
+    is in `midgard-react`'s `graph.yaml` (midgard-react#13). The move carries those two lines with the graph
+    unchanged, and moves with it: the graph tests of `midgard-react`'s `pack_test.go`
+    (`TestTheContractGateComesBeforeTheMoveAndTheMoveShipsTheRoutingIndexes` and the body assertions), the
+    "Routing" section of `midgard-react`'s `docs/architecture.md`, and the stage prompts. No new edit to the graph or
+    the prompts is made in this plan from here on.
+  - **Stays where it is:** the `grade` node kind, the `grader:` block and the `routing` block of the pack schema
+    (`gungnir`, v0-T245 and v0-T255); the grade stage, the indexes, the `pointer-contract` gate engine and
+    `ygg deps bump` (`odin`); `Grade` (`gleipnir`); the flavor checks (`go-deps.sh`, `go-authz.sh`, `web-deps.sh`:
+    rungs 1 to 5 belong to the flavors, design §5.3); the smoke task `smoke-notes` (`mimir`).
+  - **A lead-realm read in `odin` that the move rewrites (v0-T251):** the wiring generator gives a leaf with no pin of its
+    own the umbrella's realm and version (`internal/routing/wiring.go`, the `cmpOr(c.Realm, u.Realm)` line), and its
+    fixture `testdata/routing/project/umbrella.yaml` leaves `web` unpinned. Once no lead realm exists, the Voluspa change
+    rewrites both (yggdrasil#68 lists it).
+  - **Open for the Voluspa change, not decided here:** which pack carries the `routing: {threshold, bench}` block once
+    no lead realm supplies the graph (decision 8 says `midgard-react` sets none; a test pins that); how the
+    pointer-contract gate finds a leaf realm's contracts when the graph has no lead realm (it matches by file name,
+    `*openapi.yaml`, so the rule itself does not change); and acceptance without a lead realm (design §5.4).
+  - **Not affected:** the grader smoke (v0-T262), the real-agent smoke (v0-T263, v0-H16, v0-H17) and the example
+    config. They run the `smoke-grade` realm, which holds its own small graph in `odin`'s `testdata/smoke-grade/`,
+    not `midgard-react`'s graph. The client gallery's proof run with `--graph software` is the Voluspa change's
+    success criterion and Phase 6's, not this plan's.
+  - **v0-T265** moves the umbrella's pointers for the repos this plan changed. The pointer of the new `voluspa` repo,
+    and the removal of the graph from `midgard-react`, belong to the Voluspa change.
+- **Execution state on 2026-10-19.** Merged: `gungnir`#14 (v0-T245, the gungnir parts of v0-T255, v0-T262, v0-T264),
+  `gleipnir`#12 (v0-T246, its docs), `helheim-go`#8 (v0-T256 docs, v0-T257, v0-T260), `midgard-react`#13 (v0-T256 graph,
+  v0-T258), `mimir`#4 (v0-T261), `odin`#17 (B-061, found while executing; not a task of this plan) and `odin`#18
+  (v0-T247 to v0-T255, v0-T259, the odin parts of v0-T262, v0-T263, v0-T264). In review: the two `ouroboric`
+  scripts (v0-T262, v0-T263). To do: v0-T265, then the founder tasks v0-H16 and v0-H17.
+- **Reviews changed some code against this file's drafts.** The merged code is the reference where it differs from a
+  code block above. The main differences: the routing index readers and writers are bounded, symlink-safe and atomic
+  (`internal/routing`), the pointer-contract gate escalates on a corrupt or oversize shipped index and the pointer
+  refuses a commit the gate did not judge, `ygg deps bump` refuses a leaf with an uncommitted manifest or lock, writes
+  a `started` ledger line, and keeps manifest and lock byte-identical after the ladder, `score.ReadResults` refuses
+  links and pipes, and `ygg-deps` is baked into the Go stack image (not run with `go run`).
 
 ## How each task lands
 
