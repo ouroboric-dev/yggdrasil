@@ -278,6 +278,8 @@ records stay as written. Each step adds a journal entry in `ouroboric/docs/6-jou
 
 ### 8.1 Step 1: the realm checklist and a manual retrofit (before 5c)
 
+**Done on 2026-10-19:** the checklist (#52), the assessments (#63) and the realms' base CI.
+
 It goes with the pre-5c hardening pass, because B-049 changes the same check scripts in both
 realms.
 
@@ -306,6 +308,10 @@ realms.
   docs above match.
 
 ### 8.2 Step 2: Voluspa (the decision before the 5c plan)
+
+**Done on 2026-10-20**, built as well as proposed: the change
+[voluspa](../../2-engineering/changes/2026-10-19-voluspa/proposal.md) (#68, #70, #72, #73). Until step 4,
+[Create a realm](../../3-using/how-to/create-a-realm.md) is the manual way to make a realm.
 
 - A change proposal that covers §5.2 to §5.4: the graph-only pack, `--graph`, the project's pin,
   acceptance without a lead realm, and the spec sections the leaf-naming change touched.

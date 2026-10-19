@@ -17,7 +17,8 @@ This roadmap sets the order of work, not dates. Each step has its own design doc
    development (SDD) process (self-hosting stage 0). Before the Phase 5c plan: the realm readiness
    checklist, with the existing realms assessed and their gaps fixed, and the Voluspa change proposal
    (one software graph, out of `midgard-react`) accepted. See
-   `design/2026-10-18-ginnungagap-design.md` §8.1 and §8.2.
+   `design/2026-10-18-ginnungagap-design.md` §8.1 and §8.2. Both are done: the checklist on 2026-10-19,
+   and Voluspa built (not only proposed) on 2026-10-20.
 2. **Asgard v0:** the Asgard realm's kickstart journey, company template, kickstart skills (in
    Havamal) and scripts, used by hand; a photographer's company and her three products as the
    acceptance test. Its design doc is `design/2026-10-17-asgard-v0-design.md`. Its readiness script
