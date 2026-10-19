@@ -923,7 +923,117 @@ Small, and worth doing soon: one word in each script, and one test per rung.
   not hide its change).
 - **Status:** reasoned (the re-review found it, and git resolves tags before branches).
 
+Source of items B-094 to B-103: the voluspa change (2026-10-19, [proposal](changes/2026-10-19-voluspa/proposal.md)):
+its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `gungnir` and `gleipnir`.
+
+### B-094: a schema version in every pack
+
+- **Where:** `gungnir` (the pack schema), every `pack.yaml` in the realms.
+- **Problem:** a graph states the Gungnir schema version it needs (`schema` in `graph.yaml`). A realm pack does not.
+- **Fix:** add the integer `schema` to realm packs too, once a second schema version exists.
+- **Status:** requirement.
+
+### B-095: the routing threshold in the project
+
+- **Where:** `umbrella.yaml`, beside `.ygg/routing-bench.yaml`.
+- **Problem:** the routing threshold is not a setting of the project.
+- **Fix:** put it in `umbrella.yaml`, once a project writes its own bench (5c plan question 8).
+- **Status:** requirement.
+
+### B-096: ygg's resume and approve hints don't carry the engine environment
+
+- **Where:** `odin/internal/cli` (the stop hint), `ouroboric/scripts/ygg-smoke-realms.sh`.
+- **Problem:** after a stop, ygg prints `run: ygg resume <id>` or `ygg approve …`. On the founder's machine, run from
+  a plain shell, that failed in 334 ms at the move's sandbox (`devcontainer up … exit status 1`). Only
+  `ygg-engine.sh run --folder DIR -- ygg …` sets `CONTAINER_HOST`, the devcontainer CLI on `PATH`, and the empty
+  registry auth (H02, 2026-10-19).
+- **Fix:** two parts. The smoke scripts print the wrapped commands when a run stops. Odin's stop hint names the
+  engine wrapper when `factory.yaml` has a sandbox section.
+- **Status:** proved (H02).
+
+### B-098: odin review leftovers (voluspa-F1 re-review, parked)
+
+- **Where:** `odin/internal/cli/doctor.go:104`, `odin/internal/realm/subfolder_test.go:115`, `hashLimited`,
+  `initAhead`.
+- **Problem:**
+  - two comment lines are over 120 columns (`doctor.go:104`, `subfolder_test.go:115`);
+  - `hashLimited`'s "not a git repository" match runs on the whole error string, which includes `(in <dir>)`, so a
+    folder path holding that phrase would turn a refusal into a disk hash (contrived);
+  - no test covers `initAhead`'s fallback for a resume whose nodes don't expand. The code returns false (strict).
+- **Fix:** wrap the two comments; match git's stderr only; add the test.
+- **Status:** reasoned.
+
+### B-099: gungnir's `schema.Node.Realm` comment says "empty is the graph pack"
+
+- **Where:** `gungnir` `schema.Node.Realm`.
+- **Problem:** Odin's `NodeRealm` takes an empty `Realm` to mean the leaf's pinned realm, as the plan says. The
+  comment on `RealmFrom` (`schema/graph.go:~52`, "the graph pack's (the default)") is wrong in the same way. For
+  checks, an empty value means the realm of the node's repo.
+- **Fix:** correct both comments, or rename the fields for clarity.
+- **Status:** proved (the reading of both).
+
+### B-100: gleipnir `BuildFactory` has no unit test of its failure paths
+
+- **Where:** `gleipnir` `BuildFactory`.
+- **Problem:** for example, when the stack build fails, no layer is built; no test says so. Deferred at T002.
+  `git` from apt is unpinned in that image, which belongs to B-023 and B-044, not to this item.
+- **Fix:** a unit test per failure path.
+- **Status:** requirement.
+
+### B-101: "lead realm" and "no graph in v0" wording left in the merged repos
+
+- **Where:**
+  - `helheim-go`: `pack_test.go:122` ("the lead realm's graph holds the pointer-contract gate…"); `pack_test.go:20`
+    and `docs/architecture.md:22` ("has no graph in v0");
+  - `odin`: `testdata/realms/helheim-toy/pack.yaml:1` ("never lead a run");
+  - `gungnir`: `docs/architecture.md:23`;
+  - `ouroboric`: `scripts/ygg-engine.sh:16,60`; `scripts/ygg-smoke-realms.sh`.
+- **Problem:**
+  - there is no lead realm any more, and "has no graph in v0" is now a MUST NOT (§9.4) in the helheim-go lines;
+  - gungnir's line says a build realm's pack "may have no graph", which is weaker than §9.4, and the line is 142
+    columns wide;
+  - `ygg-engine.sh` still says the bind mount "is there";
+  - the message of `ygg-smoke-realms.sh` for a missing `factory.yaml` names only the smoke-realms example, not
+    smoke-content's, which `--graph software` needs;
+  - the T012 and T017 greps covered only `.go` files of `odin`, `gungnir` and `gleipnir`.
+- **Fix:** reword each line; grep every file type in every repo.
+- **Status:** proved (the final review's reading).
+
+### B-102: the journal entry overstates two things
+
+- **Where:** `ouroboric` `docs/6-journal/2026-10-19-one-graph-for-every-run.md:50,60`.
+- **Problem:**
+  - "on the same project" is wrong: H02 and H03 ran in different projects with the same brief;
+  - "The run's behaviour did not change" is not quite right: the scratch sandboxes' image and egress changed, as
+    decided.
+- **Fix:** correct both sentences.
+- **Status:** proved (the final review's reading).
+
+### B-103: guards nobody owns since the move
+
+- **Where:** `midgard-react` CI, `voluspa` `software/`, the smoke scripts, `odin` realm checks.
+- **Problem:**
+  - (a) midgard-react's CI no longer catches a version bump that Voluspa's `spec.md` does not follow (it hard-codes
+    `midgard-react` 0.1.0). Only odin's umbrella-only real-realms test compares the two, and odin's CI skips it;
+  - (b) no test checks that `software/graph.yaml`'s `name` and `version` equal `pack.yaml`'s. The pin and `run.json`
+    use the pack's version;
+  - (c) a missing `mountpoint` binary makes the smoke scripts exit 127, not 2;
+  - (d) a realm's `routing:` block is silently ignored. Should a pack check refuse it?
+- **Fix:** give each guard an owner and a test; decide (d).
+- **Status:** reasoned.
+
 ## Done
+
+### B-097: the plan's H02 and H03 steps omitted three things
+
+- **Where:** the voluspa plan's H02 and H03 steps; `docs/3-using/operations/README.md`.
+- **Problem:** found while running them on 2026-10-19. The steps did not say:
+  - that `--build` is needed the first time, and when the images are gone;
+  - that an unattended content run stops at `version-t1-contract-gate` (B-072) and needs an approve;
+  - that the approve and resume steps must run under `ygg-engine.sh`.
+- **Fixed** in the voluspa change's pull request (the T017 branch): the runbook says all three, in "Name a graph".
+  Its approve and resume commands carry `--project <project>`, and work without `ygg` on `PATH`.
+- **Status:** proved.
 
 ### The Phase 5b notes that Phase 5c closed
 

@@ -16,5 +16,8 @@ the [v0 design doc](1-product/design/2026-10-11-yggdrasil-v0-design.md).
 | [`6-journal/`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/6-journal/README.md) | the journey: challenges, solutions, results |
 | [`7-branding/`](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/7-branding/README.md) | story, identity, voice, prompts, assets |
 
+A run follows a graph from [Voluspa](https://github.com/ouroboric-dev/voluspa) and builds each leaf in a realm.
+How to name a graph is in [operations](3-using/operations/README.md#name-a-graph).
+
 This repo follows its own [documentation standard](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/docs-standard.md).
 Every product that Yggdrasil builds uses the same standard.

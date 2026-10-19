@@ -29,6 +29,7 @@ Run `uvx pre-commit install` once after cloning, so `gitleaks` checks each commi
   changed version, or runs one as a service, must publish their source under the same licence.
 - **Anything the factory copies into what you build** (realm templates, scaffolds, skills): MIT, so your
   products stay yours. Those files live in their own repositories (for example `midgard-react`, `havamal`).
+  Voluspa's graphs (`software/`) are MIT too.
 - **Documentation:** [CC BY 4.0](LICENSES/CC-BY-4.0.txt).
 - **Names and logos** are not licensed: see
   [TRADEMARKS.md](https://github.com/ouroboric-dev/ouroboric/blob/main/TRADEMARKS.md).
