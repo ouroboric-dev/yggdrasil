@@ -271,6 +271,10 @@ decision 19. Asgard as a realm is next after this phase.
     (`gungnir`, v0-T245 and v0-T255); the grade stage, the indexes, the `pointer-contract` gate engine and
     `ygg deps bump` (`odin`); `Grade` (`gleipnir`); the flavor checks (`go-deps.sh`, `go-authz.sh`, `web-deps.sh`:
     rungs 1 to 5 belong to the flavors, design §5.3); the smoke task `smoke-notes` (`mimir`).
+  - **A lead-realm read in `odin` that the move rewrites (v0-T251):** the wiring generator gives a leaf with no pin of its
+    own the umbrella's realm and version (`internal/routing/wiring.go`, the `cmpOr(c.Realm, u.Realm)` line), and its
+    fixture `testdata/routing/project/umbrella.yaml` leaves `web` unpinned. Once no lead realm exists, the Voluspa change
+    rewrites both (yggdrasil#68 lists it).
   - **Open for the Voluspa change, not decided here:** which pack carries the `routing: {threshold, bench}` block once
     no lead realm supplies the graph (decision 8 says `midgard-react` sets none; a test pins that); how the
     pointer-contract gate finds a leaf realm's contracts when the graph has no lead realm (it matches by file name,
