@@ -674,28 +674,33 @@ facts were read at each realm's `main` after Phase 5c's first commits.
     leaf's tool configs, which the ladder ignores).
 - **Status:** proved (the greps).
 
-Source of items B-071 to B-073: the final review and the task reviews of the protected-configs change
-(2026-10-19), over `helheim-go` `c3a08de` and `midgard-react` `4d145f3`. Line numbers are at those commits.
+Source of items B-090 to B-093: the final review, the re-review and the task reviews of the protected-configs
+change (2026-10-19), over `helheim-go` `7ab0751` and `midgard-react` `62d3de6` (after the fix wave, helheim-go #10 and
+midgard-react #16). Line numbers are at those commits.
 
-### B-071: the protected-path rungs trust the leaf's `.git`
+### B-090: the protected-path rungs trust the leaf's `.git`
 
-- **Where:** `helheim-go/devcontainer/checks/go-static.sh` (the `git merge-base HEAD main` at line 23 and the
-  `git diff`, `git ls-files` calls below it); `midgard-react/devcontainer/checks/web-protected.sh` (the same calls).
+- **Where:** `helheim-go/devcontainer/checks/go-static.sh` (the `git merge-base HEAD refs/heads/main` at line 24 and
+  the `git diff`, `git ls-files` calls at lines 61 to 68); `midgard-react/devcontainer/checks/web-protected.sh` (line
+  14 and lines 51 to 58).
 - **Problem:** both rungs ask the leaf's own git what changed. A task can run `git branch -f main HEAD`, so the
   merge-base is the task's own commit and its changes are hidden. It can also run
   `git update-index --assume-unchanged <file>` on a tracked config, so `git diff` skips it. Every rung stays green.
+- **Fixed in part:** the tag variant (`git tag main HEAD`) no longer hides a change from the protected step: it reads
+  `refs/heads/main`, and a tag with no branch fails closed (helheim-go #10, midgard-react #16). The other rungs still
+  read a plain `main`: see B-093.
 - **Why it matters:** the protection is only as strong as the `.git` that the agent can write. Only the reviewers
   would see it.
-- **Fix:** read the base commit from the factory, not from a branch in the leaf (for example the commit Odin
-  recorded when the task started), and compare the tree, not the index flags. Test: a leaf where `main` was moved,
-  and one with an assumed-unchanged config, must be refused.
+- **Fix:** the factory passes in the task's base commit, so no branch in the leaf is read, and the rung compares the
+  tree, not the index flags. Test: a leaf where `main` was moved, and one with an assumed-unchanged config, must be
+  refused.
 - **Status:** reasoned.
 
-### B-072: the protected-path guard trusts its environment
+### B-091: the protected-path guard trusts its environment
 
 - **Where:** the `:(glob)` entries of `devcontainer/checks/protected-common` and the `git diff`, `git ls-files`
-  calls in `helheim-go/devcontainer/checks/go-static.sh` (lines 59 to 64) and
-  `midgard-react/devcontainer/checks/web-protected.sh` (lines 46 to 53).
+  calls in `helheim-go/devcontainer/checks/go-static.sh` (lines 61 to 68) and
+  `midgard-react/devcontainer/checks/web-protected.sh` (lines 51 to 58).
 - **Problem:** with `GIT_LITERAL_PATHSPECS=1` in the rung's environment, git reads `:(glob)**/.yamllint` as a
   literal name, so the match-anywhere names stop matching and a change to them passes.
 - **Why it matters:** fine while the factory, not the agent, sets the rung's environment. It stops being fine if a
@@ -704,34 +709,47 @@ Source of items B-071 to B-073: the final review and the task reviews of the pro
   `GIT_NOGLOB_PATHSPECS`, `GIT_ICASE_PATHSPECS`) before the git calls. Test: run a rung with the variable set.
 - **Status:** reasoned.
 
-### B-073: minor findings of the protected-configs reviews
+### B-092: minor findings of the protected-configs reviews
 
-- **Where:** `helheim-go` `c3a08de` and `midgard-react` `4d145f3`, as each finding says.
+- **Where:** `helheim-go` `7ab0751` and `midgard-react` `62d3de6`, as each finding says.
 - **Problem:**
   - `templates/api/AGENTS.md` line 38 (helheim-go), `templates/web/AGENTS.md` lines 39 and 40 (midgard-react) and
     both `prompts/implementer.md` (helheim-go lines 55 and 56, midgard-react line 51) name broader patterns
     (`.yamllint*`, `.gitleaks*`) than the exact names that `protected-common` refuses (`.yamllint`,
     `.yamllint.yaml`, `.yamllint.yml`, `.gitleaks.toml`, `.gitleaksignore`).
-  - helheim-go `checks_test.go` line 841: the comment on `commonProtected` says the test reads the file for its
+  - helheim-go `checks_test.go` line 848: the comment on `commonProtected` says the test reads the file for its
     cases. It reads the file only to compare it with this list.
-  - helheim-go `go-static.sh` line 69: the refusal message indents only the first path
-    (`printf '  %s\n' "$changed"` gets one argument). `web-protected.sh` indents every path.
-  - helheim-go `checks_test.go` line 1038: `TestStaticFailsWhenGitFails` accepts any `static:` line. It does not
-    assert `git failed`, as midgard-react's `TestEveryRungFailsWhenGitFails` does (line 1060).
   - midgard-react: no test makes `ls-files` alone fail. `set -e` still fails closed, so this is only a gap in the
     tests.
   - midgard-react: the refusal test is heavy, about 112 s at `-parallel 4`; its CI job takes about 5 to 6 minutes of
     the 15 allowed.
-  - midgard-react `web-protected.sh` line 59 (before this change): when `main` has no `package.json`,
+  - midgard-react `web-protected.sh` line 63: when `main` has no `package.json`,
     `git show "$base:package.json" | scripts` fails under `pipefail` and `set -e` ends the rung with no message.
-  - `go-static.sh` line 62 and `web-protected.sh` line 51: the `-gt 1` test on `globs` is always true, because the
+    This predates the change.
+  - `go-static.sh` line 65 and `web-protected.sh` line 55: the `-gt 0` test on `globs` is always true, because the
     stack's own names are always added. It is harmless, and misleading to read.
+  - helheim-go's Go protected step (`go-static.sh`, from line 14) runs after `go mod download && go mod verify`
+    (line 9), while delta §9.5 says the refusal comes "before it installs or runs anything". This predates the
+    change. No leaf code runs there, and the downloads are checked against the checksum database.
+  - delta §9.5 says every rung refuses a protected change, but in helheim-go only rung 1 (`go-static.sh`) does. It has
+    no effect today: jormungandr reruns the ladder from rung 1 on every attempt and stops at the first failure
+    (`jormungandr/loop.go:177-200`).
 - **Fix:** one line per finding, as above.
 - **Status:** reasoned.
 
-Source of items B-071 to B-089: Phase 5c (2026-10-19), the task reviews and the final review. The reports are in the
-SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**. The pull requests are
-gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #18, ouroboric#59.
+### B-093: the TDD and contract rungs find the task's base with a plain `main`
+
+Small, and worth doing soon: one word in each script, and one test per rung.
+
+- **Where:** helheim-go `devcontainer/checks/go-tdd.sh` (line 22), `go-contract.sh` (line 12) and `sqlc-owned.sh`
+  (line 11, which also ends in `|| exit 0`); midgard-react `devcontainer/checks/web-tdd.sh` (line 12) and
+  `web-contract.sh` (line 23), and the text `git diff $(git merge-base HEAD main) HEAD` in midgard-react's
+  `prompts/reviewer-spec.md` (line 9), `reviewer-quality.md` (line 8) and `reviewer-simplicity.md` (line 6).
+- **Problem:** with both a branch and a tag named `main` (a task can create the tag), `git merge-base HEAD main`
+  resolves the tag, so these rungs see no change, while the protected step reads `refs/heads/main` and passes.
+- **Fix:** `refs/heads/main` in each script and prompt, with a test per rung (a tag `main` on the task's HEAD must
+  not hide its change).
+- **Status:** reasoned (the re-review found it, and git resolves tags before branches).
 
 ### B-071: `Advance` has no default case, so an unknown node kind passes silently
 
@@ -1128,7 +1146,10 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
   own config names. `check-repos.sh --check shared` keeps the two copies equal
   ([ouroboric#60](https://github.com/ouroboric-dev/ouroboric/pull/60)). A task's change to a protected file is
   refused when it is added, changed, deleted, moved, swapped for a symlink, untracked or ignored. Tests that failed
-  first are in both realms. The leaks left are B-071 and B-072.
+  first are in both realms. A fix wave after the final review ([helheim-go#10](https://github.com/ouroboric-dev/helheim-go/pull/10),
+  [midgard-react#16](https://github.com/ouroboric-dev/midgard-react/pull/16)) closed three holes: a root folder
+  added as a symlink, a tag named `main`, and a config force-added under `node_modules`. The leaks left are B-090
+  and B-091.
 
 ### B-066: midgard-react's workflow refusal test lists its rungs by hand
 
@@ -1152,4 +1173,6 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Fix:** copy the web script's behaviour (fail closed, no diff filter, untracked files including ignored ones),
   with a test case for each. **Status:** proved (the reading of both scripts).
   Fixed 2026-10-19 in [helheim-go#9](https://github.com/ouroboric-dev/helheim-go/pull/9): `go-static.sh` fails closed
-  with no `main`, no diff filter, untracked files including ignored ones, and a test case for each.
+  with no `main`, no diff filter, untracked files including ignored ones, and a test case for each. The fix wave
+  [helheim-go#10](https://github.com/ouroboric-dev/helheim-go/pull/10) made the refusal tests assert the refusal line
+  and the message indent every path.
