@@ -14,7 +14,7 @@ those.
 - `ygg run --graph <name|dir>`: a bare name is found in the `graphs` store, the folder that `graphs.dir` of
   `factory.yaml` names. A path is used as it is.
 - The graph pin: the first run of a project writes `graph:` and `graph_version:` at the top of its
-  `umbrella.yaml`. A later run of another graph, or of another version, is refused. A project that still pins a
+  `umbrella.yaml`, only when `--graph` is a name. A path pins nothing. A later run of another graph, or of another version, is refused. A project that still pins a
   realm at the top is refused, with the way to pin a graph.
 - Every leaf pins its own realm in `umbrella.yaml`, and the realm of a leaf comes from that pin alone. There is no
   lead realm and no `ygg run --realm`.
@@ -30,9 +30,17 @@ run on the real realms.
 - Approve and resume need the engine environment (`CONTAINER_HOST`, the devcontainer CLI on `PATH`, the empty
   registry auth). Run them under `ygg-engine.sh`:
 
-```bash
-ouroboric/scripts/ygg-engine.sh run --folder DIR -- ygg approve <run-id> <gate>
-ouroboric/scripts/ygg-engine.sh run --folder DIR -- ygg resume <run-id>
+```zsh
+cd ~/brunogbv/ouroboric/yggdrasil/odin
+~/brunogbv/ouroboric/ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
+  go run ./cmd/ygg approve <run-id> <gate> --project <project> --note "..."
+~/brunogbv/ouroboric/ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
+  go run ./cmd/ygg resume <run-id> --project <project>
 ```
+
+- `--folder` is the folder that holds `factory.yaml`.
+- `<project>` is the project folder, the one the smoke script prints as `smoke-realms: made <project>`. The run
+  lives there. Odin's `--project` defaults to `.`, so without it the commands do not find the run.
+- With `ygg` on `PATH`, `ygg approve …` replaces `go run ./cmd/ygg approve …`.
 
 The `ygg resume` and `ygg approve` lines that `ygg` prints on a stop do not carry this environment (B-096).
