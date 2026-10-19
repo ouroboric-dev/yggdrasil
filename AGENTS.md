@@ -40,3 +40,6 @@ A child `AGENTS.md` may add rules; it must not loosen these.
 - Product direction: `docs/1-product/` (charter, design docs, roadmap).
 - Engineering: `docs/2-engineering/` (specs, plans, change proposals, living spec).
 - Standards: <https://github.com/ouroboric-dev/ouroboric/tree/main/docs/4-ways-of-working>
+- Graphs: `voluspa/`, one folder per graph (`software/`), with its `graph.yaml` and stage prompts. Realms
+  (`midgard-react/`, `helheim-go/`) hold a stack, an implementer prompt, a template and checks, and no graph.
+  Operators name a graph with `ygg run --graph`: see `docs/3-using/operations/README.md`.

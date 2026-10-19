@@ -923,6 +923,71 @@ Small, and worth doing soon: one word in each script, and one test per rung.
   not hide its change).
 - **Status:** reasoned (the re-review found it, and git resolves tags before branches).
 
+Source of items B-094 to B-100: the voluspa change (2026-10-19, [proposal](changes/2026-10-19-voluspa/proposal.md)):
+its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `gungnir` and `gleipnir`.
+
+### B-094: a schema version in every pack
+
+- **Where:** `gungnir` (the pack schema), every `pack.yaml` in the realms.
+- **Problem:** a graph states the Gungnir schema version it needs (`schema` in `graph.yaml`). A realm pack does not.
+- **Fix:** add the integer `schema` to realm packs too, once a second schema version exists.
+- **Status:** requirement.
+
+### B-095: the routing threshold in the project
+
+- **Where:** `umbrella.yaml`, beside `.ygg/routing-bench.yaml`.
+- **Problem:** the routing threshold is not a setting of the project.
+- **Fix:** put it in `umbrella.yaml`, once a project writes its own bench (5c plan question 8).
+- **Status:** requirement.
+
+### B-096: ygg's resume and approve hints don't carry the engine environment
+
+- **Where:** `odin/internal/cli` (the stop hint), `ouroboric/scripts/ygg-smoke-realms.sh`.
+- **Problem:** after a stop, ygg prints `run: ygg resume <id>` or `ygg approve …`. On the founder's machine, run from
+  a plain shell, that failed in 334 ms at the move's sandbox (`devcontainer up … exit status 1`). Only
+  `ygg-engine.sh run --folder DIR -- ygg …` sets `CONTAINER_HOST`, the devcontainer CLI on `PATH`, and the empty
+  registry auth (H02, 2026-10-19).
+- **Fix:** two parts. The smoke scripts print the wrapped commands when a run stops. Odin's stop hint names the
+  engine wrapper when `factory.yaml` has a sandbox section.
+- **Status:** proved (H02).
+
+### B-097: the plan's H02 and H03 steps omitted three things
+
+- **Where:** the voluspa plan's H02 and H03 steps; `docs/3-using/operations/README.md`.
+- **Problem:** found while running them on 2026-10-19. The steps did not say:
+  - that `--build` is needed the first time, and when the images are gone;
+  - that an unattended content run stops at `version-t1-contract-gate` (B-072) and needs an approve;
+  - that the approve and resume steps must run under `ygg-engine.sh`.
+- **Fix:** the runbook says all three, in "Name a graph" (this change).
+- **Status:** proved. Fixed by this change, in the runbook; the item stays here as the record.
+
+### B-098: odin review leftovers (voluspa-F1 re-review, parked)
+
+- **Where:** `odin/internal/cli/doctor.go:104`, `odin/internal/realm/subfolder_test.go:115`, `hashLimited`,
+  `initAhead`.
+- **Problem:**
+  - two comment lines are over 120 columns (`doctor.go:104`, `subfolder_test.go:115`);
+  - `hashLimited`'s "not a git repository" match runs on the whole error string, which includes `(in <dir>)`, so a
+    folder path holding that phrase would turn a refusal into a disk hash (contrived);
+  - no test covers `initAhead`'s fallback for a resume whose nodes don't expand. The code returns false (strict).
+- **Fix:** wrap the two comments; match git's stderr only; add the test.
+- **Status:** reasoned.
+
+### B-099: gungnir's `schema.Node.Realm` comment says "empty is the graph pack"
+
+- **Where:** `gungnir` `schema.Node.Realm`.
+- **Problem:** Odin's `NodeRealm` takes an empty `Realm` to mean the leaf's pinned realm, as the plan says.
+- **Fix:** correct the comment, or rename the field for clarity.
+- **Status:** proved (the reading of both).
+
+### B-100: gleipnir `BuildFactory` has no unit test of its failure paths
+
+- **Where:** `gleipnir` `BuildFactory`.
+- **Problem:** for example, when the stack build fails, no layer is built; no test says so. Deferred at T002.
+  `git` from apt is unpinned in that image, which belongs to B-023 and B-044, not to this item.
+- **Fix:** a unit test per failure path.
+- **Status:** requirement.
+
 ## Done
 
 ### The Phase 5b notes that Phase 5c closed

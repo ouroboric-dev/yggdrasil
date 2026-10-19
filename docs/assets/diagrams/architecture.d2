@@ -1,7 +1,8 @@
 direction: down
 cli: "ygg CLI\nrun, resume, approve, status, metrics"
 config: "factory.yaml\nmode, caps, roles, privacy"
-realm: "realm-web\ngraph, prompts, checks, templates"
+graph: "graph (Voluspa)\ngraph.yaml, stage prompts"
+realm: "realms\nstack, implementer prompt, templates, checks"
 odin: "Odin\ngraph engine: exec, agent, loop, gate nodes"
 jorm: "Jormungandr\nbuild, check, fix loop"
 gleipnir: "Gleipnir (harness)" {
@@ -13,6 +14,7 @@ tree: "instance tree\numbrellas, leaves, ledger, gates"
 gungnir: "Gungnir\nthe contract every component implements" {style.stroke-dash: 4}
 cli -> odin
 config -> odin
+graph -> odin
 realm -> odin
 odin -> jorm
 jorm -> gleipnir.agents

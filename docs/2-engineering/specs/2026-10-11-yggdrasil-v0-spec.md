@@ -190,10 +190,10 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 
 ### 4.2 The web realm graph
 
-<!-- diagram: assets/diagrams/web-realm-graph.mmd -->
+<!-- diagram: assets/diagrams/software-graph.mmd -->
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/web-realm-graph.dark.svg">
-  <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report" src="../../assets/diagrams/rendered/web-realm-graph.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/software-graph.dark.svg">
+  <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report" src="../../assets/diagrams/rendered/software-graph.svg">
 </picture>
 
 ```text
