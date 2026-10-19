@@ -141,11 +141,11 @@ Pull requests, in order: `gungnir` and `gleipnir` beside each other; `voluspa` (
 **`midgard-react` keeps its graph until Odin reads Voluspa's** (T014 after the odin PR).
 
 **How this sequences with Phase 5c.** Merged in 5c and not touched here: `ouroboric` #59 (the scripts of v0-T262
-and v0-T263). This change owns their `--realm` → `--graph` (T013) and the example configs (T012). The 5c steps
-still to do run after T017, on the final model: v0-H16 (`ygg-smoke-grade.sh`, now `--graph`), v0-H17
-(`ygg-smoke-real.sh`), then v0-T265. v0-T265's `git submodule update --remote` then finds the pointers at
-`main` already, and its exit check `TestTheRealRealmsBuildAProductFromABriefWithScriptedAgents` runs with
-`voluspa` beside `odin` (T005). v0-T265's backlog work is unchanged; T017 adds only this change's items.
+and v0-T263). This change owns their `--realm` → `--graph` (T013) and the example configs (T012). v0-T265
+(yggdrasil #69) is done on the tree from before this change. The 5c founder steps still to do run after T017,
+on the final model: v0-H16 (`ygg-smoke-grade.sh`, now `--graph`) and v0-H17 (`ygg-smoke-real.sh`). T017's
+pointer bump re-runs v0-T265's exit check `TestTheRealRealmsBuildAProductFromABriefWithScriptedAgents`, now
+with `voluspa` beside `odin` (T005). T017 adds only this change's backlog items.
 
 ---
 
@@ -750,8 +750,9 @@ for f in $(grep -l 'snapshot/' $R/sandbox/*/compose.yaml); do grep -E '^ +image:
 - [ ] **Step 2:** Docs. `README.md`: `voluspa` joins the repos with MIT content. `AGENTS.md`: a Map line for
   graphs (`voluspa/`) and realms. `docs/3-using/operations/README.md`: a section "Name a graph" (`--graph`, the
   `graphs` store, the graph pin, every leaf pins its realm, `--realm` only on `sandbox build`). RR-12 ends
-  "..., and holds no graph?". The backlog gains, at the end of Open, with the next two free numbers (B-074 and
-  B-075 once the protected-configs record has merged; check with `grep -o 'B-0[0-9]*' backlog.md | sort -u | tail -1`),
+  "..., and holds no graph?". The backlog gains, at the end of Open, with the next two free numbers on `main` when
+  T017 starts (check with `grep -o 'B-[0-9]*' backlog.md | sort -u | tail -1`; v0-T265 and protected-configs
+  take numbers first),
   "a schema version in every pack" and "the routing threshold in the project", from the proposal's Backlog.
 - [ ] **Step 3:** Diagrams: `architecture.d2` shows two inputs to Odin, "graph (Voluspa): graph.yaml, stage
   prompts" and "realms: stack, implementer prompt, templates, checks" (delta §2); `instance-tree.d2` shows the
