@@ -8,4 +8,5 @@ use (
 	./jormungandr
 	./midgard-react
 	./odin
+	./voluspa
 )
