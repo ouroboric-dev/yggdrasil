@@ -10,8 +10,7 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
 phase, with one exception: [B-061](#b-061-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
 blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
-**Minor** by its effect on a person using the factory. [B-063](#b-063-the-web-ladder-does-not-protect-devcontainer)
-is a guardrail gap, not a blocker: it should land before Phase 5c adds more web changes.
+**Minor** by its effect on a person using the factory.
 
 ## How to use this file
 
@@ -656,21 +655,6 @@ over the checklist, the three assessments, `helheim-go` and `midgard-react`. Eac
 documentation pass does not make. B-055, B-057, B-058, B-059 and B-043 were widened by the same review. The code
 facts were read at each realm's `main` after Phase 5c's first commits.
 
-### B-063: the web ladder does not protect `.devcontainer/`
-
-- **Where:** `midgard-react/devcontainer/checks/web-protected.sh` (`files=('.npmrc' '.github/')`),
-  `midgard-react/templates/web/.devcontainer/devcontainer.json`, `midgard-react/prompts/implementer.md`.
-  Compare `helheim-go/devcontainer/checks/go-static.sh` (`protected=('.devcontainer/' '.github/')`).
-- **Problem:** the Go ladder refuses a change to `.devcontainer/`. The web ladder does not. The web template's
-  `devcontainer.json` reaches every web product, and the implementer prompt tells the agent not to change it, but
-  nothing enforces that. `go-static.sh` says why it matters: the dev container is what a person's editor runs. This
-  predates the plan, but the plan's decision ("protected like the dev container") assumed parity.
-- **Fix:** add `'.devcontainer/'` to `files` in `web-protected.sh`, with one refusal-test case. Fold in the deferred
-  minors: the header of `web-protected.sh` does not name `.github/`; no test covers a deleted or gitignored
-  workflow; `hasLine` in `ci_test.go` (a closure in `TestTemplateCI`) does not check parent keys.
-- **Timing:** a guardrail gap, not a blocker. It should land before Phase 5c adds more web changes.
-- **Status:** proved (the file list, read at `main`).
-
 ### B-064: no test pins either realm's own root `ci.yml` to its stack
 
 - **Where:** `helheim-go/.github/workflows/ci.yml` (the Go image) and `midgard-react/.github/workflows/ci.yml` (the
@@ -895,3 +879,21 @@ facts were read at each realm's `main` after Phase 5c's first commits.
 - **Problem:** `Down` runs under `context.WithoutCancel` with no timeout.
 - **Fix:** Add a bounded timeout. Test: `TestDownGivesUpOnAHungEngine`.
 - **Status:** fixed by Phase 4, [gleipnir#6](https://github.com/ouroboric-dev/gleipnir/pull/6).
+
+### B-063: the web ladder does not protect `.devcontainer/`
+
+- **Where:** `midgard-react/devcontainer/checks/web-protected.sh` (`files=('.npmrc' '.github/')`),
+  `midgard-react/templates/web/.devcontainer/devcontainer.json`, `midgard-react/prompts/implementer.md`.
+  Compare `helheim-go/devcontainer/checks/go-static.sh` (`protected=('.devcontainer/' '.github/')`).
+- **Problem:** the Go ladder refuses a change to `.devcontainer/`. The web ladder does not. The web template's
+  `devcontainer.json` reaches every web product, and the implementer prompt tells the agent not to change it, but
+  nothing enforces that. `go-static.sh` says why it matters: the dev container is what a person's editor runs. This
+  predates the plan, but the plan's decision ("protected like the dev container") assumed parity.
+- **Fix:** add `'.devcontainer/'` to `files` in `web-protected.sh`, with one refusal-test case. Fold in the deferred
+  minors: the header of `web-protected.sh` does not name `.github/`; no test covers a deleted or gitignored
+  workflow; `hasLine` in `ci_test.go` (a closure in `TestTemplateCI`) does not check parent keys.
+- **Timing:** a guardrail gap, not a blocker. It should land before Phase 5c adds more web changes.
+- **Status:** proved (the file list, read at `main`). Fixed 2026-10-19 in
+  [midgard-react#14](https://github.com/ouroboric-dev/midgard-react/pull/14), with tests that failed first:
+  `TestEveryRungRefusesADevContainerOrWorkflowChange` (both folders, every rung, a deleted and an ignored file
+  included) and `TestMisplacedFindsALineUnderTheWrongKey` (the template CI's lines count only under their keys).
