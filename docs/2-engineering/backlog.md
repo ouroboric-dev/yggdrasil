@@ -923,7 +923,7 @@ Small, and worth doing soon: one word in each script, and one test per rung.
   not hide its change).
 - **Status:** reasoned (the re-review found it, and git resolves tags before branches).
 
-Source of items B-094 to B-100: the voluspa change (2026-10-19, [proposal](changes/2026-10-19-voluspa/proposal.md)):
+Source of items B-094 to B-103: the voluspa change (2026-10-19, [proposal](changes/2026-10-19-voluspa/proposal.md)):
 its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `gungnir` and `gleipnir`.
 
 ### B-094: a schema version in every pack

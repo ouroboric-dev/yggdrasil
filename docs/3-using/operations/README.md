@@ -13,9 +13,9 @@ those.
 
 - `ygg run --graph <name|dir>`: a bare name is found in the `graphs` store, the folder that `graphs.dir` of
   `factory.yaml` names. A path is used as it is.
-- The graph pin: the first run of a project writes `graph:` and `graph_version:` at the top of its
-  `umbrella.yaml`, only when `--graph` is a name. A path pins nothing. A later run of another graph, or of another version, is refused. A project that still pins a
-  realm at the top is refused, with the way to pin a graph.
+- The graph pin: when `--graph` is a name, the first run of a project writes `graph:` and `graph_version:` at
+  the top of its `umbrella.yaml`. A path pins nothing. A later run of another graph, or of another version, is
+  refused. A project that still pins a realm at the top is refused, with the way to pin a graph.
 - Every leaf pins its own realm in `umbrella.yaml`, and the realm of a leaf comes from that pin alone. There is no
   lead realm and no `ygg run --realm`.
 - `--realm` is for `ygg sandbox build` only, which builds the stack of each realm it names (or `--all`).
