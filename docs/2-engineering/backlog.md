@@ -8,9 +8,7 @@ related: [plans/README.md, changes/README.md, plans/2026-10-15-yggdrasil-v0-phas
 # Engineering backlog
 
 Small defects and gaps that a review found and the team chose not to fix yet. Nothing here blocks a
-phase, with one exception: [B-061](#b-061-since-odin-15-the-first-tasks-acceptance-run-sees-the-other-new-leaf-without-its-template)
-blocks real runs of the client gallery, and Phase 5c's real runs, until it is fixed. Each other item is graded
-**Minor** by its effect on a person using the factory.
+phase. Each item is graded **Minor** by its effect on a person using the factory.
 
 ## How to use this file
 
@@ -588,31 +586,6 @@ checklist item ([realm-readiness.md](realm-readiness.md)).
   `REALMS` in `check-repos.sh`, and RR-09 applies); then the wiring pull request (submodule, and asgard moved to
   `LEAVES` in `check-repos.sh`). **Status:** requirement.
 
-### B-061: since odin #15, the first task's acceptance run sees the other new leaf without its template
-
-- **Where:** `odin/internal/engine/init.go` (`initLeaf`, `mainToTemplate`), `odin/internal/run/sandbox.go`
-  (`snapshotSources`, `recordedCommit`). Readiness: helheim-go and midgard-react, RR-21.
-- **Problem:** `initLeaf` creates a leaf with its first commit (the pack's `first_commit`, here only `LICENSE`),
-  and the project's umbrella records that commit. Then it commits the template and moves the leaf's `main` to it,
-  but the umbrella's gitlink stays on the first commit. Since odin #15 (B-048 M-1), a snapshot takes each other leaf at its
-  gitlink. So the acceptance run of the first task's pointer move sees the other leaf as `LICENSE` alone.
-- **Proved:** the content smoke run (v0-H15's mode) at odin `6829cfb`, gleipnir `f362ea2`, helheim-go `60731f6` and
-  midgard-react `26ca85e`, on 2026-10-18. Task 1 (the API leaf) passed its loop and its landing. Its pointer move
-  failed: `accept: the web leaf has no repos/web/contracts/api.openapi.yaml`. The snapshot's `repos/web` held only
-  `LICENSE`, and the umbrella's gitlink for `repos/web` was the first commit, `454b811`. The run gave up both tasks
-  (exit 5).
-- **Control (v0-H15):** v0-H15 ran on 2026-10-18 at 09:37 UTC, before odin #15 (`6829cfb`) merged at 11:28 UTC.
-  In its project (`~/ygg-it/content/smoke-realms-20261018-113734`), `repos/web` was also recorded at its first
-  commit (`d2a944d`) when `version-t1-move` ran, and that move's `accept` passed (exit 0). So the change is odin
-  #15's, not the realms'.
-- **Why it matters:** it fails any run whose first pointer move runs an acceptance check that reads another new
-  leaf. The client gallery's order is such a run: the API task is first, and midgard-react's `accept-e2e.sh` reads
-  the web leaf beside the API leaf. **It blocks real runs of the gallery, and Phase 5c's real runs, until it is
-  fixed.**
-- **Fix:** when `initLeaf` moves `main` to the template, move the umbrella's gitlink to it too; or let the snapshot
-  take a leaf that this run created, and that has had no pointer move yet, at its `main`. Test: the content smoke
-  run passes, and a unit test of `snapshotSources` on a new leaf finds its template. **Status:** proved.
-
 ### B-062: the build realms' packs give no reason for each egress host
 
 - **Where:** `helheim-go/pack.yaml` and `midgard-react/pack.yaml` (`sandbox.egress`). Readiness: helheim-go and
@@ -1023,6 +996,34 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 - **Status:** reasoned.
 
 ## Done
+
+### B-061: since odin #15, the first task's acceptance run sees the other new leaf without its template
+
+- **Where:** `odin/internal/engine/init.go` (`initLeaf`, `mainToTemplate`), `odin/internal/run/sandbox.go`
+  (`snapshotSources`, `recordedCommit`). Readiness: helheim-go and midgard-react, RR-21.
+- **Problem:** `initLeaf` creates a leaf with its first commit (the pack's `first_commit`, here only `LICENSE`),
+  and the project's umbrella records that commit. Then it commits the template and moves the leaf's `main` to it,
+  but the umbrella's gitlink stays on the first commit. Since odin #15 (B-048 M-1), a snapshot takes each other leaf at its
+  gitlink. So the acceptance run of the first task's pointer move sees the other leaf as `LICENSE` alone.
+- **Proved:** the content smoke run (v0-H15's mode) at odin `6829cfb`, gleipnir `f362ea2`, helheim-go `60731f6` and
+  midgard-react `26ca85e`, on 2026-10-18. Task 1 (the API leaf) passed its loop and its landing. Its pointer move
+  failed: `accept: the web leaf has no repos/web/contracts/api.openapi.yaml`. The snapshot's `repos/web` held only
+  `LICENSE`, and the umbrella's gitlink for `repos/web` was the first commit, `454b811`. The run gave up both tasks
+  (exit 5).
+- **Control (v0-H15):** v0-H15 ran on 2026-10-18 at 09:37 UTC, before odin #15 (`6829cfb`) merged at 11:28 UTC.
+  In its project (`~/ygg-it/content/smoke-realms-20261018-113734`), `repos/web` was also recorded at its first
+  commit (`d2a944d`) when `version-t1-move` ran, and that move's `accept` passed (exit 0). So the change is odin
+  #15's, not the realms'.
+- **Why it matters:** it fails any run whose first pointer move runs an acceptance check that reads another new
+  leaf. The client gallery's order is such a run: the API task is first, and midgard-react's `accept-e2e.sh` reads
+  the web leaf beside the API leaf. It blocked real runs of the gallery, and Phase 5c's real runs, until it was
+  fixed.
+- **Fix:** when `initLeaf` moves `main` to the template, move the umbrella's gitlink to it too; or let the snapshot
+  take a leaf that this run created, and that has had no pointer move yet, at its `main`. Test: the content smoke
+  run passes, and a unit test of `snapshotSources` on a new leaf finds its template.
+- **Fixed** in odin #17 (`b08d7d6`): a new leaf's template is recorded in the umbrella's gitlink. The content smoke
+  runs of 2026-10-19 (voluspa-H02 and H03) passed `accept` on both moves, with both leaves new.
+- **Status:** proved.
 
 ### B-097: the plan's H02 and H03 steps omitted three things
 
