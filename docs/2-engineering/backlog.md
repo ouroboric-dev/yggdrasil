@@ -1057,16 +1057,6 @@ These eight are what it left.
 - **Fix:** an optional `reasoning:` setting on a role (`low`, `medium`, `high`, `off`), with `high` as the default.
 - **Status:** reasoned.
 
-### B-107: a model that OpenRouter reports no cost for counts as zero dollars
-
-- **Where:** `gleipnir/opencode` (the cost of a session), `odin` `doctor` and the budget meter.
-- **Problem:** the Claude Haiku 5.5 and Sonnet 5.5 sessions of the bake-off came back from OpenRouter with `cost: 0`
-  on every step. A reviewer on such a model would add nothing to the dollar caps (`per_run.usd`, `per_day.usd`), while
-  its tokens count. The role's `Price` setting is the way out, and nothing says to set it.
-- **Fix:** a session with tokens and a cost of 0 and no `Price` is an error or a `doctor` warning, so the caps are
-  never silently weaker than they look.
-- **Status:** proved (the step files); the effect on the caps is reasoned.
-
 ### B-108: the reviewer bake-off scripts are in a scratch folder
 
 - **Where:** a session's scratchpad (`bake.sh`, the planted-fault leaves, the scorer); to move to
@@ -1111,6 +1101,20 @@ These eight are what it left.
 - **Status:** reasoned.
 
 ## Done
+
+### B-107: a model that OpenRouter reports no cost for counts as zero dollars
+
+- **Where:** `gleipnir/opencode` (the cost of a session), `odin` `doctor` and the budget meter.
+- **Problem:** the Claude Haiku 5.5 and Sonnet 5.5 sessions of the bake-off came back from OpenRouter with `cost: 0`
+  on every step. A reviewer on such a model would add nothing to the dollar caps (`per_run.usd`, `per_day.usd`), while
+  its tokens count. The role's `Price` setting is the way out, and nothing says to set it.
+- **Fix:** a session with tokens and a cost of 0 and no `Price` is an error or a `doctor` warning, so the caps are
+  never silently weaker than they look.
+- **Fixed:** the refusal half already stood in gleipnir (`opencode.go` fails a session with tokens, cost 0 and no
+  `Price`, naming `roles.<role>.price`). [odin#24](https://github.com/ouroboric-dev/odin/pull/24) adds the missing
+  early notice: `ygg doctor` warns of an OpenCode role on `openrouter/anthropic/*` with no price. Test: a role
+  table with one unpriced Claude role gives one warning.
+- **Status:** proved (the step files and the test).
 
 ### B-071: `Advance` has no default case, so an unknown node kind passes silently
 
