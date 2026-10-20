@@ -771,17 +771,21 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Fix:** say so in the refusal, or let `grade` accept a realm whose changes do not touch the grader's inputs.
 - **Status:** proved (v0-T262's smoke).
 
-### B-084: the decisions parked in odin#18 for the founder
+### B-084: the decisions parked in odin#18, decided by the founder on 2026-10-20
 
 - **Where:** `odin/internal/deps`, `odin/internal/gate`, `odin/internal/engine/grade.go`.
-- **Problem and fix, one line each:**
+- **Decided, one line each:**
   - `ygg deps bump` without a `sandbox:` section runs on the host with the full network and the operator's uid.
-    Fix: refuse unless `--host` is given.
-  - A contract split across files, or behind a symlink, passes the `pointer-contract` gate unseen. Fix: escalate on a
-    changed YAML or JSON under a listed contract's folder, or on mode 120000.
-  - The graded app can overwrite `results.json`. Fix: write the file where the app cannot, or read the scores from the grader's own stdout.
+    **Decision:** refuse (exit 2) unless `--host` is given.
+  - A contract split across files, or behind a symlink, passes the `pointer-contract` gate unseen. **Decision:**
+    escalate on a changed YAML or JSON under a listed contract's folder, and on a mode-120000 file there.
+  - The graded app can overwrite `results.json`. **Decision:** the grader reads the scores from the suite's stdout,
+    and the app has no path to forge it.
   - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the founder asked for it).
-- **Status:** proved (the reviewers' probes). Each needs the founder's answer.
+- **Next:** the first and the third change behavior the spec states, so each goes through a
+  [change proposal](changes/README.md) before the code. The second changes the plan's decision 15 ("acceptance tests
+  catch the rest"); say so in its proposal.
+- **Status:** decided; not built.
 
 ### B-085: gleipnir's grader, minors
 
