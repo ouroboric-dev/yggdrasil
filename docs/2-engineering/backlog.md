@@ -1022,30 +1022,7 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer experiments of 2026-10-20
 (gleipnir pull requests 14 to 16, odin pull requests 21 to 23, and the journal entry
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
-These eight are what it left.
-
-### B-104: a loop has no way to settle a disputed finding
-
-- **Where:** `jormungandr` (the loop), `odin/internal/engine/loop.go`.
-- **Problem:** one false blocker from a reviewer ends the run. In run 20261020-190818-5b02ff the reviewer said
-  `findIndex` is not a JavaScript method. The implementer showed with `curl` that it works, and changed nothing. The
-  reviewer repeated the claim in its next two sessions, and the run stopped at `attempts-exhausted` (exit 3). Nothing
-  checks who is right.
-- **Fix:** decide between a second reviewer that must agree, a reviewer that must show proof for a blocker (as a
-  `fixed` finding already must), or a founder gate on a finding the implementer disputes. It changes the loop's
-  contract, so it needs a [change proposal](changes/README.md).
-- **Status:** proved (the run's ledger).
-
-### B-105: `ParseReport` refuses an answer with prose around the JSON
-
-- **Where:** `gungnir/schema/event.go` (`ParseReport`), the reviewer prompt's last paragraph.
-- **Problem:** the report must be one JSON document, alone or in one code fence. `deepseek-v4-flash` wrote a sentence
-  before the fence in the smoke run (and in 2 of 8 bake-off sessions), and the engine treated it as unreadable. A
-  strict parser is a safe default, but every unreadable answer costs a try, and two in a row stop the run.
-- **Fix:** decide. Accept the last JSON document or fence in the answer and ignore the text before it, or keep it
-  strict and rely on the second try. Accepting more is a change to the report format the spec states, so it needs a
-  change proposal.
-- **Status:** proved (the smoke ledger and the bake-off files).
+These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 
 ### B-106: the reasoning effort is `high` for every OpenCode session
 
@@ -1100,7 +1077,76 @@ These eight are what it left.
 - **Fix:** print the commit and path of the `ygg` that runs, or always build from `--odin`. Add a test.
 - **Status:** reasoned.
 
+### B-112: the conformance reviewer's prompt still forbids prose before its JSON
+
+- **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
+- **Problem:** B-105 relaxed the framing of a reviewer's report. The design-conformance reviewer's answer is read by
+  `ParseConformance`, which is still strict, so the same model habit (a sentence before the JSON) would stop a run
+  there.
+- **Fix:** give `ParseConformance` the same framing as `ParseReport` and change the prompt. A change proposal first.
+- **Status:** reasoned.
+
+### B-113: the operator cannot overrule a disputed finding
+
+- **Where:** `odin` (`ygg approve` for `finding-disputed`), `jormungandr` (`Book.Overrule`).
+- **Problem:** after a `finding-disputed` stop, `ygg approve` lets the run go on, but the finding stays open in the
+  ledger. The operator's ruling for the implementer is not recorded as an overrule, and the next reviewer pass may
+  raise it again.
+- **Fix:** let `ygg approve` on `finding-disputed` call `Book.Overrule` with the operator's note as the evidence. A
+  change proposal first.
+- **Status:** reasoned.
+
+### B-114: an ignored dispute has no ledger event of its own
+
+- **Where:** `gungnir` (the event list), `odin` (`Record`).
+- **Problem:** a dispute that cannot be used is written as a `loop_attempt` event whose result begins with
+  `dispute ignored:`. `ygg metrics` cannot count them without parsing text.
+- **Fix:** a `dispute_ignored` event in gungnir.
+- **Status:** proved (odin#25).
+
+### B-115: `ygg report` must show overruled findings
+
+- **Where:** Phase 6 (`ygg report`), `odin` (`ygg status` shows them today).
+- **Problem:** an overruled finding is the implementer's word, backed by one test. A reader of the run report must
+  see both sides and the check run, or a weak test could hide a real fault.
+- **Fix:** list every overruled finding in `ygg report` with the reviewer's claim, the implementer's evidence and the
+  check proof.
+- **Status:** reasoned.
+
 ## Done
+
+### B-104: a loop has no way to settle a disputed finding
+
+- **Where:** `jormungandr` (the loop), `odin/internal/engine/loop.go`.
+- **Problem:** one false blocker from a reviewer ends the run. In run 20261020-190818-5b02ff the reviewer said
+  `findIndex` is not a JavaScript method. The implementer showed with `curl` that it works, and changed nothing. The
+  reviewer repeated the claim in its next two sessions, and the run stopped at `attempts-exhausted` (exit 3). Nothing
+  checks who is right.
+- **Fix:** decide between a second reviewer that must agree, a reviewer that must show proof for a blocker (as a
+  `fixed` finding already must), or a founder gate on a finding the implementer disputes. It changes the loop's
+  contract, so it needs a [change proposal](changes/README.md).
+- **Status:** proved (the run's ledger).
+- **Fixed:** 2026-10-20, by the [change proposal](changes/2026-10-20-disputed-findings/proposal.md):
+  [gungnir#17](https://github.com/ouroboric-dev/gungnir/pull/17),
+  [jormungandr#10](https://github.com/ouroboric-dev/jormungandr/pull/10) and
+  [odin#25](https://github.com/ouroboric-dev/odin/pull/25). An implementer disputes a finding with a check and a
+  test id. A dispute that holds overrules the finding. One no check can settle stops the run with
+  `finding-disputed`.
+
+### B-105: `ParseReport` refuses an answer with prose around the JSON
+
+- **Where:** `gungnir/schema/event.go` (`ParseReport`), the reviewer prompt's last paragraph.
+- **Problem:** the report must be one JSON document, alone or in one code fence. `deepseek-v4-flash` wrote a sentence
+  before the fence in the smoke run (and in 2 of 8 bake-off sessions), and the engine treated it as unreadable. A
+  strict parser is a safe default, but every unreadable answer costs a try, and two in a row stop the run.
+- **Fix:** decide. Accept the last JSON document or fence in the answer and ignore the text before it, or keep it
+  strict and rely on the second try. Accepting more is a change to the report format the spec states, so it needs a
+  change proposal.
+- **Status:** proved (the smoke ledger and the bake-off files).
+- **Fixed:** 2026-10-20, by the [change proposal](changes/2026-10-20-report-framing/proposal.md):
+  [gungnir#16](https://github.com/ouroboric-dev/gungnir/pull/16) and
+  [jormungandr#9](https://github.com/ouroboric-dev/jormungandr/pull/9). Prose before the report is ignored; the
+  report must be last.
 
 ### B-107: a model that OpenRouter reports no cost for counts as zero dollars
 
