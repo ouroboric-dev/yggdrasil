@@ -45,3 +45,17 @@ cd ~/brunogbv/ouroboric/yggdrasil/odin
 - With `ygg` on `PATH`, `ygg approve …` replaces `go run ./cmd/ygg approve …`.
 
 The `ygg resume` and `ygg approve` lines that `ygg` prints on a stop do not carry this environment (B-096).
+
+## A run stops at `finding-disputed`
+
+A reviewer raised a finding, and the implementer said with a check and a test that the reviewer is wrong. The run
+stops with exit code 3 when no check of the loop can settle the dispute, or when the attempts ran out with a
+disputed blocker that no check settled. This is not `attempts-exhausted`.
+
+- Read the gate file or `ygg status`: it shows both sides, the reviewer's claim and location and the implementer's
+  evidence.
+- You rule for the implementer with `ygg approve <run-id> <gate> --note "..."`, then `ygg resume`. The finding stays
+  open in the ledger until B-113 is built.
+- You rule for the reviewer by sending the work back with guidance (`ygg reject`).
+- A dispute that a check settled does not stop the run. The finding is `overruled`, and `ygg status` lists it with
+  both sides and the check run, so you can audit it afterwards.

@@ -18,7 +18,8 @@ style: spec
 ## Tasks
 
 - [ ] **T1 `gungnir`:** change `unfence`/`ParseReport`. Failing tests first: a sentence then a fence parses; a
-  sentence then a bare document parses; text after the fence fails; two fences fail; an unclosed fence fails; no
-  document fails and is not an empty report; the existing strict cases still fail.
+  sentence then a bare document parses (braces in the prose are fine); text after the fence or a bare document
+  fails; two fences fail, also after prose; a fence or a document in the prose fails; two bare documents fail; an
+  unclosed fence fails; no document fails and is not an empty report; a broken document fails; the existing strict cases still fail.
 - [ ] **T2 `jormungandr`:** change the `ReportFormat` text and its test.
 - [ ] **T3 `yggdrasil`:** fold the delta into the spec, mark B-105 done, move the pointers, archive this folder.

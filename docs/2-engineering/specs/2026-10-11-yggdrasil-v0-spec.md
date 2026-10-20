@@ -280,11 +280,24 @@ Checks and reviewers report **findings**, a Gungnir type, not free text:
 | `severity` | blocker, major, minor |
 | `location` | file and line(s) |
 | `claim` | what is wrong |
-| `status` | open, fixed, disputed |
-| `proof` | for `fixed`: the file:line evidence and the check run that confirms it |
+| `status` | open, fixed, disputed, overruled |
+| `proof` | for `fixed`: the file:line evidence and the check run that confirms it. For `overruled`: the implementer's evidence and the check run that settled the dispute |
 
 - Jormungandr feeds the open findings to the next implementer attempt. A finding MUST NOT close until
-  its source confirms the fix with proof. The implementer's claim of "fixed" is not enough.
+  its source confirms the fix with proof, or a dispute of it holds (`overruled`, below). The implementer's
+  claim of "fixed" is not enough.
+- **A reviewer's answer** MAY have prose before its report. The report MUST be the last thing in the answer,
+  bare or in one code fence, and the prose MUST be ignored. Text after the report, a second fence or
+  document, and an unclosed fence are malformed.
+- **Disputes.** An implementer MAY dispute an open finding in its last answer of an attempt, with a
+  `disputes` document. Each dispute MUST name the finding id, a check of the loop, a test id and the
+  evidence. An answer with no `disputes` document disputes nothing. A malformed document MUST be recorded
+  and ignored. Odin MUST decide a dispute after the loop's checks ran: it holds only when the named check
+  passed in this attempt and its output contains the test id. A dispute that holds MUST close the finding as
+  `overruled`, with a `finding_overruled` ledger event. A reviewer's repeat of the claim MUST NOT reopen it
+  unless the report gives another location, or the check that overruled it failed in a later attempt. A
+  dispute that does not hold leaves the finding open, and the next attempt MUST be told why. A check's own
+  finding MUST NOT be disputed.
 - **Missing or malformed data MUST NOT be defaulted.** If a reviewer output does not parse, or a
   finding has no location, it MUST be retried once as an agent failure. If it is still
   malformed, the loop MUST stop and escalate. Malformed output MUST NOT count as a pass.
@@ -429,6 +442,12 @@ integrity or the escape-attempt suite. It is active from self-hosting stage 1 (Â
   waiting at approval points is recorded separately. It is excluded from factory time.
 
 ### 7.3 Exhausted loops
+
+A loop escalates with a reason. `attempts-exhausted` and `reviewer-unreadable` are the old ones.
+`finding-disputed` is raised when an implementer disputes an open finding that no check of the loop can
+settle (it names a check the loop does not run), or when the attempts run out with a blocking finding the
+implementer disputed and no check settled. Its record MUST carry the reviewer's claim and location and the
+implementer's evidence. The operator's `ygg approve` is the ruling for the implementer.
 
 - step-by-step and key-points: stop and ask.
 - unattended: mark the task `blocked`. Continue with tasks that do not depend on it. List it first in
