@@ -1019,6 +1019,97 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 - **Fix:** give each guard an owner and a test; decide (d).
 - **Status:** reasoned.
 
+Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer experiments of 2026-10-20
+(gleipnir pull requests 14 to 16, odin pull requests 21 to 23, and the journal entry
+`2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
+These eight are what it left.
+
+### B-104: a loop has no way to settle a disputed finding
+
+- **Where:** `jormungandr` (the loop), `odin/internal/engine/loop.go`.
+- **Problem:** one false blocker from a reviewer ends the run. In run 20261020-190818-5b02ff the reviewer said
+  `findIndex` is not a JavaScript method. The implementer showed with `curl` that it works, and changed nothing. The
+  reviewer repeated the claim in its next two sessions, and the run stopped at `attempts-exhausted` (exit 3). Nothing
+  checks who is right.
+- **Fix:** decide between a second reviewer that must agree, a reviewer that must show proof for a blocker (as a
+  `fixed` finding already must), or a founder gate on a finding the implementer disputes. It changes the loop's
+  contract, so it needs a [change proposal](changes/README.md).
+- **Status:** proved (the run's ledger).
+
+### B-105: `ParseReport` refuses an answer with prose around the JSON
+
+- **Where:** `gungnir/schema/event.go` (`ParseReport`), the reviewer prompt's last paragraph.
+- **Problem:** the report must be one JSON document, alone or in one code fence. `deepseek-v4-flash` wrote a sentence
+  before the fence in the smoke run (and in 2 of 8 bake-off sessions), and the engine treated it as unreadable. A
+  strict parser is a safe default, but every unreadable answer costs a try, and two in a row stop the run.
+- **Fix:** decide. Accept the last JSON document or fence in the answer and ignore the text before it, or keep it
+  strict and rely on the second try. Accepting more is a change to the report format the spec states, so it needs a
+  change proposal.
+- **Status:** proved (the smoke ledger and the bake-off files).
+
+### B-106: the reasoning effort is `high` for every OpenCode session
+
+- **Where:** `gleipnir/opencode/opencode.go` (`ConfigJSON`), the role settings in `factory.yaml`.
+- **Problem:** gleipnir#16 names `effort: high` on every request, because `deepseek-v4-flash` took its prompt for an
+  empty message when no effort was named. The value is the same for every model and every role. A model that thinks
+  a lot (GLM 5.3 Flash wrote up to 18.5k tokens in a session) may do better with less, and a model that rejects the
+  setting has no way out.
+- **Fix:** an optional `reasoning:` setting on a role (`low`, `medium`, `high`, `off`), with `high` as the default.
+- **Status:** reasoned.
+
+### B-107: a model that OpenRouter reports no cost for counts as zero dollars
+
+- **Where:** `gleipnir/opencode` (the cost of a session), `odin` `doctor` and the budget meter.
+- **Problem:** the Claude Haiku 5.5 and Sonnet 5.5 sessions of the bake-off came back from OpenRouter with `cost: 0`
+  on every step. A reviewer on such a model would add nothing to the dollar caps (`per_run.usd`, `per_day.usd`), while
+  its tokens count. The role's `Price` setting is the way out, and nothing says to set it.
+- **Fix:** a session with tokens and a cost of 0 and no `Price` is an error or a `doctor` warning, so the caps are
+  never silently weaker than they look.
+- **Status:** proved (the step files); the effect on the caps is reasoned.
+
+### B-108: the reviewer bake-off scripts are in a scratch folder
+
+- **Where:** a session's scratchpad (`bake.sh`, the planted-fault leaves, the scorer); to move to
+  `ouroboric/scripts`.
+- **Problem:** the scripts that compared five reviewer models, and the three planted-fault leaves, were written for
+  one session and a restart of the PC deleted part of them. The next model change needs the same bench. It is
+  reusable tooling.
+- **Fix:** move them to `ouroboric/scripts` as one script with a test and a pull request. It takes a model, a leaf
+  (a folder), the number of sessions and a pattern for the fault, and prints the table of the journal entry: valid
+  reports, findings, tokens, cost. Add a planted fault that needs reading two files (one user reaching another's
+  notes).
+- **Status:** requirement.
+
+### B-109: the repair path of a loop is not proved with a cheap reviewer
+
+- **Where:** the real-agent smoke (`scripts/ygg-smoke-real.sh`), the smoke pack.
+- **Problem:** the passing smoke never used the repair path. The reviewer found nothing, so the implementer was not
+  sent back. Planted-fault tests show that Qwen3.8 27B reports a real fault. They do not show that the implementer
+  fixes it and that the reviewer then closes the finding.
+- **Fix:** a smoke variant whose brief makes the implementer likely to make one mistake, or a run that starts from the
+  planted-fault leaf, with the pass condition "one finding raised, fixed, and closed". Report it in the journal
+  entry.
+- **Status:** requirement.
+
+### B-110: Qwen as the implementer is not tried
+
+- **Where:** `factory.real.example.yaml`, the OpenCode adapter with write permissions.
+- **Problem:** the implementer is Claude Code on the founder's subscription, which costs nothing per run. A
+  factory without that subscription needs an implementer on a per-token model. `qwen3.8-27b` costs about 1 cent
+  for a reviewer session, and is the model the founder runs locally. Nobody has measured it as an implementer.
+- **Fix:** run the grader smoke with the implementer on `qwen/qwen3.8-27b` through OpenCode, and compare the
+  reward, the turns, the time and the cost with the Sonnet run. Change one role at a time.
+- **Status:** requirement.
+
+### B-111: the real-agent smoke runs a `ygg` from `PATH` without saying which
+
+- **Where:** `ouroboric/scripts/ygg-smoke-real.sh` (the lines that choose `ygg`).
+- **Problem:** the script uses `ygg` from `PATH` when there is one, and builds odin only when there is none. A stale
+  binary would run the old code, and the run would give no sign. The smoke of 2026-10-20 built from source, so it
+  was safe, but only because `PATH` held no `ygg`.
+- **Fix:** print the commit and path of the `ygg` that runs, or always build from `--odin`. Add a test.
+- **Status:** reasoned.
+
 ## Done
 
 ### B-071: `Advance` has no default case, so an unknown node kind passes silently
