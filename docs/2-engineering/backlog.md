@@ -675,15 +675,8 @@ facts were read at each realm's `main` after Phase 5c's first commits.
 - **Status:** proved (the greps).
 
 Source of items B-071 to B-089: Phase 5c (2026-10-19), the task reviews and the final review. The reports are in the
-SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**. The pull requests are
+SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**, except B-071, now in [Done](#done). The pull requests are
 gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #18, ouroboric#59.
-
-### B-071: `Advance` has no default case, so an unknown node kind passes silently
-
-- **Where:** `odin/internal/engine` (`Advance`).
-- **Problem:** a graph node of a kind the engine does not know is skipped as if it had passed.
-- **Fix:** a `default` case that stops the run with `bad_manifest`. Test: a graph with a made-up kind stops.
-- **Status:** proved (the reading of `Advance`).
 
 ### B-072: an unattended run stops at a contract change
 
@@ -1023,6 +1016,15 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 - **Status:** reasoned.
 
 ## Done
+
+### B-071: `Advance` has no default case, so an unknown node kind passes silently
+
+- **Where:** `odin/internal/engine` (`Advance`).
+- **Problem:** a graph node of a kind the engine does not know is skipped as if it had passed.
+- **Fix:** a `default` case that stops the run with `bad_manifest`. Test: a graph with a made-up kind stops.
+- **Fixed** in [odin#20](https://github.com/ouroboric-dev/odin/pull/20): a `default` case fails the node as
+  `bad_manifest`, with a `node_failed` event. Test: a graded run whose last node has a made-up kind stops `failed`.
+- **Status:** proved (the reading of `Advance`).
 
 ### B-097: the plan's H02 and H03 steps omitted three things
 
