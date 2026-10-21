@@ -327,7 +327,7 @@ mode: key-points
 roles:
   planner:          { agent: claude-code, model: opus }
   implementer:      { agent: claude-code, model: sonnet }
-  reviewer-spec:    { agent: opencode,    model: openrouter/<another-vendor> }
+  reviewer-spec:    { agent: opencode,    model: openrouter/<another-vendor>, reasoning: medium }
   reviewer-quality: { agent: opencode,    model: openrouter/<another-vendor> }
 budget: { per_run: { tokens: 20000000, turns: 2000 }, per_day: { tokens: 40000000 } }  # example values
 privacy: standard   # strict → only providers with no training and no retention
@@ -340,6 +340,11 @@ privacy: standard   # strict → only providers with no training and no retentio
   and no retention. The adapter does this through OpenRouter's provider data-policy settings (the
   exact options are verified when the adapter is built). Policy MUST only tighten going down:
   factory defaults → L0 → L1 → leaf.
+- **Reasoning:** a role MAY set `reasoning:` to `low`, `medium`, `high` or `off`. The default is `high`. A
+  `factory.yaml` with another value MUST be refused when it loads. The `opencode` adapter MUST pass the value
+  to the model as the reasoning effort of every request of the role, and with `off` MUST pass none. `off` gives
+  the model its own default, which made one model take its prompt for an empty message, so it is a risk the
+  operator takes. The `claude-code` and `scripted` adapters ignore the setting, as they ignore `price`.
 
 ### 5.1 Skills and writing styles
 
