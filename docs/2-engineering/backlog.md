@@ -1167,12 +1167,15 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 
 ### B-128: odin writes a leaf's first-commit files without the execute bit
 
-- **Where:** `odin/internal/remote/local.go` (`os.WriteFile(…, 0o644)` for every first-commit file).
-- **Problem:** a template's `start.sh` or `run.sh` (B-078 ships one in every build realm) lands in the leaf as 0644.
-  The grader or an agent that runs `./start.sh` gets "permission denied". The smoke works around it: its
-  `--from-leaf` project runs `sh ./start.sh` when the file is not executable.
-- **Fix:** keep the template file's mode (0755 when the template's file is executable). Test: an executable
-  template file is executable in the leaf's first commit.
+- **Where:** `odin/internal/remote/local.go` (`os.WriteFile(…, 0o644)` for every first-commit file), `gungnir`
+  (`Repo.Files` carries no mode).
+- **Problem:** a file a pack lists in `first_commit` lands in the leaf as 0644, even when the template's file is
+  executable. It does not bite the realms today: helheim-go and midgard-react list only `LICENSE`, and the rest of
+  a template goes through `copyTemplate` (`odin/internal/engine/init.go`), which keeps the execute bit, so the B-078
+  run scripts reach a new leaf executable. It bites a pack that lists a script in `first_commit`: the smoke's
+  `--from-leaf` does, and works around it by running `sh ./start.sh` when the file is not executable.
+- **Fix:** carry the mode in `gungnir.Repo.Files` and write it in `firstCommit` (a gungnir change). Cheap guard
+  until then: a test that no realm's `first_commit` file is executable.
 - **Status:** proved (read at odin `471d535`).
 
 ### B-129: the real-agent smoke names its work folder by the second
