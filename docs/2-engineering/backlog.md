@@ -1211,6 +1211,19 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 - **Fix:** key by node and id, follow reopen, prefer `source == "review"`. Test each with a made-up ledger.
 - **Status:** reasoned.
 
+### B-133: OpenCode is pinned at 1.18.32
+
+- **Where:** `gleipnir/sandbox/images.go` (`OpenCode = "1.18.32"`), `gleipnir/opencode` (the adapter's flags).
+- **Problem:** the pin dates from Phase 3 (2026-10-16). The Phase 0 spike (v0-T003) proved the strict OpenRouter
+  settings on 1.18.32 (released 2026-09-21). npm's latest is 1.19.3 (2026-10-16); Homebrew ships 2.0.32, which is
+  what the founder's `PATH` has. v2 changes the CLI (`run --standalone`, a background service), and 1.18.32 rejects
+  `--standalone`. Nothing has checked the privacy settings or the reviewer's behaviour on a newer version.
+- **Fix:** step 1, a bump to 1.19.x once it is two weeks old: re-run the T003 privacy capture and the reviewer bench
+  on P0 to P4. Step 2, v2: a short spike with the same two checks and the adapter's flags, then decide. The reviewer
+  bench reads the pin from `images.go`, so it follows a bump.
+- **Status:** proved (versions read on 2026-10-21; `opencode run --standalone` on 1.18.32 prints its help and runs
+  nothing).
+
 ## Done
 
 ### B-073: `.factory/runs/` is untracked but not ignored in a project
