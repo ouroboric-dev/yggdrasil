@@ -54,6 +54,7 @@ The "applies to" column says which realms an item covers:
 | RR-20 | build | prompt | Has a person reviewed the implementer prompt? | human | A person reviews the prompt and records it. |
 | RR-21 | build | smoke | Does `ygg-smoke-realms.sh` include the realm, and does it pass? | auto | `ygg-smoke-realms.sh`. This is a wiring item. |
 | RR-22 | document | contract | Does the pack declare no stack, and are its checks document checks? | auto | `go test -run Pack ./...` in the leaf |
+| RR-23 | build | run | Does the template ship an executable `run.sh` that starts the leaf on `PORT`, and does a test start it from a copy of the template and wait for the port? | auto | `YGG_REQUIRE_TEMPLATES=1 go test -run RunScript ./...` in the leaf (helheim-go #12, midgard-react #19) |
 
 ## Items that read GitHub
 

@@ -725,17 +725,6 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Fix:** a first-run rule: the bench writes the questions from the extracted graph and a person confirms them; until then routing does not ship.
 - **Status:** proved (the engine bench is two `[]` questions).
 
-### B-078: the grader's `/app` needs a `start.sh` that a real project does not yet provide
-
-- **Where:** `gleipnir/sandbox/grade.go`, the leaf templates of both realms.
-- **Problem:** the grader starts the product with a `start.sh` at the root. The smoke project has one. A real
-  project made from a template has none, so `ygg grade` on it fails to start the app.
-- **Fix:** the templates ship a `start.sh` and the realms' prompts name it. Decide who writes it for a new leaf.
-  Decided 2026-10-21: see the [change proposal](changes/2026-10-21-leaf-run-contract/proposal.md). Each build realm's
-  template ships a `run.sh` that starts the leaf on `PORT`, with a readiness item (RR-23). The root `start.sh` belongs
-  to the infra realm, later.
-- **Status:** reasoned (the first real run is where to see it).
-
 ### B-079: the real version floors of the two policy files
 
 - **Where:** `helheim-go` (`go-deps.sh`), `midgard-react` (`web-deps.sh`, the policy file).
@@ -1118,7 +1107,45 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   compatible with a benchmark that gives one reward per task. It belongs in the Phase 6 plan.
 - **Status:** requirement (the founder, 2026-10-21).
 
+### B-117: the web leaf's `run.sh` serves on loopback only
+
+- **Where:** `midgard-react` (`templates/web/run.sh`).
+- **Problem:** `run.sh` starts `vite preview` with `--host 127.0.0.1`, and vite preview's host check allows only
+  `localhost` and `127.0.0.1`. A grader that reaches the leaf by another name, or from outside the container's
+  loopback, is refused. Not tested.
+- **Fix:** make the host configurable (`HOST`, default loopback) and check what the grader's request uses.
+- **Status:** reasoned.
+
+### B-118: a leaf's dependencies do not reach the grader
+
+- **Where:** the task image (Phase 6), `helheim-go` and `midgard-react` (`run.sh`).
+- **Problem:** the grader has no network. The Go leaf builds with `GOPROXY=off`, so its `pgx` modules must be in the
+  module cache. The web leaf needs `node_modules`, installed by `init.sh`. Nothing yet puts either into the image
+  the grader runs.
+- **Fix:** decide how they arrive: a baked image, or a vendored folder. A Phase 6 question for the task's image.
+- **Status:** requirement.
+
+### B-119: a run does not refuse an unpriced model with no cost until the first session
+
+- **Where:** `odin` (run start), `gleipnir` (the price check).
+- **Problem:** gleipnir refuses a session that has tokens, cost 0 and no price, but only when the session
+  ends. B-107 only warns early, in `ygg doctor`. The B-107 builder suggested a refusal at run start.
+- **Fix:** refuse at run start when a role's model has no price and its adapter reports no cost.
+- **Status:** reasoned.
+
 ## Done
+
+### B-078: the grader's `/app` needs a `start.sh` that a real project does not yet provide
+
+- **Where:** `gleipnir/sandbox/grade.go`, the leaf templates of both realms.
+- **Problem:** the grader starts the product with a `start.sh` at the root. The smoke project has one. A real
+  project made from a template has none, so `ygg grade` on it fails to start the app.
+- **Fix:** the templates ship a `start.sh` and the realms' prompts name it. Decide who writes it for a new leaf.
+  Decided 2026-10-21: see the [change proposal](changes/2026-10-21-leaf-run-contract/proposal.md). Each build realm's
+  template ships a `run.sh` that starts the leaf on `PORT`, with a readiness item (RR-23). The root `start.sh` belongs
+  to the infra realm, later.
+- **Status:** reasoned (the first real run is where to see it).
+- **Fixed:** 2026-10-21, as far as the realms go, by the [change proposal](changes/2026-10-21-leaf-run-contract/proposal.md): [helheim-go#12](https://github.com/ouroboric-dev/helheim-go/pull/12) and [midgard-react#19](https://github.com/ouroboric-dev/midgard-react/pull/19), with readiness item RR-23. Still open: the root `start.sh` (the infra realm), B-117 and B-118.
 
 ### B-106: the reasoning effort is `high` for every OpenCode session
 
