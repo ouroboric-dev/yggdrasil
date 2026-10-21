@@ -1198,6 +1198,18 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   stray-file rung, or the secret scan) refuses them. Test: a leaf with a cookie jar fails the check.
 - **Status:** proved (runs 20261021-220441-84e852, 20261021-220651-618061).
 
+### B-138: a sandbox's teardown leaves its compose pod behind
+
+- **Where:** `gleipnir/sandbox/driver.go` (`Down`), `odin/internal/cli/doctor.go`.
+- **Problem:** reported on 2026-10-22 from the user's Podman engine: every sandbox's teardown removes its
+  containers but not the compose pod, so the engine held 108 empty pods named `pod_ygg<run id><leaf><hash>`
+  (status Created, no containers), one per sandbox since 2026-10-16. They do no harm, but they accumulate. `ygg
+  doctor` counts containers only, so it reports "sandboxes: 0". `podman pod prune -f` leaves them, because a pod in
+  state Created does not count as stopped; `podman pod rm` removes them. Not yet reproduced by this session.
+- **Fix:** `Down` also runs `podman pod rm` for the run's pod (by the run's label or name), and `ygg doctor` lists
+  leftover pods. Test: after `Down` no pod of the run is left.
+- **Status:** reasoned.
+
 ## Done
 
 ### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
