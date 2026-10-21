@@ -731,6 +731,9 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Problem:** the grader starts the product with a `start.sh` at the root. The smoke project has one. A real
   project made from a template has none, so `ygg grade` on it fails to start the app.
 - **Fix:** the templates ship a `start.sh` and the realms' prompts name it. Decide who writes it for a new leaf.
+  Decided 2026-10-21: see the [change proposal](changes/2026-10-21-leaf-run-contract/proposal.md). Each build realm's
+  template ships a `run.sh` that starts the leaf on `PORT`, with a readiness item (RR-23). The root `start.sh` belongs
+  to the infra realm, later.
 - **Status:** reasoned (the first real run is where to see it).
 
 ### B-079: the real version floors of the two policy files
@@ -1102,6 +1105,18 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Fix:** list every overruled finding in `ygg report` with the reviewer's claim, the implementer's evidence and the
   check proof.
 - **Status:** reasoned.
+
+### B-116: grade each piece of software, and the project from the pieces
+
+- **Where:** Phase 6 (`ygg grade`, `ygg report`, the Harbor bridge), `gleipnir/sandbox/grade.go`.
+- **Problem:** a grade today is one score for one project. A product of several leaves and realms (frontend, backend,
+  infra) can be strong in one and weak in another: a sharp, responsive frontend, a slow and wrong backend. One
+  number hides which leaf failed, and the proof runs cannot show which realm or model is good at what.
+- **Fix:** design a grade per leaf (its own suite or rubric, run against that leaf) and a project grade that
+  combines them. Open questions: how a leaf is graded alone (it needs its dependencies stood up), how qualities no
+  suite can test (beautiful, responsive) are judged, the weights of the combination, and how the project grade stays
+  compatible with a benchmark that gives one reward per task. It belongs in the Phase 6 plan.
+- **Status:** requirement (the founder, 2026-10-21).
 
 ## Done
 
