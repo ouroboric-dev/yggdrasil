@@ -678,15 +678,6 @@ Source of items B-071 to B-089: Phase 5c (2026-10-19), the task reviews and the 
 SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**, except B-071, now in [Done](#done). The pull requests are
 gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #18, ouroboric#59.
 
-### B-072: an unattended run stops at a contract change
-
-- **Where:** `odin/internal/gate` (`Decide`), `odin/internal/engine` (`reachGate`).
-- **Problem:** `gate.Decide` returns `Block` for a contract change in unattended mode, and `reachGate` stops the
-  run. The `pointer-contract` gate needs a person to say yes, so an unattended run that changes a contract ends there.
-- **Fix:** decide with the founder whether unattended mode should escalate to a named person and wait, or end
-  `blocked` with a clear line in the report. Test: the chosen behaviour.
-- **Status:** proved (the gate tests).
-
 ### B-073: `.factory/runs/` is untracked but not ignored in a project
 
 - **Where:** the umbrella template (`odin/internal/engine/init.go`, the files `ygg init` writes).
@@ -731,13 +722,6 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Problem:** the floors in the policy files were written to test the rungs. A real policy needs the lines the
   factory supports today.
 - **Fix:** the founder names the minimum minor of each pinned toolchain package; set them and add a test per floor.
-- **Status:** requirement.
-
-### B-080: no per-agent token cap
-
-- **Where:** `gungnir` (the factory file's caps), `odin/internal/engine`.
-- **Problem:** the caps count the whole run. One agent can spend the run's tokens before the next starts.
-- **Fix:** a `max_tokens` per node kind, counted from the usage lines. Needed before v0-H17 runs at scale.
 - **Status:** requirement.
 
 ### B-081: `oasdiff` is not proven against 1.33.0 on the host
@@ -1133,7 +1117,42 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Fix:** refuse at run start when a role's model has no price and its adapter reports no cost.
 - **Status:** reasoned.
 
+### B-120: how far a session can pass its `max_tokens` is not measured
+
+- **Where:** `gleipnir/claudecode`, `gleipnir/opencode`.
+- **Problem:** the adapters count usage as the tool's stream arrives. opencode reports usage only at the end of a
+  step, so the stop comes after the step that crossed the limit, and one step can be large (18.5k tokens in one
+  session). Whether claude-code prints per-message usage mid-message was not checked against the real tool.
+- **Fix:** one short real session per adapter with a low `max_tokens`; record how many tokens past the limit each
+  stopped. If one overshoots by a lot, say so in the spec's §7.4 or find a finer signal.
+- **Status:** reasoned.
+
 ## Done
+
+### B-072: an unattended run stops at a contract change
+
+- **Where:** `odin/internal/gate` (`Decide`), `odin/internal/engine` (`reachGate`).
+- **Problem:** `gate.Decide` returns `Block` for a contract change in unattended mode, and `reachGate` stops the
+  run. The `pointer-contract` gate needs a person to say yes, so an unattended run that changes a contract ends there.
+- **Fix:** decide with the founder whether unattended mode should escalate to a named person and wait, or end
+  `blocked` with a clear line in the report. Test: the chosen behaviour.
+- **Status:** proved (the gate tests).
+- **Fixed:** 2026-10-21, with no spec change (spec §7.1 and §7.3 already said it): [odin#27](https://github.com/ouroboric-dev/odin/pull/27).
+  An unattended run blocks the task whose pointer move changes a contract and goes on; the gate file says so and
+  has no approve lines. A gate with no task, and any other mode, still stops.
+
+### B-080: no per-agent token cap
+
+- **Where:** `gungnir` (the factory file's caps), `odin/internal/engine`.
+- **Problem:** the caps count the whole run. One agent can spend the run's tokens before the next starts.
+- **Fix:** a `max_tokens` per node kind, counted from the usage lines. Needed before v0-H17 runs at scale.
+- **Status:** requirement.
+- **Fixed:** 2026-10-21, by the [change proposal](changes/2026-10-21-session-token-cap/proposal.md):
+  [gungnir#19](https://github.com/ouroboric-dev/gungnir/pull/19),
+  [gleipnir#18](https://github.com/ouroboric-dev/gleipnir/pull/18) and
+  [odin#28](https://github.com/ouroboric-dev/odin/pull/28). A node (agent, loop, and a loop's reviewers) can set
+  `max_tokens`; a session that passes it is stopped and fails with `token-limit`, which costs an attempt. Still
+  unverified: how far a session can overshoot (see B-120).
 
 ### B-078: the grader's `/app` needs a `start.sh` that a real project does not yet provide
 
