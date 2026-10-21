@@ -970,35 +970,6 @@ Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer e
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
 These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 
-### B-109: the repair path of a loop is not proved with a cheap reviewer
-
-- **Where:** the real-agent smoke (`scripts/ygg-smoke-real.sh`), the smoke pack.
-- **Problem:** the passing smoke never used the repair path. The reviewer found nothing, so the implementer was not
-  sent back. Planted-fault tests show that Qwen3.8 27B reports a real fault. They do not show that the implementer
-  fixes it and that the reviewer then closes the finding.
-- **Fix:** a smoke variant whose brief makes the implementer likely to make one mistake, or a run that starts from the
-  planted-fault leaf, with the pass condition "one finding raised, fixed, and closed". Report it in the journal
-  entry.
-- **Status:** requirement.
-- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --from-leaf LEAF`
-  starts the leaf from a planted-fault leaf, and `scripts/ygg-repair-path.sh LEDGER` says "finding raised, fixed,
-  closed" or names the missing step (the smoke prints it for a `--from-leaf` run). The founder's paid run is next
-  (default leaf P3; P4 once the reviewer bench shows Qwen catches it).
-
-### B-110: Qwen as the implementer is not tried
-
-- **Where:** `factory.real.example.yaml`, the OpenCode adapter with write permissions.
-- **Problem:** the implementer is Claude Code on the founder's subscription, which costs nothing per run. A
-  factory without that subscription needs an implementer on a per-token model. `qwen3.8-27b` costs about 1 cent
-  for a reviewer session, and is the model the founder runs locally. Nobody has measured it as an implementer.
-- **Fix:** run the grader smoke with the implementer on `qwen/qwen3.8-27b` through OpenCode, and compare the
-  reward, the turns, the time and the cost with the Sonnet run. Change one role at a time.
-- **Status:** requirement.
-- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --implementer
-  opencode:openrouter/qwen/qwen3.8-27b` rewrites the implementer line of the run's copied `factory.yaml`. No odin or
-  gleipnir change was needed: a session that is not read-only gets `--auto` and no deny list, with strict privacy.
-  The founder's paid run is next; it may meet the run's 400k-token cap.
-
 ### B-112: the conformance reviewer's prompt still forbids prose before its JSON
 
 - **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
@@ -1211,10 +1182,12 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 
 ### B-134: the sample suite and the hidden suite do not print the keyed score line
 
-- **Where:** the sample suite (`bench/harbor/tests/`, the smoke), the hidden suite (the founder's, in `huldra`).
+- **Where:** the sample suites (`bench/harbor/tests/`; the smoke task's public suite,
+  `mimir/smoke-notes/sample-suite/tests/test.sh`), the hidden suite (the founder's, in `huldra`).
 - **Problem:** since odin#32, `ygg grade` takes the scores from one line on the suite's stdout,
   `ygg-results/v1 $YGG_SCORE_KEY <report>`, and fails closed ("the suite printed no scores") without it. Every suite
-  still writes `results.json`.
+  still writes `results.json`. Until mimir's public sample suite prints the line, every real-agent smoke built
+  from odin main fails at grading (`ygg-smoke-real.sh`); the 2026-10-22 smokes were built from odin 4bbaf9a instead.
 - **Fix:** each suite prints the line once (Playwright report on one line, `jq -c`), starts the app with `env -i`
   and keeps the app's output out of stdout. The hidden suite is the founder's to change. A real `ygg grade` on a
   real engine then settles two open points: whether the app can reach the suite's stdout when the suite runs as
@@ -1231,7 +1204,69 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   too. Measure first how often the proof runs hit it (the root-contract rule keeps the Go template quiet).
 - **Status:** reasoned.
 
+### B-136: the Qwen reviewer misses faults nobody planted
+
+- **Where:** the reviewer role (`openrouter/qwen/qwen3.8-27b`, odin's smoke pack `prompts/review.md`).
+- **Problem:** on the product a Qwen implementer built (run 20261021-225348-f4bd10), the Qwen reviewer reported no
+  finding, though the public suite failed 3 of 6: no field labelled Email on `/`, and 501 where the brief says 401
+  for `DELETE /api/notes/1` without a session. On the planted faults it caught 8 of 8 (P4) and 6 of 6 (P1 to P3). Its
+  recall on faults nobody planted is unmeasured, and the loop trusts its "no findings".
+- **Fix:** measure it: run the reviewer bench on products with organic faults (this one, kept in
+  `~/ygg-it/smoke-real-20261022-005348`, as a leaf), and decide whether the reviewer prompt asks it to try the
+  brief's routes and forms, or a second check (the suite's public scenarios as a loop check) carries that.
+- **Status:** proved (one run).
+
+### B-137: the implementer commits its curl cookie jars into the leaf
+
+- **Where:** the smoke pack's template and implementer prompt (`odin/testdata/smoke-grade`), the reviewer prompt.
+- **Problem:** in three of the 2026-10-22 smokes the Sonnet implementer committed two files, `a` and `b`, the curl
+  cookie jars of its own checks, each with a session id. The reviewer did not flag them. Harmless in the smoke; in a
+  real product they are stray files, and a cookie jar of a real service holds a credential.
+- **Fix:** the template ships a `.gitignore`, or the implementer prompt says where scratch files go; and a check (a
+  stray-file rung, or the secret scan) refuses them. Test: a leaf with a cookie jar fails the check.
+- **Status:** proved (runs 20261021-220441-84e852, 20261021-220651-618061).
+
 ## Done
+
+### B-109: the repair path of a loop is not proved with a cheap reviewer
+
+- **Where:** the real-agent smoke (`scripts/ygg-smoke-real.sh`), the smoke pack.
+- **Problem:** the passing smoke never used the repair path. The reviewer found nothing, so the implementer was not
+  sent back. Planted-fault tests show that Qwen3.8 27B reports a real fault. They do not show that the implementer
+  fixes it and that the reviewer then closes the finding.
+- **Fix:** a smoke variant whose brief makes the implementer likely to make one mistake, or a run that starts from the
+  planted-fault leaf, with the pass condition "one finding raised, fixed, and closed". Report it in the journal
+  entry.
+- **Status:** requirement.
+- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --from-leaf LEAF`
+  starts the leaf from a planted-fault leaf, and `scripts/ygg-repair-path.sh LEDGER` says "finding raised, fixed,
+  closed" or names the missing step (the smoke prints it for a `--from-leaf` run). The founder's paid run is next
+  (default leaf P3; P4 once the reviewer bench shows Qwen catches it).
+- **Fixed:** 2026-10-22: [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68),
+  [#71](https://github.com/ouroboric-dev/ouroboric/pull/71) and [#72](https://github.com/ouroboric-dev/ouroboric/pull/72).
+  From P3 and from P4 with the whole brief, the Sonnet implementer fixed the fault itself in attempt 1, so nothing was
+  raised. With a note that narrows its task (`--brief-note`, graded against a derived task version), run
+  20261021-231003-db15c7: Qwen raised `cross-user-note-delete` in attempt 1, Sonnet fixed it in attempt 2, Qwen closed
+  it; reward 1.0 on smoke-notes 1.0.1000, $0.0996. The journal entry `2026-10-20-choosing-the-reviewer-model` has the
+  four runs.
+
+### B-110: Qwen as the implementer is not tried
+
+- **Where:** `factory.real.example.yaml`, the OpenCode adapter with write permissions.
+- **Problem:** the implementer is Claude Code on the founder's subscription, which costs nothing per run. A
+  factory without that subscription needs an implementer on a per-token model. `qwen3.8-27b` costs about 1 cent
+  for a reviewer session, and is the model the founder runs locally. Nobody has measured it as an implementer.
+- **Fix:** run the grader smoke with the implementer on `qwen/qwen3.8-27b` through OpenCode, and compare the
+  reward, the turns, the time and the cost with the Sonnet run. Change one role at a time.
+- **Status:** requirement.
+- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --implementer
+  opencode:openrouter/qwen/qwen3.8-27b` rewrites the implementer line of the run's copied `factory.yaml`. No odin or
+  gleipnir change was needed: a session that is not read-only gets `--auto` and no deny list, with strict privacy.
+  The founder's paid run is next; it may meet the run's 400k-token cap.
+- **Fixed:** 2026-10-22, measured: run 20261021-225348-f4bd10 (`--implementer opencode:openrouter/qwen/qwen3.8-27b`,
+  built from odin 4bbaf9a). Reward 0.5 (3 of 6 fail-to-pass) against 1.0 for Sonnet; 11 turns, 283 s, about $0.06.
+  The product (Python) had no labelled sign-up field on `/` and answered 501 for a delete without a session, and the
+  Qwen reviewer reported nothing (B-136). One run per cell, so the 0.5 against 1.0 is thin.
 
 ### B-084: the decisions parked in odin#18, decided by the founder on 2026-10-20
 
