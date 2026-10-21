@@ -22,7 +22,7 @@ style: spec
 
 ## What changes
 
-- **A node setting `max_tokens`** (agent and loop nodes, as `max_turns`): the most tokens one session of the node
+- **A node setting `max_tokens`** (agent and loop nodes and a loop's reviewers, as `max_turns`): the most tokens one session of the node
   may use, input plus output, not counting cache reads. `0` or absent: no per-session limit (today's behaviour).
 - **The adapters stop a session that crosses it.** Both adapters read the tool's usage lines as the session streams.
   When the running total passes `max_tokens`, the adapter stops the tool, keeps what it wrote to the workdir and the

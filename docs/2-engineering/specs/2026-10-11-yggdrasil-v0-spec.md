@@ -465,6 +465,12 @@ MUST stop with everything resumable. The cap is a hard approval point because th
 subscription with their daily work. Without the cap, a flaky check that keeps re-running the
 implementer would burn the weekly quota overnight.
 
+A node (an agent, a loop's implementer, or one of a loop's reviewers) MAY set `max_tokens`, next to `max_turns`.
+A session of the node MUST be stopped when its tokens, input plus output and not cache reads, pass the limit. It
+ends as failed with the failure kind `token-limit`, and its usage counts against the run's caps. A loop treats it
+as a failed attempt; outside a loop the node fails. It is not an approval point. A tool that reports usage only at
+the end of a step stops after the step that crossed the limit.
+
 ## 8. Routing (package in Odin; future module Ratatoskr)
 
 Routing follows marola's

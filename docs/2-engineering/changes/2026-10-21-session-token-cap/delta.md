@@ -14,7 +14,7 @@ style: spec
   cache reads) pass the limit. The session ends as failed with the failure kind `token-limit`, and its usage counts
   against the run's caps. A loop treats it as a failed attempt. Outside a loop the node fails. It is not a hard
   approval point.
-- The graph node fields (agent and loop): `max_tokens`, next to `max_turns`.
+- The graph node fields (agent and loop, and a loop's reviewers): `max_tokens`, next to `max_turns`.
 
 ## Modified
 
