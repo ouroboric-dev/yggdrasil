@@ -568,9 +568,16 @@ realm-web/
   graph.yaml       the graph in §4.2
   prompts/         planner, initializer, implementer, reviewer-spec, reviewer-quality
   devcontainer/    stack layer (Dockerfile, devcontainer.json, compose services)
-  templates/       api and web leaf starters: lint/test/e2e config, AGENTS.md, init.sh
+  templates/       api and web leaf starters: lint/test/e2e config, AGENTS.md, init.sh, run.sh
   checks/          the check ladder scripts
 ```
+
+A build realm's template MUST hold an executable `run.sh` at the leaf's root. Run in the leaf with `PORT` set, it
+MUST build what the leaf needs without fetching packages, start the leaf's service in the foreground on `PORT`,
+accept a TCP connection on `PORT` within 60 seconds, and exit non-zero with a message when it cannot start. It
+MUST NOT read a secret or write outside the leaf and the temporary folders. A build realm's tests MUST start
+`run.sh` from a copy of the template and wait for the port (readiness item RR-23). The root `start.sh` that the
+grader runs belongs to a later infra realm.
 
 ### 9.5 The check ladder
 
