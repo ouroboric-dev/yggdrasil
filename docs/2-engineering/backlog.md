@@ -732,27 +732,12 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Fix:** say so in the refusal, or let `grade` accept a realm whose changes do not touch the grader's inputs.
 - **Status:** proved (v0-T262's smoke).
 
-### B-084: the decisions parked in odin#18, decided by the founder on 2026-10-20
-
-- **Where:** `odin/internal/deps`, `odin/internal/gate`, `odin/internal/engine/grade.go`.
-- **Decided, one line each:**
-  - `ygg deps bump` without a `sandbox:` section runs on the host with the full network and the operator's uid.
-    **Decision:** refuse (exit 2) unless `--host` is given.
-  - A contract split across files, or behind a symlink, passes the `pointer-contract` gate unseen. **Decision:**
-    escalate on a changed YAML or JSON under a listed contract's folder, and on a mode-120000 file there.
-  - The graded app can overwrite `results.json`. **Decision:** the grader reads the scores from the suite's stdout,
-    and the app has no path to forge it.
-  - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the founder asked for it).
-- **Next:** the first and the third change behavior the spec states, so each goes through a
-  [change proposal](changes/README.md) before the code. The second changes the plan's decision 15 ("acceptance tests
-  catch the rest"); say so in its proposal.
-- **Status:** decided; not built.
-
 ### B-085: gleipnir's grader, minors
 
 - **Where:** `gleipnir/sandbox/grade.go`, `driver.go`.
 - **Problem and fix, one line each:**
-  - Output of the grader is buffered in host memory without a bound (as B-021 was for sessions): bound it.
+  - Output of the grader is buffered in host memory without a bound (as B-021 was for sessions): bound it. **Done** for
+    its stdout (gleipnir#19, 32 MiB); its stderr is still unbounded.
   - `TestGradeNeverMountsAnythingButTheThreePaths` misses `--flag=value` spellings: use an allow-list of flags.
   - The grader does not pass `--pull=never`: pass it.
 - **Status:** reasoned.
@@ -1224,7 +1209,53 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 - **Status:** proved (versions read on 2026-10-21; `opencode run --standalone` on 1.18.32 prints its help and runs
   nothing).
 
+### B-134: the sample suite and the hidden suite do not print the keyed score line
+
+- **Where:** the sample suite (`bench/harbor/tests/`, the smoke), the hidden suite (the founder's, in `huldra`).
+- **Problem:** since odin#32, `ygg grade` takes the scores from one line on the suite's stdout,
+  `ygg-results/v1 $YGG_SCORE_KEY <report>`, and fails closed ("the suite printed no scores") without it. Every suite
+  still writes `results.json`.
+- **Fix:** each suite prints the line once (Playwright report on one line, `jq -c`), starts the app with `env -i`
+  and keeps the app's output out of stdout. The hidden suite is the founder's to change. A real `ygg grade` on a
+  real engine then settles two open points: whether the app can reach the suite's stdout when the suite runs as
+  root, and how Playwright's report shares stdout with the tests' output.
+- **Status:** requirement.
+
+### B-135: an escalation from the contract folder rules stops an unattended run
+
+- **Where:** `odin/internal/gate` (`Decide`), `odin/internal/engine` (`reachGate`).
+- **Problem:** the folder rules of odin#30 set `Escalate`, and `Decide` returns `Stop` for it before it looks at the
+  mode. An unattended run that edits a YAML file in a contract folder stops and waits, where a contract change it
+  can judge now blocks only the task (B-072).
+- **Fix:** decide with the founder whether an unattended run should block the task and go on for this escalation
+  too. Measure first how often the proof runs hit it (the root-contract rule keeps the Go template quiet).
+- **Status:** reasoned.
+
 ## Done
+
+### B-084: the decisions parked in odin#18, decided by the founder on 2026-10-20
+
+- **Where:** `odin/internal/deps`, `odin/internal/gate`, `odin/internal/engine/grade.go`.
+- **Decided, one line each:**
+  - `ygg deps bump` without a `sandbox:` section runs on the host with the full network and the operator's uid.
+    **Decision:** refuse (exit 2) unless `--host` is given.
+  - A contract split across files, or behind a symlink, passes the `pointer-contract` gate unseen. **Decision:**
+    escalate on a changed YAML or JSON under a listed contract's folder, and on a mode-120000 file there.
+  - The graded app can overwrite `results.json`. **Decision:** the grader reads the scores from the suite's stdout,
+    and the app has no path to forge it.
+  - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the founder asked for it).
+- **Next:** the first and the third change behavior the spec states, so each goes through a
+  [change proposal](changes/README.md) before the code. The second changes the plan's decision 15 ("acceptance tests
+  catch the rest"); say so in its proposal.
+- **Status:** decided.
+- **Fixed:** 2026-10-22, by three change proposals ([deps bump](changes/2026-10-21-deps-bump-needs-a-sandbox/proposal.md),
+  [contract folder](changes/2026-10-21-contract-folder-escalation/proposal.md),
+  [grader scores](changes/2026-10-21-grader-scores-from-stdout/proposal.md)):
+  [odin#31](https://github.com/ouroboric-dev/odin/pull/31), [odin#30](https://github.com/ouroboric-dev/odin/pull/30),
+  [gleipnir#19](https://github.com/ouroboric-dev/gleipnir/pull/19) and [odin#32](https://github.com/ouroboric-dev/odin/pull/32).
+  The backlog's "plan decision 15" is a wrong label: the text is in spec §8.2 and the §18 row "Contract-change
+  stops", which the contract-folder change amends. The grader fix needs the suites to change first (B-134). The
+  bump's closing line (the follow-up from odin#29) is in odin#31.
 
 ### B-073: `.factory/runs/` is untracked but not ignored in a project
 
