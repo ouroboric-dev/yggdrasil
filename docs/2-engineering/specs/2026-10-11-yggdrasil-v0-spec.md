@@ -173,6 +173,12 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 - A move MUST span one level only. That level's own tests MUST pass before the move.
 - A move that changes a contract (per the impact index, §8) is the `pointer-contract` approval
   point.
+- The gate MUST also look at the folder of each contract the shipped impact index lists: the directory of the
+  entry's path and every folder below it, except that for a contract at a leaf's root only the files directly in the
+  root count. A move that changes a YAML file (`.yaml`, `.yml`) or a JSON file (`.json`) there, or a file whose git
+  mode is `120000` (a symlink), whatever its name, MUST escalate. The escalation uses the evidence `inferred`, stops
+  the gate in every mode, and an approved spec that holds the change MUST NOT open it. The gate's reason MUST name
+  the file and the rule that selected it. A file named like a contract (`openapi.y*ml`) keeps the verdicts it has.
 - A move MUST NOT propagate automatically more than one level in a single step. The operator MAY
   raise that limit explicitly.
 - A sync job MUST NOT auto-merge pointers.
@@ -499,8 +505,9 @@ Following graphify, every edge in every index MUST be tagged **`extracted`** or 
 `extracted` means read directly from source, config or contracts. `inferred` means guessed, e.g. by
 name matching or a model. v0's generators are deterministic, so their edges are `extracted`. The
 impact index MUST report any other edge separately. Odin MUST treat a pointer move as
-`pointer-contract` only on `extracted` evidence or on `oasdiff`. Every pointer move also runs the
-umbrella's acceptance tests (§4.5), so a break that only an `inferred` edge noticed is still caught.
+`pointer-contract` on `extracted` evidence or on `oasdiff`, and MUST escalate it on the folder rules of §3.4. Every
+pointer move also runs the umbrella's acceptance tests (§4.5), so a break that only an `inferred` edge noticed, and
+that the folder rules did not select, is still caught.
 
 Symbol and meaning indexes come later. Each one ships only if it beats the bench. Cross-service
 HTTP-call and infrastructure-as-code wiring for impact analysis (as in codebase-memory-mcp) comes with
@@ -621,7 +628,12 @@ The rungs run from fast to slow. Each rung's failure output goes back to the imp
    vendored and invoked explicitly.
 7. **Final acceptance at L1:** Odin MUST run the hidden benchmark suite (§11) in a **separate grader
    container started after the agent containers stop**. Results MUST go to the ledger only. Results
-   MUST NOT go to agents. The suite includes gallery ID enumeration attempts.
+   MUST NOT go to agents. The suite includes gallery ID enumeration attempts. Odin MUST take the scores from the
+   grader container's stdout, read outside the container and apart from its stderr, with a bound; a stdout over the
+   bound MUST fail the grade. Odin MUST NOT read any file the container could write as a score. Odin MUST give each
+   grading attempt a random key as the environment variable `YGG_SCORE_KEY`, a score line MUST carry it, and Odin
+   MUST ignore a line that does not. A grade MUST fail, with no score written, when the stdout holds no score line
+   with the key, or more than one. A grade that fails MUST NOT count as a score of 0.
 
 ### 9.6 Dependency policy (all realms)
 
@@ -630,6 +642,11 @@ The rungs run from fast to slow. Each rung's failure output goes back to the imp
 - A version bump MUST roll to one canary product first. If the canary's suite fails, the bump MUST NOT
   roll out. After the canary passes, the bump rolls out in batches.
 - Authorisation MUST NOT rely on middleware alone.
+- A dependency bump MUST run its package manager, its scripts and the realm's checks in the product's sandbox (§6).
+  `ygg deps bump` MUST refuse with exit code 2 when `factory.yaml` has no `sandbox:` section and `--host` is not
+  given, before it takes the runs lock, creates a folder or writes a ledger line. With `--host` a bump MAY run on the
+  host, and its ledger MUST then hold a line, before any product is touched, that says so. A bump that is cancelled
+  or whose sandbox fails to start MUST close its ledger.
 
 ## 10. Observability (packages in Odin; future module Norns)
 
@@ -753,7 +770,13 @@ benchmarks/<task-id>/
   grader, so they cannot observe the suite.
 - Black-box only: hidden tests MUST use only what the brief describes (UI and public API). Then any
   factory's output can be scored.
-- Output: `score.json` (pass/fail per scenario, by category) joined with the run's metrics.
+- Output: `score.json` (pass/fail per scenario, by category) joined with the run's metrics. The scores come from
+  the report on the suite's keyed stdout line (below), not from a results file.
+- A hidden suite MUST print its scores as one line on stdout, `ygg-results/v1 <key> <report>`, with `<key>` the value
+  of `YGG_SCORE_KEY` and `<report>` a Playwright JSON report on a single line. It MUST print the line once, after
+  it has stopped the app. It MUST start the app with a clean environment, without `YGG_SCORE_KEY`, and MUST NOT
+  send the app's output to the container's stdout. A suite that Harbor also runs MUST still write Harbor's reward
+  file; Odin MUST NOT read it.
 - Hidden suites MUST live in a private submodule of L0. They MUST NOT live in a public repo, because
   published tests leak to other factories and eventually into model training data.
 - The operator MUST write the v0 hidden suite for client gallery lite before the first factory run,
@@ -818,7 +841,7 @@ The adversaries are named in the [naming record](https://github.com/ouroboric-de
 | Cascade through generated files | a buggy generator empties an index, every move merges the loss | shrink guard |
 | Cascade through previews | an unreviewed branch's preview runs a migration on the production DB | preview/production separation of secrets, DB and bucket |
 | Quota burn | a flaky check loops the implementer overnight | hard budget cap |
-| Supply chain | a pinned framework version gets a critical CVE; every product inherits it | dependency policy (§9.6), canary rollout |
+| Supply chain | a pinned framework version gets a critical CVE; every product inherits it | dependency policy (§9.6), canary rollout, the bump runs in the sandbox |
 | Third-party skills | a compromised skill update reaches every run | vendored, pinned, reviewed copies only |
 | Hidden-test leakage | public hidden tests end up in training data | private benchmark submodule |
 
@@ -982,6 +1005,6 @@ Yggdrasil to publish their source. That would make the factory unusable for most
 | Writing styles | 14 style ids per section (incl. `prompt`), skills loaded explicitly, Vale checks, humanizer only for human-published text | one style everywhere; skills only |
 | Skills | all vendored with `skills.lock`, public upstreams with redistributable licences | rely on host-installed skills |
 | Skill library | its own module, Havamal, from v0; own skills ship only with evals | vendored skills inside Gleipnir |
-| Contract-change stops (2026-10-12) | only `extracted` or `oasdiff` evidence triggers `pointer-contract`; acceptance tests on every pointer move catch the rest | `inferred` edges also stop (alarm fatigue) |
+| Contract-change stops (2026-10-12) | only `extracted` or `oasdiff` evidence triggers `pointer-contract`; acceptance tests on every pointer move catch the rest; a changed YAML or JSON file and a symlink under a listed contract's folder escalate (2026-10-21) | `inferred` edges also stop (alarm fatigue) |
 | Own-skill evals (2026-10-12) | an eval MUST show a measurable gain before a skill ships | eval required, result informational |
 | Dependency rollout (2026-10-12) | a bump that fails the canary suite MUST NOT roll out | canary runs without a pass requirement |
