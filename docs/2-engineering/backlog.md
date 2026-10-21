@@ -675,23 +675,8 @@ facts were read at each realm's `main` after Phase 5c's first commits.
 - **Status:** proved (the greps).
 
 Source of items B-071 to B-089: Phase 5c (2026-10-19), the task reviews and the final review. The reports are in the
-SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**, except B-071, now in [Done](#done). The pull requests are
+SDD workspace (`.superpowers/sdd/tasks-2026-10-18-yggdrasil-v0-phase-5c/`). Each is **Open**, except B-071, B-072, B-073, B-074 and B-080, now in [Done](#done). The pull requests are
 gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #18, ouroboric#59.
-
-### B-073: `.factory/runs/` is untracked but not ignored in a project
-
-- **Where:** the umbrella template (`odin/internal/engine/init.go`, the files `ygg init` writes).
-- **Problem:** the run folder shows in `git status` of the project. Compare B-001.
-- **Fix:** the umbrella template writes `.factory/` into `.gitignore`. Test: after `ygg init`, `git check-ignore .factory/runs` succeeds.
-- **Status:** proved (v0-T262's smoke).
-
-### B-074: `ygg doctor` and `ygg status` do not list `.factory/deps/` or leftover bump sandboxes
-
-- **Where:** `odin/internal/cli/doctor.go`, `odin/internal/deps`.
-- **Problem:** a bump killed halfway leaves a ledger and a sandbox that nothing reports. A bump that stopped
-  before it restored the leaf leaves the leaf changed, and `doctor` says nothing.
-- **Fix:** both commands list an unfinished bump ledger and the containers of a bump sandbox, and say what to run.
-- **Status:** reasoned.
 
 ### B-075: the indexes are built from the leaves' working copies, not from their pointers
 
@@ -1000,19 +985,6 @@ Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer e
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
 These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 
-### B-108: the reviewer bake-off scripts are in a scratch folder
-
-- **Where:** a session's scratchpad (`bake.sh`, the planted-fault leaves, the scorer); to move to
-  `ouroboric/scripts`.
-- **Problem:** the scripts that compared five reviewer models, and the three planted-fault leaves, were written for
-  one session and a restart of the PC deleted part of them. The next model change needs the same bench. It is
-  reusable tooling.
-- **Fix:** move them to `ouroboric/scripts` as one script with a test and a pull request. It takes a model, a leaf
-  (a folder), the number of sessions and a pattern for the fault, and prints the table of the journal entry: valid
-  reports, findings, tokens, cost. Add a planted fault that needs reading two files (one user reaching another's
-  notes).
-- **Status:** requirement.
-
 ### B-109: the repair path of a loop is not proved with a cheap reviewer
 
 - **Where:** the real-agent smoke (`scripts/ygg-smoke-real.sh`), the smoke pack.
@@ -1023,6 +995,10 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   planted-fault leaf, with the pass condition "one finding raised, fixed, and closed". Report it in the journal
   entry.
 - **Status:** requirement.
+- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --from-leaf LEAF`
+  starts the leaf from a planted-fault leaf, and `scripts/ygg-repair-path.sh LEDGER` says "finding raised, fixed,
+  closed" or names the missing step (the smoke prints it for a `--from-leaf` run). The founder's paid run is next
+  (default leaf P3; P4 once the reviewer bench shows Qwen catches it).
 
 ### B-110: Qwen as the implementer is not tried
 
@@ -1033,15 +1009,10 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Fix:** run the grader smoke with the implementer on `qwen/qwen3.8-27b` through OpenCode, and compare the
   reward, the turns, the time and the cost with the Sonnet run. Change one role at a time.
 - **Status:** requirement.
-
-### B-111: the real-agent smoke runs a `ygg` from `PATH` without saying which
-
-- **Where:** `ouroboric/scripts/ygg-smoke-real.sh` (the lines that choose `ygg`).
-- **Problem:** the script uses `ygg` from `PATH` when there is one, and builds odin only when there is none. A stale
-  binary would run the old code, and the run would give no sign. The smoke of 2026-10-20 built from source, so it
-  was safe, but only because `PATH` held no `ygg`.
-- **Fix:** print the commit and path of the `ygg` that runs, or always build from `--odin`. Add a test.
-- **Status:** reasoned.
+- **Tooling:** ready in [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68): `ygg-smoke-real.sh --implementer
+  opencode:openrouter/qwen/qwen3.8-27b` rewrites the implementer line of the run's copied `factory.yaml`. No odin or
+  gleipnir change was needed: a session that is not read-only gets `--auto` and no deny list, with strict privacy.
+  The founder's paid run is next; it may meet the run's 400k-token cap.
 
 ### B-112: the conformance reviewer's prompt still forbids prose before its JSON
 
@@ -1127,7 +1098,171 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   stopped. If one overshoots by a lot, say so in the spec's §7.4 or find a finer signal.
 - **Status:** reasoned.
 
+Source of items B-121 to B-132: the task and final reviews of B-073, B-074 (odin#29), B-108, B-109, B-110 and
+B-111 (ouroboric#68), 2026-10-21, in the SDD workspace `.superpowers/sdd/tasks-2026-10-21-pre-6-hardening-b/`.
+Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
+
+### B-121: the `ygg doctor` that `ygg status` points to may read another config
+
+- **Where:** `odin/internal/cli/cli.go` (`bumpLines`), `odin/internal/cli/doctor.go` (`checkSandbox`).
+- **Problem:** status says `Run: ygg doctor --project <p>` without `--config`, and doctor reads `factory.yaml` in the
+  current folder. Run from a folder whose `factory.yaml` has no sandbox section, doctor counts the bump's
+  containers as settled and offers `git -C <product> diff` while a container of the bump's sandbox may still run.
+  With no `factory.yaml` there, doctor repeats "Once the engine answers, run: ygg doctor" though the cause is the config.
+- **Fix:** status passes the config it read (`--config <path>`). Doctor says when it has no config to judge the
+  sandbox by. Test: status's pointer names the config; doctor with no config offers no git.
+- **Status:** reasoned (final review of odin#29).
+
+### B-122: `ygg status` shows a bump only inside the status of some run
+
+- **Where:** `odin/internal/cli/cli.go` (`status`, `bumpLines`), `odin/internal/cli/bump_report.go` (`bumpRunning`).
+- **Problem:** status needs a run id, so a project with bumps and no runs cannot show a bump at all, and
+  `ygg status <bump id>` refuses with a run-state error. A live run holds the runs lock, so while a run advances
+  status hides every bump line. B-074 is met by doctor; status is a partial answer.
+- **Fix:** `ygg status <bump id>` reports a bump; status with no run lists unfinished bumps; tell a bump's lock from a run's.
+- **Status:** reasoned.
+
+### B-123: a leftover container's run label is not checked as an id
+
+- **Where:** `odin/internal/cli/bump_report.go` (`isBump`), `odin/internal/cli/doctor.go` (the run path, `run.Dir`).
+- **Problem:** gleipnir lists containers by the presence of the `ygg.run` label. An empty or `..` label joins to an
+  existing folder (`.factory/deps` or `.factory/runs`), so doctor would take the container for this project's and stop
+  it. No ygg code writes such a label, and the sandbox cannot reach the engine.
+- **Fix:** require `run.ValidID(label)` on both paths, in one change. Test: a container labelled `..` is not stopped.
+- **Status:** reasoned.
+
+### B-124: minors of `ygg init`'s `.gitignore` (B-073)
+
+- **Where:** `odin/internal/engine/init.go` (`ignoreFactory`), `odin/internal/run/run.go` (`pinGraph`).
+- **Problem:** (a) both refusals print `(<nil>)` when `git status` works and the file is dirty. (b) init refuses a
+  dirty `.gitignore` even when the committed file already has `.factory/` and there is nothing to commit. (c) only
+  the exact line `.factory/` counts, so `/.factory/` or `.factory` gets a second, harmless line.
+- **Fix:** print the error only when there is one; check `HEAD:.gitignore` before the dirty check. Test each.
+- **Status:** proved (the reviews read the code).
+
+### B-125: a product whose `.git` a bump changed has no way back
+
+- **Where:** `odin/internal/cli/bump_report.go`, `odin/internal/leaf` (`Reset`, `restoreGitFile`).
+- **Problem:** when the leaf guard fails, doctor says `do not run git in <dir>` and nothing more. Nothing gives the
+  operator the way to restore the `.git` file that the bump code exists to protect.
+- **Fix:** a verb or a doctor line that names the restore (`leaf` already has the code). Test: a changed `.git` is restored.
+- **Status:** reasoned.
+
+### B-126: doctor's product lookup can check out a submodule
+
+- **Where:** `odin/internal/cli/bump_report.go` (`guardProduct`), `odin/internal/tree` (`Resolve`, `child`).
+- **Problem:** `guardProduct` uses `tree.Resolve`, whose checkout mode runs `git submodule update --init` in the
+  umbrella when the product's module folder is missing. A diagnostic could then write. It cannot happen for a product
+  the bump opened, which `deps.go` resolved the same way.
+- **Fix:** a lookup that never checks out (a `tree.Walk`-like path). Test: doctor on a missing module writes nothing.
+- **Status:** reasoned.
+
+### B-127: one doctor finding prints on two lines
+
+- **Where:** `odin/internal/cli/bump_report.go` (`nextForProduct`).
+- **Problem:** the git advice holds a `\n`, so its "Then, once the product is as you want it, remove …" line has no
+  level or subject. Anything that reads doctor line by line misreads it.
+- **Fix:** one line per finding, or a level on each line. Test: every doctor line starts with a level.
+- **Status:** proved (the final fix-wave review).
+
+### B-128: odin writes a leaf's first-commit files without the execute bit
+
+- **Where:** `odin/internal/remote/local.go` (`os.WriteFile(…, 0o644)` for every first-commit file).
+- **Problem:** a template's `start.sh` or `run.sh` (B-078 ships one in every build realm) lands in the leaf as 0644.
+  The grader or an agent that runs `./start.sh` gets "permission denied". The smoke works around it: its
+  `--from-leaf` project runs `sh ./start.sh` when the file is not executable.
+- **Fix:** keep the template file's mode (0755 when the template's file is executable). Test: an executable
+  template file is executable in the leaf's first commit.
+- **Status:** proved (read at odin `471d535`).
+
+### B-129: the real-agent smoke names its work folder by the second
+
+- **Where:** `ouroboric/scripts/ygg-smoke-real.sh` (`smoke-real-<time>`).
+- **Problem:** two runs in one second share a folder; the test sleeps one second per run (about a minute in all).
+- **Fix:** add a random part, or make the folder with `mktemp -d`. Then drop the sleeps.
+- **Status:** proved (the test's sleeps).
+
+### B-130: the smoke asks for a Claude token when no role uses Claude
+
+- **Where:** `ouroboric/scripts/ygg-smoke-real.sh` (the credentials check).
+- **Problem:** the check needs `CLAUDE_CODE_OAUTH_TOKEN` and `OPENROUTER_API_KEY` whatever the roles are. With
+  `--implementer opencode:…` no role uses Claude, but a machine without the token is refused.
+- **Fix:** ask for the credentials of the agents the config names. Test: an all-opencode config needs only the key.
+- **Status:** reasoned.
+
+### B-131: the reviewer bench copies the engine's answer request
+
+- **Where:** `ouroboric/scripts/ygg-reviewer-bench.sh` (the answer request, from jormungandr `prompt.go` at `ec8f18c`).
+- **Problem:** the text is a copy; a change in jormungandr would make the bench ask for something else and nothing
+  would say so. The bench's failure paths (a timeout, an `error` event, a step with no numbers, a non-empty `--out`,
+  a missing brief) are not tested. The bench omits a reviewer's skills and task block, which the smoke has none of.
+- **Fix:** warn when jormungandr's `prompt.go` no longer holds the first line of `ReportFormat`; add the tests.
+- **Status:** proved (compared at `ec8f18c`).
+
+### B-132: `ygg-repair-path.sh` is written for one loop and one finding
+
+- **Where:** `ouroboric/scripts/ygg-repair-path.sh`.
+- **Problem:** it keys findings by id alone, so in a graph with two loops two findings with one id merge; it ignores
+  a `finding_reopened` after a close; with a check finding and a reviewer finding both closed it names the first raised,
+  where B-109 wants the reviewer's. The smoke has one loop and two attempts, so none of this bites B-109.
+- **Fix:** key by node and id, follow reopen, prefer `source == "review"`. Test each with a made-up ledger.
+- **Status:** reasoned.
+
 ## Done
+
+### B-073: `.factory/runs/` is untracked but not ignored in a project
+
+- **Where:** the umbrella template (`odin/internal/engine/init.go`, the files `ygg init` writes).
+- **Problem:** the run folder shows in `git status` of the project. Compare B-001.
+- **Fix:** the umbrella template writes `.factory/` into `.gitignore`. Test: after `ygg init`, `git check-ignore .factory/runs` succeeds.
+- **Status:** proved (v0-T262's smoke).
+- **Fixed:** 2026-10-21: [odin#29](https://github.com/ouroboric-dev/odin/pull/29). `ygg init` writes `.factory/` into the
+  umbrella's `.gitignore` (once) and commits it with a pathspec. It refuses an uncommitted or untracked `.gitignore`,
+  as `pinGraph` refuses an uncommitted `umbrella.yaml`. Minors left: B-124.
+
+### B-074: `ygg doctor` and `ygg status` do not list `.factory/deps/` or leftover bump sandboxes
+
+- **Where:** `odin/internal/cli/doctor.go`, `odin/internal/deps`.
+- **Problem:** a bump killed halfway leaves a ledger and a sandbox that nothing reports. A bump that stopped
+  before it restored the leaf leaves the leaf changed, and `doctor` says nothing.
+- **Fix:** both commands list an unfinished bump ledger and the containers of a bump sandbox, and say what to run.
+- **Status:** reasoned.
+- **Fixed:** 2026-10-21: [odin#29](https://github.com/ouroboric-dev/odin/pull/29). `deps.FindUnfinished` finds a bump whose
+  last `deps_bump` line has no verdict. `ygg doctor` stops the bump's leftover containers, then runs the leaf guard,
+  and only then offers `git -C <product> diff`; it offers no git when the guard fails or a container could not be
+  listed or stopped. `ygg status` lists the bump and its containers and points to `ygg doctor`. Each finding names the
+  folder to remove. A round-trip test pins the started line that `FindUnfinished` reads. Left: B-121 to B-123, B-125
+  to B-127; a closing line on a cancelled bump goes with B-084.
+
+### B-108: the reviewer bake-off scripts are in a scratch folder
+
+- **Where:** a session's scratchpad (`bake.sh`, the planted-fault leaves, the scorer); to move to
+  `ouroboric/scripts`.
+- **Problem:** the scripts that compared five reviewer models, and the three planted-fault leaves, were written for
+  one session and a restart of the PC deleted part of them. The next model change needs the same bench. It is
+  reusable tooling.
+- **Fix:** move them to `ouroboric/scripts` as one script with a test and a pull request. It takes a model, a leaf
+  (a folder), the number of sessions and a pattern for the fault, and prints the table of the journal entry: valid
+  reports, findings, tokens, cost. Add a planted fault that needs reading two files (one user reaching another's
+  notes).
+- **Status:** requirement.
+- **Fixed:** 2026-10-21: [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68). `scripts/ygg-reviewer-bench.sh` (and
+  its scorer `ygg-reviewer-bench.py`) runs N OpenCode reviewer sessions on a leaf, each on a fresh copy, under
+  `env -i` with its own config and data folders, with the smoke reviewer's prompt and the adapter's settings, and
+  prints the journal's table. The leaves P0 to P3 and a new P4 (a delete that ignores the owner; the fault spans two
+  files) are in `scripts/testdata/reviewer-bench`. `--dry-run` spends nothing. Left: B-131.
+
+### B-111: the real-agent smoke runs a `ygg` from `PATH` without saying which
+
+- **Where:** `ouroboric/scripts/ygg-smoke-real.sh` (the lines that choose `ygg`).
+- **Problem:** the script uses `ygg` from `PATH` when there is one, and builds odin only when there is none. A stale
+  binary would run the old code, and the run would give no sign. The smoke of 2026-10-20 built from source, so it
+  was safe, but only because `PATH` held no `ygg`.
+- **Fix:** print the commit and path of the `ygg` that runs, or always build from `--odin`. Add a test.
+- **Status:** reasoned.
+- **Fixed:** 2026-10-21: [ouroboric#68](https://github.com/ouroboric-dev/ouroboric/pull/68). The smoke prints the path and
+  modified time of the `ygg` that runs, and for a build from `--odin` the odin commit and whether the tree is clean,
+  before `ygg doctor` and as the first line of `report.txt`. `--clip` copies the whole report.
 
 ### B-072: an unattended run stops at a contract change
 
