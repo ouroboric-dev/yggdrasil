@@ -724,14 +724,6 @@ gungnir#14, gleipnir#12, helheim-go#8, midgard-react#13, mimir#4, odin#17 and #1
 - **Fix:** one test per realm that runs the real tool against a known-vulnerable fixture, behind `YGG_REQUIRE_TEMPLATES`.
 - **Status:** reasoned.
 
-### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
-
-- **Where:** `odin/internal/realm`, `odin/internal/engine/grade.go`.
-- **Problem:** `ygg grade` checks the realm hash the run recorded. A fix to a realm between the run and the grade
-  refuses the grade.
-- **Fix:** say so in the refusal, or let `grade` accept a realm whose changes do not touch the grader's inputs.
-- **Status:** proved (v0-T262's smoke).
-
 ### B-085: gleipnir's grader, minors
 
 - **Where:** `gleipnir/sandbox/grade.go`, `driver.go`.
@@ -811,19 +803,6 @@ midgard-react #16). Line numbers are at those commits.
   refused.
 - **Status:** reasoned.
 
-### B-091: the protected-path guard trusts its environment
-
-- **Where:** the `:(glob)` entries of `devcontainer/checks/protected-common` and the `git diff`, `git ls-files`
-  calls in `helheim-go/devcontainer/checks/go-static.sh` (lines 61 to 68) and
-  `midgard-react/devcontainer/checks/web-protected.sh` (lines 51 to 58).
-- **Problem:** with `GIT_LITERAL_PATHSPECS=1` in the rung's environment, git reads `:(glob)**/.yamllint` as a
-  literal name, so the match-anywhere names stop matching and a change to them passes.
-- **Why it matters:** fine while the factory, not the agent, sets the rung's environment. It stops being fine if a
-  task can set a variable that the rung inherits.
-- **Fix:** the scripts set `GIT_LITERAL_PATHSPECS=0` (or `unset` it, and `GIT_GLOB_PATHSPECS`,
-  `GIT_NOGLOB_PATHSPECS`, `GIT_ICASE_PATHSPECS`) before the git calls. Test: run a rung with the variable set.
-- **Status:** reasoned.
-
 ### B-092: minor findings of the protected-configs reviews
 
 - **Where:** `helheim-go` `7ab0751` and `midgard-react` `62d3de6`, as each finding says.
@@ -851,20 +830,12 @@ midgard-react #16). Line numbers are at those commits.
     (`jormungandr/loop.go:177-200`).
 - **Fix:** one line per finding, as above.
 - **Status:** reasoned.
-
-### B-093: the TDD and contract rungs find the task's base with a plain `main`
-
-Small, and worth doing soon: one word in each script, and one test per rung.
-
-- **Where:** helheim-go `devcontainer/checks/go-tdd.sh` (line 22), `go-contract.sh` (line 12) and `sqlc-owned.sh`
-  (line 11, which also ends in `|| exit 0`); midgard-react `devcontainer/checks/web-tdd.sh` (line 12) and
-  `web-contract.sh` (line 23), and the text `git diff $(git merge-base HEAD main) HEAD` in midgard-react's
-  `prompts/reviewer-spec.md` (line 9), `reviewer-quality.md` (line 8) and `reviewer-simplicity.md` (line 6).
-- **Problem:** with both a branch and a tag named `main` (a task can create the tag), `git merge-base HEAD main`
-  resolves the tag, so these rungs see no change, while the protected step reads `refs/heads/main` and passes.
-- **Fix:** `refs/heads/main` in each script and prompt, with a test per rung (a tag `main` on the task's HEAD must
-  not hide its change).
-- **Status:** reasoned (the re-review found it, and git resolves tags before branches).
+- **Done 2026-10-22** ([helheim-go#13](https://github.com/ouroboric-dev/helheim-go/pull/13),
+  [midgard-react#20](https://github.com/ouroboric-dev/midgard-react/pull/20)): the exact names in the AGENTS.md and
+  prompt text, the `commonProtected` comment, the always-true `-gt 0` tests, the `ls-files` test gap, and the missing
+  `package.json` message. **Still open:** the weight of midgard-react's refusal test, the download order in
+  helheim-go's `go-static.sh`, the "only rung 1 refuses" point, and `docs/architecture.md` line 36 of helheim-go
+  (`.golangci.*`).
 
 Source of items B-094 to B-103: the voluspa change (2026-10-19, [proposal](changes/2026-10-19-voluspa/proposal.md)):
 its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `gungnir` and `gleipnir`.
@@ -1192,7 +1163,8 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   and keeps the app's output out of stdout. The hidden suite is the founder's to change. A real `ygg grade` on a
   real engine then settles two open points: whether the app can reach the suite's stdout when the suite runs as
   root, and how Playwright's report shares stdout with the tests' output.
-- **Status:** requirement.
+- **Status:** the public sample suite is done ([mimir#5](https://github.com/ouroboric-dev/mimir/pull/5), 2026-10-22);
+  the hidden suite is the founder's and still to do. Not yet run against a real container.
 
 ### B-135: an escalation from the contract folder rules stops an unattended run
 
@@ -1226,7 +1198,64 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   stray-file rung, or the secret scan) refuses them. Test: a leaf with a cookie jar fails the check.
 - **Status:** proved (runs 20261021-220441-84e852, 20261021-220651-618061).
 
+### B-138: a sandbox's teardown leaves its compose pod behind
+
+- **Where:** `gleipnir/sandbox/driver.go` (`Down`), `odin/internal/cli/doctor.go`.
+- **Problem:** reported on 2026-10-22 from the user's Podman engine: every sandbox's teardown removes its
+  containers but not the compose pod, so the engine held 108 empty pods named `pod_ygg<run id><leaf><hash>`
+  (status Created, no containers), one per sandbox since 2026-10-16. They do no harm, but they accumulate. `ygg
+  doctor` counts containers only, so it reports "sandboxes: 0". `podman pod prune -f` leaves them, because a pod in
+  state Created does not count as stopped; `podman pod rm` removes them. Not yet reproduced by this session.
+- **Fix:** `Down` also runs `podman pod rm` for the run's pod (by the run's label or name), and `ygg doctor` lists
+  leftover pods. Test: after `Down` no pod of the run is left.
+- **Status:** reasoned.
+
 ## Done
+
+### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
+
+- **Where:** `odin/internal/realm`, `odin/internal/engine/grade.go`.
+- **Problem:** `ygg grade` checks the realm hash the run recorded. A fix to a realm between the run and the grade
+  refuses the grade.
+- **Fix:** say so in the refusal, or let `grade` accept a realm whose changes do not touch the grader's inputs.
+- **Status:** proved (v0-T262's smoke).
+- **Fixed:** 2026-10-22, with the clearer refusal and not the wider acceptance: [odin#33](https://github.com/ouroboric-dev/odin/pull/33).
+  The refusal shows the hash the run began with and the one the realm has now, and says that putting the realm back
+  lets the run resume and be graded.
+
+### B-091: the protected-path guard trusts its environment
+
+- **Where:** the `:(glob)` entries of `devcontainer/checks/protected-common` and the `git diff`, `git ls-files`
+  calls in `helheim-go/devcontainer/checks/go-static.sh` (lines 61 to 68) and
+  `midgard-react/devcontainer/checks/web-protected.sh` (lines 51 to 58).
+- **Problem:** with `GIT_LITERAL_PATHSPECS=1` in the rung's environment, git reads `:(glob)**/.yamllint` as a
+  literal name, so the match-anywhere names stop matching and a change to them passes.
+- **Why it matters:** fine while the factory, not the agent, sets the rung's environment. It stops being fine if a
+  task can set a variable that the rung inherits.
+- **Fix:** the scripts set `GIT_LITERAL_PATHSPECS=0` (or `unset` it, and `GIT_GLOB_PATHSPECS`,
+  `GIT_NOGLOB_PATHSPECS`, `GIT_ICASE_PATHSPECS`) before the git calls. Test: run a rung with the variable set.
+- **Status:** reasoned.
+- **Fixed:** 2026-10-22: [helheim-go#13](https://github.com/ouroboric-dev/helheim-go/pull/13) and
+  [midgard-react#20](https://github.com/ouroboric-dev/midgard-react/pull/20). The scripts unset the four git pathspec
+  variables before the git calls (`protected-common` is untouched). midgard-react's `web-tdd.sh` had the same
+  problem and got the same fix.
+
+### B-093: the TDD and contract rungs find the task's base with a plain `main`
+
+Small, and worth doing soon: one word in each script, and one test per rung.
+
+- **Where:** helheim-go `devcontainer/checks/go-tdd.sh` (line 22), `go-contract.sh` (line 12) and `sqlc-owned.sh`
+  (line 11, which also ends in `|| exit 0`); midgard-react `devcontainer/checks/web-tdd.sh` (line 12) and
+  `web-contract.sh` (line 23), and the text `git diff $(git merge-base HEAD main) HEAD` in midgard-react's
+  `prompts/reviewer-spec.md` (line 9), `reviewer-quality.md` (line 8) and `reviewer-simplicity.md` (line 6).
+- **Problem:** with both a branch and a tag named `main` (a task can create the tag), `git merge-base HEAD main`
+  resolves the tag, so these rungs see no change, while the protected step reads `refs/heads/main` and passes.
+- **Fix:** `refs/heads/main` in each script and prompt, with a test per rung (a tag `main` on the task's HEAD must
+  not hide its change).
+- **Status:** reasoned (the re-review found it, and git resolves tags before branches).
+- **Fixed:** 2026-10-22: [helheim-go#13](https://github.com/ouroboric-dev/helheim-go/pull/13) and
+  [midgard-react#20](https://github.com/ouroboric-dev/midgard-react/pull/20), `refs/heads/main` in every rung, one
+  test per rung. The reviewer prompts named here left midgard-react for Voluspa (#17), so they needed nothing.
 
 ### B-109: the repair path of a loop is not proved with a cheap reviewer
 
