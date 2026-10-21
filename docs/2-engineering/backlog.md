@@ -1024,16 +1024,6 @@ Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer e
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
 These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 
-### B-106: the reasoning effort is `high` for every OpenCode session
-
-- **Where:** `gleipnir/opencode/opencode.go` (`ConfigJSON`), the role settings in `factory.yaml`.
-- **Problem:** gleipnir#16 names `effort: high` on every request, because `deepseek-v4-flash` took its prompt for an
-  empty message when no effort was named. The value is the same for every model and every role. A model that thinks
-  a lot (GLM 5.3 Flash wrote up to 18.5k tokens in a session) may do better with less, and a model that rejects the
-  setting has no way out.
-- **Fix:** an optional `reasoning:` setting on a role (`low`, `medium`, `high`, `off`), with `high` as the default.
-- **Status:** reasoned.
-
 ### B-108: the reviewer bake-off scripts are in a scratch folder
 
 - **Where:** a session's scratchpad (`bake.sh`, the planted-fault leaves, the scorer); to move to
@@ -1114,6 +1104,22 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Status:** reasoned.
 
 ## Done
+
+### B-106: the reasoning effort is `high` for every OpenCode session
+
+- **Where:** `gleipnir/opencode/opencode.go` (`ConfigJSON`), the role settings in `factory.yaml`.
+- **Problem:** gleipnir#16 names `effort: high` on every request, because `deepseek-v4-flash` took its prompt for an
+  empty message when no effort was named. The value is the same for every model and every role. A model that thinks
+  a lot (GLM 5.3 Flash wrote up to 18.5k tokens in a session) may do better with less, and a model that rejects the
+  setting has no way out.
+- **Fix:** an optional `reasoning:` setting on a role (`low`, `medium`, `high`, `off`), with `high` as the default.
+- **Status:** reasoned.
+- **Fixed:** 2026-10-21, by the [change proposal](changes/2026-10-20-role-reasoning/proposal.md):
+  [gungnir#18](https://github.com/ouroboric-dev/gungnir/pull/18),
+  [gleipnir#17](https://github.com/ouroboric-dev/gleipnir/pull/17) and
+  [odin#26](https://github.com/ouroboric-dev/odin/pull/26). Still unverified: whether OpenRouter rejects `low` or
+  `medium` for a model that does not support them, and what `off` does on OpenRouter. A small direct model call
+  settles both.
 
 ### B-104: a loop has no way to settle a disputed finding
 
