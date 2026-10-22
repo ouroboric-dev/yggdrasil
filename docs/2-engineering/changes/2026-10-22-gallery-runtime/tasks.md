@@ -430,7 +430,8 @@ deps`. Split from one task because the two together come near 480 lines.
     with `--all` hold the runtime realm's services, and the realm is still listed as having no stack.
   - `TestWiringNeedsEdges` in `internal/routing/wiring_test.go`: a leaf of a realm that needs `postgres` and `s3` has
     `needs` edges to `service:postgres` and `service:seaweedfs`, the provider's service names (the wiring names
-    services by name today, `wiring.go`'s `needs` edge), from the realm's `pack.yaml`.
+    services by name today, `wiring.go`'s `needs` edge), from the realm's `pack.yaml`. The wiring gets the
+    provider's names from `services.For`, never from the leaf realms' packs alone.
 
   Expected: FAIL.
 - [ ] **Step 2:** implement it. `For` never reads the run's state, so the run and `ygg deps` cannot disagree.
@@ -1103,7 +1104,7 @@ beside the others in the test.
     `ready` (T07), naming the missing `runtime`. With the pin, and `niflheim-local` copied into the store, it passes,
     and the run's `run.json` records `niflheim-local` as a loaded realm. It skips when `niflheim-local` is not beside
     `odin`, the way it skips for the other realms (`copyBesideOdin`).
-  - `TestTheContentSmokeFilesLoad`: the leaves file the spec step writes parses with `gungnir`'s `ParseLeaves` and
+  - `TestTheContentSmokeFilesLoad` (it exists; extend it): the leaves file the spec step writes parses with `gungnir`'s `ParseLeaves` and
     names the runtime pin.
 
   Expected: FAIL.
@@ -1172,7 +1173,7 @@ it. This check keeps the copies equal (delta §11, RR-26).
 
 **Files (in `ouroboric`):**
 
-- Modify: `scripts/check-repos.sh` (`--check services`; `niflheim-local` in `LEAVES`; a `RUNTIMES` list, apart from
+- Modify: `scripts/check-repos.sh` (`--check services`; `niflheim-local` in `LEAVES`, kept out of
   the build `REALMS` of the `shared` check), `scripts/tests/check-repos.test.sh`, `AGENTS.md` (the table's
   `check-repos.sh` row)
 

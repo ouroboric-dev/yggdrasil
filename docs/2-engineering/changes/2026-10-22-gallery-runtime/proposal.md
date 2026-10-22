@@ -305,7 +305,7 @@ lacks them.
 ## Risk
 
 - **A new repo and more Odin work before run 1.** Niflheim adds a repo, a scaffold, three `gungnir` tasks and four
-  `odin` tasks (T07 to T09, T25) to the change. The founder chose this over keeping B-158 until after run 1. Each task stays under 400
+  `odin` tasks (T07 to T10, T25) to the change. The founder chose this over keeping B-158 until after run 1. Each task stays under 400
   lines, and run 1 waits for all of them.
 - **The planner forgets the runtime pin.** Then the run stops at the `ready` node, before any leaf or leaf sandbox
   exists, because `helheim-go` needs services that no runtime realm provides; the message names the missing `runtime`
