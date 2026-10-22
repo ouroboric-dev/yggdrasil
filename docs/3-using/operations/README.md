@@ -3,6 +3,8 @@
 This folder contains the runbooks to operate Yggdrasil: install, upgrade, `ygg doctor` and recovery. It
 fills as v0 becomes usable.
 
+The paid proof runs, in order, with their commands and what to write down, are in [Proof runs](proof-runs.md).
+
 The checklist for a finished realm is in [realm-readiness.md](../../2-engineering/realm-readiness.md). How to
 make a new realm is in [Create a realm](../how-to/create-a-realm.md).
 
