@@ -83,7 +83,8 @@ The order is the table's order, with these gates between runs:
 | `--name NAME` | the run's name: `a-z`, `0-9` and `-` | every run |
 | `--mode MODE` | `key-points` (the default), `unattended` or `step-by-step` | rehearsal, `r1u` |
 | `--implementer AGENT:MODEL` | the implementer; `AGENT` is `claude-code` or `opencode`, and an OpenCode `MODEL` is `openrouter/<model>` | `r2` |
-| `--baseline RUN_ID` | also prints `ygg metrics --compare RUN_ID <this run>` | `r1b`, `r2`, `r3` |
+| `--baseline RUN_ID` | also prints `ygg metrics --compare RUN_ID <this run>`; the baseline may be in any earlier proof folder under `--folder` (exactly one must hold it, or the script refuses before it starts anything) | `r1b`, `r2`, `r3` |
+| `--continue RUN_ID` with `--approve GATE [--note TEXT]` or `--resume` | continues a stopped or paused run (see "Continue a stopped run") | after any stop |
 | `--build` | builds the sandbox images first | rehearsal, `r1` |
 | `--clip` | copies the report to the Windows clipboard | every scored run |
 | `--dry-run` | stops after the plan, exit 0 | any |
@@ -100,7 +101,8 @@ The flags that no run in the table changes keep their defaults. They exist for a
 
 A run has a project and a folder: `DIR/proof-NAME-TIME/project` holds the project and the run, and
 `DIR/proof-NAME-TIME/` holds `factory.yaml`, `run.txt` (the run's output with the credentials removed) and `report.txt`
-(the evidence the script printed). Every `ygg` command below needs `--project` with that project path; without it `ygg`
+(the evidence the script printed). A Ctrl-C or a closed terminal stops the run cleanly through the script and keeps the
+report; after a closed terminal, what the script still prints goes to `hangup.txt` in the same folder. Every `ygg` command below needs `--project` with that project path; without it `ygg`
 looks in the current folder and does not find the run.
 
 ## The rehearsal
@@ -111,8 +113,8 @@ planner's sessions and the two reviewers: cents to a dollar, an estimate and not
 
 1. Start it with the command in the table.
 2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-1.md`, then `spec-1.md`, and so on. Approve
-   the design and the spec gates, each with the command that the script prints (see "Continue a stopped run"). Each
-   approve is a separate command, and no wall clock runs between them. Do not approve `plan-gate`: the run ends there.
+   the design and the spec gates, each with the `--continue` command that the script prints (see "Continue a stopped run"). Each
+   approve is a separate `--continue` command, and each one has its own wall clock. Do not approve `plan-gate`: the run ends there.
    `report.txt` still holds the metrics and the report of the run.
 3. Read the design, the spec, the plan (`docs/2-engineering/plans/*/tasks.md` in the project) and `docs/leaves.yaml`.
 4. Answer five questions from what you read: which leaves and realms the plan uses; how the design makes
@@ -165,47 +167,52 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 
 | Stop | How it shows | What to do |
 | --- | --- | --- |
-| A cap (`budget-cap`) | exit 3 | a gate: read how far it got with `ygg metrics` and decide. To continue, raise the cap while the run is stopped (see "Caps"), then approve |
+| A cap (`budget-cap`) | exit 3 | a gate: read how far it got with `ygg metrics` and decide. To continue, raise the cap while the run is stopped (see "Caps"), then `--continue RUN --approve GATE` |
 | A gate | exit 3 | read the gate file; `ygg approve` or `ygg reject` |
-| The provider's quota | exit 4 (paused) | wait for the quota, then `ygg resume` |
-| The wall clock (`--wall`) | exit 124 (the script's `timeout` interrupted the run) | see "After a wall clock stop" below |
-| A node failed | exit 1 | read `run.txt` and the status; this is a finding, not a retry |
+| The provider's quota | exit 4 (paused) | wait for the quota, then `--continue RUN --resume` |
+| The wall clock (`--wall`) | exit 124 (the script's `timeout` interrupted the run) | see "After a wall clock stop" below; the script ran `ygg doctor` |
+| A node failed | exit 1 | read `run.txt` and the status; this is a finding, not a retry. The script runs `ygg doctor` to stop what the run left |
 | Done with tasks given up | exit 5 | the run finished; the report lists the given-up tasks first |
 
 ### Continue a stopped run
 
-A run that stopped (3) or paused (4) is not graded. The script ends with the command that continues it, as its last
-lines:
+A run that stopped (3) or paused (4) is not graded until it ends. The script continues it itself, with the same wall
+clock, the credentials loaded only inside its own subshell, the same filter, and the output added to `run.txt` and
+`report.txt`. After it finishes, it grades the run, prints the metrics, the report and the evidence, and the comparison
+with the baseline the run recorded (`--baseline` names another). You do not load the credentials in your shell.
 
-- `proof-run: the run stopped at an approval point; to continue it (load the credentials in that shell first), run:`
-  and then the `ygg approve` command.
-- `proof-run: the run paused (the provider's quota); once it is back, run:` and then the `ygg resume` command.
+The last lines of the script after a stop are the command to run. After a gate stop they are:
 
-Run the command the script printed last. It goes through `ygg-engine.sh`, because `ygg approve` and `ygg resume` need the
-engine environment, and its `--folder` is the script's `--folder` (`~/ygg-it` by default: the folder that holds
-`factory.yaml`, `dc/` and the empty Docker config). It has this form:
+- `proof-run: or by hand, outside this script ...`, then a raw `ygg-engine.sh ... ygg approve` line. Ignore it.
+- `proof-run: the run stopped at the approval point GATE; read its gates folder, then continue it (add --note TEXT if you
+  like):` and then the `ygg-proof-run.sh --continue` command. Run that one.
+
+After a pause, the last lines are the same, with `proof-run: the run paused (the provider's quota); once it is back,
+continue it:` and the `--resume` command. The forms are:
 
 ```zsh
-scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg approve RUN GATE --project PROJECT
-scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg resume RUN --project PROJECT
+scripts/ygg-proof-run.sh --continue RUN --approve GATE [--note "..."]
+scripts/ygg-proof-run.sh --continue RUN --resume
 ```
 
-The credentials must be loaded in the shell that runs it, and nowhere else. Open a fresh shell, load them without
-printing them, run the command, and close the shell:
+Add `--clip` to copy the report, `--wall TIME` for another wall clock, and `--folder` and `--env` only if the first command
+used them. `--continue` refuses the setup flags (`--name`, `--mode`, the roles, the caps, `--build`, `--tasks`, `--suites`
+and `--yggdrasil`): the run keeps its config and its mode. Add `--dry-run` to see what it would do. A note on `--approve`
+makes an intervention.
+
+Never edit `factory.yaml` while a process holds the run; a stop at `budget-cap` is the one time you edit it, before you
+approve.
+
+The raw fallback runs without the wall clock, the filter, `run.txt` or the report, so use it only if the script cannot.
+Then the credentials must be in the shell that runs it, and nowhere else. Open a fresh shell, load them without printing
+them, run the printed raw command, and close the shell:
 
 ```zsh
 set -a; . ~/.config/ouroboric/factory.env; set +a
 ```
 
-Never `cat` or `echo` the file or a variable. Add `--note "..."` to `ygg approve` when the note is an intervention you mean
-to record.
-
-Never pass `--mode` to `ygg approve` or `ygg resume` on a scored run: the run keeps the mode it began with. Never edit
-`factory.yaml` while a process holds the run; a stop at `budget-cap` is the one time you edit it, before you approve.
-
-A run that ended 0 or 5 was graded by the script. A run you continued by hand is not under the wall clock, and the
-script does not grade it or write `report.txt` for it. Grade it yourself once it is done, and read it with the commands of
-"Reading the results":
+Never `cat` or `echo` the file or a variable. A run continued by raw commands is not graded by the script and has no new
+`report.txt`. Grade it yourself once it is done, and read it with the commands of "Reading the results":
 
 ```zsh
 ygg grade RUN --project PROJECT
@@ -213,15 +220,13 @@ ygg grade RUN --project PROJECT
 
 ### After a wall clock stop
 
-At exit 124 the script's `timeout` interrupted the run, and the script prints no continue command. Read `run.txt`, run
-`ygg status RUN --project PROJECT` and read the end of the ledger. Continue only if the run is not finished, with the
-same printed form and the credentials loaded as above:
+At exit 124 the script's `timeout` interrupted the run, and, like any abnormal end (an exit other than 0, 3, 4 and 5), the
+script ran `ygg doctor` to stop the sandboxes the run left. It prints no continue command. Read `run.txt`, run
+`ygg status RUN --project PROJECT` and read the end of the ledger. Continue only if the run is unfinished:
 
 ```zsh
-scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg resume RUN --project PROJECT
+scripts/ygg-proof-run.sh --continue RUN --resume
 ```
-
-That run is continued by hand, so it is not graded and has no new `report.txt`: see the last paragraph above.
 
 ### Caps
 
@@ -231,7 +236,7 @@ subscription. The OpenRouter key's $25 a month is the backstop.
 
 A stop at `budget-cap` (exit 3) is a gate. Read `ygg metrics` and decide. To continue, raise the cap in that run's own
 `factory.yaml` (the one in `DIR/proof-NAME-TIME`, never your `~/ygg-it/factory.yaml`) while the run is stopped. Then run
-the printed `ygg approve` command with the credentials loaded.
+the printed `ygg-proof-run.sh --continue RUN --approve GATE` command.
 
 Run 1's final size (turns, tokens and billed dollars) is written in the journal and sets the caps of `r1b`, `r2`, `r3` and
 `r1u` from their start. The caps may change after run 1. `ygg metrics --compare` then lists the config as a difference of
