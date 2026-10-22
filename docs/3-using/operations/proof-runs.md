@@ -158,8 +158,9 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 - The design gate stops in every mode. Read the gate file and approve with the command the script prints.
 - An `escalation` gate stops in every mode (exit 3). Read it and rule on it.
 - In `key-points`, the plan, feature, merge and pointer gates pass by themselves, except the contract case below.
-- In `key-points`, a contract change stops the run at a `pointer-contract` gate. Read it, then approve or reject with a
-  note. A note makes it an intervention, which is the point of the mode.
+- In `key-points`, a contract change stops the run at a `pointer-contract` gate. Read it, then approve with
+  `--continue RUN --approve GATE --note "..."`. A note makes it an intervention, which is the point of the mode. The
+  script has no reject path: to reject, use the raw fallback (see "Continue a stopped run").
 - In `unattended`, a gate that would stop for a deviation blocks the task and the run goes on. A disputed finding
   blocks the task too.
 
@@ -168,9 +169,10 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 | Stop | How it shows | What to do |
 | --- | --- | --- |
 | A cap (`budget-cap`) | exit 3 | a gate: read how far it got with `ygg metrics` and decide. To continue, raise the cap while the run is stopped (see "Caps"), then `--continue RUN --approve GATE` |
-| A gate | exit 3 | read the gate file; `ygg approve` or `ygg reject` |
+| A gate | exit 3 | read the gate file; `scripts/ygg-proof-run.sh --continue RUN --approve GATE [--note "..."]`. To reject, see the raw fallback below |
 | The provider's quota | exit 4 (paused) | wait for the quota, then `--continue RUN --resume` |
 | The wall clock (`--wall`) | exit 124 (the script's `timeout` interrupted the run) | see "After a wall clock stop" below; the script ran `ygg doctor` |
+| Ctrl-C, TERM, a closed terminal | exit 130, 143, 129 | the script stopped the run, ran `ygg doctor` and kept the report (`hangup.txt` for 129). Continue with `--continue RUN --resume` only if the run is unfinished |
 | A node failed | exit 1 | read `run.txt` and the status; this is a finding, not a retry. The script runs `ygg doctor` to stop what the run left |
 | Done with tasks given up | exit 5 | the run finished; the report lists the given-up tasks first |
 
@@ -179,7 +181,8 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 A run that stopped (3) or paused (4) is not graded until it ends. The script continues it itself, with the same wall
 clock, the credentials loaded only inside its own subshell, the same filter, and the output added to `run.txt` and
 `report.txt`. After it finishes, it grades the run, prints the metrics, the report and the evidence, and the comparison
-with the baseline the run recorded (`--baseline` names another). You do not load the credentials in your shell.
+with the baseline the run recorded (`--baseline` names another; if the recorded baseline has since gone, `--continue` drops
+the comparison with a warning and goes on). You do not load the credentials in your shell.
 
 The last lines of the script after a stop are the command to run. After a gate stop they are:
 
@@ -211,7 +214,15 @@ them, run the printed raw command, and close the shell:
 set -a; . ~/.config/ouroboric/factory.env; set +a
 ```
 
-Never `cat` or `echo` the file or a variable. A run continued by raw commands is not graded by the script and has no new
+To reject a gate, run this raw command (`ygg reject` takes `--reason`, not `--note`), then read the run, or continue it with
+`scripts/ygg-proof-run.sh --continue RUN --resume` if the rejection left it paused:
+
+```zsh
+scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg reject RUN GATE --reason "..." --project PROJECT
+```
+
+Never pass `--mode` to a raw `ygg approve`, `ygg reject` or `ygg resume` on a scored run: the run keeps the mode it began
+with. Never `cat` or `echo` the file or a variable. A run continued by raw commands is not graded by the script and has no new
 `report.txt`. Grade it yourself once it is done, and read it with the commands of "Reading the results":
 
 ```zsh
