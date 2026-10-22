@@ -4,7 +4,7 @@ This page is for the founder, who runs the paid proof runs of Yggdrasil v0. It g
 command of each, what to look at while a run goes, what stops a run and how to continue, and what to write down
 afterwards. The same page serves the next operator.
 
-Every run is started by `ygg-proof-run.sh` (in `ouroboric/scripts`, from its Phase 6 pull request once that merges). It sets every run up the same way, so that
+Every run is started by `ygg-proof-run.sh` (in `ouroboric/scripts`). It sets every run up the same way, so that
 `ygg metrics --compare` compares two factories and not two setups. Run it from `~/brunogbv/ouroboric/ouroboric`.
 Commands here are written for zsh.
 
