@@ -70,12 +70,173 @@ The order is the table's order, with these gates between runs:
 
 - Question 10 (does the brief fit the realms: A, B or C) is decided after the rehearsal. Run 1 waits for it, and for
   what it requires to be built and merged.
-- Run 1's real size is read before the other runs start: write it in the journal. The caps may change after that. The
-caps of `r1`, `r1b`, `r2` and `r3` must be the same. If run 1's size makes you change a cap, all four use the new cap and
-run 1 is repeated with it. A cap that differs is a difference of setup, and the pair is not comparable.
+- Run 1's real size is read before the other runs start (see "Caps" below).
+- The improvement run needs part two merged. It uses the same mode, roles and caps as run 1.
+- Add `--dry-run` to any line above to check it first.
+- `--build` builds the sandbox image of every realm. The rehearsal is the first real run and always has it. Run 1 has
+  it too, because the images may be gone by then; a later run leaves it out while the images are there.
 
-Set a cap with `--run-turns`, `--run-tokens`, `--run-usd` or the `--day-*` flags on the command, before the run starts.
-Never edit `factory.yaml` during a run.
+### The flags that the runs use
+
+| Flag | Meaning | Used by |
+| --- | --- | --- |
+| `--name NAME` | the run's name: `a-z`, `0-9` and `-` | every run |
+| `--mode MODE` | `key-points` (the default), `unattended` or `step-by-step` | rehearsal, `r1u` |
+| `--implementer AGENT:MODEL` | the implementer; `AGENT` is `claude-code` or `opencode`, and an OpenCode `MODEL` is `openrouter/<model>` | `r2` |
+| `--baseline RUN_ID` | also prints `ygg metrics --compare RUN_ID <this run>` | `r1b`, `r2`, `r3` |
+| `--build` | builds the sandbox images first | rehearsal, `r1` |
+| `--clip` | copies the report to the Windows clipboard | every scored run |
+| `--dry-run` | stops after the plan, exit 0 | any |
+
+The flags that no run in the table changes keep their defaults. They exist for another machine or for a test:
+
+- Roles: `--planner AGENT:MODEL` (default `claude-code:sonnet`) and `--reviewer AGENT:MODEL` (default
+  `opencode:openrouter/qwen/qwen3.8-27b`). The implementer defaults to `claude-code:sonnet`.
+- Caps: `--run-turns`, `--run-tokens`, `--run-usd`, `--day-turns`, `--day-tokens` and `--day-usd`.
+- Time: `--wall TIME` is a number and `s`, `m` or `h` (default `8h`).
+- Places: `--folder DIR` (default `~/ygg-it`), `--env FILE` (the credentials file; default
+  `~/.config/ouroboric/factory.env`), `--tasks DIR` (default `../mimir`), `--suites DIR` (default
+  `~/ygg-it/hidden-suites`) and `--yggdrasil DIR`.
+
+A run has a project and a folder: `DIR/proof-NAME-TIME/project` holds the project and the run, and
+`DIR/proof-NAME-TIME/` holds `factory.yaml`, `run.txt` (the run's output with the credentials removed) and `report.txt`
+(the evidence the script printed). Every `ygg` command below needs `--project` with that project path; without it `ygg`
+looks in the current folder and does not find the run.
+
+## The rehearsal
+
+The rehearsal plans the gallery and writes no code. There is no plan-only flag: "plans only" is `--mode step-by-step`
+and you not approving `plan-gate`. In that mode the run stops at each gate with exit 3 and is not graded. It costs the
+planner's sessions and the two reviewers: cents to a dollar, an estimate and not a measure.
+
+1. Start it with the command in the table.
+2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-1.md`, then `spec-1.md`, and so on. Approve
+   the design and the spec gates, each with the command that the script prints (see "Continue a stopped run"). Each
+   approve is a separate command, and no wall clock runs between them. Do not approve `plan-gate`: the run ends there.
+   `report.txt` still holds the metrics and the report of the run.
+3. Read the design, the spec, the plan (`docs/2-engineering/plans/*/tasks.md` in the project) and `docs/leaves.yaml`.
+4. Answer five questions from what you read: which leaves and realms the plan uses; how the design makes
+   `/app/start.sh` start the whole product on port 3000 with no outside service; where it keeps data and photos; how
+   many tasks, and of which sizes; and whether the conformance or the reuse reviewer found anything.
+5. Read the run, and send the five answers with both outputs and the design documents:
+
+```zsh
+ygg metrics RUN --project PROJECT
+ygg report RUN --project PROJECT
+```
+
+Question 10 is decided from the answers.
+
+## During a run
+
+A run is long. Use three terminals.
+
+- Second terminal, before the run starts: `scripts/ygg-events-watch.sh`. It watches the `podman events` process that the
+  `devcontainer` CLI starts, for B-051 (the first `devcontainer up` hangs about half the time). Gleipnir's retry limits
+  the damage. Do not change the retry.
+- Third terminal, once the run has an id and a project: `ygg status RUN --watch --project PROJECT`. It prints the status
+  every two seconds (`--interval` changes that), with a `now:` line that names the node, its attempt, how long it has
+  run and the cost so far. It stops when the run stops running. It reads a ledger that is being written and does not
+  check its chain.
+- `ygg board --project PROJECT` shows the tasks by column: Ready, In progress, Verifying, Blocked, Needs you and Done.
+  Look at it between stops. To see every project, add the project to the list that `ygg board --all` reads and run
+  that:
+
+```zsh
+mkdir -p ~/.config/ouroboric
+printf 'projects:\n  - %s\n' "PROJECT" >> ~/.config/ouroboric/projects.yaml
+ygg board --all
+```
+
+`ygg metrics` of a run that is still writing may refuse, because its last line is half written. Read the metrics
+when the run has stopped, and use `ygg status --watch` meanwhile.
+
+### Gates you will meet
+
+- The design gate stops in every mode. Read the gate file and approve with the command the script prints.
+- An `escalation` gate stops in every mode (exit 3). Read it and rule on it.
+- In `key-points`, the plan, feature, merge and pointer gates pass by themselves, except the contract case below.
+- In `key-points`, a contract change stops the run at a `pointer-contract` gate. Read it, then approve or reject with a
+  note. A note makes it an intervention, which is the point of the mode.
+- In `unattended`, a gate that would stop for a deviation blocks the task and the run goes on. A disputed finding
+  blocks the task too.
+
+## What stops a run
+
+| Stop | How it shows | What to do |
+| --- | --- | --- |
+| A cap (`budget-cap`) | exit 3 | a gate: read how far it got with `ygg metrics` and decide. To continue, raise the cap while the run is stopped (see "Caps"), then approve |
+| A gate | exit 3 | read the gate file; `ygg approve` or `ygg reject` |
+| The provider's quota | exit 4 (paused) | wait for the quota, then `ygg resume` |
+| The wall clock (`--wall`) | exit 124 (the script's `timeout` interrupted the run) | see "After a wall clock stop" below |
+| A node failed | exit 1 | read `run.txt` and the status; this is a finding, not a retry |
+| Done with tasks given up | exit 5 | the run finished; the report lists the given-up tasks first |
+
+### Continue a stopped run
+
+A run that stopped (3) or paused (4) is not graded. The script ends with the command that continues it, as its last
+lines:
+
+- `proof-run: the run stopped at an approval point; to continue it (load the credentials in that shell first), run:`
+  and then the `ygg approve` command.
+- `proof-run: the run paused (the provider's quota); once it is back, run:` and then the `ygg resume` command.
+
+Run the command the script printed last. It goes through `ygg-engine.sh`, because `ygg approve` and `ygg resume` need the
+engine environment, and its `--folder` is the script's `--folder` (`~/ygg-it` by default: the folder that holds
+`factory.yaml`, `dc/` and the empty Docker config). It has this form:
+
+```zsh
+scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg approve RUN GATE --project PROJECT
+scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg resume RUN --project PROJECT
+```
+
+The credentials must be loaded in the shell that runs it, and nowhere else. Open a fresh shell, load them without
+printing them, run the command, and close the shell:
+
+```zsh
+set -a; . ~/.config/ouroboric/factory.env; set +a
+```
+
+Never `cat` or `echo` the file or a variable. Add `--note "..."` to `ygg approve` when the note is an intervention you mean
+to record.
+
+Never pass `--mode` to `ygg approve` or `ygg resume` on a scored run: the run keeps the mode it began with. Never edit
+`factory.yaml` while a process holds the run; a stop at `budget-cap` is the one time you edit it, before you approve.
+
+A run that ended 0 or 5 was graded by the script. A run you continued by hand is not under the wall clock, and the
+script does not grade it or write `report.txt` for it. Grade it yourself once it is done, and read it with the commands of
+"Reading the results":
+
+```zsh
+ygg grade RUN --project PROJECT
+```
+
+### After a wall clock stop
+
+At exit 124 the script's `timeout` interrupted the run, and the script prints no continue command. Read `run.txt`, run
+`ygg status RUN --project PROJECT` and read the end of the ledger. Continue only if the run is not finished, with the
+same printed form and the credentials loaded as above:
+
+```zsh
+scripts/ygg-engine.sh run --folder ~/ygg-it -- ygg resume RUN --project PROJECT
+```
+
+That run is continued by hand, so it is not graded and has no new `report.txt`: see the last paragraph above.
+
+### Caps
+
+The defaults are the assumed ones: per run 1,500 turns, 12 million tokens and $5 billed; per day 2,000 turns, 24 million
+tokens and $10 billed. The dollar caps count what a paid API billed, not the estimate for a Claude Code session on the
+subscription. The OpenRouter key's $25 a month is the backstop.
+
+A stop at `budget-cap` (exit 3) is a gate. Read `ygg metrics` and decide. To continue, raise the cap in that run's own
+`factory.yaml` (the one in `DIR/proof-NAME-TIME`, never your `~/ygg-it/factory.yaml`) while the run is stopped. Then run
+the printed `ygg approve` command with the credentials loaded.
+
+Run 1's final size (turns, tokens and billed dollars) is written in the journal and sets the caps of `r1b`, `r2`, `r3` and
+`r1u` from their start. The caps may change after run 1. `ygg metrics --compare` then lists the config as a difference of
+setup. That does not make the pair not comparable: only another brief, task version, suite or mode does. Set a cap with
+`--run-turns`, `--run-tokens`, `--run-usd` or the `--day-*` flags on the command, before the run starts.
 
 ## Reading the results
 
@@ -138,7 +299,7 @@ thin and the second says how thin. A later change must beat the spread of the re
 
 Tell that a pair was not repeated: `ygg metrics --compare` printed `comparable: no`. It names the reason (another brief,
 task version, suite or mode). Also look at the config hash and the roles in its output: a role or a cap you changed by
-hand shows there, and the pair is not a repeat of that setup.
+hand shows there as a difference of setup.
 
 ## The journal entry
 
