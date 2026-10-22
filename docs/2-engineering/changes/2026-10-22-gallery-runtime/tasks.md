@@ -222,6 +222,7 @@ version is made by the founder.
 - Modify (Postgres 18, the founder's answer to question 5): `pack.yaml` (the `postgres` service image) and
   `templates/api/.github/workflows/ci.yml` (the same image; `ci_test.go` already requires the two to match), and any
   other place in `helheim-go` that names Postgres 17
+- Modify: `pack_test.go` (`TestPackPostgresIsEighteen`)
 - Create: `runtime_test.go`
 
 **Interfaces:**
@@ -236,8 +237,8 @@ version is made by the founder.
     of `PORT`, `HOST`, `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
     `S3_SECRET_ACCESS_KEY`, `X-Forwarded-Host` and `/app/start.sh`.
   - `TestPackPostgresIsEighteen` in `pack_test.go`: the `postgres` service image in `pack.yaml` matches
-    `postgres:18\.\d+-\S+@sha256:[0-9a-f]{64}`, and no file in `helheim-go` (outside `.git`, `LICENSES`, the test file itself and the
-    sums) names `postgres:17`, `postgresql-17` or `postgresql/17`.
+    `postgres:18\.\d+-\S+@sha256:[0-9a-f]{64}`, and no file in `helheim-go` (outside `.git`, `LICENSES`, the test file itself and
+    `go.sum`) names `postgres:17`, `postgresql-17` or `postgresql/17`.
 
   Run them. Expected: FAIL.
 - [ ] **Step 2:** the server listens on `HOST:PORT`, and on all interfaces when `HOST` is unset.
