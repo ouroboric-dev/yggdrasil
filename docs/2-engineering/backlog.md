@@ -960,23 +960,6 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   change proposal first.
 - **Status:** reasoned.
 
-### B-114: an ignored dispute has no ledger event of its own
-
-- **Where:** `gungnir` (the event list), `odin` (`Record`).
-- **Problem:** a dispute that cannot be used is written as a `loop_attempt` event whose result begins with
-  `dispute ignored:`. `ygg metrics` cannot count them without parsing text.
-- **Fix:** a `dispute_ignored` event in gungnir.
-- **Status:** proved (odin#25).
-
-### B-115: `ygg report` must show overruled findings
-
-- **Where:** Phase 6 (`ygg report`), `odin` (`ygg status` shows them today).
-- **Problem:** an overruled finding is the implementer's word, backed by one test. A reader of the run report must
-  see both sides and the check run, or a weak test could hide a real fault.
-- **Fix:** list every overruled finding in `ygg report` with the reviewer's claim, the implementer's evidence and the
-  check proof.
-- **Status:** reasoned.
-
 ### B-116: grade each piece of software, and the project from the pieces
 
 - **Where:** Phase 6 (`ygg grade`, `ygg report`, the Harbor bridge), `gleipnir/sandbox/grade.go`.
@@ -988,6 +971,10 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   suite can test (beautiful, responsive) are judged, the weights of the combination, and how the project grade stays
   compatible with a benchmark that gives one reward per task. It belongs in the Phase 6 plan.
 - **Status:** requirement (the founder, 2026-10-21).
+- **Phase 6 half done:** 2026-10-23: the metrics and the report group tasks, usage and gave-up work by leaf, with one
+  reward per task (the plan's decision 13; [odin#36](https://github.com/ouroboric-dev/odin/pull/36), open at the time
+  of writing). **Still open:** a grade per leaf from a suite of its own, and the weights. Both wait for question 10
+  of the Phase 6 plan (B-140) and for a per-leaf suite in `huldra`.
 
 ### B-117: the web leaf's `run.sh` serves on loopback only
 
@@ -997,6 +984,7 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   loopback, is refused. Not tested.
 - **Fix:** make the host configurable (`HOST`, default loopback) and check what the grader's request uses.
 - **Status:** reasoned.
+- **Still open:** whether the grader reaches the leaf waits for question 10 of the Phase 6 plan (B-140).
 
 ### B-118: a leaf's dependencies do not reach the grader
 
@@ -1009,6 +997,7 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
   grader's container creates belong to a subuid (B-139).
 - **Fix:** decide how they arrive: a baked image, or a vendored folder. A Phase 6 question for the task's image.
 - **Status:** requirement.
+- **Still open:** it is part of question 10 of the Phase 6 plan (B-140), to be answered after v0-H19.
 
 ### B-119: a run does not refuse an unpriced model with no cost until the first session
 
@@ -1186,6 +1175,125 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   stray-file rung, or the secret scan) refuses them. Test: a leaf with a cookie jar fails the check.
 - **Status:** proved (runs 20261021-220441-84e852, 20261021-220651-618061).
 
+### B-140: the brief's runtime and the realms' do not fit
+
+- **Where:** `mimir/client-gallery-lite` (`instruction.md` §6, `environment/Dockerfile`), `helheim-go/pack.yaml`, `midgard-react`, `B-117`, `B-118`, `B-078`.
+- **Problem:** the frozen brief asks for one self-contained machine: `/app/start.sh` starts the whole product on port 3000 on all interfaces, with no outside services. The web realm builds a React leaf and a Go API leaf with Postgres and SeaweedFS, and the web leaf serves on `127.0.0.1` only. The grader image holds Playwright, Node and Python, no Postgres and no SeaweedFS, and the grader has no network. A product built as the realms' design says cannot start in the grader. No real-agent run of the `software` graph has planned this brief yet.
+- **Fix:** decide question 10 of the [Phase 6 plan](plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md) after v0-H19, which shows what the planner designs. A: bake Postgres and SeaweedFS into a new task version of the image and have the factory write a root `start.sh`. B: give the realms a single-machine flavor (SQLite and files on disk, one process). C: tell the planner by the brief only, and let the realms' docs yield.
+- **Status:** reasoned (read together; not run). B-116, B-117 and B-118 keep their second halves behind this question.
+
+### B-142: the factory writes no `routing_lookup`, so the routing metric reads 0 lookups
+
+- **Where:** `odin/internal/metrics` (routing), `odin/internal/engine`, spec §8.1.
+- **Problem:** spec §8.1 says a session carries a summary of its routing lookups. The factory does not build it and writes no `routing_lookup` line, so `ygg metrics` and the report show 0 lookups whatever the agent did.
+- **Fix:** write the summary in a session and one `routing_lookup` line for each lookup, then let the metric count them. A change proposal first, since it builds spec §8.1.
+- **Status:** proved (the metric reads 0 on every run; the plan names it).
+
+### B-143: the metrics find a loop's reviewers by the node-id convention `<loop>-<reviewer>`
+
+- **Where:** `odin/internal/metrics` (the veto rate and the reviewer sessions), `voluspa/software/graph.yaml`.
+- **Problem:** a loop's reviewer sessions are found by the node id `<loop>-<reviewer>`, because the ledger line carries no loop name. A graph pack whose reviewers are named another way reads as having no reviewers, and nothing fails.
+- **Fix:** a test in each graph pack that pins the convention (every reviewer node's id starts with its loop's id), or a loop name in the session line. Test: a pack that breaks the convention fails.
+- **Status:** reasoned.
+
+### B-144: a run's metrics trust a ledger with no anchor in `run.json`
+
+- **Where:** `odin/internal/metrics` (`Collect`), `gungnir` (`Verify`).
+- **Problem:** the metrics refuse a ledger that has lines but no ledger anchor in `run.json`. Today `Verify` with a zero anchor only checks the chain, so a cut ledger plus a `run.json` without its anchor gives numbers.
+- **Fix:** refuse that case. Test: a ledger with lines and a zero anchor is refused.
+- **Status:** reasoned (v0-T273 review, odin#36).
+
+### B-145: the metrics count a session only from `node_finished` and `node_failed`
+
+- **Where:** `odin/internal/metrics` (usage).
+- **Problem:** usage is counted from an allow-list of two events, not from every event that carries usage except the run totals (a deny-list). A new event with usage would be missed without a sound.
+- **Fix:** count by the deny-list. Test: a new usage-carrying event is counted.
+- **Status:** reasoned (v0-T273 review, odin#36).
+
+### B-146: a session line carries no task id
+
+- **Where:** `odin/internal/metrics`, `odin/internal/board`, `gungnir` (the session line).
+- **Problem:** per-task usage and the board's task of a node rely on the `<slug>-` node prefix, so a task `T1` and a task `T1-implement` collide.
+- **Fix:** add `ygg.task.id` to the session line and read it. Test: two tasks whose ids share a prefix stay apart.
+- **Status:** reasoned (the odin PR1 and PR2 whole-branch reviews, odin#36 and odin#37).
+
+### B-147: minors of the metrics: a refused re-grade, the veto rate, `Collect` reads twice
+
+- **Where:** `odin/internal/metrics`.
+- **Problem:** (a) a re-grade that was refused after a `score.json` exists is not shown beside the old score. (b) a gate rejection that restarts a loop's attempts at 1 merges two rounds in the veto rate. (c) `Collect` verifies the ledger and then reads it again.
+- **Fix:** show the refused re-grade; key the rounds by the gate; verify and parse in one pass. Test each.
+- **Status:** reasoned (v0-T276 review and the odin PR1 fix re-review, odin#36).
+
+### B-148: the spend journal accepts a `billed_usd` above `cost_usd`
+
+- **Where:** `gleipnir` or `odin` (the spend journal).
+- **Problem:** a negative `billed_usd` is refused since odin#36, but one above `cost_usd` is not, and a billed part cannot exceed the cost.
+- **Fix:** refuse it. Test: a line with `billed_usd` above `cost_usd` is refused.
+- **Status:** reasoned (v0-T289 review).
+
+### B-149: the Harbor adapter gives the factory 5 seconds from SIGTERM to SIGKILL
+
+- **Where:** `bench/harbor/ygg_harbor/agent.py` (`_stop`).
+- **Problem:** 5 s is less than a sandbox's teardown (a `sleep infinity` PID 1 costs 2 s per sandbox), so a budget or timeout stop orphans containers. `ygg bridge` prints its work folder to stderr since odin#37, which helps to find them.
+- **Fix:** give SIGTERM its own grace of about 60 s. Test: a stop leaves no container.
+- **Status:** reasoned (the odin PR2 whole-branch review, odin#37).
+
+### B-150: minors of the board and the bridge
+
+- **Where:** `odin/internal/board`, `odin/internal/cli` (`bridge`).
+- **Problem:** (a) a run killed without a ledger line keeps its doing task In progress, though `ygg status` says interrupted. (b) the card keeps only the first line of a reason, and the brief says it keeps all of it. (c) the bridge's exit codes are treated as a severity order.
+- **Fix:** settle the board from the run's state; keep the whole reason; compare the codes by name. Test each.
+- **Status:** reasoned (the odin PR2 whole-branch review, odin#37).
+
+### B-151: `ygg status --watch` reads the whole ledger on every tick
+
+- **Where:** `odin/internal/cli` (`status`).
+- **Problem:** each tick re-reads the whole ledger, which grows with the run.
+- **Fix:** read the tail since the last tick. Test: a tick reads only the new lines.
+- **Status:** reasoned (v0-T284 review, odin#37).
+
+### B-152: `ygg status` prints an escalation's reason and an overruled finding raw
+
+- **Where:** `odin/internal/cli` (`status`).
+- **Problem:** the board cleans agent text (control characters, headings, fences); `ygg status` still prints an escalation's reason and an overruled finding's claim and proof as they are.
+- **Fix:** clean them as the board does. Test: a control character in a reason is not printed.
+- **Status:** reasoned (the odin PR2 fix re-review, odin#37).
+
+### B-153: `ygg metrics --json` keeps C1 and bidi characters of agent text
+
+- **Where:** `odin/internal/cli` (`metrics`).
+- **Problem:** `encoding/json` escapes C0 characters only, so C1 and bidirectional controls in agent text reach the output.
+- **Fix:** decide whether JSON keeps the exact text, and if not, clean it. Test: the choice.
+- **Status:** reasoned (the odin PR1 whole-branch review, odin#36).
+
+### B-154: two refusals of `ygg report`
+
+- **Where:** `odin/internal/cli` (`report`).
+- **Problem:** (a) `ygg report --commit` on an unchanged run exits 2 ("nothing to commit"). (b) `ygg report` on a `ygg.run/v2` run refuses with "can't be resumed", though `ygg metrics` reads it.
+- **Fix:** (a) say "already committed" and exit 0, or keep 2 and document it. (b) read the run without the resume check. Test each.
+- **Status:** proved (the odin PR1 whole-branch review, odin#36).
+
+### B-155: journal-check misses a `factory-change` tag over two lines
+
+- **Where:** `ouroboric/scripts/journal-check.sh`.
+- **Problem:** a `factory-change` tag in a flow list that spans two lines is not seen, and the check does not compare the README's Tags column.
+- **Fix:** read the list as YAML, and compare the column. Test: a two-line flow list is found.
+- **Status:** proved (the ouroboric whole-branch review, ouroboric#77).
+
+### B-156: three smoke scripts source the credentials file with stderr visible
+
+- **Where:** `ouroboric/scripts/ygg-smoke-loop.sh`, `ygg-smoke-real.sh`, `ygg-smoke-realms.sh`.
+- **Problem:** a bad line in the credentials file is echoed by the shell, and in `ygg-smoke-realms.sh` it is also kept in the run file.
+- **Fix:** source it as `ygg-proof-run.sh` does. Test: a bad line is not echoed.
+- **Status:** proved (v0-T291 review, ouroboric#77).
+
+### B-157: `ygg-proof-run.sh`: ygg's SIGHUP handling can cancel a later `grade` or `report`
+
+- **Where:** `ouroboric/scripts/ygg-proof-run.sh`.
+- **Problem:** after a hang-up the script survives and notes the code, but ygg's own SIGHUP handling can cancel a `grade` or `report` that runs after it.
+- **Fix:** run those steps so they ignore SIGHUP (`nohup` or `trap '' HUP`). Test: a hang-up during the run does not cancel the grade.
+- **Status:** reasoned (the ouroboric fix re-review, ouroboric#77).
+
 ## Done
 
 ### B-134: the sample suite and the hidden suite do not print the keyed score line
@@ -1239,6 +1347,38 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 - **Status:** proved.
 - **Fixed:** 2026-10-22: [gleipnir#21](https://github.com/ouroboric-dev/gleipnir/pull/21), pinned by
   [odin#35](https://github.com/ouroboric-dev/odin/pull/35).
+
+### B-141: the dollar caps counted a subscription's estimate
+
+- **Where:** `gungnir` (`Usage`, `Cap.Reached`), `odin/internal/engine`.
+- **Problem:** `Cap.Reached` counted every session's cost figure whenever any role paid per token. A config with Claude Code on the subscription and OpenCode on OpenRouter would stop at the $5 cap on the subscription's estimate (about $0.03 a turn for Sonnet at API prices) long before the paid reviewer spent a dollar.
+- **Fix:** `Usage.BilledUSD` holds the part that was billed, and the caps count that. The engine bills only a paid adapter's sessions. A journal from before the change has no billed figure, so the first day's total undercounts its earlier lines. The caps are per day and per run.
+- **Status:** proved.
+- **Fixed:** 2026-10-23: `Usage.BilledUSD` in [gungnir#20](https://github.com/ouroboric-dev/gungnir/pull/20) (v0-T288), and the engine
+  sets it in [odin#36](https://github.com/ouroboric-dev/odin/pull/36) (v0-T289, open at the time of writing).
+
+### B-114: an ignored dispute has no ledger event of its own
+
+- **Where:** `gungnir` (the event list), `odin` (`Record`).
+- **Problem:** a dispute that cannot be used is written as a `loop_attempt` event whose result begins with
+  `dispute ignored:`. `ygg metrics` cannot count them without parsing text.
+- **Fix:** a `dispute_ignored` event in gungnir.
+- **Status:** proved (odin#25).
+- **Fixed:** 2026-10-23: `gungnir.EventDisputeIgnored` (`dispute_ignored`) in
+  [gungnir#20](https://github.com/ouroboric-dev/gungnir/pull/20) (v0-T270), and the engine writes it in
+  [odin#36](https://github.com/ouroboric-dev/odin/pull/36) (v0-T272, open at the time of writing). `ygg metrics` counts
+  the event.
+
+### B-115: `ygg report` must show overruled findings
+
+- **Where:** Phase 6 (`ygg report`), `odin` (`ygg status` shows them today).
+- **Problem:** an overruled finding is the implementer's word, backed by one test. A reader of the run report must
+  see both sides and the check run, or a weak test could hide a real fault.
+- **Fix:** list every overruled finding in `ygg report` with the reviewer's claim, the implementer's evidence and the
+  check proof.
+- **Status:** reasoned.
+- **Fixed:** 2026-10-23: `ygg report` lists every overruled finding with both sides and the check proof, in
+  [odin#36](https://github.com/ouroboric-dev/odin/pull/36) (v0-T281, open at the time of writing).
 
 ### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
 
