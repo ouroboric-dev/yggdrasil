@@ -1004,6 +1004,9 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Problem:** the grader has no network. The Go leaf builds with `GOPROXY=off`, so its `pgx` modules must be in the
   module cache. The web leaf needs `node_modules`, installed by `init.sh`. Nothing yet puts either into the image
   the grader runs.
+- **Seen on 2026-10-22:** the grader's export refuses anything that is not a regular file, so a `node_modules` with
+  `.bin` symlinks fails; the grade smoke installs with `npm ci --no-bin-links` and commits `node_modules`. Files the
+  grader's container creates belong to a subuid (B-139).
 - **Fix:** decide how they arrive: a baked image, or a vendored folder. A Phase 6 question for the task's image.
 - **Status:** requirement.
 
@@ -1151,21 +1154,6 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 - **Status:** proved (versions read on 2026-10-21; `opencode run --standalone` on 1.18.32 prints its help and runs
   nothing).
 
-### B-134: the sample suite and the hidden suite do not print the keyed score line
-
-- **Where:** the sample suites (`bench/harbor/tests/`; the smoke task's public suite,
-  `mimir/smoke-notes/sample-suite/tests/test.sh`), the hidden suite (the founder's, in `huldra`).
-- **Problem:** since odin#32, `ygg grade` takes the scores from one line on the suite's stdout,
-  `ygg-results/v1 $YGG_SCORE_KEY <report>`, and fails closed ("the suite printed no scores") without it. Every suite
-  still writes `results.json`. Until mimir's public sample suite prints the line, every real-agent smoke built
-  from odin main fails at grading (`ygg-smoke-real.sh`); the 2026-10-22 smokes were built from odin 4bbaf9a instead.
-- **Fix:** each suite prints the line once (Playwright report on one line, `jq -c`), starts the app with `env -i`
-  and keeps the app's output out of stdout. The hidden suite is the founder's to change. A real `ygg grade` on a
-  real engine then settles two open points: whether the app can reach the suite's stdout when the suite runs as
-  root, and how Playwright's report shares stdout with the tests' output.
-- **Status:** the public sample suite is done ([mimir#5](https://github.com/ouroboric-dev/mimir/pull/5), 2026-10-22);
-  the hidden suite is the founder's and still to do. Not yet run against a real container.
-
 ### B-135: an escalation from the contract folder rules stops an unattended run
 
 - **Where:** `odin/internal/gate` (`Decide`), `odin/internal/engine` (`reachGate`).
@@ -1198,19 +1186,59 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
   stray-file rung, or the secret scan) refuses them. Test: a leaf with a cookie jar fails the check.
 - **Status:** proved (runs 20261021-220441-84e852, 20261021-220651-618061).
 
+## Done
+
+### B-134: the sample suite and the hidden suite do not print the keyed score line
+
+- **Where:** the sample suites (`bench/harbor/tests/`; the smoke task's public suite,
+  `mimir/smoke-notes/sample-suite/tests/test.sh`), the hidden suite (the founder's, in `huldra`).
+- **Problem:** since odin#32, `ygg grade` takes the scores from one line on the suite's stdout,
+  `ygg-results/v1 $YGG_SCORE_KEY <report>`, and fails closed ("the suite printed no scores") without it. Every suite
+  still writes `results.json`. Until mimir's public sample suite prints the line, every real-agent smoke built
+  from odin main fails at grading (`ygg-smoke-real.sh`); the 2026-10-22 smokes were built from odin 4bbaf9a instead.
+- **Fix:** each suite prints the line once (Playwright report on one line, `jq -c`), starts the app with `env -i`
+  and keeps the app's output out of stdout. The hidden suite is the founder's to change. A real `ygg grade` on a
+  real engine then settles two open points: whether the app can reach the suite's stdout when the suite runs as
+  root, and how Playwright's report shares stdout with the tests' output.
+- **Status:** proved (the smoke below).
+- **Fixed:** 2026-10-22: the public sample suite in [mimir#5](https://github.com/ouroboric-dev/mimir/pull/5), the
+  hidden suite's v2 in `huldra` (the founder's; it prints the line, and its `manifest.json` was missing for both v1
+  and v2, so one was generated and checked with odin's own task loader), and the task's `suite = "v2"` in
+  [mimir#6](https://github.com/ouroboric-dev/mimir/pull/6). v1's `test.sh` was also changed in place. The real
+  smoke (`scripts/ygg-smoke-grade.sh`, [ouroboric#74](https://github.com/ouroboric-dev/ouroboric/pull/74),
+  [#75](https://github.com/ouroboric-dev/ouroboric/pull/75), [#76](https://github.com/ouroboric-dev/ouroboric/pull/76))
+  settled both open points on a real engine: the app's output stayed out of stdout, and the report shared stdout
+  cleanly with the tests. Result: the reference product scores 29/29 (reward 1), an empty product 0/29, a second
+  `ygg grade` of the same run works, and no grader container is left. It graded a hand-written reference, not a
+  product a factory built; that is Phase 6.
+
 ### B-138: a sandbox's teardown leaves its compose pod behind
 
 - **Where:** `gleipnir/sandbox/driver.go` (`Down`), `odin/internal/cli/doctor.go`.
 - **Problem:** reported on 2026-10-22 from the user's Podman engine: every sandbox's teardown removes its
-  containers but not the compose pod, so the engine held 108 empty pods named `pod_ygg<run id><leaf><hash>`
-  (status Created, no containers), one per sandbox since 2026-10-16. They do no harm, but they accumulate. `ygg
+  containers but not the compose pod, so the engine held empty pods named `pod_ygg<run id><leaf><hash>`
+  (status Created, no containers). The first report said 108; the engine was found holding 1. They do no harm, but they accumulate. `ygg
   doctor` counts containers only, so it reports "sandboxes: 0". `podman pod prune -f` leaves them, because a pod in
-  state Created does not count as stopped; `podman pod rm` removes them. Not yet reproduced by this session.
+  state Created does not count as stopped; `podman pod rm` removes them.
 - **Fix:** `Down` also runs `podman pod rm` for the run's pod (by the run's label or name), and `ygg doctor` lists
   leftover pods. Test: after `Down` no pod of the run is left.
-- **Status:** reasoned.
+- **Status:** proved (the pod was seen on the engine).
+- **Fixed:** 2026-10-22: [gleipnir#20](https://github.com/ouroboric-dev/gleipnir/pull/20) (`Down` removes
+  `pod_<project>`, without force) and [odin#34](https://github.com/ouroboric-dev/odin/pull/34) (`ygg doctor` removes
+  the pods of unlocked runs and warns when it cannot). Not yet observed: that a normal run now leaves no pod; the
+  next real run settles it.
 
-## Done
+### B-139: grading a product a second time fails on files the container owned
+
+- **Where:** `gleipnir/sandbox/grade.go`.
+- **Problem:** found by the 2026-10-22 smoke. The grader runs as root in a rootless container, so the files it
+  creates in the product copy (and `/logs/verifier`) belong to a subuid on the host. The next `ygg grade` of the
+  same run failed to clean the copy (`unlinkat …/.gitmodules: permission denied`).
+- **Fix:** the grade command gives `/app` and `/logs/verifier` back to the container's root before it exits, and
+  the same for a killed grade's copy. Test: grade twice.
+- **Status:** proved.
+- **Fixed:** 2026-10-22: [gleipnir#21](https://github.com/ouroboric-dev/gleipnir/pull/21), pinned by
+  [odin#35](https://github.com/ouroboric-dev/odin/pull/35).
 
 ### B-083: the realm folder is hashed into a run, so editing a realm mid-run breaks `ygg grade`
 
