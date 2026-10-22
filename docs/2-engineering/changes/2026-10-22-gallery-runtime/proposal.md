@@ -8,7 +8,7 @@ style: spec
 
 # The gallery's product starts in the grader (option A)
 
-**Proposed 2026-10-22.** It makes question 10 of the
+**Proposed 2026-10-22. Amended 2026-10-22: Postgres 18 (the founder's answer to question 5).** It makes question 10 of the
 [Phase 6 plan](../../plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md) real, with the option the founder chose, and
 fixes backlog [B-140](../../backlog.md). It is task v0-T293, the start of Phase 6 part two (the plan's decision 1).
 Run 1 (v0-H20) waits for this change to be built and merged.
@@ -28,7 +28,7 @@ Each task assumes the answer in **bold**. Say so on the pull request if you want
 | 2 | Who owns the root `start.sh` until an infra realm exists? | **`midgard-react`**, which holds the acceptance run. The other ways: a new infra realm now; or Voluspa's graph pack, which today holds no recipe |
 | 3 | Which hidden suite scores 4.1.0? | **The founder's decision.** T02 keeps `suite = "v2"` in `task.toml` unless the founder names another. No agent reads or changes a suite |
 | 4 | Where does the product keep its data in the grader? | **Under `/app/.data/`**, so a restart of `start.sh` in the same grading copy keeps it. The other way: the temporary folder, fresh at each start |
-| 5 | Which Postgres? | **PostgreSQL 17 for Ubuntu 24.04 from the PostgreSQL project, at one pinned package version.** The main repository keeps only the newest package of each version, so the pin comes from `apt-archive.postgresql.org` or a dated snapshot (to verify when T02 is built). The realm's sandbox runs 17.10 on Debian. The minor version may differ; the major may not |
+| 5 | Which Postgres? | **Answered (the founder, 2026-10-22): PostgreSQL 18 for Ubuntu 24.04 from the PostgreSQL project, at one pinned package version.** The main repository keeps only the newest package of each version, so the pin comes from `apt-archive.postgresql.org` or a dated snapshot (to verify when T02 is built). The realm's sandbox ran 17.10 on Debian; it moves to 18.x in T04, because the minor version may differ and the major may not |
 | 6 | What happens to 4.0.0? | **It stays in the repository's history, and the README lists 4.1.0.** A run of 4.0.0 is graded against 4.0.0's image, as today, because the task version and the image travel together |
 | 7 | Photo bytes and object versioning in the grading copy | **Allowed and to verify.** In grading, photo bytes pass through the web leaf's forward on port 3000, because the brief asks for one port; they still never pass through the API, and production stays direct to storage (delta §9.3). Object versioning is turned on when the bucket is made at start, if SeaweedFS 4.45 supports it (to verify in T16); if it does not, the grading copy runs without it, and that is written as a deviation |
 
@@ -45,7 +45,7 @@ The frozen brief and the realms describe two different machines. Read as files:
   (`gleipnir/sandbox/grade.go`), so it has no network and reaches the product on loopback.
 - **The realms** build a Go API leaf (`helheim-go`) and a React web leaf (`midgard-react`). Spec §9.2 and §9.3 give
   the API Postgres and the photos an S3 store. `helheim-go/pack.yaml` names both services as container images
-  (`postgres:17.10-bookworm`, `seaweedfs:4.45`). Photo bytes go between the browser and the S3 API, never through the
+  (`postgres:17.10-bookworm`, which moves to 18 in T04, and `seaweedfs:4.45`). Photo bytes go between the browser and the S3 API, never through the
   API.
 - **The leaves' run scripts** (change [leaf-run-contract](../2026-10-21-leaf-run-contract/proposal.md)) build at
   start. The API's `run.sh` runs `go build` with `GOPROXY=off`: it needs Go and the module cache. The web leaf's
@@ -86,7 +86,7 @@ The assumptions:
   asks.
 - **Options B and C are not taken.** The realms keep their stack (Postgres, S3). The planner is not told to ignore the
   realms' docs.
-- **The task image gains the services and nothing else.** `client-gallery-lite` 4.1.0 adds PostgreSQL 17 (`initdb`,
+- **The task image gains the services and nothing else.** `client-gallery-lite` 4.1.0 adds PostgreSQL 18 (`initdb`,
   `postgres`, `pg_ctl`, `createdb`, `psql`) and SeaweedFS 4.45 (`weed`) to the image, on the `PATH` of the user `app`.
   It adds no Go, no project package and no factory script: the image is a public benchmark machine, and any factory
   may use it.
@@ -136,7 +136,7 @@ These make option A work. Each needs the founder's yes (the questions above).
 
 - **`mimir`** (the founder's): `client-gallery-lite` 4.1.0. `instruction.md` is unchanged and keeps its hash.
   `task.toml` says `4.1.0`. The Dockerfile turns off the Debian packaging's automatic cluster
-  (`create_main_cluster = false` in `createcluster.conf`), then installs PostgreSQL 17 at one pinned package version
+  (`create_main_cluster = false` in `createcluster.conf`), then installs PostgreSQL 18 at one pinned package version
   (question 5), and copies `weed` from the `seaweedfs:4.45` image by digest, the same digest `helheim-go/pack.yaml`
   pins. The README's table gets the new version.
 - **`gungnir`:** the pack schema takes an optional `product.start`, a path inside the pack.

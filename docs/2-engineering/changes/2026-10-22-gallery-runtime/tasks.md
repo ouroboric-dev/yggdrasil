@@ -46,7 +46,7 @@ replaced through an amendment of this file, and T15 follows the answer.
 | T01 (founder) the planning rehearsal, kept | the founder's machine | S | none |
 | T02 (founder) `client-gallery-lite` 4.1.0 | `mimir` | S, about 50 lines | T01 |
 | T03 the pack's `product.start` | `gungnir` | S, about 90 lines | T01 |
-| T04 the API on `HOST`, and the runtime names | `helheim-go` | M, about 150 lines | T01 |
+| T04 the API on `HOST`, the runtime names, and Postgres 18 | `helheim-go` | M, about 190 lines | T01 |
 | T05 the API's release | `helheim-go` | M, about 120 lines | T04, question 1 |
 | T06 the web leaf's server, on `HOST` | `midgard-react` | M, about 300 lines | T01 |
 | T07 the web leaf's release | `midgard-react` | M, about 150 lines | T06, question 1 |
@@ -156,21 +156,21 @@ version is made by the founder.
   1. `FROM docker.io/chrislusf/seaweedfs:4.45@sha256:… AS weed` first;
   2. then the Playwright stage, as today;
   3. in it, install `postgresql-common`, then write `create_main_cluster = false` into
-     `/etc/postgresql-common/createcluster.conf`, then install `postgresql-17` (the order the official `postgres`
+     `/etc/postgresql-common/createcluster.conf`, then install `postgresql-18` (the order the official `postgres`
      image uses; to verify when the image is built), so the package makes no cluster. Use the PostgreSQL project's
      repository for Ubuntu 24.04, with its key checked by fingerprint, at one pinned package version. The main
      repository keeps only the newest package of each version, so take the pin from `apt-archive.postgresql.org` or a
-     dated snapshot (to verify: say which in the pull request). Put `/usr/lib/postgresql/17/bin` on the `PATH`;
+     dated snapshot (to verify: say which in the pull request). Put `/usr/lib/postgresql/18/bin` on the `PATH`;
   4. `COPY --from=weed /usr/bin/weed /usr/local/bin/weed`.
 
-  Do not start a service. Update the header comment: the image also holds PostgreSQL 17 and SeaweedFS 4.45, for
+  Do not start a service. Update the header comment: the image also holds PostgreSQL 18 and SeaweedFS 4.45, for
   a product that wants them; the product starts them itself.
 - [ ] **Step 3:** set `version = "4.1.0"` in `task.toml`. Keep `brief_sha256`. Keep `suite = "v2"` unless the founder
   names another suite (proposal question 3). Change the README's row to 4.1.0.
-- [ ] **Step 4:** run the command of step 1 on the new image. Expected: four version lines, PostgreSQL 17 and
+- [ ] **Step 4:** run the command of step 1 on the new image. Expected: four version lines, PostgreSQL 18 and
   SeaweedFS 4.45. Then run, as `app` with no network, a cluster in a temporary folder:
   `initdb -D /tmp/pg -U postgres --auth=trust && pg_ctl -D /tmp/pg -o '-k /tmp -c listen_addresses=127.0.0.1' -w start && createdb -h /tmp -U postgres app && psql -h /tmp -U postgres -d app -c 'select 1'`.
-  Expected: `1`. Check that `/var/lib/postgresql/17/main` does not exist.
+  Expected: `1`. Check that `/var/lib/postgresql/18/main` does not exist.
 - [ ] **Step 5:** run `scripts/check-task.sh client-gallery-lite` and `bash scripts/check-task.test.sh`. Expected:
   both pass. `check-task.sh` reads only the task folder, so check by hand that `sha256sum
   client-gallery-lite/instruction.md` is the hash in the README's row.
@@ -213,12 +213,16 @@ version is made by the founder.
 **Named test:** `gungnir/schema/pack_product_test.go:TestPackProductStart`.
 **Layer:** `gungnir`. **Size:** S, about 90 lines. **Depends on:** T01.
 
-### Task gallery-runtime-T04: the API on `HOST`, and the runtime names
+### Task gallery-runtime-T04: the API on `HOST`, the runtime names, and Postgres 18
 
 **Files (in `helheim-go`):**
 
 - Modify: `templates/api/cmd/api/main.go` and `main_test.go` (`HOST`), `templates/api/AGENTS.md` and
   `prompts/implementer.md` (the runtime names, the bucket), `docs/architecture.md`
+- Modify (Postgres 18, the founder's answer to question 5): `pack.yaml` (the `postgres` service image) and
+  `templates/api/.github/workflows/ci.yml` (the same image; `ci_test.go` already requires the two to match), and any
+  other place in `helheim-go` that names Postgres 17
+- Modify: `pack_test.go` (`TestPackPostgresIsEighteen`)
 - Create: `runtime_test.go`
 
 **Interfaces:**
@@ -232,6 +236,9 @@ version is made by the founder.
   - `TestPromptNamesTheRuntime` in `runtime_test.go`: the implementer prompt and the template's `AGENTS.md` name each
     of `PORT`, `HOST`, `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
     `S3_SECRET_ACCESS_KEY`, `X-Forwarded-Host` and `/app/start.sh`.
+  - `TestPackPostgresIsEighteen` in `pack_test.go`: the `postgres` service image in `pack.yaml` matches
+    `postgres:18\.\d+-\S+@sha256:[0-9a-f]{64}`, and no file in `helheim-go` (outside `.git`, `LICENSES`, the test file itself and
+    `go.sum`) names `postgres:17`, `postgresql-17` or `postgresql/17`.
 
   Run them. Expected: FAIL.
 - [ ] **Step 2:** the server listens on `HOST:PORT`, and on all interfaces when `HOST` is unset.
@@ -239,15 +246,24 @@ version is made by the founder.
   public addresses from `X-Forwarded-Host` and `X-Forwarded-Proto`; storage URLs are path-style, `/<S3_BUCKET>/<key>`,
   signed for that address; the API makes the bucket at start when it is missing, with versioning on when the store
   supports it; the product's `/app/start.sh` is the factory's and no task changes it.
-- [ ] **Step 4:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
+- [ ] **Step 4:** move the pack's Postgres to 18. In `pack.yaml` and in the template's `ci.yml`, replace
+  `docker.io/library/postgres:17.10-bookworm@sha256:…` with the current `postgres:18.x-bookworm` (or the current
+  Debian variant, if `bookworm` is no longer built) at its digest (to verify when T04 is built: take the digest from
+  the registry, say so in the pull request, and keep `pack.yaml` and `ci.yml` the same). The 18 image keeps its data
+  under `/var/lib/postgresql/18/docker`; the pack mounts no data folder, so nothing else changes (to verify). Then
+  `grep -rn 'postgres:17\|postgresql-17\|postgresql/17\|Postgres 17' .` in `helheim-go` must find nothing.
+- [ ] **Step 5:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS, including
+  `TestPackPostgresIsEighteen` and the existing `ci_test.go` and `pack_test.go` tests that read the pack's services.
 
 **Acceptance criteria:**
 
 - [ ] The API listens on `HOST` when it is set, and where it does today when it is not.
 - [ ] The prompt and the template's `AGENTS.md` name the runtime and the bucket.
+- [ ] The pack's postgres image is 18.x by digest; nothing in `helheim-go` names Postgres 17.
 
-**Named test:** `templates/api/cmd/api/main_test.go:TestListensOnHost`, `helheim-go/runtime_test.go:TestPromptNamesTheRuntime`.
-**Layer:** `helheim-go`. **Size:** M, about 150 lines. **Depends on:** T01.
+**Named test:** `templates/api/cmd/api/main_test.go:TestListensOnHost`, `helheim-go/runtime_test.go:TestPromptNamesTheRuntime`,
+`helheim-go/pack_test.go:TestPackPostgresIsEighteen`.
+**Layer:** `helheim-go`. **Size:** M, about 190 lines. **Depends on:** T01.
 
 ### Task gallery-runtime-T05: the API's release
 
