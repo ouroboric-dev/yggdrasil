@@ -90,7 +90,7 @@ The rest follows from option A and the answers the proposal assumes.
 - §9.3, "Storage keys: MUST be bucket-scoped. Object versioning MUST be on." gains: "In the grading copy, the API makes
   the bucket at start; versioning is on when SeaweedFS supports it (to verify)."
 - §9.3, the table of concerns gains a third column, **Grading (the task image)**: Web, the web leaf's release on port
-  3000, all interfaces; API, the API's release on `127.0.0.1`; Database, Postgres 17 from the image, data under
+  3000, all interfaces; API, the API's release on `127.0.0.1`; Database, Postgres 18 from the image, data under
   `/app/.data/`; Photos, SeaweedFS from the image, its S3 API on `127.0.0.1`, reached by the browser through port 3000.
 - §9.4, the leaf run contract: `run.sh` listens on `HOST` when it is set. When it is not, a leaf listens where it does
   today: the web leaf on `127.0.0.1`, the API on all interfaces.
@@ -108,6 +108,8 @@ None.
 
 ## Outside the spec
 
-- `mimir/client-gallery-lite` 4.1.0: the same `instruction.md` and brief hash; the image adds PostgreSQL 17 and
+- `mimir/client-gallery-lite` 4.1.0: the same `instruction.md` and brief hash; the image adds PostgreSQL 18 and
   SeaweedFS 4.45 on the `PATH` of the user `app`, and nothing else. The founder makes the version (`mimir/AGENTS.md`).
+- `helheim-go`: the pack's `postgres` service moves from 17.10 to 18.x by digest (T04), so that the realm's sandbox
+  and the grading image share a Postgres major. The spec names no Postgres version.
 - The hidden suite is not changed by this delta. Which suite scores 4.1.0 is the founder's decision.
