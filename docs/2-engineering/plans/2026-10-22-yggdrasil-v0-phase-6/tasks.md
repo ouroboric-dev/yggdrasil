@@ -112,8 +112,9 @@ differently are in "Questions for the founder", each with the answer a task assu
 11. **The journal check** (`scripts/journal-check.sh`) makes criterion 6 mechanical: an entry tagged `factory-change`
     that is resolved must cite `ygg metrics --compare` and two run ids in its Result.
 12. **The proof runs** (founder tasks) are: a planning rehearsal (v0-H19), run 1 (v0-H20), a repeat of it (v0-H21), the
-    cross-model run (v0-H22) and the improvement run (v0-H23, after part two). All use the frozen brief of
-    `client-gallery-lite`, the `software` graph and `key-points` mode. They differ in one thing each.
+    cross-model run (v0-H22), the improvement run (v0-H23, after part two) and one unattended run (v0-H27). All use the
+    frozen brief of `client-gallery-lite` and the `software` graph, and all but v0-H27 use `key-points` mode. They differ in
+    one thing each.
 13. **Per leaf, not per suite, in v0** (question 7). The metrics and the report group tasks, usage and gave-up work by
     leaf and by role and model, which is what the founder needs to see which realm or model is good at what. A reward
     stays one number per task. A grade per leaf from its own suite, and a rubric for qualities no suite tests
@@ -129,8 +130,8 @@ Each task assumes the answer in **bold**. Say so on the pull request if you want
 | --- | --- | --- |
 | 1 | **The cross-model run (criterion 2).** Which role changes, and to what? | **The implementer, on OpenCode with `openrouter/qwen/qwen3.8-27b`** (B-110: it works with no adapter change and scored 0.5 against 1.0 on the smoke, one run each). The planner and the reviewers stay as in run 1. One role at a time. Run 1's implementer is free on the subscription and this one is not: the config's `per_run.usd` is the guard |
 | 2 | **The improvement run (criterion 7).** Which factory change, and which metric must improve? | **Chosen after run 1, from its report**, and made through its own change proposal in part two. The candidates today: B-136 (a reviewer prompt that tries the brief's routes and forms; the metric is escaped defects, with the score held), a cheaper reviewer effort for one role (B-106; the metric is cost per task), B-137 (stray files). Criterion 7 names first-pass rate, cost per task or interventions, and `--compare` must show it without lowering the score |
-| 3 | **How many runs, and the caps.** | **A rehearsal that plans only, then four scored runs: run 1, a repeat of it, the cross-model run and the improvement run.** One run per cell is thin (hosted models change from hour to hour, per the journal), so the repeat measures the spread. **Estimate, not measured:** the smoke took 14 turns and 44k tokens (cache reads excluded) for one tiny task; the gallery plan is probably 12 or more tasks, each with three reviewers, so a run is about 600 to 1,000 turns and 3 to 5M tokens. [budget.md](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/1-company/budget.md) caps a run at 400 turns, so run 1 would stop at the cap. **Assumed: `per_run` 1,500 turns, 12M tokens and $5 billed; `per_day` 2,000 turns, 24M tokens, $10 billed**, and the founder reads run 1's real size before the other runs. The paid part is the Qwen reviewers (about $0.01 a session, perhaps $1 a run); with a Qwen implementer, perhaps $3 to $6. The OpenRouter key's $25 a month is the backstop |
-| 4 | **Unattended or attended.** | **Every scored run is `key-points`, the founder approving the design gate and any deviation.** The interventions metric needs the same mode on both sides of a comparison. Criterion 4's scripted half is `TestToyGraphEndToEnd` (all three modes, Phase 1), run again at the exit check. B-135 (an escalation from the contract folder rules stops an unattended run) is not decided here: it is measured, and it matters only if a run is made unattended |
+| 3 | **How many runs, and the caps.** | **A rehearsal that plans only, then four scored runs (run 1, a repeat of it, the cross-model run and the improvement run) and one unattended run (question 4).** One run per cell is thin (hosted models change from hour to hour, per the journal), so the repeat measures the spread. **Estimate, not measured:** the smoke took 14 turns and 44k tokens (cache reads excluded) for one tiny task; the gallery plan is probably 12 or more tasks, each with three reviewers, so a run is about 600 to 1,000 turns and 3 to 5M tokens. [budget.md](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/1-company/budget.md) caps a run at 400 turns, so run 1 would stop at the cap. **Assumed: `per_run` 1,500 turns, 12M tokens and $5 billed; `per_day` 2,000 turns, 24M tokens, $10 billed**, and the founder reads run 1's real size before the other runs. The paid part is the Qwen reviewers (about $0.01 a session, perhaps $1 a run); with a Qwen implementer, perhaps $3 to $6. The OpenRouter key's $25 a month is the backstop |
+| 4 | **Unattended or attended.** | **Every run of a comparison is `key-points`, the founder approving the design gate and any deviation; one more run, v0-H27, is `unattended`, like run 1 otherwise.** The interventions metric and the score need the same mode on both sides of a comparison, so v0-H27 is never one side of one: it shows how an unattended run ends on the real brief, and it measures B-135. Criterion 4's scripted half is `TestToyGraphEndToEnd` (all three modes, Phase 1), run again at the exit check. B-135 (an escalation from the contract folder rules stops an unattended run) is not decided here: v0-H27 measures it |
 | 5 | **A split.** | **No split by size** (25 tasks, under 45). The split is by what can be known: part two is an amendment after v0-H19 and v0-H20 (decision 1) |
 | 6 | **The photographer's run.** | **It is not a Phase 6 factory run.** The Asgard design puts it "during Phase 6" as her own journey on her helper's machine; her products are built after Yggdrasil v0, and the proof runs stay on the frozen brief. Nothing in this plan builds her products |
 | 7 | **A grade for each piece of software (B-116).** | **Per leaf in the metrics, one reward per task** (decision 13). The reward counts only the hidden suite's fail-to-pass scenarios, by category. A grade per leaf from a suite of its own needs the leaf's dependencies stood up (B-118) and a per-leaf suite in `huldra`, which is the founder's. "Beautiful" and "responsive" are judged from the built product against the task's `rubric.md`, by the founder, and written in the journal; they never enter the reward. No weights are invented before two scored runs show which leaves vary |
@@ -240,9 +241,10 @@ Each task assumes the answer in **bold**. Say so on the pull request if you want
 | v0-H20 (founder) run 1, the baseline | the founder's machine | M | v0-H19, question 10 answered |
 | v0-H21 (founder) run 1 again, for the spread | the founder's machine | M | v0-H20 |
 | v0-H22 (founder) the cross-model run | the founder's machine | M | v0-H20 |
+| v0-H27 (founder) an unattended run | the founder's machine | M | v0-H21 |
 | v0-H23 (founder) the improvement run | the founder's machine | M | part two, v0-H21 |
 | v0-H24 (founder, optional) the bridge on Harbor | the founder's machine | S | v0-T287 merged |
-| v0-H25 (founder) the exit check | the founder's machine | S | v0-H20 to v0-H23 |
+| v0-H25 (founder) the exit check | the founder's machine | S | v0-H20 to v0-H23, v0-H27 |
 | v0-H26 (founder) retire the v0 hidden suite | the founder's machine | S | v0-H25 |
 
 Pull requests, in order: `gungnir` (v0-T270, v0-T271, v0-T288) first. Then `odin` in two PRs that stack. **v0-T289 is the
@@ -8553,6 +8555,26 @@ scripts/ygg-proof-run.sh --name r1b --baseline <run 1 id> --clip
 - [ ] **Step 2:** write in the journal what the two runs differ by (the spread): first pass, cost per task, interventions, reward.
       Any change that a later run claims must be bigger than this spread to mean anything.
 
+### Task v0-H27 (founder): an unattended run
+
+Not a criterion, and not one side of a comparison: it shows how an unattended run ends on the real brief (criterion 4 asks only for
+one real run in `key-points`) and how often B-135 stops it. Everything is as in v0-H20 except the mode. In `unattended` the design
+gate still stops (the spec's default); a gate that would stop for a deviation blocks the task and the run goes on; a disputed
+finding blocks the task too.
+
+**Named test:** the run ends `done` (exit 0), or `done` with tasks given up (exit 5), and the report lists the blocked tasks first.
+**Layer:** the founder's machine. **Size:** M. **Depends on:** v0-H21 (its caps are set by the size of run 1).
+
+- [ ] **Step 1:** run it.
+
+```zsh
+scripts/ygg-proof-run.sh --name r1u --mode unattended --clip
+```
+
+- [ ] **Step 2:** send the report. In the journal, write which tasks were blocked and why, how many escalations came from the
+      contract folder rules (B-135), and the reward. `ygg metrics --compare` against run 1 prints `comparable: no` with the
+      mode as the reason: that is the expected result, not a failure. Update B-135 in the backlog with the count.
+
 ### Task v0-H22 (founder): the cross-model run
 
 Criterion 2: the same brief with another agent tool or model for at least one role. As question 1 assumes: the implementer on
@@ -8606,14 +8628,14 @@ factory's standard error shows the run's exit code. **Layer:** the founder's mac
 
 The seven criteria of the design doc §2.3, one line each, from the evidence.
 
-**Named test:** every row of the table below has its evidence. **Layer:** the founder's machine. **Size:** S. **Depends on:** v0-H20 to v0-H23.
+**Named test:** every row of the table below has its evidence. **Layer:** the founder's machine. **Size:** S. **Depends on:** v0-H20 to v0-H23, v0-H27.
 
 | Criterion | Evidence |
 | --- | --- |
 | 1. builds `client-gallery-lite`; rungs 1 to 6 pass; the hidden suite is scored | run 1: `ygg metrics` shows the grade; the ledger shows the ladder results |
 | 2. another agent tool or model for one role | run 2: the roles table and `--compare` |
 | 3. a complete hash-chained ledger; `ygg metrics` reports everything | every run: `ygg metrics` refused none, and the figures of spec §10.2 are all in its output |
-| 4. all three modes with `scripted`; one real run in `key-points` | `go test -run TestToyGraphEndToEnd ./internal/cli` in `odin` (the three modes) and runs 1 to 3 (key-points) |
+| 4. all three modes with `scripted`; one real run in `key-points` | `go test -run TestToyGraphEndToEnd ./internal/cli` in `odin` (the three modes) and runs 1 to 3 (key-points); v0-H27 (unattended, real) |
 | 5. the escape-attempt tests pass | `go test ./...` in `gleipnir` and `odin` |
 | 6. journal entries with evidence; factory changes cite `--compare` | `scripts/journal-check.sh` exits 0 |
 | 7. one factory change improves a metric and the score held | run 3 against run 1: `--compare` |
@@ -8628,7 +8650,7 @@ runs it scored, and a new hidden version exists before the next scored run. **Th
 **Named test (founder-run):** the retired version's tests in `mimir` match its last commit in `huldra` (`git diff --no-index` prints
 nothing), and the next run's `score.json` names the new version. **Layer:** `mimir`, `huldra`. **Size:** S. **Depends on:** v0-H25.
 
-- [ ] **Step 1:** copy the retired version into `mimir` with a note that names the runs of v0-H20 to v0-H23 (their ids), mark it retired
+- [ ] **Step 1:** copy the retired version into `mimir` with a note that names the runs of v0-H20 to v0-H23 and v0-H27 (their ids), mark it retired
       beside the task as Phase 5c's `retired/<suite>` mark says, and remove it from `huldra` so that `huldra` keeps only versions that have
       not been retired. Open the `mimir` pull request; you merge it.
 - [ ] **Step 2:** before the next scored run, write the new hidden version in `huldra` and set `suite` in `task.toml` to it (a new task
