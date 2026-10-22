@@ -27,13 +27,13 @@ the answer in **bold**.
 
 | # | Question | Decided |
 | --- | --- | --- |
-| 1 | How do the leaves' builds reach the grader (B-118)? | **Decided by the founder (2026-10-23): a release that Odin builds when it exports `/app`, never committed**, as assumed (see "Decided, beyond option A"). T14, T16, T21 and T22 may start. The ways not taken: commit `node_modules` and a vendored Go module folder, as the grade smoke did; or add Go to the image and build at start |
+| 1 | How do the leaves' builds reach the grader (B-118)? | **Decided by the founder (2026-10-23): a release that Odin builds when it exports `/app`, never committed**, as assumed (see "Decided, beyond option A"). T15, T17, T22 and T23 may start. The ways not taken: commit `node_modules` and a vendored Go module folder, as the grade smoke did; or add Go to the image and build at start |
 | 2 | Who owns the root `start.sh`? | **Decided by the founder (2026-10-23): a new Niflheim realm, now, in the repo `niflheim-local`.** Its flavor `local` is one machine with no cloud; a cloud flavor (such as `niflheim-vercel`) comes later. Before run 1 it holds the product start script **and the services**: Postgres and SeaweedFS move out of `helheim-go/pack.yaml`, `helheim-go` declares what it needs, and Niflheim provides the containers of the sandbox and the versions the 4.1.0 grader image bakes in. Not `midgard-react`. This closes B-078 and B-158. The founder creates the repo (T02) |
 | 3 | Which hidden suite scores 4.1.0? | **Decided by the founder (2026-10-23): keep `v2`.** `task.toml` keeps `suite = "v2"`. The founder checks `v2` against the product decisions below, outside this change's tasks. No agent reads or changes a suite |
 | 4 | Where does the product keep its data in the grader? | **Decided by the founder (2026-10-23): under `/app/.data/`**, in `.gitignore`, never committed. A restart of `start.sh` in the same grading copy keeps it. The rehearsal's planner chose `/app/data/`; the start script and the prompts name `/app/.data/` |
-| 5 | Which Postgres? | **Decided by the founder (2026-10-22): PostgreSQL 18.** With question 2, the pin lives in Niflheim's services, not in `helheim-go`: the sandbox's container image is `postgres:18.x` by digest (T10), and the grader image installs PostgreSQL 18 for Ubuntu 24.04 from the PostgreSQL project at one pinned package version (T20). The main repository keeps only the newest package of each version, so the pin comes from `apt-archive.postgresql.org` or a dated snapshot (to verify in T20). The major version is the same in both; the minor may differ, and the check of T25 prints both |
+| 5 | Which Postgres? | **Decided by the founder (2026-10-22): PostgreSQL 18.** With question 2, the pin lives in Niflheim's services, not in `helheim-go`: the sandbox's container image is `postgres:18.x` by digest (T11), and the grader image installs PostgreSQL 18 for Ubuntu 24.04 from the PostgreSQL project at one pinned package version (T21). The main repository keeps only the newest package of each version, so the pin comes from `apt-archive.postgresql.org` or a dated snapshot (to verify in T21). The major version is the same in both; the minor may differ, and the check of T27 prints both |
 | 6 | What happens to 4.0.0? | **Decided by the founder (2026-10-23): 4.1.0 replaces it in place.** 4.0.0 stays in `mimir`'s git history, and the README lists both versions. A run of 4.0.0 is graded against 4.0.0's image, as today, because the task version and the image travel together |
-| 7 | Photo bytes and object versioning in the grading copy | **Decided by the founder (2026-10-23).** While graded, photo bytes pass through the web server's forward on port 3000, never through the API; production stays direct to storage. Reviewers treat an API that streams a photo or a zip as a violation of spec §9.3 (delta). Object versioning is **best effort**: on if SeaweedFS 4.45 supports it, else a recorded deviation; T28 checks |
+| 7 | Photo bytes and object versioning in the grading copy | **Decided by the founder (2026-10-23).** While graded, photo bytes pass through the web server's forward on port 3000, never through the API; production stays direct to storage. Reviewers treat an API that streams a photo or a zip as a violation of spec §9.3 (delta). Object versioning is **best effort**: on if SeaweedFS 4.45 supports it, else a recorded deviation; T30 checks |
 
 ## Why
 
@@ -75,7 +75,7 @@ v0-H19's first rehearsal left no record. T01 ran it again on 2026-10-23, on toda
   server on port 3000 forwards `/api/*`. No other service at run time.
 - **The plan:** 29 tasks, 17 in `repos/api` and 12 in `repos/web` by their Layer field; 23 of size M and 6 of size S;
   none L. Its T001 puts `/app/start.sh` in `repos/api`: the table's "plan has its own `start.sh`" row of T01, expected
-  until the prompts change (T18). The leaves file also says that the API serves the built web app, which T18's
+  until the prompts change (T19). The leaves file also says that the API serves the built web app, which T19's
   prompts rule out.
 - **The data folder:** the spec put the product's data, and the reset outbox, under `/app/data/`. Question 4 names
   `/app/.data/`.
@@ -132,7 +132,8 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
     `niflheim-local` 0.1.0, the only runtime realm.
   - Odin gives a leaf's sandbox, and the snapshot's, the runtime realm's service for each need of the realms
     involved, under the service's own name, so the checks reach `postgres:5432` and `seaweedfs:8333` as today. A need
-    that the runtime realm does not provide, or a need with no runtime realm, stops the run before anything starts.
+    that the runtime realm does not provide, or a need with no runtime realm, stops the run before any leaf or leaf
+    sandbox exists: at the `ready` node, which reads `docs/leaves.yaml`, and again at `init`.
   - Odin's `init` writes the runtime realm's product start at the project root as `start.sh`, executable, and commits
     it, as it commits `.gitignore`. No agent changes it. The script finds the leaves at the fixed paths `repos/api`
     and `repos/web`, the paths the spec prompt already requires and the acceptance run already uses. It does not read
@@ -170,7 +171,8 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
 
 The founder answered the design's open questions at the rehearsal's design gate (2026-10-22). They are the product
 owner's decisions for the gallery, and **every proof run gives them word for word**, so that two runs are built to the
-same product and `ygg metrics --compare` compares two factories:
+same product and `ygg metrics --compare` compares two factories. The list below is a summary; the authoritative text is
+the two blocks of T32 in [tasks.md](tasks.md), which the runbook copies byte for byte:
 
 1. Password reset: primarily by email, with security questions set at sign-up as the second way. The email sender is
    configurable; with none configured, reset emails are written to a local outbox file under `/app/.data/` that the
@@ -181,9 +183,10 @@ same product and `ygg metrics --compare` compares two factories:
 5. A change of a gallery password or PIN logs out the clients already in; a photographer's password change logs out
    their other sessions.
 
-The text the founder approved is the design-gate note and the spec-gate rejection reason of T01. T30 copies both into
-the [proof-runs runbook](../../../3-using/operations/proof-runs.md), with one change, which needs the founder's yes:
-"a local outbox file under /app" becomes "under /app/.data/" (question 4). With F1 fixed, the runbook gives the
+The text the founder approved is the design-gate note and the spec-gate rejection reason of T01. T32 copies both into
+the [proof-runs runbook](../../../3-using/operations/proof-runs.md), with one change: "a local outbox file under /app"
+becomes "under /app/.data/". The founder made that change: the decisions of 2026-10-23 write decision 1 as "a local
+outbox file under /app/.data/", with question 4. With F1 fixed, the runbook gives the
 decisions as the note of the design-gate approval; the spec-gate reason stays as the fallback for a spec that still
 lacks them.
 
@@ -193,19 +196,20 @@ lacks them.
   `gate_approved` event, and nothing reads it again. Only a rejection's reason reaches a stage (`state.Reasons`, read
   by `runAgent` in `internal/engine/engine.go`). So the spec stage and the design doc lacked the founder's design-gate
   answers, the spec said "Deviations from the design doc: None", and the founder had to reject the spec with the same
-  text. **Fix (T23):** an approval's note is kept in the run's state and reaches the prompt of every later agent
+  text. **Fix (T24):** the note of a gate's approval is kept in the run's state and reaches the prompt of every later agent
   session (agent and scratch nodes, implementers, reviewers) as "the product owner's decisions", in order. A
   rejection that sends the run back before a gate drops that gate's note, because the gate is met again. The runbook
-  says how to give them (T30).
+  says how to give them (T32). A note given at another stop (a loop that gave up, `policy-violation`, `shrink-guard`)
+  is about that stop and stays on its event; a note with a control character is refused, so a note is one line.
 - **F2 (ouroboric, voluspa): the conformance reviewer ran out its session deadline.** The reviewer (opencode,
   `openrouter/qwen/qwen3.8-27b`) read the files in 6 seconds and then produced nothing for its whole 600-second
   deadline (`timeout: 10m` on the `conformance` node of `voluspa/software/graph.yaml`) on a review of about 62 KB: the
   verdict call never returned, and the run failed. The resume passed in 244 seconds and 10 turns. Run 1 has 29 tasks
   with three reviewers each. **Fix:** the proof config sets `reasoning: low` on the reviewer role (`gungnir`'s role
   setting: `low`, `medium`, `high`, `off`; unset means `high`), with a flag to change it and a dry-run line that shows
-  it (T26). The `conformance` node's deadline goes from 10 to 20 minutes (T19); the task reviewers keep 10 minutes.
+  it (T28). The `conformance` node's deadline goes from 10 to 20 minutes (T20); the task reviewers keep 10 minutes.
 - **F3 (ouroboric): `ygg-proof-run.sh` has no reject.** `ygg reject` advances the run at once (`engine.Reject`, then
-  the CLI advances), so it needs the credentials, and the founder had to run the raw command. **Fix (T27):**
+  the CLI advances), so it needs the credentials, and the founder had to run the raw command. **Fix (T29):**
   `--continue RUN --reject GATE --reason TEXT`, with the same timeout, credentials subshell, filter and evidence as
   `--approve`, and tests.
 
@@ -262,13 +266,13 @@ lacks them.
   `~/ygg-it/hidden-suites`. Any change to scoring stays with the founder. The founder keeps `v2` (question 3) and
   checks it against the product decisions outside this change's tasks.
 - **The release in the acceptance run.** The acceptance run builds and starts the leaves from source, as today. Making
-  it build and start the release, so that the ladder exercises `release.sh`, is a later change; T29 files it.
+  it build and start the release, so that the ladder exercises `release.sh`, is a later change; T31 files it.
 - **A store in the web end-to-end rung.** In a task's loop the web leaf runs against a mock of the API, with no store.
-  This change does not add one. T17 tells each spec whether a real store is behind `/<bucket>/`
+  This change does not add one. T18 tells each spec whether a real store is behind `/<bucket>/`
   (`YGG_E2E_STORE=1` in the acceptance run, unset in the rung), and the implementer prompt says to stub the store only
   when it is unset, so the acceptance run exercises the real forward.
 - **The development sandbox's SeaweedFS.** It runs with no S3 identities, so it accepts anonymous requests. The
-  product start gives SeaweedFS an identity; the sandbox is not changed here, and T29 files the gap.
+  product start gives SeaweedFS an identity; the sandbox is not changed here, and T31 files the gap.
 - **Other product shapes.** `niflheim-local`'s product start knows the gallery's shape: at most one API leaf at
   `repos/api` and one web leaf at `repos/web`, as the acceptance run does. A product of another shape needs its own
   start.
@@ -281,13 +285,15 @@ lacks them.
 - **Repos:** `mimir` (the founder's), `niflheim-local` (new), `gungnir`, `helheim-go`, `midgard-react`, `odin`,
   `voluspa`, `ouroboric`, `yggdrasil`.
 - **Order:** T01 is done. The founder creates `niflheim-local` (T02), and its scaffold (T03) merges whenever it is
-  ready. Then `gungnir` (T04 to T06). Then `odin`'s first pull request (T07 to T09, with the new `gungnir` pinned),
+  ready. Then `gungnir` (T04 to T06). Then `odin`'s first pull request (T07 to T10, with the new `gungnir` pinned),
   because `gungnir`'s pack schema refuses unknown keys (`additionalProperties: false`): an `odin` on the old pin cannot
   load a `helheim-go` whose `pack.yaml` names `needs`, and an `odin` that does not resolve needs would give a
   `helheim-go` with no services an empty sandbox. Then the repos that pin the new `gungnir` (`niflheim-local`'s
   content, `helheim-go`) and the others (`midgard-react`, `voluspa`, `mimir`), in any order with the dependencies of
-  tasks.md. Then `odin`'s second pull request (the release, F1), `ouroboric`, and `yggdrasil` last. The umbrella's
-  pointers do not move until T31. Until then, T28 checks out each repo at its merged `main` and uses a `ygg` built
+  tasks.md. Then `odin`'s second pull request (the release, F1, the real-realm fixtures), `ouroboric`'s second (the
+  runtime smoke, the services check), and `yggdrasil` last. `ouroboric`'s first pull request (F2's reasoning, F3's
+  reject) depends on nothing and may merge at any time. The umbrella's
+  pointers do not move until T33. Until then, T30 checks out each repo at its merged `main` and uses a `ygg` built
   from that `odin`.
 - **Approval points:** none added. The release sandbox runs no agent. An approval's note now reaches later stages;
   the approval points themselves do not change.
@@ -298,38 +304,39 @@ lacks them.
 
 ## Risk
 
-- **A new repo and more Odin work before run 1.** Niflheim adds a repo, a scaffold, three `gungnir` tasks and two
-  `odin` tasks to the change. The founder chose this over keeping B-158 until after run 1. Each task stays under 400
+- **A new repo and more Odin work before run 1.** Niflheim adds a repo, a scaffold, three `gungnir` tasks and four
+  `odin` tasks (T07 to T09, T25) to the change. The founder chose this over keeping B-158 until after run 1. Each task stays under 400
   lines, and run 1 waits for all of them.
-- **The planner forgets the runtime pin.** Then the run stops at `init`, before any leaf or sandbox exists, because
-  `helheim-go` needs services that no runtime realm provides; the message names the missing `runtime` in
-  `docs/leaves.yaml`. T18's test keeps the pin in the spec prompt's example, and the founder reads `docs/leaves.yaml`
-  at the spec gate.
+- **The planner forgets the runtime pin.** Then the run stops at the `ready` node, before any leaf or leaf sandbox
+  exists, because `helheim-go` needs services that no runtime realm provides; the message names the missing `runtime`
+  in `docs/leaves.yaml`. `ready` runs after the plan stage, so a forgotten pin is found after the plan is paid for
+  (the scratch sandboxes of design, spec and plan have run). T19's test keeps the pin in the spec prompt's example, and
+  the founder reads `docs/leaves.yaml` at the spec gate.
 - **Two forms of one Postgres.** The sandbox runs Postgres 18 from a Debian container image, the grader from an
-  Ubuntu package. Their minors may differ. T25's check fails on a different major and prints both minors.
+  Ubuntu package. Their minors may differ. T27's check fails on a different major and prints both minors.
 - **The planner designs something else.** T01 showed the four assumptions on today's prompts. Run 1 is the first plan
-  made with the new prompts (T18); if it leaves them, the run's gates show it before any task starts.
+  made with the new prompts (T19); if it leaves them, the run's gates show it before any task starts.
 - **The decisions differ between runs.** A run given other words is built to another product, and its comparison
-  means little. The runbook holds the text, and T30 says to paste it, not to retype it.
-- **An approval note is a decision (F1).** Every note on an approval reaches every later stage, so "ok" becomes a
-  decision too. The runbook says to give a note only for a decision.
+  means little. The runbook holds the text, and T32 says to paste it, not to retype it.
+- **An approval note is a decision (F1).** Every note on a gate's approval reaches every later stage, so "ok" becomes
+  a decision too. The runbook says to give a note at a gate only for a decision.
 - **A lower reasoning effort for the reviewers (F2).** `low` may make reviews faster and shallower. The reviewer
-  bench (`ygg-reviewer-bench.sh`) can measure it; run 1's findings will show it. The deadline raise of T19 can be
+  bench (`ygg-reviewer-bench.sh`) can measure it; run 1's findings will show it. The deadline raise of T20 can be
   dropped if `low` is enough.
 - **The signature through the forward (to verify).** The proposal assumes that SeaweedFS checks a presigned URL
   against the `Host` header it receives, so that forwarding the path unchanged keeps the signature valid. SeaweedFS's
   SigV4 check may read `X-Forwarded-Host` and `X-Forwarded-Port` before `Host`; that is from memory and unverified.
-  So the storage forward adds no `X-Forwarded-*` header. The runtime smoke (T24, T28) must show a signed request
+  So the storage forward adds no `X-Forwarded-*` header. The runtime smoke (T26, T30) must show a signed request
   succeeding through port 3000.
 - **`release.sh` is in the leaf and unprotected.** An agent can change it, and nothing in the ladder or the acceptance
-  run runs it, so a broken release shows only at export. The implementer prompts say (T14, T16): keep `release.sh`
-  working, and change it only when the leaf's build changes. T29 files a backlog item for a check that runs it.
+  run runs it, so a broken release shows only at export. The implementer prompts say (T15, T17): keep `release.sh`
+  working, and change it only when the leaf's build changes. T31 files a backlog item for a check that runs it.
 - **Port clashes.** SeaweedFS's volume server listens on 8080 by default, the API's port. The product start must move
   it.
 - **Postgres as `app`.** `initdb` refuses root, which suits the brief. The 2-minute limit holds `initdb`, both
   services and both leaves; the runtime smoke measures it.
 - **Ownership of the release's files.** A file written in a rootless sandbox may belong to a subuid on the host, as
-  in B-139. T22 must copy the release out as the host user.
+  in B-139. T23 must copy the release out as the host user.
 - **One more sandbox start per export.** The release adds a sandbox start to `ygg grade` and `ygg bridge`, with B-051's
   hang. Odin keeps a release by the commits it was built from, so a second grade reuses it.
 
@@ -340,5 +347,6 @@ lacks them.
 - **2026-10-23, amended:** the founder answered questions 1 to 4, 6 and 7, and T01 ran. Question 2's answer is a new
   Niflheim realm, `niflheim-local`, that owns the product start and the services; the Postgres 18 pin moves from
   `helheim-go` to it. The founder's five product decisions are recorded, and every proof run gives them word for
-  word. The rehearsal's three findings get tasks (F1: T23; F2: T19, T26; F3: T27). The tasks are renumbered: see the
-  table of [tasks.md](tasks.md), which maps the old numbers to the new.
+  word. The rehearsal's three findings get tasks (F1: T24; F2: T20, T28; F3: T29). The tasks are renumbered: see the
+  table of [tasks.md](tasks.md), which maps the old numbers to the new. The review of the amendment split the services
+  resolution in two (T08, T09), added the real-realm fixtures task (T25), and split `ouroboric`'s pull request in two.

@@ -83,7 +83,9 @@ lines marked **(assumed)** are details the founder has not yet said yes to: the 
   need of the leaf's realm and of the realms of the leaves it consumes; and, in the sandbox of a snapshot, for each
   need of the realms of the project's leaves. A service keeps the name it has in the runtime realm's pack. A need that
   the project's runtime realm does not provide, or a need in a project that pins no runtime realm, MUST stop the run
-  before any leaf is created or any sandbox starts, with a message that names the need and the realm that has it.
+  before any leaf is created or any leaf sandbox starts, with a message that names the need and the realm that has it.
+  The node that reads the leaves file before `init` (`ready` in the `software` graph) MUST check it too. The scratch
+  sandboxes of the design, spec and plan stages have run by then.
 - §9.4, the product start: only the runtime realm MAY name a product start script. Odin's `init` node MUST write it at
   the project root as `start.sh`, executable, and commit it, and MUST add `.data/` to the project's `.gitignore`. No
   agent task MAY change the project root.
@@ -100,7 +102,9 @@ lines marked **(assumed)** are details the founder has not yet said yes to: the 
 
 ### The approval's note (§7.2)
 
-- §7.2: an approval's note MUST be kept in the run's state with the gate it was given at. Every agent session that
+- §7.2: the note of an approval at a gate node MUST be kept in the run's state with the gate it was given at; a note
+  given when approving another stop (a loop that gave up, `policy-violation`, `shrink-guard`) MUST NOT be. A note
+  MUST be one line: Odin MUST refuse a note with a control character. Every agent session that
   starts after the approval (an agent or scratch node, an implementer, a reviewer) MUST get every note kept so far in
   its prompt, after the brief, under the heading "The product owner's decisions", in the order the approvals were
   given, each with its gate.
