@@ -52,10 +52,10 @@ replaced through an amendment of this file, and T15 follows the answer.
 | T07 the web leaf's release | `midgard-react` | M, about 150 lines | T06, question 1 |
 | T08 the pack names the product start | `midgard-react` | S, about 60 lines | T03 merged, T11 merged |
 | T09 the product start script | `midgard-react` | M, about 300 lines | T04, T06, T08 |
-| T10 the acceptance run on the new contract | `midgard-react` | M, about 250 lines | T04, T06 |
+| T10 the acceptance run on the new contract, and the store flag for specs | `midgard-react` | M, about 330 lines | T04, T06 |
 | T11 `init` writes the product start | `odin` | M, about 200 lines | T03 merged |
 | T12 the release in the export | `odin` | M, about 300 lines | T01, question 1 |
-| T13 the release built in the acceptance sandbox | `odin` | M, about 250 lines | T12 |
+| T13 the release built in the acceptance sandbox | `odin` | M, about 250 lines | T12, question 1 |
 | T14 the prompts name the runtime | `voluspa` | S, about 60 lines | T01 |
 | T15 the runtime smoke script | `ouroboric` | M, about 300 lines | T05, T07, T09 |
 | T16 (founder) the runtime smoke on the real engine | the founder's machine | S | T02, and T04 to T15 merged |
@@ -71,7 +71,7 @@ The pull requests, each from a branch `gallery-runtime` made from `main`:
    `gungnir`. `helheim-go`: T04 (and T05 once question 1 is answered). `voluspa`: T14. `mimir`: T02, by the founder.
    These merge in any order after the first two. A repo whose release task still waits opens its pull request without
    it, and the release task follows in a second pull request.
-4. `odin`, second pull request: T12, T13.
+4. `odin`, second pull request: T12, T13, once question 1 is answered.
 5. `ouroboric`: T15.
 6. `yggdrasil`: T17, after T16. It moves the pointers.
 
@@ -115,8 +115,8 @@ transcripts.
 
 | What the design does | What to do |
 | --- | --- |
+| All four hold, and the plan has its own `start.sh` or a port-3000 task | Expected on today's prompts; not a stop. Note it, and go on with T02 to T17. T14 tells the planner, and run 1 is the first plan made with the new prompts |
 | All four hold | Go on with T02 to T17 |
-| All four hold, and the plan has its own `start.sh` or a port-3000 task | Expected on today's prompts; not a stop. Note it. T14 tells the planner, and run 1 is the first plan made with the new prompts |
 | Two leaves on the right realms, at other paths (`repos/frontend`, `repos/server`) | Stop. The spec prompt's rule on paths was broken, and the product start finds the leaves only at `repos/web` and `repos/api`. Fix the prompt in T14 first, then run the rehearsal again; or amend this proposal so that the product start reads the paths |
 | A third leaf (a worker on `helheim-go`, say) | Stop. The product start starts only `repos/api` and `repos/web`. Amend this proposal (T09 starts every leaf it finds), or tell the planner in T14 that the gallery has two leaves |
 | Two leaves, but another store (photos on disk through the API, SQLite) | Stop. Decide whether the realms' rules (spec §9.3) or the design win. Amend this proposal before T02: the image's services and the storage forward may change |
@@ -151,13 +151,19 @@ version is made by the founder.
   ```
 
   Expected: it fails (`initdb: not found`).
-- [ ] **Step 2:** in the Dockerfile, before the install, write `create_main_cluster = false` into
-  `/etc/postgresql-common/createcluster.conf`, so the package makes no cluster. Install PostgreSQL 17 for Ubuntu 24.04
-  from the PostgreSQL project, at one pinned package version, with the repository's key checked by fingerprint. The
-  main repository keeps only the newest package of each version, so take the pin from `apt-archive.postgresql.org` or
-  a dated snapshot (to verify when the image is built: say which in the pull request). Put
-  `/usr/lib/postgresql/17/bin` on the `PATH`. Copy `/usr/bin/weed` from the SeaweedFS image, by digest, in a second
-  stage. Do not start a service. Update the header comment: the image also holds PostgreSQL 17 and SeaweedFS 4.45, for
+- [ ] **Step 2:** write the Dockerfile in this order. Gleipnir's stack build refuses a `COPY --from` that names an
+  image or a stage not yet defined (`gleipnir/sandbox/stackbuild.go`), and the last stage is the image, so:
+  1. `FROM docker.io/chrislusf/seaweedfs:4.45@sha256:… AS weed` first;
+  2. then the Playwright stage, as today;
+  3. in it, install `postgresql-common`, then write `create_main_cluster = false` into
+     `/etc/postgresql-common/createcluster.conf`, then install `postgresql-17` (the order the official `postgres`
+     image uses; to verify when the image is built), so the package makes no cluster. Use the PostgreSQL project's
+     repository for Ubuntu 24.04, with its key checked by fingerprint, at one pinned package version. The main
+     repository keeps only the newest package of each version, so take the pin from `apt-archive.postgresql.org` or a
+     dated snapshot (to verify: say which in the pull request). Put `/usr/lib/postgresql/17/bin` on the `PATH`;
+  4. `COPY --from=weed /usr/bin/weed /usr/local/bin/weed`.
+
+  Do not start a service. Update the header comment: the image also holds PostgreSQL 17 and SeaweedFS 4.45, for
   a product that wants them; the product starts them itself.
 - [ ] **Step 3:** set `version = "4.1.0"` in `task.toml`. Keep `brief_sha256`. Keep `suite = "v2"` unless the founder
   names another suite (proposal question 3). Change the README's row to 4.1.0.
@@ -212,7 +218,7 @@ version is made by the founder.
 **Files (in `helheim-go`):**
 
 - Modify: `templates/api/cmd/api/main.go` and `main_test.go` (`HOST`), `templates/api/AGENTS.md` and
-  `prompts/implementer.md` (the runtime names, the bucket, `release.sh`), `docs/architecture.md`
+  `prompts/implementer.md` (the runtime names, the bucket), `docs/architecture.md`
 - Create: `runtime_test.go`
 
 **Interfaces:**
@@ -225,21 +231,20 @@ version is made by the founder.
     another container).
   - `TestPromptNamesTheRuntime` in `runtime_test.go`: the implementer prompt and the template's `AGENTS.md` name each
     of `PORT`, `HOST`, `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
-    `S3_SECRET_ACCESS_KEY`, `X-Forwarded-Host`, `/app/start.sh` and `release.sh`.
+    `S3_SECRET_ACCESS_KEY`, `X-Forwarded-Host` and `/app/start.sh`.
 
   Run them. Expected: FAIL.
 - [ ] **Step 2:** the server listens on `HOST:PORT`, and on all interfaces when `HOST` is unset.
 - [ ] **Step 3:** the template's `AGENTS.md` and the prompt say: the API reads only the names of delta §9.4; it builds
   public addresses from `X-Forwarded-Host` and `X-Forwarded-Proto`; storage URLs are path-style, `/<S3_BUCKET>/<key>`,
   signed for that address; the API makes the bucket at start when it is missing, with versioning on when the store
-  supports it; the product's `/app/start.sh` is the factory's and no task changes it; keep `release.sh` working, and
-  change it only when the leaf's build changes.
+  supports it; the product's `/app/start.sh` is the factory's and no task changes it.
 - [ ] **Step 4:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
 
 **Acceptance criteria:**
 
 - [ ] The API listens on `HOST` when it is set, and where it does today when it is not.
-- [ ] The prompt and the template's `AGENTS.md` name the runtime, the bucket and `release.sh`.
+- [ ] The prompt and the template's `AGENTS.md` name the runtime and the bucket.
 
 **Named test:** `templates/api/cmd/api/main_test.go:TestListensOnHost`, `helheim-go/runtime_test.go:TestPromptNamesTheRuntime`.
 **Layer:** `helheim-go`. **Size:** M, about 150 lines. **Depends on:** T01.
@@ -251,23 +256,29 @@ Waits for the founder's answer to question 1.
 **Files (in `helheim-go`):**
 
 - Create: `templates/api/release.sh`, `release_test.go`
-- Modify: `docs/architecture.md`
+- Modify: `templates/api/AGENTS.md` and `prompts/implementer.md` (`release.sh`), `runtime_test.go`,
+  `docs/architecture.md`
 
-- [ ] **Step 1: the failing test.** `TestReleaseScriptStarts` (so that `-run ReleaseScript` finds it): copy the
+- [ ] **Step 1: the failing tests.** `TestPromptNamesTheRelease` in `runtime_test.go`: the implementer prompt and the
+  template's `AGENTS.md` name `release.sh` and say to keep it working. `TestReleaseScriptStarts` (so that
+  `-run ReleaseScript` finds it): copy the
   template, run `release.sh` with `OUT` set to an empty folder, then run `OUT/run.sh` with `PORT` free,
   `HOST=127.0.0.1` and a `PATH` of `/usr/bin:/bin` only (no Go), and wait for the port. Assert that `OUT` holds only
   regular files and folders. Skip without Go; fail with `YGG_REQUIRE_TEMPLATES=1`. Expected: FAIL.
 - [ ] **Step 2:** write `release.sh`: `CGO_ENABLED=0 GOWORK=off GOFLAGS=-mod=readonly go build -trimpath -o "$OUT/api" ./cmd/api`
   (it may download modules through the realm's egress), then write `OUT/run.sh`, which checks `PORT` as the leaf's
   `run.sh` does and runs `exec "$(dirname "$0")/api"`. The migrations are embedded already. Print the binary's size.
-- [ ] **Step 3:** run the test, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
+- [ ] **Step 3:** the template's `AGENTS.md` and the prompt say: keep `release.sh` working, and change it only when
+  the leaf's build changes.
+- [ ] **Step 4:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
 
 **Acceptance criteria:**
 
 - [ ] The release starts with no Go on the `PATH`, and holds only regular files. The pull request gives the binary's
   size, for T12's bound.
+- [ ] The prompt and the template's `AGENTS.md` name `release.sh`.
 
-**Named test:** `helheim-go/release_test.go:TestReleaseScriptStarts`.
+**Named test:** `helheim-go/release_test.go:TestReleaseScriptStarts`, `helheim-go/runtime_test.go:TestPromptNamesTheRelease`.
 **Layer:** `helheim-go`. **Size:** M, about 120 lines. **Depends on:** T04, and question 1 answered.
 
 ### Task gallery-runtime-T06: the web leaf's server, on `HOST`
@@ -301,8 +312,8 @@ It fixes B-117.
   `run.sh` to build the bundle and `exec node serve.mjs` with `HOST` (default `127.0.0.1`). Keep the dev server's
   proxy in `vite.config.ts` as it is.
 - [ ] **Step 3:** run `TestServeForwards` and `TestRunScriptStarts`, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`.
-  Expected: PASS. The docs and the prompt say that `serve.mjs` is what serves the leaf, that it forwards `/api/` and
-  the bucket's path, and that `release.sh` is kept working and changed only when the leaf's build changes.
+  Expected: PASS. The docs and the prompt say that `serve.mjs` is what serves the leaf, and that it forwards `/api/`
+  and the bucket's path.
 
 **Acceptance criteria:**
 
@@ -320,24 +331,27 @@ Waits for the founder's answer to question 1.
 **Files (in `midgard-react`):**
 
 - Create: `templates/web/release.sh`, `release_test.go`
-- Modify: `docs/architecture.md`
+- Modify: `templates/web/AGENTS.md`, `prompts/implementer.md` (`release.sh`), `prompts_test.go`, `docs/architecture.md`
 
-- [ ] **Step 1: the failing test.** `TestReleaseScriptStarts`: copy the template **without** `node_modules` (a
+- [ ] **Step 1: the failing tests.** `TestPromptNamesTheRelease` in `prompts_test.go`: the implementer prompt and the
+  template's `AGENTS.md` name `release.sh` and say to keep it working. `TestReleaseScriptStarts`: copy the template **without** `node_modules` (a
   snapshot of committed files has none), run `release.sh` with `OUT` set to an empty folder, then run `OUT/run.sh`
   with `PORT` free and a `PATH` that holds `node` and no `npm`, from a folder with no `node_modules`, and wait for the
   port. Assert that `OUT` holds only regular files and folders, and no `node_modules`. Skip without `npm`; fail with
   `YGG_REQUIRE_TEMPLATES=1`. Expected: FAIL.
 - [ ] **Step 2:** write `release.sh`: `npm ci --ignore-scripts --no-audit --no-fund` (as the acceptance run does; it
   fetches through the realm's egress), `npm run build`, copy `dist/` to `OUT/dist` and `serve.mjs` to `OUT/`, and
-  write `OUT/run.sh`, which checks `PORT` and runs `exec node serve.mjs` in its own folder.
-- [ ] **Step 3:** run the test, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
+  write `OUT/run.sh`, which checks `PORT` and runs `exec node serve.mjs` in its own folder. The template's
+  `AGENTS.md` and the prompt say: keep `release.sh` working, and change it only when the leaf's build changes.
+- [ ] **Step 3:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
 
 **Acceptance criteria:**
 
 - [ ] The release builds from a copy with no `node_modules`, starts with Node alone (no `npm`, no `node_modules`), and
   holds only regular files.
+- [ ] The prompt and the template's `AGENTS.md` name `release.sh`.
 
-**Named test:** `midgard-react/release_test.go:TestReleaseScriptStarts`.
+**Named test:** `midgard-react/release_test.go:TestReleaseScriptStarts`, `midgard-react/prompts_test.go:TestPromptNamesTheRelease`.
 **Layer:** `midgard-react`. **Size:** M, about 150 lines. **Depends on:** T06, and question 1 answered.
 
 ### Task gallery-runtime-T08: the pack names the product start
@@ -411,10 +425,15 @@ It fixes B-078 for the web realm.
 
 Without it, an end-to-end spec that uploads a photo fails at every pointer move of run 1: `accept-e2e.sh` starts the
 API with `PORT` and `DATABASE_URL` only, and its baked `vite.config.ts` forwards only `/api`, with `changeOrigin`.
+And the e2e rung (`web-e2e.sh`, in every web task's loop) runs every spec against a Prism mock with no store, so a
+spec that does a real `PUT` can never pass there. Agents would then stub the store with `page.route`, the stub would
+run in the acceptance run too, and the store forward would never be exercised. So the scripts tell a spec whether a
+real store is behind `/<bucket>/`.
 
 **Files (in `midgard-react`):**
 
-- Modify: `devcontainer/checks/accept-e2e.sh`, `devcontainer/checks/web-configs.sh` (the baked server), `checks_test.go`,
+- Modify: `devcontainer/checks/accept-e2e.sh`, `devcontainer/checks/web-e2e.sh`, `devcontainer/checks/web-configs.sh`
+  (the baked server), `checks_test.go`, `prompts/implementer.md`, `templates/web/AGENTS.md`, `prompts_test.go`,
   `docs/architecture.md`
 - Create: `devcontainer/checks/config/serve.mjs` (byte for byte `templates/web/serve.mjs`)
 
@@ -424,23 +443,30 @@ API with `PORT` and `DATABASE_URL` only, and its baked `vite.config.ts` forwards
     sandbox's SeaweedFS (`http://seaweedfs:8333` unless `YGG_S3_ENDPOINT` says otherwise) and a bucket name; the web
     app is served by the baked `serve.mjs`, not the leaf's, with `API_URL`, `S3_ENDPOINT` and `S3_BUCKET`.
   - `TestBakedServeIsTheTemplates`: the baked `serve.mjs` and the template's are the same bytes.
+  - `TestE2EStoreFlag`: `accept-e2e.sh` runs Playwright with `YGG_E2E_STORE=1`; `web-e2e.sh` runs it with
+    `YGG_E2E_STORE` unset, also when the caller's environment sets it.
+  - `TestPromptSaysWhenToStubTheStore` in `prompts_test.go`: the implementer prompt and the template's `AGENTS.md`
+    say that a spec stubs the store only when `YGG_E2E_STORE` is unset, and uses the real `/<bucket>/` when it is `1`.
 
   Expected: FAIL.
 - [ ] **Step 2:** change `accept-e2e.sh`: build the bundle with the baked config as today, then serve it with the
-  baked `serve.mjs`; pass the names. Keep the Prism branch for a product with no API.
-- [ ] **Step 3:** read `web-e2e.sh` (the e2e rung). It runs against a Prism mock and has no store, so an e2e spec that
-  uploads cannot pass there. Write in `docs/architecture.md` and in the pull request what the rung does with such a
-  spec today. T17 files a backlog item if it fails every upload spec.
+  baked `serve.mjs`; pass the names; set `YGG_E2E_STORE=1` for Playwright. Keep the Prism branch for a product with no
+  API, and leave the flag unset there.
+- [ ] **Step 3:** change `web-e2e.sh` to unset `YGG_E2E_STORE` for Playwright. Write the rule in the prompt, the
+  template's `AGENTS.md` and `docs/architecture.md`: in the rung, a spec stubs the store (for example with
+  `page.route` on `/<bucket>/`); in the acceptance run, the same spec uses the real store through port 3000's forward.
 - [ ] **Step 4:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS.
 
 **Acceptance criteria:**
 
 - [ ] The acceptance run gives the API the runtime names and serves the web app with the realm's baked server.
 - [ ] The baked server is the template's, byte for byte.
-- [ ] The e2e rung's behaviour with an upload spec is written down.
+- [ ] A spec can tell whether a real store is behind `/<bucket>/`: `YGG_E2E_STORE=1` in the acceptance run, unset in
+  the rung; the prompt says to stub the store only when it is unset.
 
-**Named test:** `midgard-react/checks_test.go:TestAcceptanceGivesTheRuntime`, `TestBakedServeIsTheTemplates`.
-**Layer:** `midgard-react`. **Size:** M, about 250 lines. **Depends on:** T04, T06.
+**Named test:** `midgard-react/checks_test.go:TestAcceptanceGivesTheRuntime`, `TestBakedServeIsTheTemplates`,
+`TestE2EStoreFlag`; `midgard-react/prompts_test.go:TestPromptSaysWhenToStubTheStore`.
+**Layer:** `midgard-react`. **Size:** M, about 330 lines. **Depends on:** T04, T06.
 
 ### Task gallery-runtime-T11: `init` writes the product start
 
@@ -500,8 +526,8 @@ Waits for the founder's answer to question 1.
 
   Expected: FAIL.
 - [ ] **Step 2:** implement it. A release is copied into the export after `snapshot.Export`, under a bound of its own,
-  named as constants in `release.go` (for example 128 MiB per file and 512 MiB in all; set them from T05's and T07's
-  sizes), not the snapshot's limits for source (`internal/snapshot/snapshot.go`: 32 MiB per file, 256 MiB in all).
+  named as constants in `release.go`: 128 MiB per file and 512 MiB in all. These stand until T05 and T07 report
+  their sizes; a later commit adjusts them if a size comes near. They are not the snapshot's limits for source (`internal/snapshot/snapshot.go`: 32 MiB per file, 256 MiB in all).
   Keep each release in the run folder under the commits it was built from. Write the releaser's output to
   `release.log` beside `grade.log`, mode `0600`.
 - [ ] **Step 3:** run the tests, then `GOWORK=off go test -race ./...`. Expected: PASS. `ygg bridge`'s tests still pass:
@@ -544,7 +570,7 @@ Waits for the founder's answer to question 1.
 
 **Named test:** `odin/internal/run/release_sandbox_test.go:TestReleaseRunsInTheAcceptanceSandbox`,
 `TestReleaseSandboxStopsBeforeTheGrader`, `TestNoAcceptanceSandboxNoRelease`.
-**Layer:** `odin`. **Size:** M, about 250 lines. **Depends on:** T12.
+**Layer:** `odin`. **Size:** M, about 250 lines. **Depends on:** T12, and question 1 answered.
 
 ### Task gallery-runtime-T14: the prompts name the runtime
 
@@ -651,9 +677,8 @@ spec is its own piece of work, which T17 files in the backlog.
 - [ ] **Step 1:** fold the delta into the dated spec. Add RR-24 and RR-25 to the checklist, with their checks.
 - [ ] **Step 2:** in the backlog, mark B-078, B-117, B-118 and B-140 done with the pull requests; add to B-116 that a
   leaf now starts alone from its release. File these items: the acceptance run does not build or start the release,
-  so no check runs `release.sh`; the development sandbox's SeaweedFS accepts anonymous requests; the e2e rung and
-  upload specs (from T10's finding), if it fails them; versioning on SeaweedFS, if T16 found it off; the changes
-  README's archive rule, which no change follows yet.
+  so no check runs `release.sh`; the development sandbox's SeaweedFS accepts anonymous requests; versioning on
+  SeaweedFS, if T16 found it off; the changes README's archive rule, which no change follows yet.
 - [ ] **Step 3:** the proof-runs runbook says the runs use task 4.1.0, and that question 10 is answered (option A).
 - [ ] **Step 4:** move the pointers to the merged commits. Set this folder's front matter to `accepted`.
 - [ ] **Step 5:** run `pre-commit run --files` on every changed file, and the docs check. Expected: pass; no problem

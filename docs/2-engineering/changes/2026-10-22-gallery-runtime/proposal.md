@@ -118,8 +118,8 @@ These make option A work. Each needs the founder's yes (the questions above).
   The product start gives the web leaf `HOST=0.0.0.0` and `PORT=3000`.
 - **Everything the browser loads is on port 3000.** The API signs storage URLs for the address the product was
   reached at, on the bucket's path. The web leaf forwards that path to SeaweedFS unchanged, with the `Host` header
-  kept and no `X-Forwarded-*` header added, so the signature still matches. Every other port listens on `127.0.0.1`
-  only.
+  kept and no `X-Forwarded-*` header added, so that the signature can still match (to verify: see "Risk"). Every
+  other port listens on `127.0.0.1` only.
 - **The leaves read fixed names.** The API reads `PORT`, `HOST`, `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`,
   `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`. The web leaf reads `PORT`, `HOST`, `API_URL`,
   `S3_ENDPOINT` and `S3_BUCKET`. The product start and the acceptance run set them. The S3 key pair is made at each
@@ -127,7 +127,8 @@ These make option A work. Each needs the founder's yes (the questions above).
   environment; never in git or in a log. SeaweedFS refuses a request without it.
 - **The acceptance run follows the same contract.** It gives the API the `S3_*` names (the sandbox's SeaweedFS), and
   serves the web leaf with the realm's baked copy of `serve.mjs`, so `/<bucket>/` and `/api/` behave at every pointer
-  move as they do in the grader.
+  move as they do in the grader. It tells the specs that a real store is behind `/<bucket>/` (`YGG_E2E_STORE=1`); the
+  e2e rung, which has no store, does not.
 - **The planner is told.** Voluspa's spec and plan prompts say that the product runs on one machine, that `start.sh`
   and the services are the factory's, and which names the leaves read. No task writes a file outside its leaf.
 
@@ -174,9 +175,10 @@ These make option A work. Each needs the founder's yes (the questions above).
   the founder's decision (question 3).
 - **The release in the acceptance run.** The acceptance run builds and starts the leaves from source, as today. Making
   it build and start the release, so that the ladder exercises `release.sh`, is a later change; T17 files it.
-- **The web end-to-end rung's store.** In a task's loop the web leaf runs against a mock of the API, with no store, so
-  an end-to-end spec that uploads cannot pass there. T10 writes down what the rung does with such a spec; a fix, if
-  one is needed, is a later change.
+- **A store in the web end-to-end rung.** In a task's loop the web leaf runs against a mock of the API, with no store.
+  This change does not add one. T10 tells each spec whether a real store is behind `/<bucket>/`
+  (`YGG_E2E_STORE=1` in the acceptance run, unset in the rung), and the implementer prompt says to stub the store only
+  when it is unset, so the acceptance run exercises the real forward.
 - **The development sandbox's SeaweedFS.** It runs with no S3 identities, so it accepts anonymous requests. The
   product start gives SeaweedFS an identity; the sandbox is not changed here, and T17 files the gap.
 - **Other product shapes.** The product start knows the web realm's shape: at most one API leaf at `repos/api` and one
@@ -212,8 +214,8 @@ These make option A work. Each needs the founder's yes (the questions above).
   So the storage forward adds no `X-Forwarded-*` header. The runtime smoke (T15, T16) must show a signed request
   succeeding through port 3000.
 - **`release.sh` is in the leaf and unprotected.** An agent can change it, and nothing in the ladder or the acceptance
-  run runs it, so a broken release shows only at export. The implementer prompts say: keep `release.sh` working, and
-  change it only when the leaf's build changes. T17 files a backlog item for a check that runs it.
+  run runs it, so a broken release shows only at export. Once question 1 is answered, the implementer prompts say
+  (T05, T07): keep `release.sh` working, and change it only when the leaf's build changes. T17 files a backlog item for a check that runs it.
 - **Port clashes.** SeaweedFS's volume server listens on 8080 by default, the API's port. The product start must move
   it.
 - **Postgres as `app`.** `initdb` refuses root, which suits the brief. The 2-minute limit holds `initdb`, both

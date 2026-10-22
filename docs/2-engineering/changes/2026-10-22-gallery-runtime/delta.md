@@ -8,9 +8,15 @@ style: spec
 
 # Delta: v0 spec §9.3, §9.4 and §11, and the realm readiness checklist
 
-The lines about the release (§9.4's release contract, §11's release at export, RR-24) are assumed and wait for the
-founder's answer to question 1 of the [proposal](proposal.md). The rest follows from option A and the answers the
-proposal assumes.
+These lines are about the release, are assumed, and wait for the founder's answer to question 1 of the
+[proposal](proposal.md):
+
+- Added: §9.4's release contract; §11's release at export, its bound, its failure and its reuse; RR-24.
+- Modified: the §9.3 table's release entries ("the web leaf's release", "the API's release"); the §9.4 pack layout's
+  `release.sh`; §11's "after the release sandbox has stopped".
+- The product start's "from `.ygg/release/<leaf>/run.sh`" (with no release, it starts `<leaf>/run.sh`).
+
+The rest follows from option A and the answers the proposal assumes.
 
 ## Added
 
@@ -43,6 +49,9 @@ proposal assumes.
 - §9.4, the acceptance run: it MUST give the API every name of the runtime, with the sandbox's SeaweedFS as the S3
   store, and MUST serve the web leaf with the realm's own copy of the web server, which forwards `/api/` and
   `/<S3_BUCKET>/` as above. The leaf's copy MUST NOT be the one the acceptance run uses.
+- §9.5, rung 5 and the acceptance run: a Playwright spec MUST be told whether a real store is behind `/<S3_BUCKET>/`.
+  The acceptance run MUST set `YGG_E2E_STORE=1`; the e2e rung MUST leave it unset. A spec MAY stub the store only when
+  it is unset.
 - §9.4, the product start: a realm MAY name a product start script in `pack.yaml` (`product.start`, a path inside the
   pack). At most one realm of a project MAY name one. Odin's `init` node MUST write it at the project root as
   `start.sh`, executable, and commit it, and MUST add `.data/` to the project's `.gitignore`. No agent task MAY change
