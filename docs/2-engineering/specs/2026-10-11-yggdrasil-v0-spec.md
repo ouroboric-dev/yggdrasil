@@ -382,7 +382,16 @@ privacy: standard   # strict → only providers with no training and no retentio
 
 - The driver uses the devcontainer CLI with Podman (`devcontainer up --docker-path podman`, then
   `devcontainer exec`). The host needs only Podman, the devcontainer CLI and the `ygg` binary.
-- Each run gets one rootless container per leaf, plus the realm's services (§9.3) via compose.
+- Each run gets one rootless container per leaf, plus the runtime realm's services for the needs of the leaf's realm
+  and of the realms of the leaves it consumes (§9.3, §9.4), via compose. The rule that two realms offering a service
+  of the same name must offer it alike stays, for a pack that still names services.
+- Odin MUST start, beside a leaf's work container, the runtime realm's service for each need of the leaf's realm and
+  of the realms of the leaves it consumed; and, in the sandbox of a snapshot, for each need of the realms of the
+  project's leaves. A service keeps the name it has in the runtime realm's pack. A need that the project's runtime
+  realm does not provide, or a need in a project that pins no runtime realm, MUST stop the run before any leaf is
+  created or any leaf sandbox starts, with a message that names the need and the realm that has it. The node that
+  reads the leaves file before `init` (`ready` in the `software` graph) MUST check it too. The scratch sandboxes of
+  the design, spec and plan stages have run by then.
 - **Two layers per image:** the realm's stack layer and the factory layer. The factory layer holds
   agent CLIs pinned to exact versions with auto-update off, `/etc/claude-code/managed-settings.json`,
   an egress firewall adapted from Anthropic's reference `init-firewall.sh`, and a non-root user.
@@ -442,7 +451,16 @@ integrity or the escape-attempt suite. It is active from self-hosting stage 1 (�
 - **Stop:** Odin writes `gates/<name>.md` (what happened, diff, check results, cost so far). Then it
   logs `gate_pending`, saves state and exits. Approvals can wait for days.
 - **Decide:** `ygg approve <run> <gate> [--note …]` continues the run. `ygg reject <run> <gate>
-  --reason …` sends the reason back into the previous node as input.
+  --reason …` sends the reason back into the previous node as input. The note of an approval reaches every later
+  stage as the product owner's decisions.
+- **Notes:** the note of an approval at a gate node MUST be kept in the run's state with the gate it was given at; a
+  note given when approving another stop (a loop that gave up, `policy-violation`, `shrink-guard`) MUST NOT be. A note
+  MUST be one line: Odin MUST refuse a note with a control character. Every agent session that starts after the
+  approval (an agent or scratch node, an implementer, a reviewer) MUST get every note kept so far in its prompt, after
+  the brief, under the heading "The product owner's decisions", in the order the approvals were given, each with its
+  gate. An approval with no note MUST add nothing to later prompts. A rejection that sends the run back to a node
+  before a gate MUST drop the notes of the gates between that node and the rejecting gate, because the run meets those
+  gates again. A resumed run MUST keep the notes.
 - **Auto-pass:** Odin MUST still write the gate file and log `gate_auto_passed`. This lets people
   audit unattended decisions.
 - **Config:** set `mode:` in `factory.yaml`, and override it per run with `--mode`. Per-gate
@@ -551,18 +569,21 @@ runs it as a read-only service in `web`'s sandbox.
   <img alt="Client gallery production architecture: users use the React site on Vercel, which calls the Go API; the API stores metadata in Neon and signs short-lived R2 URLs; photo bytes go directly between browser and R2; previews use a separate Neon branch and R2 bucket" src="../../assets/diagrams/rendered/client-gallery-architecture.svg">
 </picture>
 
-| Concern | Development (in the sandbox) | Production target (deployment is outside v0) |
-| --- | --- | --- |
-| Web | Vite dev server | Vercel (static build) |
-| API | Go server | Vercel Go preset (beta) |
-| Database | Postgres container | Neon (free tier; suspends when idle, keeps data) |
-| Photos | SeaweedFS (S3 API) | Cloudflare R2 (no egress fees) |
+| Concern | Development (in the sandbox) | Production target (deployment is outside v0) | Grading (the task image) |
+| --- | --- | --- | --- |
+| Web | Vite dev server | Vercel (static build) | the web leaf's release on port 3000, all interfaces |
+| API | Go server | Vercel Go preset (beta) | the API's release on `127.0.0.1` |
+| Database | the runtime realm's Postgres 18 container (`niflheim-local`) | Neon (free tier; suspends when idle, keeps data) | Postgres 18 from the image, data under `/app/.data/` |
+| Photos | the runtime realm's SeaweedFS 4.45 (S3 API) | Cloudflare R2 (no egress fees) | SeaweedFS from the image, its S3 API on `127.0.0.1`, reached by the browser through port 3000 |
 
 Design rules:
 
 - **Photo bytes MUST NOT pass through the API or Vercel.** Viewing and downloads MUST use
   short-lived presigned URLs. The browser builds download-all zips from presigned URLs and streams
-  them to disk. If a browser cannot stream, it falls back to per-photo downloads.
+  them to disk. If a browser cannot stream, it falls back to per-photo downloads. In grading, photo bytes pass
+  through the web leaf's forward on port 3000, because the brief asks for one port. They still never pass through
+  the API. Production stays direct between the browser and storage. A reviewer MUST report an API that streams a
+  photo's bytes or a zip of photos as a violation of this rule.
 - **Thumbnails MUST be generated in the browser at upload time.** The server MUST NOT decode images.
   The server MUST accept only JPEG and WebP. It MUST enforce size and pixel limits. It MUST serve
   derivatives from the storage domain with fixed content types. Originals MUST be stored untouched.
@@ -571,26 +592,106 @@ Design rules:
 - **Previews MUST NOT see production:** production secrets MUST exist only in Vercel's Production
   environment. Previews MUST use a Neon preview branch and a separate R2 bucket with separate keys.
   Promotion to production is the `deploy-prod` hard approval point.
-- **Storage keys:** MUST be bucket-scoped. Object versioning MUST be on.
+- **Storage keys:** MUST be bucket-scoped. Object versioning MUST be on. In the grading copy, the API makes the
+  bucket at start; versioning is on when SeaweedFS supports it (best effort).
+
+#### In the grader
+
+- The product MUST start from `/app/start.sh` in the task's image, with no network, as an ordinary user, and MUST
+  serve everything on port 3000 on all interfaces within 2 minutes (`instruction.md` §6).
+- The product MUST keep all its data, files and services' data under `/app/.data/`. The project's `.gitignore` MUST
+  hold `.data/`, and nothing under it MUST be committed. A restart of `start.sh` in the same grading copy MUST find
+  the data it left.
+- Everything the browser loads MUST be served on port 3000, at the address the product was reached at. A presigned
+  storage URL MUST use that address and the bucket's path (`/<S3_BUCKET>/<key>`).
+- The web leaf MUST forward a request whose path starts with `/<S3_BUCKET>/` to `S3_ENDPOINT` with its method, path,
+  query and body unchanged and its `Host` header kept. That forward MUST NOT add an `X-Forwarded-*` header
+  (SeaweedFS's signature check may read one before `Host`: to verify). It MUST forward a request whose path starts
+  with `/api/` to `API_URL` without the `/api` prefix, with `X-Forwarded-Host` and `X-Forwarded-Proto` set from the
+  request. It MUST answer any other path from the built bundle, with `index.html` for a path that names no file. The
+  API MUST NOT serve the web app.
+- The API MUST build a public address (a presigned URL, a client link) from `X-Forwarded-Host` and
+  `X-Forwarded-Proto` when the web leaf sets them.
+- The API MUST make its bucket at start when it is missing, with object versioning on when the store supports it. In
+  the grading copy, a store without versioning is a deviation written in the run's report (proposal question 7: best
+  effort).
+- The S3 store MUST refuse a request that carries no valid signature. Its key pair MUST be made at each start, MUST
+  be kept only in the store's identity file under `/app/.data/` (readable by the product's user alone) and in the
+  leaves' environment, and MUST NOT be written to git or to a log.
 
 ### 9.4 Pack layout
 
 ```text
 realm-web/
-  pack.yaml        name, version, default roles/models, check commands
+  pack.yaml        name, version, default roles/models, check commands, a build realm's `needs`
   graph.yaml       the graph in §4.2
   prompts/         planner, initializer, implementer, reviewer-spec, reviewer-quality
-  devcontainer/    stack layer (Dockerfile, devcontainer.json, compose services)
-  templates/       api and web leaf starters: lint/test/e2e config, AGENTS.md, init.sh, run.sh
+  devcontainer/    stack layer (Dockerfile, devcontainer.json)
+  templates/       api and web leaf starters: lint/test/e2e config, AGENTS.md, init.sh, run.sh, release.sh
   checks/          the check ladder scripts
 ```
+
+A runtime realm (`niflheim-local`) has a different layout:
+
+```text
+niflheim-local/
+  pack.yaml                  name, version, services, provides, product.start
+  templates/product/start.sh the product start script
+```
+
+Kinds of realm: a **runtime realm** (Niflheim; `niflheim-local` today, one machine with no cloud) provides no leaf and
+no stack. It MAY name services, MUST say which need each of them provides (`provides`, a need: a service of its own),
+and MAY name a product start script (`product.start`, a path inside the pack). A pack that names `leaf` MUST NOT name
+`provides` or `product`.
+
+Needs: a build realm MUST declare the services its leaves need as needs (`needs`), from the list `gungnir` holds:
+`postgres` ("a Postgres-compatible database") and `s3` ("an S3 API"). A build realm SHOULD NOT name services of its
+own; the readiness checklist checks it (RR-27). The contract of a need, which the checks rely on: the provider of
+`postgres` MUST be the service `postgres` on port 5432, with a database `app`, the user `postgres` and no password;
+the provider of `s3` MUST be the service `s3`, its S3 API on port 8333 (SeaweedFS in `niflheim-local`). A need and its
+service share one name. `helheim-go`'s checks and `midgard-react`'s acceptance run reach the store at
+`http://s3:8333`.
+
+The runtime pin: a project MUST pin at most one runtime realm. The spec stage names it in `docs/leaves.yaml`
+(`runtime: {realm, realm_version}`), and Odin's `init` MUST record it in `umbrella.yaml` (`runtime` and
+`runtime_version`, both or neither), as it records each leaf's realm. Once recorded, a later run's leaves file MUST
+name the same pin or none.
+
+The runtime names: an API leaf MUST read `PORT`, `HOST`, `DATABASE_URL`, `DATA_DIR`, `S3_ENDPOINT`, `S3_REGION`,
+`S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`. A web leaf MUST read `PORT`, `HOST`, `API_URL`,
+`S3_ENDPOINT` and `S3_BUCKET`. A leaf MUST NOT need any other variable to start. `DATA_DIR` is the only folder the API
+MAY write files in (a reset outbox, say); the product start sets it under `/app/.data/`.
 
 A build realm's template MUST hold an executable `run.sh` at the leaf's root. Run in the leaf with `PORT` set, it
 MUST build what the leaf needs without fetching packages, start the leaf's service in the foreground on `PORT`,
 accept a TCP connection on `PORT` within 60 seconds, and exit non-zero with a message when it cannot start. It
-MUST NOT read a secret or write outside the leaf and the temporary folders. A build realm's tests MUST start
-`run.sh` from a copy of the template and wait for the port (readiness item RR-23). The root `start.sh` that the
-grader runs belongs to a later infra realm.
+MUST NOT read a secret or write outside the leaf and the temporary folders. `run.sh` listens on `HOST` when it is
+set. When it is not, a leaf listens where it does today: the web leaf on `127.0.0.1`, the API on all interfaces. A
+build realm's tests MUST start `run.sh` from a copy of the template and wait for the port (readiness item RR-23). The
+root `start.sh` that the grader runs is the product start script of the project's runtime realm (`niflheim-local`
+today).
+
+The release contract: a build realm's template MUST hold an executable `release.sh` at the leaf's root. Run in the
+leaf with `OUT` set to an empty folder, it MUST write into `OUT` everything the leaf needs to start with no network
+and no tool beyond the task image, and an executable `OUT/run.sh` that keeps the leaf run contract (`PORT`, `HOST`,
+60 seconds, a message on failure). It MAY fetch packages through the realm's egress. It MUST write only regular files
+and folders, MUST NOT read a secret, and MUST NOT write outside the leaf, `OUT` and the temporary folders. A build
+realm's tests MUST run `release.sh` on a copy of the template and start `OUT/run.sh` with no build tool on the
+`PATH` (no Go, no `npm`) and no installed packages (readiness item RR-24).
+
+The acceptance run MUST give the API every name of the runtime, with the sandbox's SeaweedFS as the S3 store, and
+MUST serve the web leaf with the realm's own copy of the web server, which forwards `/api/` and `/<S3_BUCKET>/` as
+above. The leaf's copy MUST NOT be the one the acceptance run uses.
+
+The product start: only the runtime realm MAY name a product start script. Odin's `init` node MUST write it at the
+project root as `start.sh`, executable, and commit it, and MUST add `.data/` to the project's `.gitignore`. No agent
+task MAY change the project root. The script MUST find the leaves at `repos/api` and `repos/web`, the paths the spec
+stage requires, and MUST exit non-zero with a message when `repos/web` is missing. It MUST refuse to run as root;
+start Postgres and the S3 store from the task image, with their data under `/app/.data/`; start each leaf from
+`.ygg/release/<leaf>/run.sh`, or from `<leaf>/run.sh` when there is no release; give the API `DATA_DIR` under
+`/app/.data/`; give the web leaf `HOST=0.0.0.0` and `PORT=3000`; keep every other port on `127.0.0.1`; exit non-zero
+with a message naming the part when a part does not start; and stop every part when it is stopped (readiness item
+RR-25).
 
 ### 9.5 The check ladder
 
@@ -621,7 +722,9 @@ The rungs run from fast to slow. Each rung's failure output goes back to the imp
      be rejected;
    - PIN attempts MUST be rate-limited.
 5. **End-to-end:** Playwright runs against the running app, with one spec per acceptance criterion.
-   The implementer writes these specs and can see them.
+   The implementer writes these specs and can see them. A Playwright spec MUST be told whether a real store is
+   behind `/<S3_BUCKET>/`: the acceptance run MUST set `YGG_E2E_STORE=1`, and the e2e rung MUST leave it unset. A
+   spec MAY stub the store only when it is unset.
 6. **Reviewers** (read-only agents, typed findings) run in this order: spec compliance, then
    simplicity, then code quality. The spec-compliance reviewer uses doc↔code and `tasks.md`, and flags
    behaviour changes without a spec delta. The simplicity reviewer is Ponytail `ponytail-review`,
@@ -766,8 +869,22 @@ benchmarks/<task-id>/
   stay green. The two kinds are reported separately. A whole-product brief like client gallery lite
   has mostly fail-to-pass tests. Feature-level tasks on an existing product use both.
 - **Grading is isolated:** graders MUST run in their own container, against the built app, after the
-  agent containers have stopped. Agents MUST NOT share a container, filesystem or network with the
+  agent containers have stopped and after the release sandbox has stopped. Agents MUST NOT share a container, filesystem or network with the
   grader, so they cannot observe the suite.
+- **The release at export:** when Odin exports `/app` (`ygg grade`, `ygg bridge`), it MUST build the release of each
+  leaf that has a `release.sh`: in the project's acceptance sandbox, on a snapshot of the commits it exports, with no
+  agent and no secret. It MUST place each release at `/app/.ygg/release/<leaf>/` and MUST NOT commit it. It MUST stop
+  that sandbox before the grader starts. A release MUST have its own bound, named in the code, and MUST NOT be held
+  to the snapshot's limits for source (32 MiB per file, 256 MiB in all), which a static Go binary can come near. A
+  release that fails, times out, holds anything but regular files and folders, or passes its bound MUST fail the
+  grade (`GradeFailed`, no `score.json`, a resume grades again). It MUST NOT count as a score of 0. Odin MAY keep a
+  release in the run folder by the commits it was built from, and reuse it for an export of the same commits.
+- **The grader image's services:** a task version MAY add services to its image while its brief and brief hash stay
+  the same. `score.json` already names the task version, which says which image graded the product. A task image
+  that bakes in services MUST bake in the versions of the runtime realm the factory's projects pin: the same
+  SeaweedFS image digest, and the same Postgres major version. The minor MAY differ. `ouroboric`'s
+  `check-repos.sh --check services` MUST compare them, and the Postgres image of a build realm's template CI, and
+  MUST fail on a difference (readiness item RR-26).
 - Black-box only: hidden tests MUST use only what the brief describes (UI and public API). Then any
   factory's output can be scored.
 - Output: `score.json` (pass/fail per scenario, by category) joined with the run's metrics. The scores come from

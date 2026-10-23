@@ -974,29 +974,7 @@ These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
 - **Phase 6 half done:** 2026-10-23: the metrics and the report group tasks, usage and gave-up work by leaf, with one
   reward per task (the plan's decision 13; [odin#36](https://github.com/ouroboric-dev/odin/pull/36), merged). **Still open:** a grade per leaf from a suite of its own, and the weights. Both wait for question 10
   of the Phase 6 plan (B-140) and for a per-leaf suite in `huldra`.
-
-### B-117: the web leaf's `run.sh` serves on loopback only
-
-- **Where:** `midgard-react` (`templates/web/run.sh`).
-- **Problem:** `run.sh` starts `vite preview` with `--host 127.0.0.1`, and vite preview's host check allows only
-  `localhost` and `127.0.0.1`. A grader that reaches the leaf by another name, or from outside the container's
-  loopback, is refused. Not tested.
-- **Fix:** make the host configurable (`HOST`, default loopback) and check what the grader's request uses.
-- **Status:** reasoned.
-- **Still open:** whether the grader reaches the leaf waits for question 10 of the Phase 6 plan (B-140).
-
-### B-118: a leaf's dependencies do not reach the grader
-
-- **Where:** the task image (Phase 6), `helheim-go` and `midgard-react` (`run.sh`).
-- **Problem:** the grader has no network. The Go leaf builds with `GOPROXY=off`, so its `pgx` modules must be in the
-  module cache. The web leaf needs `node_modules`, installed by `init.sh`. Nothing yet puts either into the image
-  the grader runs.
-- **Seen on 2026-10-22:** the grader's export refuses anything that is not a regular file, so a `node_modules` with
-  `.bin` symlinks fails; the grade smoke installs with `npm ci --no-bin-links` and commits `node_modules`. Files the
-  grader's container creates belong to a subuid (B-139).
-- **Fix:** decide how they arrive: a baked image, or a vendored folder. A Phase 6 question for the task's image.
-- **Status:** requirement.
-- **Still open:** it is part of question 10 of the Phase 6 plan (B-140), to be answered after v0-H19.
+- **Gallery-runtime change (2026-10-23):** unchanged, except that a leaf now starts alone from its release (`.ygg/release/<leaf>/run.sh`), which a per-leaf suite would need. The per-leaf suite in `huldra` is still the founder's.
 
 ### B-119: a run does not refuse an unpriced model with no cost until the first session
 
@@ -1176,14 +1154,6 @@ Code locations are at odin `471d535` and ouroboric `0f6b3fa`.
 
 Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](https://github.com/ouroboric-dev/gungnir/pull/20), merged), odin `2b9dcb7` ([odin#36](https://github.com/ouroboric-dev/odin/pull/36) and [odin#37](https://github.com/ouroboric-dev/odin/pull/37), merged) and ouroboric `9077261` ([ouroboric#77](https://github.com/ouroboric-dev/ouroboric/pull/77), merged).
 
-### B-140: the brief's runtime and the realms' do not fit
-
-- **Where:** `mimir/client-gallery-lite` (`instruction.md` §6, `environment/Dockerfile`), `helheim-go/pack.yaml`, `midgard-react`, `B-117`, `B-118`, `B-078`.
-- **Problem:** the frozen brief asks for one self-contained machine: `/app/start.sh` starts the whole product on port 3000 on all interfaces, with no outside services. The web realm builds a React leaf and a Go API leaf with Postgres and SeaweedFS, and the web leaf serves on `127.0.0.1` only. The grader image holds Playwright, Node and Python, no Postgres and no SeaweedFS, and the grader has no network. A product built as the realms' design says cannot start in the grader. No real-agent run of the `software` graph has planned this brief yet.
-- **Fix:** decide question 10 of the [Phase 6 plan](plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md) after v0-H19, which shows what the planner designs. A: bake Postgres and SeaweedFS into a new task version of the image and have the factory write a root `start.sh`. B: give the realms a single-machine flavor (SQLite and files on disk, one process). C: tell the planner by the brief only, and let the realms' docs yield.
-- **Status:** reasoned (read together; not run). B-116, B-117 and B-118 keep their second halves behind this question.
-- **Decided:** question 10 is answered: option A (the founder, 2026-10-22), in the [gallery-runtime change](changes/2026-10-22-gallery-runtime/), whose questions the founder answered on 2026-10-23. It is fixed when that change's tasks merge (T31 marks it done).
-
 ### B-142: the factory writes no `routing_lookup`, so the routing metric reads 0 lookups
 
 - **Where:** `odin/internal/metrics/grade.go` (`Routing`, `routing()`, which says "the factory does not write them yet"), `gungnir` (`EventRoutingLookup`). Nothing in `odin/internal/engine` writes the event.
@@ -1297,14 +1267,105 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 - **Fix:** `trap '' HUP` is already at `ygg-proof-run.sh:426`, and it cannot stop a Go program that re-enables SIGHUP with `signal.Notify` (`odin/cmd/ygg/main.go`). Either run `grade` and `report` under `setsid`, or have odin ignore SIGHUP in those commands. Decide which first. Test: a hang-up during the run does not cancel the grade.
 - **Status:** reasoned (the ouroboric fix re-review, ouroboric#77, merged).
 
+### B-159: the acceptance run does not build or start the release, so no check runs `release.sh`
+
+- **Where:** `midgard-react` and `helheim-go` (the acceptance run, `templates/*/release.sh`), `odin/internal/engine` (the acceptance node), the [gallery-runtime proposal](changes/2026-10-22-gallery-runtime/proposal.md) ("Not in this change").
+- **Problem:** the acceptance run builds and starts the leaves from source. Odin builds the release only at export (`ygg grade`, `ygg bridge`), so a `release.sh` an agent broke is first seen by the grade, and the ladder never exercises it. The template's own tests run it (RR-24); a product's `release.sh` is in the leaf and unprotected.
+- **Fix:** have the acceptance run build the release and start `OUT/run.sh`, or add a rung that runs `release.sh` on the leaf. Decide which; the first needs a change proposal for spec §9.4. Test: a leaf whose `release.sh` fails fails the acceptance run.
+- **Status:** reasoned (the proposal names it and defers it).
+
+### B-160: the development sandbox's SeaweedFS accepts anonymous requests
+
+- **Where:** `niflheim-local/pack.yaml` (the `s3` service, `command: [server, -s3, -dir=/data]`).
+- **Problem:** the sandbox's store runs with no S3 identities, so it accepts a request with no signature. The product start gives the grading copy's SeaweedFS an identity (spec §9.3, "In the grader"), so a bug that only an unsigned request hides (an API that never signs) passes the ladder and fails the grade.
+- **Fix:** give the sandbox's store an identity file and the leaves' environment its key pair, as the product start does, and check in the realm's tests that an unsigned request is refused. Test: the sandbox's `s3` refuses an unsigned PUT.
+- **Status:** reasoned (the proposal names it and defers it).
+
+### B-161: object versioning on SeaweedFS is off in the product
+
+- **Where:** `niflheim-local/templates/product/start.sh`, `helheim-go` (the API's bucket creation).
+- **Problem:** found by the founder's smoke (T30, 2026-10-23, proposal question 7). `start.sh` never enables bucket versioning and SeaweedFS buckets start unversioned. Spec §9.3 asks for versioning when the store supports it, and a deviation written in the run's report when it does not. Nothing yet writes that deviation, and nobody checked whether SeaweedFS 4.45 accepts the call.
+- **Fix:** try the S3 `PutBucketVersioning` call when the API makes its bucket; if SeaweedFS accepts it, turn versioning on; if not, make the report name the deviation. Test: a bucket made by the API reports its versioning status.
+- **Status:** proved (T30 read `start.sh`).
+
+### B-162: a cloud flavor of Niflheim
+
+- **Where:** a new realm (`niflheim-vercel`, say), [realm-leaf-naming](changes/2026-10-17-realm-leaf-naming/), the [gallery-runtime proposal](changes/2026-10-22-gallery-runtime/proposal.md) ("Not in this change").
+- **Problem:** `niflheim-local` is one machine with no cloud: it starts Postgres and SeaweedFS in the sandbox and in the grader. Production (Vercel, Neon, R2) and operations have no realm, and a project pins at most one runtime realm.
+- **Fix:** design the cloud flavor: what it provides, how a project pins two runtimes (or one that holds both), and what stays outside v0. Needs a design and a change proposal.
+- **Status:** requirement (the charter's Niflheim).
+
+### B-163: the changes README's archive rule, which no change follows yet
+
+- **Where:** [changes/README.md](changes/README.md), every folder under `changes/`.
+- **Problem:** the README says a merged change moves to `archive/` after its delta is folded into `../system/`. No change did that: each folded its delta into the dated v0 spec and stayed in `changes/`, and neither `changes/archive/` nor `system/` exists. The README states a rule that nothing follows.
+- **Fix:** either move every merged change to `archive/` and the living spec into `system/` (a piece of work of its own), or change the README to say what the changes do. Test: none; the docs check passes after the move.
+- **Status:** proved (the folder listing).
+
+### B-164: `ygg-smoke-real.sh` can die of SIGPIPE on a leaf with many odd files
+
+- **Where:** `ouroboric/scripts/ygg-smoke-real.sh:128`.
+- **Problem:** `odd="$(cd "$leaf" && find . -name .git -prune -o ! -type f ! -type d -print | head -n 1)"` stops `find` when `head` exits. Under `pipefail` a leaf with many odd files dies of SIGPIPE (exit 141, no message). [ouroboric#80](https://github.com/ouroboric-dev/ouroboric/pull/80) fixed the same class in `ygg-smoke-runtime.sh`.
+- **Fix:** read the first line without closing the pipe early (`sed -n 1p` reads to the end), or collect the list and take the first line. Test: a leaf with 100 odd files fails with the message, not 141.
+- **Status:** reasoned (T30, 2026-10-23).
+
+### B-165: `check-repos.sh --check services` reads the first `postgresql-<major>` in a comment
+
+- **Where:** `ouroboric/scripts/check-repos.sh:110`.
+- **Problem:** the check takes the first `postgresql-<major>` match in `mimir`'s Dockerfile, comments included. A comment that names `postgresql-18` before the install line makes it read the wrong token.
+- **Fix:** anchor the match on the install line (`apt-get install` and the package argument). Test: a Dockerfile with a comment naming another major before the install line still reads the install line's.
+- **Status:** reasoned (T30, 2026-10-23).
+
+### B-166: `ygg-smoke-runtime.sh` can test a stale stack image
+
+- **Where:** `ouroboric/scripts/ygg-smoke-runtime.sh:62` (`stack()`, the newest `localhost/ygg-stack-<realm>` image), `~/ygg-it/factory.yaml` (no `realms:`).
+- **Problem:** the smoke defaults to the newest `localhost/ygg-stack-<realm>` image, which can be an old build: T30 found a Go 1.26.9 image after the 1.26.10 bump. The founder's `~/ygg-it/factory.yaml` has no `realms:`, so a rebuild needs a copy of it with `realms.dir`. Nothing says how the smoke learns that the stack is current.
+- **Fix:** have the smoke compare the image to the realm's stack (the realm's stack hash, or run `ygg sandbox build` first) and refuse a stale one, and say in the runbook which config the rebuild takes. Test: a stale image is refused with the message.
+- **Status:** proved (T30, 2026-10-23).
+
+## Done
+
+### B-117: the web leaf's `run.sh` serves on loopback only
+
+- **Where:** `midgard-react` (`templates/web/run.sh`).
+- **Problem:** `run.sh` starts `vite preview` with `--host 127.0.0.1`, and vite preview's host check allows only
+  `localhost` and `127.0.0.1`. A grader that reaches the leaf by another name, or from outside the container's
+  loopback, is refused. Not tested.
+- **Fix:** make the host configurable (`HOST`, default loopback) and check what the grader's request uses.
+- **Status:** reasoned.
+- **Still open:** whether the grader reaches the leaf waits for question 10 of the Phase 6 plan (B-140).
+- **Fixed:** 2026-10-23 by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/): the web leaf reads `HOST` (`run.sh` and the release), and the product start sets `HOST=0.0.0.0` for port 3000 alone ([midgard-react#21](https://github.com/ouroboric-dev/midgard-react/pull/21), [helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14) for the API, [niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2) for the product start). Whether the real grader reaches it is the founder's smoke (T30): the runtime smoke passed on the real engine, its listener check among the checks.
+
+### B-118: a leaf's dependencies do not reach the grader
+
+- **Where:** the task image (Phase 6), `helheim-go` and `midgard-react` (`run.sh`).
+- **Problem:** the grader has no network. The Go leaf builds with `GOPROXY=off`, so its `pgx` modules must be in the
+  module cache. The web leaf needs `node_modules`, installed by `init.sh`. Nothing yet puts either into the image
+  the grader runs.
+- **Seen on 2026-10-22:** the grader's export refuses anything that is not a regular file, so a `node_modules` with
+  `.bin` symlinks fails; the grade smoke installs with `npm ci --no-bin-links` and commits `node_modules`. Files the
+  grader's container creates belong to a subuid (B-139).
+- **Fix:** decide how they arrive: a baked image, or a vendored folder. A Phase 6 question for the task's image.
+- **Status:** requirement.
+- **Still open:** it is part of question 10 of the Phase 6 plan (B-140), to be answered after v0-H19.
+- **Fixed:** 2026-10-23 by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/): the services come with the 4.1.0 image ([mimir#7](https://github.com/ouroboric-dev/mimir/pull/7)), and the leaves arrive as a release that Odin builds at export, in the acceptance sandbox, with nothing committed ([odin#39](https://github.com/ouroboric-dev/odin/pull/39); each realm's `release.sh`: [midgard-react#21](https://github.com/ouroboric-dev/midgard-react/pull/21), [helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14)). The grade smoke's workaround (committing `node_modules`) stays in the smoke only.
+
+### B-140: the brief's runtime and the realms' do not fit
+
+- **Where:** `mimir/client-gallery-lite` (`instruction.md` §6, `environment/Dockerfile`), `helheim-go/pack.yaml`, `midgard-react`, `B-117`, `B-118`, `B-078`.
+- **Problem:** the frozen brief asks for one self-contained machine: `/app/start.sh` starts the whole product on port 3000 on all interfaces, with no outside services. The web realm builds a React leaf and a Go API leaf with Postgres and SeaweedFS, and the web leaf serves on `127.0.0.1` only. The grader image holds Playwright, Node and Python, no Postgres and no SeaweedFS, and the grader has no network. A product built as the realms' design says cannot start in the grader. No real-agent run of the `software` graph has planned this brief yet.
+- **Fix:** decide question 10 of the [Phase 6 plan](plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md) after v0-H19, which shows what the planner designs. A: bake Postgres and SeaweedFS into a new task version of the image and have the factory write a root `start.sh`. B: give the realms a single-machine flavor (SQLite and files on disk, one process). C: tell the planner by the brief only, and let the realms' docs yield.
+- **Status:** reasoned (read together; not run). B-116, B-117 and B-118 keep their second halves behind this question.
+- **Decided:** question 10 is answered: option A (the founder, 2026-10-22), in the [gallery-runtime change](changes/2026-10-22-gallery-runtime/), whose questions the founder answered on 2026-10-23. It is fixed when that change's tasks merge (T31 marks it done).
+- **Fixed:** 2026-10-23: option A, by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/). The runtime realm [niflheim-local#1](https://github.com/ouroboric-dev/niflheim-local/pull/1) and [niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2) (services, product start); needs and the runtime pin [gungnir#21](https://github.com/ouroboric-dev/gungnir/pull/21); the run joins the runtime realm and `init` writes the start [odin#38](https://github.com/ouroboric-dev/odin/pull/38); the release in the export [odin#39](https://github.com/ouroboric-dev/odin/pull/39) and the real-realm fixtures [odin#40](https://github.com/ouroboric-dev/odin/pull/40); the realms [helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14), [midgard-react#21](https://github.com/ouroboric-dev/midgard-react/pull/21) and the prompts [voluspa#3](https://github.com/ouroboric-dev/voluspa/pull/3); the 4.1.0 image [mimir#7](https://github.com/ouroboric-dev/mimir/pull/7); the smoke and the services check [ouroboric#79](https://github.com/ouroboric-dev/ouroboric/pull/79) ([ouroboric#80](https://github.com/ouroboric-dev/ouroboric/pull/80) fixed a SIGPIPE the smoke found). The founder's smoke on the real engine (T30, 2026-10-23) passed.
+
 ### B-158: the realms pin the stack's services, and the grader image copies them
 
 - **Where:** `helheim-go/pack.yaml` (`services:`), `odin/internal/run/prepare.go` (the union of the services of every realm a run uses), `mimir/client-gallery-lite` `environment/Dockerfile` (4.1.0). The fix is the gallery-runtime change's ([change](changes/2026-10-22-gallery-runtime/)) T02, T03, T11 and T12 (`niflheim-local`), T05 and T06 (`gungnir`), T07 to T09 (`odin`), T14 (`helheim-go`), T21 (`mimir`) and T27 (the services check).
 - **Problem:** `helheim-go/pack.yaml` declares `postgres` (`docker.io/library/postgres:17.10-bookworm@sha256:…`) and `seaweedfs` (`chrislusf/seaweedfs:4.45@sha256:…`). Odin starts them by compose beside the leaf's sandbox (spec §9.3, "Development (in the sandbox)" column). They are test fixtures for the API's checks (integration, authz) and the acceptance run, not deployment infrastructure. So a language recipe ("a Go API") pins a database and a store and their versions, and a Helheim Go service on another store would have to fight the pack. The gallery-runtime change (option A of question 10) bakes the same services into the grader image, so one fact lives in two places. [yggdrasil#99](https://github.com/ouroboric-dev/yggdrasil/pull/99) (Postgres 18) had to move the realm and the image together, and the change needs a rule that their major versions match. Real infrastructure belongs to Niflheim (deploy, cloud, operations; change realm-leaf-naming), which is not built. [B-078](#b-078-the-graders-app-needs-a-startsh-that-a-real-project-does-not-yet-provide) (no infra realm writes the root `start.sh`) is the same gap, and question 2 of the gallery-runtime change first assumed `midgard-react` owns the root `start.sh` only for that reason, until the founder chose Niflheim (2026-10-23). See also [B-140](#b-140-the-briefs-runtime-and-the-realms-do-not-fit).
 - **Fix:** the founder chose (a) on 2026-10-23 (see Status). Candidates: (a) a minimal Niflheim realm that owns the service versions (the sandbox containers and the grader image's baked services) and the root `start.sh`, with `helheim-go` declaring needs ("a Postgres-compatible database, an S3 API") instead of images; (b) services declared on the project (the plan or the graph pack) rather than in a realm.
 - **Status:** decided 2026-10-23 by the founder, before run 1, replacing the decision of 2026-10-22 (keep it for run 1): candidate (a). A new runtime realm, `niflheim-local`, owns the services (Postgres 18, SeaweedFS 4.45) and the root `start.sh`; the build realms declare `needs` instead of images; the grader image follows Niflheim's versions. Closed by the gallery-runtime change: T31 marks it done when the change lands.
-
-## Done
+- **Fixed:** 2026-10-23, by the founder's decision of candidate (a), before run 1: `niflheim-local` owns the services and the product start ([niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2)), `gungnir` holds `needs`, `provides` and the runtime pin ([gungnir#21](https://github.com/ouroboric-dev/gungnir/pull/21)), `odin` resolves needs and starts the services ([odin#38](https://github.com/ouroboric-dev/odin/pull/38)), `helheim-go` declares needs ([helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14)), and `check-repos.sh --check services` keeps the grader image on the same versions ([ouroboric#79](https://github.com/ouroboric-dev/ouroboric/pull/79)). Follow-ups are B-159 to B-166.
 
 ### B-134: the sample suite and the hidden suite do not print the keyed score line
 
@@ -1590,6 +1651,7 @@ Small, and worth doing soon: one word in each script, and one test per rung.
   to the infra realm, later.
 - **Status:** reasoned (the first real run is where to see it).
 - **Fixed:** 2026-10-21, as far as the realms go, by the [change proposal](changes/2026-10-21-leaf-run-contract/proposal.md): [helheim-go#12](https://github.com/ouroboric-dev/helheim-go/pull/12) and [midgard-react#19](https://github.com/ouroboric-dev/midgard-react/pull/19), with readiness item RR-23. Still open: the root `start.sh` (the infra realm), B-117 and B-118. Decided 2026-10-23 by the founder: the root `start.sh` is the product start of the runtime realm `niflheim-local`, which Odin's `init` writes at the project root (the [gallery-runtime change](changes/2026-10-22-gallery-runtime/), T10 and T12).
+- **Fixed:** 2026-10-23 for the rest, by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/): the product start script is `niflheim-local`'s ([niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2)) and Odin's `init` writes and commits it at the project root ([odin#38](https://github.com/ouroboric-dev/odin/pull/38)). B-117 and B-118 are fixed in the same change.
 
 ### B-106: the reasoning effort is `high` for every OpenCode session
 

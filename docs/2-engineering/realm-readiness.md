@@ -27,6 +27,7 @@ The "applies to" column says which realms an item covers:
 - `all`: every realm.
 - `build`: a realm that builds software. It has a stack, a template and a ladder.
 - `document`: a realm that makes documents. Its pack declares no stack.
+- `runtime`: a realm that provides services and the product start. It has no stack, template or ladder.
 
 ## The checklist
 
@@ -55,6 +56,10 @@ The "applies to" column says which realms an item covers:
 | RR-21 | build | smoke | Does `ygg-smoke-realms.sh` include the realm, and does it pass? | auto | `ygg-smoke-realms.sh`. This is a wiring item. |
 | RR-22 | document | contract | Does the pack declare no stack, and are its checks document checks? | auto | `go test -run Pack ./...` in the leaf |
 | RR-23 | build | run | Does the template ship an executable `run.sh` that starts the leaf on `PORT`, and does a test start it from a copy of the template and wait for the port? | auto | `YGG_REQUIRE_TEMPLATES=1 go test -run RunScript ./...` in the leaf (helheim-go #12, midgard-react #19) |
+| RR-24 | build | release | Does the template ship an executable `release.sh`, and does a test build the release from a copy of the template and start `OUT/run.sh` with no build tool on the `PATH`? | auto | `YGG_REQUIRE_TEMPLATES=1 go test -run ReleaseScript ./...` in the leaf |
+| RR-25 | runtime | run | Does the product start script start the services and the leaves of a product made from the templates, and serve port 3000 on all interfaces? | auto | `go test -run ProductStart ./...` in the leaf, and `ygg-smoke-runtime.sh` in the task image. |
+| RR-26 | runtime | services | Does the pack provide every need of the build realms, with each service pinned by digest, and does every task image that bakes in services hold the same versions? | auto | `go test -run Pack ./...` in the leaf, and `check-repos.sh --check services`. |
+| RR-27 | build | needs | Does the pack declare its needs, and name no service of its own? | auto | `go test -run Pack ./...` in the leaf |
 
 ## Items that read GitHub
 
