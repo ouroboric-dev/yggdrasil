@@ -113,16 +113,16 @@ looks in the current folder and does not find the run.
 Every proof run gives the same product decisions, word for word, so that the runs differ in the factory and not in
 the product. The runs use task `client-gallery-lite` 4.1.0, and question 10 is answered (option A).
 
-- At `design-gate`, approve with the first block as the note. Paste it; never retype it:
-  `scripts/ygg-proof-run.sh --continue RUN --approve design-gate --note "<the block>"`. The note reaches every later
-  stage as "The product owner's decisions".
-- A note given when approving a gate reaches every later stage, whatever the gate. A note at a gate inside the task
-  loop (`feature-gate`, `merge-gate`, `pointer-gate`, `contract-gate`) or at `plan-gate` reaches every later task.
-  Give a note at another gate only for a decision. A second approval with a blank note keeps the gate's earlier note;
-  a note that is not blank replaces it. A note is one line: no control characters and no line or paragraph
-  separators.
-- If the spec at `spec-gate` still lacks a decision, reject it with the second block:
-  `scripts/ygg-proof-run.sh --continue RUN --reject spec-gate --reason "<the block>"`.
+- At `design-gate`, approve with the first block as the note, passed through a variable (see "Pass a block" below).
+  The note reaches every later stage as "The product owner's decisions".
+- A note given when approving a gate node reaches every later stage. A note at a gate inside the task loop
+  (`feature-gate`, `merge-gate`, `pointer-gate`, `contract-gate`) or at `plan-gate` reaches every later task. A note at
+  an escalation or another hard stop is not kept for the later stages: it stays on the event. Give a note at another
+  gate only for a decision. A second approval with a blank note keeps the gate's earlier note; a note that is not
+  blank replaces it. A note is one line: no control characters (C1 ones too) and no line or paragraph separators.
+- If the spec at `spec-gate` still lacks a decision, reject it with the second block, passed the same way. A
+  rejection drops the notes of the gates it goes back past: a `spec-gate` rejection keeps the `design-gate` note, but
+  a rejection that goes back before `design-gate` does not.
 
 The note for `design-gate`:
 
@@ -134,6 +134,30 @@ The reason for rejecting `spec-gate`:
 
 ```text
 The product owner answered the design's open questions at the design gate (2026-10-22), and the answers apply to every run. The spec must include them, with routes, data model, acceptance criteria and tests, and list each one under "Deviations from the design doc" as the product owner's decision: 1. A password reset for photographers: primarily by email, with security questions set at sign-up as the second way. The graded machine has no outside services and no network, so the email sender is configurable; with none configured, each reset email is written to a local outbox file under /app/.data/ that the operator can read. 2. Photographers can delete photos, galleries and their own account. 3. The client's email step says that the photographer will see the email entered. 4. A storage cap of 10 GB per photographer by default, configurable per photographer. 5. A change of a gallery password or PIN logs out the clients already in, and a photographer's password change logs out their other sessions.
+```
+
+### Pass a block
+
+The second block holds double quotes and both blocks hold apostrophes, so never paste a block between quotes on the
+command line: zsh breaks the command without a word. Put the block in a variable with a quoted heredoc, then pass the
+variable. For the note at `design-gate`:
+
+```zsh
+N=$(cat <<'EOF'
+<paste the first block here>
+EOF
+)
+scripts/ygg-proof-run.sh --continue RUN --approve design-gate --note "$N"
+```
+
+For the reason at `spec-gate`:
+
+```zsh
+R=$(cat <<'EOF'
+<paste the second block here>
+EOF
+)
+scripts/ygg-proof-run.sh --continue RUN --reject spec-gate --reason "$R"
 ```
 
 ## The rehearsal
