@@ -41,6 +41,6 @@ A child `AGENTS.md` may add rules; it must not loosen these.
 - Engineering: `docs/2-engineering/` (specs, plans, change proposals, living spec).
 - Standards: <https://github.com/ouroboric-dev/ouroboric/tree/main/docs/4-ways-of-working>
 - Graphs: `voluspa/`, one folder per graph (`software/`), with its `graph.yaml` and stage prompts. Realms
-  (`midgard-react/`, `helheim-go/`) hold a stack, an implementer prompt, a template and checks, and no graph. `niflheim-local/` is the runtime realm: it holds the
-  services and the product start.
+  (`midgard-react/`, `helheim-go/`) hold a stack, an implementer prompt, a template and checks, and no graph.
+  `niflheim-local/` is the runtime realm: it holds the services and the product start.
   Operators name a graph with `ygg run --graph`: see `docs/3-using/operations/README.md`.

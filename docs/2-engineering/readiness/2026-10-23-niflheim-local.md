@@ -14,7 +14,7 @@ only a founder run of `setup-repo.sh` fixes that.
 
 - **Realm:** [`niflheim-local`](https://github.com/ouroboric-dev/niflheim-local) at
   [`8f21bf0`](https://github.com/ouroboric-dev/niflheim-local/commit/8f21bf011db8c79afeeb7c868f94f3c28808acb9), a
-  runtime realm (kind `runtime`). The change's final pull request moves the umbrella's pointer to that commit.
+  runtime realm (kind `runtime`). The umbrella's pointer is at that commit, moved in the gallery-runtime change.
 - **Checklist:** the [realm readiness checklist](../realm-readiness.md), the items whose "applies to" is `all` or
   `runtime`, with RR-13 and RR-21 added because the realm pins services and has no leaf. The other build and document
   items are not rows here.
