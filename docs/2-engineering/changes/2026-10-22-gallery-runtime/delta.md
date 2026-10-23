@@ -11,8 +11,8 @@ style: spec
 **Amended 2026-10-23.** The founder answered the [proposal](proposal.md)'s questions, so the release lines are no
 longer waiting. The product start and the services move to a runtime realm, `niflheim-local` (question 2, B-158);
 the product's data folder is `/app/.data/` (question 4); an approval's note reaches later stages (finding F1). The
-lines marked **(assumed)** are details the founder has not yet said yes to: the names `needs`, `provides` and
-`runtime`, the two needs, and `DATA_DIR`.
+founder also confirmed, on 2026-10-23, the names `needs`, `provides` and `runtime`, the two needs, `DATA_DIR`, and
+the name `s3` for the store's service.
 
 ## Added
 
@@ -44,7 +44,7 @@ lines marked **(assumed)** are details the founder has not yet said yes to: the 
 
 ### The runtime names and the release (§9.4)
 
-- §9.4, the runtime names: an API leaf MUST read `PORT`, `HOST`, `DATABASE_URL`, `DATA_DIR` **(assumed)**,
+- §9.4, the runtime names: an API leaf MUST read `PORT`, `HOST`, `DATABASE_URL`, `DATA_DIR`,
   `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`. A web leaf MUST read `PORT`,
   `HOST`, `API_URL`, `S3_ENDPOINT` and `S3_BUCKET`. A leaf MUST NOT need any other variable to start. `DATA_DIR` is
   the only folder the API MAY write files in (a reset outbox, say); the product start sets it under `/app/.data/`.
@@ -65,17 +65,17 @@ lines marked **(assumed)** are details the founder has not yet said yes to: the 
 ### The runtime realm, needs and the product start (§9.4, §6.1)
 
 - §9.4, kinds of realm: a **runtime realm** (Niflheim; `niflheim-local` today, one machine with no cloud) provides no
-  leaf and no stack. It MAY name services, MUST say which need each of them provides (`provides` **(assumed)**, a need:
+  leaf and no stack. It MAY name services, MUST say which need each of them provides (`provides`, a need:
   a service of its own), and MAY name a product start script (`product.start`, a path inside the pack). A pack that
   names `leaf` MUST NOT name `provides` or `product`.
-- §9.4, needs **(assumed)**: a build realm MUST declare the services its leaves need as needs (`needs`), from the list
+- §9.4, needs: a build realm MUST declare the services its leaves need as needs (`needs`), from the list
   `gungnir` holds: `postgres` ("a Postgres-compatible database") and `s3` ("an S3 API"). A build realm SHOULD NOT name
   services of its own; the readiness checklist checks it (RR-27).
 - §9.4, the contract of a need, which the checks rely on: the provider of `postgres` MUST be the service `postgres` on
   port 5432, with a database `app`, the user `postgres` and no password; the provider of `s3` MUST be the service
-  `seaweedfs`, its S3 API on port 8333. These are the names `helheim-go`'s checks and `midgard-react`'s acceptance run
-  use today.
-- §9.4, the runtime pin **(assumed)**: a project MUST pin at most one runtime realm. The spec stage names it in
+  `s3`, its S3 API on port 8333 (SeaweedFS in `niflheim-local`). A need and its service share one name (the founder,
+  2026-10-23). `helheim-go`'s checks and `midgard-react`'s acceptance run reach the store at `http://s3:8333`.
+- §9.4, the runtime pin: a project MUST pin at most one runtime realm. The spec stage names it in
   `docs/leaves.yaml` (`runtime: {realm, realm_version}`), and Odin's `init` MUST record it in `umbrella.yaml`
   (`runtime` and `runtime_version`, both or neither), as it records each leaf's realm. Once recorded, a later run's
   leaves file MUST name the same pin or none.

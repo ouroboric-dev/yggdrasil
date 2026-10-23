@@ -123,7 +123,7 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
   snapshot's 32 MiB per file, because a static Go binary can come near 32 MiB.
 - **Niflheim owns the product start and the services (question 2, B-078, B-158).** `niflheim-local` is a runtime
   realm: it provides no leaf and no stack. Its `pack.yaml` names the services (`postgres`, Postgres 18 by digest;
-  `seaweedfs`, SeaweedFS 4.45 by digest), says which need each one provides (`provides`), and names the product start
+  `s3`, SeaweedFS 4.45 by digest), says which need each one provides (`provides`), and names the product start
   script (`product.start`, `templates/product/start.sh`).
   - A build realm declares its needs instead of images: `helheim-go` says `needs: [postgres, s3]`, "a
     Postgres-compatible database" and "an S3 API", from a fixed list in `gungnir`. It names no service.
@@ -131,7 +131,9 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
     and Odin's `init` records it in `umbrella.yaml` (`runtime`, `runtime_version`). The spec prompt names
     `niflheim-local` 0.1.0, the only runtime realm.
   - Odin gives a leaf's sandbox, and the snapshot's, the runtime realm's service for each need of the realms
-    involved, under the service's own name, so the checks reach `postgres:5432` and `seaweedfs:8333` as today. A need
+    involved, under the service's own name, so the checks reach `postgres:5432` and `s3:8333`: each need and the
+    service that provides it share one name (the founder, 2026-10-23). Today `helheim-go` names the store's service
+    `seaweedfs`; T14 moves its checks to `s3`. A need
     that the runtime realm does not provide, or a need with no runtime realm, stops the run before any leaf or leaf
     sandbox exists: at the `ready` node, which reads `docs/leaves.yaml`, and again at `init`.
   - Odin's `init` writes the runtime realm's product start at the project root as `start.sh`, executable, and commits
@@ -141,9 +143,9 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
   - The grader image follows Niflheim's versions: the same SeaweedFS digest and the same Postgres major. A check in
     `ouroboric` (`check-repos.sh --check services`) compares `niflheim-local/pack.yaml`, the 4.1.0 Dockerfile and the
     Postgres image of `helheim-go`'s template CI, and fails on a difference.
-  - **Assumed (the founder's yes on this pull request):** the names `needs`, `provides` and `runtime`, the two needs
-    `postgres` and `s3`, and that the planner names the runtime realm in `docs/leaves.yaml`. The founder decided what
-    Niflheim owns, not how a project pins it; say so on the pull request if you want another way.
+  - **Decided by the founder (2026-10-23):** the names `needs`, `provides` and `runtime`, the two needs `postgres`
+    and `s3`, the service names `postgres` and `s3`, and that the spec stage names the runtime realm in
+    `docs/leaves.yaml`, recorded in `umbrella.yaml`.
 - **The web leaf serves on `HOST` (B-117).** The web template gets `serve.mjs`, a server on Node's standard library.
   It serves the bundle, forwards `/api/` to the API and forwards the photo store's path to the S3 API. Both `run.sh`
   and the release use it. It listens on `HOST`, by default `127.0.0.1`. The API listens on `HOST` too, when it is set.
@@ -155,8 +157,8 @@ The founder said yes to each of these on 2026-10-23 (the questions above).
 - **The leaves read fixed names.** The API reads `PORT`, `HOST`, `DATABASE_URL`, `DATA_DIR`, `S3_ENDPOINT`,
   `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`. The web leaf reads `PORT`, `HOST`,
   `API_URL`, `S3_ENDPOINT` and `S3_BUCKET`. The product start and the acceptance run set them. `DATA_DIR` is the one
-  folder the API may write files in, such as the reset outbox: `/app/.data/api` while graded (question 4; assumed, the
-  founder's yes on this pull request). The S3 key pair is made at each start. It is kept only in SeaweedFS's identity
+  folder the API may write files in, such as the reset outbox: `/app/.data/api` while graded (question 4; decided by the
+  founder, 2026-10-23). The S3 key pair is made at each start. It is kept only in SeaweedFS's identity
   file under `/app/.data/`, readable by `app` alone, and in the leaves' environment; never in git or in a log.
   SeaweedFS refuses a request without it.
 - **The acceptance run follows the same contract.** It gives the API the `S3_*` names (the sandbox's SeaweedFS), and
@@ -205,9 +207,10 @@ lacks them.
   `openrouter/qwen/qwen3.8-27b`) read the files in 6 seconds and then produced nothing for its whole 600-second
   deadline (`timeout: 10m` on the `conformance` node of `voluspa/software/graph.yaml`) on a review of about 62 KB: the
   verdict call never returned, and the run failed. The resume passed in 244 seconds and 10 turns. Run 1 has 29 tasks
-  with three reviewers each. **Fix:** the proof config sets `reasoning: low` on the reviewer role (`gungnir`'s role
-  setting: `low`, `medium`, `high`, `off`; unset means `high`), with a flag to change it and a dry-run line that shows
-  it (T28). The `conformance` node's deadline goes from 10 to 20 minutes (T20); the task reviewers keep 10 minutes.
+  with three reviewers each. **Fix (the founder, 2026-10-23):** the proof config sets `reasoning: medium` on the
+  reviewer role (`gungnir`'s role setting: `low`, `medium`, `high`, `off`; unset means `high`), with a flag to change
+  it and a dry-run line that shows it (T28); and the `conformance` node's deadline goes from 10 to 20 minutes (T20);
+  the task reviewers keep 10 minutes. Neither value is tested on this model: run 1's events show whether they hold.
 - **F3 (ouroboric): `ygg-proof-run.sh` has no reject.** `ygg reject` advances the run at once (`engine.Reject`, then
   the CLI advances), so it needs the credentials, and the founder had to run the raw command. **Fix (T29):**
   `--continue RUN --reject GATE --reason TEXT`, with the same timeout, credentials subshell, filter and evidence as
@@ -241,8 +244,8 @@ lacks them.
   listeners; `check-repos.sh --check services` and `niflheim-local` in its lists; the proof config's reviewer
   reasoning (F2); `ygg-proof-run.sh --reject` (F3).
 - **`yggdrasil`:** spec §6.1, §7.2, §9.3, §9.4 and §11 take the delta; the readiness checklist gets RR-24 to RR-27
-  and a `runtime` kind; the backlog, the proof-runs runbook (the decisions, `--reject`, 4.1.0), `niflheim-local` as a
-  submodule and the pointers follow.
+  and a `runtime` kind; the backlog, the proof-runs runbook (the decisions, `--reject`, 4.1.0) and the pointers follow;
+  `niflheim-local` becomes a submodule early, right after its scaffold (T34).
 
 ## What the backlog items become
 
@@ -285,15 +288,15 @@ lacks them.
 - **Repos:** `mimir` (the founder's), `niflheim-local` (new), `gungnir`, `helheim-go`, `midgard-react`, `odin`,
   `voluspa`, `ouroboric`, `yggdrasil`.
 - **Order:** T01 is done. The founder creates `niflheim-local` (T02), and its scaffold (T03) merges whenever it is
-  ready. Then `gungnir` (T04 to T06). Then `odin`'s first pull request (T07 to T10, with the new `gungnir` pinned),
+  ready; right after it, a small `yggdrasil` pull request adds it as a submodule (T34). Then `gungnir` (T04 to T06). Then `odin`'s first pull request (T07 to T10, with the new `gungnir` pinned),
   because `gungnir`'s pack schema refuses unknown keys (`additionalProperties: false`): an `odin` on the old pin cannot
   load a `helheim-go` whose `pack.yaml` names `needs`, and an `odin` that does not resolve needs would give a
   `helheim-go` with no services an empty sandbox. Then the repos that pin the new `gungnir` (`niflheim-local`'s
   content, `helheim-go`) and the others (`midgard-react`, `voluspa`, `mimir`), in any order with the dependencies of
   tasks.md. Then `odin`'s second pull request (the release, F1, the real-realm fixtures), `ouroboric`'s second (the
-  runtime smoke, the services check), and `yggdrasil` last. `ouroboric`'s first pull request (F2's reasoning, F3's
+  runtime smoke, the services check), and `yggdrasil`'s second pull request last. `ouroboric`'s first pull request (F2's reasoning, F3's
   reject) depends on nothing and may merge at any time. The umbrella's
-  pointers do not move until T33. Until then, T30 checks out each repo at its merged `main` and uses a `ygg` built
+  pointers do not move until T33 (T34 adds `niflheim-local`'s and moves none). Until then, T30 checks out each repo at its merged `main` and uses a `ygg` built
   from that `odin`.
 - **Approval points:** none added. The release sandbox runs no agent. An approval's note now reaches later stages;
   the approval points themselves do not change.
@@ -320,9 +323,10 @@ lacks them.
   means little. The runbook holds the text, and T32 says to paste it, not to retype it.
 - **An approval note is a decision (F1).** Every note on a gate's approval reaches every later stage, so "ok" becomes
   a decision too. The runbook says to give a note at a gate only for a decision.
-- **A lower reasoning effort for the reviewers (F2).** `low` may make reviews faster and shallower. The reviewer
-  bench (`ygg-reviewer-bench.sh`) can measure it; run 1's findings will show it. The deadline raise of T20 can be
-  dropped if `low` is enough.
+- **A lower reasoning effort for the reviewers (F2).** `medium` may still run out a deadline, or make reviews
+  shallower than `high`. Neither `medium` nor the 20-minute deadline is tested on `openrouter/qwen/qwen3.8-27b`: run
+  1's events (a session that ends at its deadline, the reviewers' findings) show whether they hold, and the reviewer
+  bench (`ygg-reviewer-bench.sh`) can measure them.
 - **The signature through the forward (to verify).** The proposal assumes that SeaweedFS checks a presigned URL
   against the `Host` header it receives, so that forwarding the path unchanged keeps the signature valid. SeaweedFS's
   SigV4 check may read `X-Forwarded-Host` and `X-Forwarded-Port` before `Host`; that is from memory and unverified.
@@ -340,6 +344,21 @@ lacks them.
 - **One more sandbox start per export.** The release adds a sandbox start to `ygg grade` and `ygg bridge`, with B-051's
   hang. Odin keeps a release by the commits it was built from, so a second grade reuses it.
 
+## The amendment's open points, answered
+
+The founder answered the six open points of this amendment on 2026-10-23. None is open now.
+
+1. **The runtime pin:** `runtime` in `docs/leaves.yaml`, recorded in `umbrella.yaml`; the names `needs`, `provides`
+   and `runtime` stand.
+2. **`DATA_DIR`:** confirmed, `/app/.data/api` while graded.
+3. **F2:** the reviewer's `reasoning: medium`, not `low`, and the conformance deadline of 20 minutes (T28, T20).
+   Neither value is tested on this model; run 1's events show whether they hold.
+4. **The store's service is named `s3`,** like its need; the image stays SeaweedFS 4.45 by digest.
+5. **Web serving:** the web leaf serves port 3000 with the realm's baked `serve.mjs`; the API never serves the web app
+   (T19).
+6. **The submodule comes early:** T34 adds `niflheim-local` to the umbrella right after T03; T33 only moves its
+   pointer.
+
 ## History
 
 - **2026-10-22, proposed** (yggdrasil#98): option A, with questions 1 to 7 assumed.
@@ -350,3 +369,5 @@ lacks them.
   word. The rehearsal's three findings get tasks (F1: T24; F2: T20, T28; F3: T29). The tasks are renumbered: see the
   table of [tasks.md](tasks.md), which maps the old numbers to the new. The review of the amendment split the services
   resolution in two (T08, T09), added the real-realm fixtures task (T25), and split `ouroboric`'s pull request in two.
+- **2026-10-23, the founder's answers to the open points** (above): `reasoning: medium`, the service name `s3`, and
+  the early submodule (T34).

@@ -22,9 +22,9 @@ founder's product decisions to every later stage, and can reject a gate.
 **Status:** accepted when the founder merged the pull request that added this file (yggdrasil#98). **Amended
 2026-10-23:** the founder answered the questions, T01 is done, Niflheim owns the product start and the services, and
 the rehearsal's three findings have tasks. Merging the amendment approves the new task list. No task waits for a
-question now. The lines the proposal marks **assumed** (the names `needs`, `provides`, `runtime`, the two needs, and
-`DATA_DIR`) need the founder's yes on the amendment's pull request;
-if the founder says no, the tasks that use them change through another amendment before they start.
+question now. The founder confirmed the open points on 2026-10-23: the names `needs`, `provides` and `runtime`, the
+two needs, `DATA_DIR`, the reviewer's `reasoning: medium`, the service name `s3`, the web serving, and the early
+submodule (T34).
 
 ## Global constraints
 
@@ -52,6 +52,7 @@ if the founder says no, the tasks that use them change through another amendment
 | T01 (founder) the planning rehearsal, kept: **done 2026-10-23** | the founder's machine | S | none | T01 |
 | T02 (founder) create `niflheim-local` | GitHub, with `ouroboric/scripts/new-repo.sh` | S | the amendment merged | new |
 | T03 the realm's scaffold | `niflheim-local` | M, about 150 lines | T02 | new |
+| T34 `niflheim-local` as a submodule, early | `yggdrasil` | S, about 10 lines | T03 merged | new |
 | T04 the pack's `product.start` | `gungnir` | S, about 90 lines | none | T03 |
 | T05 the pack's `needs` and `provides` | `gungnir` | M, about 220 lines | T04 | new |
 | T06 the runtime pin in the leaves file and the umbrella | `gungnir` | M, about 180 lines | none | new |
@@ -78,17 +79,18 @@ if the founder says no, the tasks that use them change through another amendment
 | T27 the services check, and `niflheim-local` in the lists | `ouroboric` | M, about 200 lines | T11, T14, T21 | new |
 | T28 the reviewer's reasoning effort in the proof config (F2) | `ouroboric` | S, about 90 lines | none | new |
 | T29 `ygg-proof-run.sh --reject` (F3) | `ouroboric` | M, about 180 lines | T28 | new |
-| T30 (founder) the runtime smoke on the real engine | the founder's machine | S | T21, and T03 to T29 merged | T16 |
+| T30 (founder) the runtime smoke on the real engine | the founder's machine | S | T21, and T03 to T29 and T34 merged | T16 |
 | T31 fold the delta, the checklist and the backlog | `yggdrasil` | M, about 250 lines | T30 | T17 |
 | T32 the runbook: the founder's decisions, `--reject`, 4.1.0 | `yggdrasil` | M, about 120 lines | T21, T24, T28, T29 merged | new |
-| T33 `niflheim-local` in the umbrella, its readiness record, and the pointers | `yggdrasil` | M, about 200 lines | T30, T31, T32 | T17 |
+| T33 `niflheim-local`'s readiness record, and the pointers | `yggdrasil` | M, about 180 lines | T30, T31, T32, T34 | T17 |
 
 Old T08 (`midgard-react`'s pack names the product start) is gone: the product start is `niflheim-local`'s (T12).
 
 The pull requests, each from a branch `gallery-runtime` made from `main`:
 
 1. `niflheim-local`, first pull request: T03, the scaffold, once the founder has made the repo (T02). It needs no
-   other pull request and may merge at any time before `niflheim-local`'s second.
+   other pull request and may merge at any time before `niflheim-local`'s second. Right after it, `yggdrasil`'s first
+   pull request: T34, the submodule at T03's merge. It adds a pointer and moves none.
 2. `ouroboric`, first pull request: T28, T29, on one branch, in this order (they change the same script). They depend
    on nothing, so F2 and F3 can reach the proof runs early; it may merge at any time.
 3. `gungnir`: T04, T05, T06. It merges first of the code that the realms pin.
@@ -103,7 +105,7 @@ The pull requests, each from a branch `gallery-runtime` made from `main`:
 6. `odin`, second pull request: T22, T23, T24, T25 (T25 after `helheim-go`'s and `niflheim-local`'s second merge).
 7. `ouroboric`, second pull request: T26, T27.
 8. T30, the founder's smoke, on the merged `main` of every repo.
-9. `yggdrasil`: T31, T32, T33, after T30. It adds `niflheim-local` as a submodule and moves the pointers.
+9. `yggdrasil`, second pull request: T31, T32, T33, after T30. It moves the pointers, `niflheim-local`'s among them.
 
 The umbrella's pointers do not move until T33. T30 checks out each repo at its merged `main` and builds `ygg` from
 that `odin`. Run 1 (v0-H20 of the Phase 6 plan) waits for T33.
@@ -227,19 +229,25 @@ component: the scaffold, then the content in a second pull request.
 The job sentence: "The Niflheim realm's local flavor: the services a product runs on and its start script, for one
 machine with no cloud."
 
-- [ ] **Step 1: the failing check.** In a clone made through `as-bot.sh`, `check-repos.sh --check agents
-  niflheim-local` and the docs check fail: there is no `AGENTS.md` and no `docs/architecture.md`.
+- [ ] **Step 1: the failing check.** In a clone made through `as-bot.sh` at `~/brunogbv/ouroboric/niflheim-local`,
+  the top level, `check-repos.sh --check agents niflheim-local` and the docs check fail: there is no `AGENTS.md` and
+  no `docs/architecture.md`. The clone goes there because `check-repos.sh` looks there for a repo that is not in its
+  `LEAVES` list (`local_path`); T27 adds the repo to `LEAVES`, after T34 has made the submodule
+  `yggdrasil/niflheim-local`, where the script looks from then on.
 - [ ] **Step 2:** run the scaffold. Write the architecture doc's two sections: it is a runtime realm (delta §9.4); it
   provides the services of the build realms' needs and the product start; it depends on `gungnir` for the pack schema
   and on Odin to read it; it has no stack, template or ladder.
 - [ ] **Step 3:** run `GOWORK=off go vet ./...`, `reuse lint`, the docs check, and
-  `bash ../ouroboric/scripts/tests/scaffold-component.test.sh`. Expected: pass.
+  `bash ../ouroboric/scripts/tests/scaffold-component.test.sh`. Expected: pass. Until T27, `check-repos.sh --check
+  agents` says only "present" for a repo outside `LEAVES`, so check its leaf rule by hand: `AGENTS.md` has at most
+  120 lines, no `## Invariants` section, and links `ouroboric-dev/yggdrasil/blob/main/AGENTS.md#invariants` (the
+  scaffold's template does all three).
 
 **Acceptance criteria:**
 
 - [ ] The scaffold's files are there, and none of `new-repo.sh`'s first commit was overwritten.
-- [ ] `reuse lint` passes, with MIT on `templates/**` (RR-02); `AGENTS.md` carries the umbrella's invariants (RR-05);
-  the docs check passes (RR-07).
+- [ ] `reuse lint` passes, with MIT on `templates/**` (RR-02); `AGENTS.md` carries the umbrella's invariants and
+  meets the leaf rule of `check_agents` (RR-05); the docs check passes (RR-07).
 
 **Named test:** `check-repos.sh --check reuse --check agents --check gitleaks niflheim-local` and the docs check (red
 in step 1, green in step 3). **Layer:** `niflheim-local`. **Size:** M, about 150 lines. **Depends on:** T02.
@@ -273,7 +281,7 @@ in step 1, green in step 3). **Layer:** `niflheim-local`. **Size:** M, about 150
 
 ### Task gallery-runtime-T05: the pack's `needs` and `provides`
 
-A build realm says what it needs; a runtime realm says what it provides (delta §9.4, assumed names).
+A build realm says what it needs; a runtime realm says what it provides (delta §9.4; the names are the founder's, 2026-10-23).
 
 **Files (in `gungnir`):**
 
@@ -290,8 +298,8 @@ A build realm says what it needs; a runtime realm says what it provides (delta �
 - [ ] **Step 1: the failing test.** `TestPackNeedsAndProvides`:
   - a pack with `needs: [postgres, s3]` loads, and `Needs` holds both; a need that is not in `gungnir.Needs`, and a
     need named twice, are each refused with the need in the message;
-  - a pack with `services` `postgres` and `seaweedfs` and `provides: {postgres: postgres, s3: seaweedfs}` loads, and
-    `Provider("s3")` returns the `seaweedfs` service; `provides` that names a service the pack does not define, or a
+  - a pack with `services` `postgres` and `s3` and `provides: {postgres: postgres, s3: s3}` loads, and
+    `Provider("s3")` returns the `s3` service; `provides` that names a service the pack does not define, or a
     need not in `gungnir.Needs`, is refused;
   - a pack that names `leaf` and `provides`, or `leaf` and `product` (T04), is refused: "a runtime realm provides no
     leaf";
@@ -312,7 +320,7 @@ A build realm says what it needs; a runtime realm says what it provides (delta �
 
 ### Task gallery-runtime-T06: the runtime pin in the leaves file and the umbrella
 
-A project pins one runtime realm, beside its graph pin (delta §9.4, assumed names).
+A project pins one runtime realm, beside its graph pin (delta §9.4; the names are the founder's, 2026-10-23).
 
 **Files (in `gungnir`):**
 
@@ -409,7 +417,9 @@ deps`. Split from one task because the two together come near 480 lines.
   the run's realms; `serviceSet` moves to the new package), `internal/cli/sandbox.go` (`stacksToBuild` with `--all`
   keeps the service images of a realm that names no stack, the runtime realm, instead of skipping them),
   `internal/routing/wiring.go` (a `needs` edge for each need of a leaf's realm, to the provider's service name),
-  `docs/architecture.md`
+  the routing fixtures that name the store's service `seaweedfs` (`internal/routing/wiring_test.go`'s `helheim-go`
+  pack, `testdata/routing/wiring.golden.md`, `testdata/routing/impact.golden.json`, `testdata/routing/bench.yaml`:
+  they become a realm that needs `s3` and a provider named `s3`), `docs/architecture.md`
 
 **Interfaces:**
 
@@ -417,7 +427,7 @@ deps`. Split from one task because the two together come near 480 lines.
 
 - [ ] **Step 1: the failing tests.**
   - `TestForGivesTheProvidersOfTheNeeds` in `services_test.go`, with a stand-in `Loader`: for a leaf whose realm needs
-    `postgres` and `s3`, `For` returns the runtime realm's `postgres` and `seaweedfs` services, under those names, with
+    `postgres` and `s3`, `For` returns the runtime realm's `postgres` and `s3` services, under those names, with
     their image, env, ports and command; for the leaf and a web leaf that consumes it, the same, once each; for a leaf
     whose realm needs nothing, none; a need with no runtime realm, or one the runtime realm does not provide, is an
     error that names the need and the realm.
@@ -429,7 +439,7 @@ deps`. Split from one task because the two together come near 480 lines.
   - `TestSandboxBuildPullsTheRuntimesServices` in `internal/cli/sandbox_test.go`: the images `stacksToBuild` returns
     with `--all` hold the runtime realm's services, and the realm is still listed as having no stack.
   - `TestWiringNeedsEdges` in `internal/routing/wiring_test.go`: a leaf of a realm that needs `postgres` and `s3` has
-    `needs` edges to `service:postgres` and `service:seaweedfs`, the provider's service names (the wiring names
+    `needs` edges to `service:postgres` and `service:s3`, the provider's service names (the wiring names
     services by name today, `wiring.go`'s `needs` edge), from the realm's `pack.yaml`. The wiring gets the
     provider's names from `services.For`, never from the leaf realms' packs alone.
 
@@ -462,7 +472,7 @@ dependency policy's integration rung would fail.
 - [ ] **Step 1: the failing tests,** in `deps_test.go`, with the stand-in engine the deps tests use:
   - `TestDepsSandboxGetsTheRuntimesServices`: a project whose umbrella pins `runtime: niflheim-local`, with an API leaf
     whose realm needs `postgres` and `s3`: the sandbox spec `ygg deps` starts holds the runtime realm's `postgres` and
-    `seaweedfs` services;
+    `s3` services;
   - `TestDepsRefusesAnUnmetNeed`: the same project with no runtime pin fails before any sandbox starts, with the
     message of `services.For`;
   - a leaf whose realm needs nothing starts with no service, as today.
@@ -523,17 +533,18 @@ It moves the services out of `helheim-go` (B-158) and pins Postgres 18 (question
 
 **Interfaces:**
 
-- Produces: the services `postgres` and `seaweedfs` and `provides: {postgres: postgres, s3: seaweedfs}`, which T08
+- Produces: the services `postgres` and `s3` and `provides: {postgres: postgres, s3: s3}`, which T08
   starts in a sandbox, T14 copies into `helheim-go`'s template CI, T21 follows in the grader image and T27 compares.
 
 - [ ] **Step 1: the failing tests.**
   - `TestThePackProvidesTheNeeds`: the pack loads with the merged `gungnir`; it is named `niflheim-local`, at 0.1.0,
     with no `leaf`, `sandbox`, `graph` or `checks`; it provides every need of `gungnir.Needs`; the `postgres` service
-    has port 5432, `POSTGRES_DB: app` and `POSTGRES_HOST_AUTH_METHOD: trust`, and the `seaweedfs` service port 8333 and
-    the command `[server, -s3, -dir=/data]`: the contract of delta §9.4, the values `helheim-go`'s pack holds today;
+    has port 5432, `POSTGRES_DB: app` and `POSTGRES_HOST_AUTH_METHOD: trust`, and the `s3` service (the SeaweedFS image) port 8333 and
+    the command `[server, -s3, -dir=/data]`: the contract of delta §9.4, the values `helheim-go`'s pack holds today
+    for its `seaweedfs` service, under the name `s3`;
     every image is pinned by digest.
   - `TestPackPostgresIsEighteen`: the `postgres` image matches `postgres:18\.\d+-\S+@sha256:[0-9a-f]{64}`.
-  - `TestPackSeaweedFSIsTheGraderImages`: the `seaweedfs` image is the digest of the global constraints.
+  - `TestPackSeaweedFSIsTheGraderImages`: the `s3` service's image is the SeaweedFS digest of the global constraints.
 
   Expected: FAIL (no `pack.yaml`).
 - [ ] **Step 2:** write `pack.yaml`. Take the current `postgres:18.x-bookworm` (or the current Debian variant, if
@@ -675,9 +686,10 @@ runtime realm, under the same names (T08).
 - Modify: `pack.yaml` (no `services:`; `needs: [postgres, s3]`; the header comment), `pack_test.go`
   (`TestThePackNeedsADatabaseAndAStore` replaces `TestTheServicesAreWhatAnAPIAsksForAndPinnedByDigest`), `ci_test.go`
   (the template CI's Postgres image is no longer compared with `pack.yaml`), `templates/api/.github/workflows/ci.yml`
-  (Niflheim's Postgres 18 image), `go.mod` and `go.sum` (the merged `gungnir`), `README.md`, `AGENTS.md`,
-  `docs/architecture.md` ("the services an API needs" becomes its needs), and any other place in `helheim-go` that
-  names Postgres 17
+  (Niflheim's Postgres 18 image), `devcontainer/checks/go-integration.sh` (the default `YGG_S3_ENDPOINT`,
+  `http://seaweedfs:8333`, becomes `http://s3:8333`: the runtime realm's service is `s3`), `go.mod` and `go.sum` (the
+  merged `gungnir`), `README.md`, `AGENTS.md`, `docs/architecture.md` ("the services an API needs" becomes its
+  needs; its list "`postgres`, `seaweedfs`" goes), and any other place in `helheim-go` that names Postgres 17
 
 - [ ] **Step 1: the failing tests.**
   - `TestThePackNeedsADatabaseAndAStore` in `pack_test.go`: the pack loads with the merged `gungnir`, its `Needs` are
@@ -686,20 +698,23 @@ runtime realm, under the same names (T08).
     `postgres:18\.\d+-\S+@sha256:[0-9a-f]{64}`, and keeps the env and the `YGG_DATABASE_URL` the test checks today.
   - `TestNoPostgres17` in `pack_test.go`: no file in `helheim-go` (outside `.git`, `LICENSES`, the test file itself and
     `go.sum`) names `postgres:17`, `postgresql-17` or `postgresql/17`.
+  - `TestTheStoreIsTheS3Service` in `pack_test.go`: `go-integration.sh`'s default `YGG_S3_ENDPOINT` is
+    `http://s3:8333`, and no file outside the tests names `seaweedfs:8333` or `http://seaweedfs`.
 
   Expected: FAIL.
-- [ ] **Step 2:** drop the services, add the needs, and set the template CI's image to `niflheim-local/pack.yaml`'s
+- [ ] **Step 2:** drop the services, add the needs, move the integration check's default endpoint to `s3`, and set the template CI's image to `niflheim-local/pack.yaml`'s
   `postgres` image, byte for byte (T27 checks that they stay the same). Then `grep -rn
   'postgres:17\|postgresql-17\|postgresql/17\|Postgres 17' .` must find nothing.
 - [ ] **Step 3:** run the tests, then `YGG_REQUIRE_TEMPLATES=1 go test ./...`. Expected: PASS, with the check tests
-  that reach `postgres:5432` and `seaweedfs:8333`.
+  that reach `postgres:5432` and `s3:8333`.
 
 **Acceptance criteria:**
 
 - [ ] The pack declares `needs: [postgres, s3]` and names no service.
 - [ ] The template CI runs Niflheim's Postgres 18 image; nothing in `helheim-go` names Postgres 17.
 
-**Named test:** `helheim-go/pack_test.go:TestThePackNeedsADatabaseAndAStore`, `TestNoPostgres17`;
+**Named test:** `helheim-go/pack_test.go:TestThePackNeedsADatabaseAndAStore`, `TestNoPostgres17`,
+`TestTheStoreIsTheS3Service`;
 `helheim-go/ci_test.go:TestTemplateCI`.
 **Layer:** `helheim-go`. **Size:** M, about 180 lines. **Depends on:** T05 merged, T07 to T10 merged (`odin`'s first
 pull request), T11 merged.
@@ -813,7 +828,7 @@ And the e2e rung (`web-e2e.sh`, in every web task's loop) runs every spec agains
 spec that does a real `PUT` can never pass there. Agents would then stub the store with `page.route`, the stub would
 run in the acceptance run too, and the store forward would never be exercised. So the scripts tell a spec whether a
 real store is behind `/<bucket>/`. The snapshot's sandbox gets SeaweedFS from the runtime realm, as the service
-`seaweedfs` (T08), so the endpoint's name does not change.
+`s3` (T08). `accept-e2e.sh` names no store today, so its default endpoint is `http://s3:8333` from the start.
 
 **Files (in `midgard-react`):**
 
@@ -825,7 +840,7 @@ real store is behind `/<bucket>/`. The snapshot's sandbox gets SeaweedFS from th
 - [ ] **Step 1: the failing tests.**
   - `TestAcceptanceGivesTheRuntime` in `checks_test.go`, with stand-in `go`, `npm` and `node` on the `PATH` (follow
     the existing acceptance tests): the API is started with every name of delta §9.4, with `S3_ENDPOINT` the
-    sandbox's SeaweedFS (`http://seaweedfs:8333` unless `YGG_S3_ENDPOINT` says otherwise), a bucket name and a
+    sandbox's SeaweedFS (`http://s3:8333` unless `YGG_S3_ENDPOINT` says otherwise), a bucket name and a
     `DATA_DIR` in the temporary folder; the web app is served by the baked `serve.mjs`, not the leaf's, with
     `API_URL`, `S3_ENDPOINT` and `S3_BUCKET`.
   - `TestBakedServeIsTheTemplates`: the baked `serve.mjs` and the template's are the same bytes.
@@ -888,8 +903,8 @@ runtime pin, before the prompt asks for it).
 ### Task gallery-runtime-T20: the conformance review gets 20 minutes (F2)
 
 The rehearsal's conformance reviewer ran out its 10-minute session on a review of about 62 KB. Run 1 has one
-conformance review; its task reviewers keep 10 minutes. T28 lowers the reviewer's reasoning effort too; the founder
-may drop this task if T28 is enough.
+conformance review; its task reviewers keep 10 minutes. The founder chose both fixes (2026-10-23): this deadline, and
+the reviewer's `reasoning: medium` (T28).
 
 **Files (in `voluspa`):**
 
@@ -927,7 +942,8 @@ the versions `niflheim-local` pins. `mimir/AGENTS.md` says a new task version is
   Expected: it fails (`initdb: not found`).
 - [ ] **Step 2:** write the Dockerfile in this order. Gleipnir's stack build refuses a `COPY --from` that names an
   image or a stage not yet defined (`gleipnir/sandbox/stackbuild.go`), and the last stage is the image, so:
-  1. `FROM` the `seaweedfs` image of `niflheim-local/pack.yaml`, by its digest, `AS weed` first;
+  1. `FROM` the image of the `s3` service of `niflheim-local/pack.yaml` (SeaweedFS 4.45), by its digest, `AS weed`
+     first;
   2. then the Playwright stage, as today;
   3. in it, install `postgresql-common`, then write `create_main_cluster = false` into
      `/etc/postgresql-common/createcluster.conf`, then install `postgresql-18` (the order the official `postgres`
@@ -1178,7 +1194,7 @@ it. This check keeps the copies equal (delta §11, RR-26).
   `check-repos.sh` row)
 
 - [ ] **Step 1: the failing test.** In `check-repos.test.sh`, on stand-in clones under a temporary root:
-  - `--check services` passes when `niflheim-local/pack.yaml`'s `seaweedfs` digest is the one in
+  - `--check services` passes when the digest of `niflheim-local/pack.yaml`'s `s3` service is the one in
     `mimir/client-gallery-lite/environment/Dockerfile`'s `FROM … AS weed` line, `helheim-go`'s template CI names
     Niflheim's `postgres` image byte for byte, and the Dockerfile's `postgresql-18` package has Niflheim's major; it
     prints both Postgres minors;
@@ -1193,7 +1209,10 @@ it. This check keeps the copies equal (delta §11, RR-26).
   Expected: FAIL (the check is unknown).
 - [ ] **Step 2:** write the check, in the style of `check_shared`, with `grep` and `sed` on the three files (no YAML
   library), run once after the loop over repos when `--check services` is given. Add `niflheim-local` to `LEAVES`,
-  so the other checks cover it, and keep it out of `REALMS`: it has no `devcontainer/checks/` to share.
+  so the other checks cover it, and keep it out of `REALMS`: it has no `devcontainer/checks/` to share. From then on
+  `check-repos.sh` reads it at `yggdrasil/niflheim-local`, the submodule of T34, which merged long before; it does not
+  go into `LEAVES` in `ouroboric`'s first pull request, because T03's checks would then look for a submodule that
+  only exists once T03 has merged. `check_agents` then applies the leaf rule, which the scaffold meets (T03).
 - [ ] **Step 3:** run the test and `shellcheck -s bash`. Expected: pass; no output.
 
 **Acceptance criteria:**
@@ -1208,19 +1227,20 @@ repos the check passes only once all three are merged).
 ### Task gallery-runtime-T28: the reviewer's reasoning effort in the proof config (F2)
 
 The rehearsal's reviewer (opencode, `openrouter/qwen/qwen3.8-27b`, reasoning unset, so `high`) produced nothing for
-600 seconds on one review. The proof config sets `reasoning: low` on the reviewer role (spec §5's role setting).
+600 seconds on one review. The proof config sets `reasoning: medium` on the reviewer role (spec §5's role setting;
+the founder's choice, 2026-10-23).
 
 **Files (in `ouroboric`):**
 
 - Modify: `scripts/testdata/proof/factory.proof.example.yaml` (the reviewer role's `reasoning: @REVIEWER_REASONING@`),
-  `scripts/ygg-proof-run.sh` (`--reviewer-reasoning low|medium|high|off`, default `low`; the header; the plan line),
+  `scripts/ygg-proof-run.sh` (`--reviewer-reasoning low|medium|high|off`, default `medium`; the header; the plan line),
   `scripts/tests/ygg-proof-run.test.sh`, `AGENTS.md` (the table's row)
 
 - [ ] **Step 1: the failing tests,** in `ygg-proof-run.test.sh`:
-  - a dry run writes `reasoning: low` on the reviewer role of `factory.yaml`, and no `reasoning` on the planner and
+  - a dry run writes `reasoning: medium` on the reviewer role of `factory.yaml`, and no `reasoning` on the planner and
     the implementer;
   - `--reviewer-reasoning off` writes `off`; a value outside the four is refused with exit 2 and nothing made;
-  - the plan line says "reviewer AGENT:MODEL (reasoning low)";
+  - the plan line says "reviewer AGENT:MODEL (reasoning medium)";
   - `--continue` refuses `--reviewer-reasoning`, as it refuses the other setup flags;
   - the config passes the stand-in `ygg doctor`.
 
@@ -1231,7 +1251,7 @@ The rehearsal's reviewer (opencode, `openrouter/qwen/qwen3.8-27b`, reasoning uns
 
 **Acceptance criteria:**
 
-- [ ] Every proof run's reviewer asks for `low` unless the operator names another effort, and the dry run shows it.
+- [ ] Every proof run's reviewer asks for `medium` unless the operator names another effort, and the dry run shows it.
 
 **Named test:** `ouroboric/scripts/tests/ygg-proof-run.test.sh` (the reasoning cases).
 **Layer:** `ouroboric`. **Size:** S, about 90 lines. **Depends on:** none.
@@ -1271,8 +1291,8 @@ command in a shell with them loaded.
 ### Task gallery-runtime-T30 (founder): the runtime smoke on the real engine
 
 - [ ] **Step 1:** check out `gungnir`, `helheim-go`, `midgard-react`, `odin` and `voluspa` at their merged `main`
-  (the umbrella's pointers move only in T33), clone `niflheim-local` at its merged `main` into the umbrella's folder
-  (T33 makes it a submodule), and build `ygg` from that `odin`.
+  (the umbrella's pointers move only in T33), check out the `niflheim-local` submodule (T34) at its merged `main`, and
+  build `ygg` from that `odin`. `check-repos.sh` finds the realm there, since T27 put it in `LEAVES`.
 - [ ] **Step 2:** build the 4.1.0 image and run the smoke and the services check:
 
   ```zsh
@@ -1295,7 +1315,7 @@ command in a shell with them loaded.
 - [ ] Whether versioning is on is written on the pull request.
 
 **Named test:** `ygg-smoke-runtime.sh` on the 4.1.0 image; `check-repos.sh --check services`.
-**Layer:** the founder's machine. **Size:** S. **Depends on:** T21, and T03 to T29 merged.
+**Layer:** the founder's machine. **Size:** S. **Depends on:** T21, and T03 to T29 and T34 merged.
 
 ### Task gallery-runtime-T31: fold the delta, the checklist and the backlog
 
@@ -1357,7 +1377,7 @@ Every proof run gives the same product decisions, word for word (proposal, "The 
   decisions of 2026-10-23 write decision 1 that way (question 4).
 - [ ] **Step 3:** replace the raw `ygg reject` fallback of "Continue a stopped run" with `--continue RUN --reject GATE
   --reason "..."` (T29), and keep the raw command as the fallback. Add `--reject` and `--reviewer-reasoning` (T28,
-  default `low`) to the flags table. Say that the runs use task 4.1.0 and that question 10 is answered (option A).
+  default `medium`) to the flags table. Say that the runs use task 4.1.0 and that question 10 is answered (option A).
 - [ ] **Step 4:** run `pre-commit run --files docs/3-using/operations/proof-runs.md` and the docs check.
 
 **Acceptance criteria:**
@@ -1370,20 +1390,21 @@ Every proof run gives the same product decisions, word for word (proposal, "The 
 `pre-commit run --files` on the runbook; the docs check.
 **Layer:** `yggdrasil`. **Size:** M, about 120 lines. **Depends on:** T21, T24, T28 and T29 merged.
 
-### Task gallery-runtime-T33: `niflheim-local` in the umbrella, its readiness record, and the pointers
+### Task gallery-runtime-T33: `niflheim-local`'s readiness record, and the pointers
 
 **Files (in `yggdrasil`):**
 
-- Modify: `.gitmodules` and `go.work` (`niflheim-local`), `docs/README.md` and `AGENTS.md`'s map (realms: Niflheim
-  holds the services and the product start), this folder's front matter (`status: accepted`), the pointers of
-  `gungnir`, `helheim-go`, `midgard-react`, `niflheim-local`, `odin` and `voluspa`
+- Modify: `docs/README.md` and `AGENTS.md`'s map (realms: Niflheim holds the services and the product start), this
+  folder's front matter (`status: accepted`), the pointers of `gungnir`, `helheim-go`, `midgard-react`,
+  `niflheim-local`, `odin` and `voluspa`. T34 added the submodule and its `go.work` line; this task only moves its
+  pointer, from T03's merge to the merged `main`.
 - Create: `docs/2-engineering/readiness/2026-10-23-niflheim-local.md`, from the checklist: a row for each item that
   applies to a runtime realm (`all` and `runtime`), with its evidence or `missing`
 
-- [ ] **Step 1: the failing check.** `git submodule status niflheim-local` fails, and `go work edit -json` names no
-  `niflheim-local`: the umbrella does not hold the realm.
-- [ ] **Step 2:** add the submodule at its merged `main` and the `go.work` line. Write the readiness record (RR-10 is
-  this step; RR-21 is `n/a`, the realm has no leaf).
+- [ ] **Step 1: the failing check.** `git submodule status niflheim-local` shows T03's merge, not the merged `main`,
+  and `docs/2-engineering/readiness/2026-10-23-niflheim-local.md` does not exist.
+- [ ] **Step 2:** write the readiness record (RR-10 is T34 with T27's `LEAVES`; RR-21 is `n/a`, the realm has no
+  leaf).
 - [ ] **Step 3:** move the pointers to the merged commits. Set this folder's front matter to `accepted`.
 - [ ] **Step 4:** run the check of step 1 again, `scripts/as-bot.sh --read all scripts/check-repos.sh --check services`
   and `--check ruleset niflheim-local` in `ouroboric`, `pre-commit run --files` on every changed file, and the docs
@@ -1391,13 +1412,40 @@ Every proof run gives the same product decisions, word for word (proposal, "The 
 
 **Acceptance criteria:**
 
-- [ ] The umbrella holds `niflheim-local` as a submodule and in `go.work`, and every module builds.
+- [ ] Every module builds through `go.work`, `niflheim-local` at its merged `main` among them.
 - [ ] The readiness record has no `missing` row for an `auto` item.
 - [ ] The pointers are the merged commits.
 
 **Named test:** the check of step 1 (red, then green); `go build ./...` in each module through `go.work`;
 `pre-commit run --files` on the changed files; the docs check.
-**Layer:** `yggdrasil`. **Size:** M, about 200 lines. **Depends on:** T30, T31, T32.
+**Layer:** `yggdrasil`. **Size:** M, about 180 lines. **Depends on:** T30, T31, T32, T34.
+
+### Task gallery-runtime-T34: `niflheim-local` as a submodule, early
+
+Its own small pull request in `yggdrasil`, right after `niflheim-local`'s first (T03), so that the realm sits where
+the realm store, `check-repos.sh` and the founder's smoke look for it (`yggdrasil/niflheim-local`) long before T33.
+It is numbered T34 to keep the other numbers. It adds a pointer; it moves none of the others, which wait for T33.
+
+**Files (in `yggdrasil`):**
+
+- Modify: `.gitmodules` (`niflheim-local`, `https://github.com/ouroboric-dev/niflheim-local.git`), `go.work` (`use
+  ./niflheim-local`), and the submodule `niflheim-local` at T03's merge commit
+
+- [ ] **Step 1: the failing check.** `git submodule status niflheim-local` fails, and `go work edit -json` names no
+  `niflheim-local`.
+- [ ] **Step 2:** `git submodule add https://github.com/ouroboric-dev/niflheim-local.git niflheim-local`, check it
+  out at T03's merge commit, and add it to `go.work`.
+- [ ] **Step 3:** run the check of step 1 again, `go build ./...` in `niflheim-local` through `go.work`, and
+  `pre-commit run --files .gitmodules go.work`. Expected: pass.
+
+**Acceptance criteria:**
+
+- [ ] `git submodule status niflheim-local` shows T03's merge commit, and `go.work` uses `./niflheim-local`.
+- [ ] No other pointer moved.
+
+**Named test:** `git submodule status niflheim-local` and `go work edit -json` (red, then green); `pre-commit run
+--files .gitmodules go.work`.
+**Layer:** `yggdrasil`. **Size:** S, about 10 lines. **Depends on:** T03 merged.
 
 ## Open for the builder
 
@@ -1411,6 +1459,9 @@ Every proof run gives the same product decisions, word for word (proposal, "The 
   folder. `DATABASE_URL` must work with `pgx` either way.
 - **Where the release is copied out of the sandbox.** `SnapshotRunner` writes into a snapshot on the host. Say how
   T23 reads it as the host user.
-- **The `seaweedfs` name for the `s3` need.** The need contract keeps the service names the checks use today
-  (`postgres`, `seaweedfs`), so no check script changes. A neutral name (`s3`) would change `helheim-go`'s checks and
-  `midgard-react`'s acceptance run; it is not in this change.
+- **The `s3` service name.** The founder named the store's service `s3` (2026-10-23), the name of its need. Only
+  `helheim-go` names `seaweedfs` as a service today (`pack.yaml`, `pack_test.go`,
+  `devcontainer/checks/go-integration.sh`'s default `YGG_S3_ENDPOINT`, `docs/architecture.md`), and T14 changes
+  them. `gleipnir`'s, `gungnir`'s and `odin`'s
+  own unit tests use `seaweedfs` as a made-up service name and need no change, except `odin`'s routing fixtures,
+  which T08 changes. The grader starts no service (one container, `--network none`), so it cannot depend on the name.
