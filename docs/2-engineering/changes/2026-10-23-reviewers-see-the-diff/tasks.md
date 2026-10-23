@@ -1,6 +1,6 @@
 ---
 title: Tasks for the task reviewers seeing the task's diff
-status: proposed
+status: accepted
 date: 2026-10-23
 related: [proposal.md, delta.md, ../../backlog.md]
 style: spec
