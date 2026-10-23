@@ -10,7 +10,7 @@ related: [../../2-engineering/realm-readiness.md, ../../1-product/design/2026-10
 
 A realm flavor is a leaf repo named `<realm>-<flavor>`, such as `midgard-react` or `helheim-go`. It holds
 the recipe for one kind of leaf: the stack, the implementer prompt, the template, the check ladder and,
-when it needs them, services and an acceptance check. It holds no graph. A run takes its graph from
+when it needs them, `needs` and an acceptance check. It holds no graph. A run takes its graph from
 [Voluspa](https://github.com/ouroboric-dev/voluspa), and each leaf takes its realm from its own pin.
 
 Today you make a realm by hand, with this procedure. After v0, Ginnungagap, the realm that makes realms,
@@ -18,9 +18,12 @@ runs these steps as a `ygg run` with gates ([design](../../1-product/design/2026
 §8.3 and §8.4). The [realm readiness checklist](../../2-engineering/realm-readiness.md) is what "done"
 means. Each step below names the items it meets (RR-nn).
 
-Copy from the two realms that exist. `helheim-go` is a Go API with services. `midgard-react` is a React
-web app with an acceptance check. Steps marked **founder** need the admin token or a push of a workflow
-file. An agent does every other step on a branch, through a pull request.
+Copy from the two realms that exist. `helheim-go` is a Go API that needs a database and a store. `midgard-react` is a
+React web app with an acceptance check. Steps marked **founder** need the admin token or a push of a workflow file. An
+agent does every other step on a branch, through a pull request.
+
+A build realm names what its leaf needs, not the services that supply it. The services and the start of the product
+belong to the runtime realm (`niflheim-local`), which this procedure does not make.
 
 ## 1. Choose and screen the name (RR-11)
 
@@ -79,7 +82,8 @@ Gungnir's pack schema checks this file. Start from `helheim-go/pack.yaml`. A bui
   - `checks`: the rungs a task's loop runs, in order.
 - `sandbox`: `build: devcontainer` (and a `target` when the Containerfile has several), and `egress`: the
   smallest list of hosts that works, each with a reason in the docs (RR-19).
-- `services`, if the leaf needs them, such as Postgres. Pin each image by digest (RR-13).
+- `needs`, if the leaf needs a database or a store: the names from `gungnir`'s list, `postgres` and `s3`. A build realm
+  names no service of its own (RR-27); the project's runtime realm provides each need.
 - An acceptance check, if the product needs one across leaves: a check named `accept`, and
   `sandbox.acceptance` naming its stack. Every pointer move runs the `accept` check of every leaf realm
   that defines one. A project needs at least one realm with it.
@@ -104,6 +108,8 @@ the one a move measures.
 - **`prompts/implementer.md`:** how an implementer works in this stack. A person reviews it (RR-20).
 - **`templates/<kind>/`:** the first commit of a leaf.
   - It passes its own ladder when built in a copy (RR-17).
+  - It ships an executable `release.sh`, and a test builds the release from a copy of the template and starts
+    `OUT/run.sh` with no build tool on the `PATH` (RR-24).
   - It gives the product a `.github/workflows/ci.yml` with a job `test`, and the MIT licence with the
     "Built with Ouroboric" notice (RR-18).
 

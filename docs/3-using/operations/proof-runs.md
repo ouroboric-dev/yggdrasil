@@ -68,9 +68,9 @@ differs. Every run of a comparison is `key-points`.
 
 The order is the table's order, with these gates between runs:
 
-- Question 10 (does the brief fit the realms: A, B or C) is answered: option A. Run 1 waits for what option A
-  requires to be built and merged.
-- The runs use `client-gallery-lite` 4.1.0, which the founder makes before run 1.
+- Question 10 (does the brief fit the realms: A, B or C) is answered: option A, which is built and merged (the
+  gallery-runtime change).
+- The runs use `client-gallery-lite` 4.1.0, which is made (mimir#7 and mimir#8).
 - Run 1's real size is read before the other runs start (see "Caps" below).
 - The improvement run needs part two merged. It uses the same mode, roles and caps as run 1.
 - Add `--dry-run` to any line above to check it first.
@@ -167,10 +167,12 @@ and you not approving `plan-gate`. In that mode the run stops at each gate with 
 planner's sessions and the two reviewers: cents to a dollar, an estimate and not a measure.
 
 1. Start it with the command in the table.
-2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-1.md`, then `spec-1.md`, and so on. Approve
-   the design and the spec gates, each with the `--continue` command that the script prints (see "Continue a stopped run"). Each
-   approve is a separate `--continue` command, and each one has its own wall clock. Do not approve `plan-gate`: the run ends there.
-   `report.txt` still holds the metrics and the report of the run.
+2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-1.md`, then `spec-1.md`, and so on.
+   Approve the design and the spec gates, each with the `--continue` command that the script prints (see "Continue a
+   stopped run"). Each approve is a separate `--continue` command, and each one has its own wall clock. Do not approve
+   `plan-gate`: the run ends there. `report.txt` still holds the metrics and the report of the run. The rehearsal
+   (v0-H19, T01) is done, and it predates the decisions rule: the proof runs approve and reject by "The product
+   owner's decisions", not by this step.
 3. Read the design, the spec, the plan (`docs/2-engineering/plans/*/tasks.md` in the project) and `docs/leaves.yaml`.
 4. Answer five questions from what you read: which leaves and realms the plan uses; how the design makes
    `/app/start.sh` start the whole product on port 3000 with no outside service; where it keeps data and photos; how
@@ -235,9 +237,9 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 
 A run that stopped (3) or paused (4) is not graded until it ends. The script continues it itself, with the same wall
 clock, the credentials loaded only inside its own subshell, the same filter, and the output added to `run.txt` and
-`report.txt`. After it finishes, it grades the run, prints the metrics, the report and the evidence, and the comparison
-with the baseline the run recorded (`--baseline` names another; if the recorded baseline has since gone, `--continue` drops
-the comparison with a warning and goes on). You do not load the credentials in your shell.
+`report.txt`. After it finishes, it grades the run, prints the metrics, the report and the evidence, and the
+comparison with the baseline the run recorded (`--baseline` names another; if the recorded baseline has since gone,
+`--continue` drops the comparison with a warning and goes on). You do not load the credentials in your shell.
 
 The last lines of the script after a stop are the command to run. After a gate stop they are:
 
@@ -257,12 +259,12 @@ scripts/ygg-proof-run.sh --continue RUN --reject GATE --reason "..."
 scripts/ygg-proof-run.sh --continue RUN --resume
 ```
 
-Add `--clip` to copy the report, `--wall TIME` for another wall clock, and `--folder` and `--env` only if the first command
-used them. `--continue` refuses the setup flags (`--name`, `--mode`, the roles, `--reviewer-reasoning`, the caps, `--build`,
-`--tasks`, `--suites` and `--yggdrasil`): the run keeps its config and its mode. Add `--dry-run` to see what it would do. A note on `--approve`
-makes an intervention. A rejection takes `--reason` and no `--note`; it advances the run at once, so it starts sessions
-as an approval does. A proof folder made before `--reviewer-reasoning` continues, and the plan shows "reasoning
-unset".
+Add `--clip` to copy the report, `--wall TIME` for another wall clock, and `--folder` and `--env` only if the first
+command used them. `--continue` refuses the setup flags (`--name`, `--mode`, the roles, `--reviewer-reasoning`, the
+caps, `--build`, `--tasks`, `--suites` and `--yggdrasil`): the run keeps its config and its mode. Add `--dry-run` to
+see what it would do. A note on `--approve` makes an intervention. A rejection takes `--reason` and no `--note`; it
+advances the run at once, so it starts sessions as an approval does. A proof folder made before `--reviewer-reasoning`
+continues, and the plan shows "reasoning unset".
 
 Never edit `factory.yaml` while a process holds the run; a stop at `budget-cap` is the one time you edit it, before you
 approve.

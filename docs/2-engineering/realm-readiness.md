@@ -27,7 +27,7 @@ The "applies to" column says which realms an item covers:
 - `all`: every realm.
 - `build`: a realm that builds software. It has a stack, a template and a ladder.
 - `document`: a realm that makes documents. Its pack declares no stack.
-- `runtime`: a realm that provides services and the product start. It has no stack, template or ladder.
+- `runtime`: a realm that provides services and the product start. It has no stack, leaf template or ladder.
 
 ## The checklist
 
