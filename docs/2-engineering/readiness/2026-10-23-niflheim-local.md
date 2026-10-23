@@ -8,8 +8,9 @@ related: [../realm-readiness.md, ../backlog.md, ../changes/2026-10-22-gallery-ru
 
 # Realm readiness: niflheim-local, 2026-10-23
 
-**Bottom line: nearly ready.** Of the 15 rows, 13 are met, 1 is `missing` (RR-11, a human item) and
-1 is `n/a`. RR-01 was partial until the founder re-ran `setup-repo.sh` on 2026-10-23; it is met now.
+**Bottom line: ready.** Of the 15 rows, 14 are met and 1 is `n/a`. RR-01 was partial until the founder re-ran
+`setup-repo.sh` on 2026-10-23, and RR-11 was missing until the founder judged the name on 2026-10-23; both are met
+now.
 
 - **Realm:** [`niflheim-local`](https://github.com/ouroboric-dev/niflheim-local) at
   [`8f21bf0`](https://github.com/ouroboric-dev/niflheim-local/commit/8f21bf011db8c79afeeb7c868f94f3c28808acb9), a
@@ -25,8 +26,7 @@ related: [../realm-readiness.md, ../backlog.md, ../changes/2026-10-22-gallery-ru
 
 | Status | Count | Items |
 | --- | --- | --- |
-| met | 13 | RR-01 to RR-10, RR-13, RR-25, RR-26 |
-| missing | 1 | RR-11 (human) |
+| met | 14 | RR-01 to RR-11, RR-13, RR-25, RR-26 |
 | n/a | 1 | RR-21 |
 
 ## Items
@@ -43,7 +43,7 @@ related: [../realm-readiness.md, ../backlog.md, ../changes/2026-10-22-gallery-ru
 | RR-08 | met | `go test -run Pack ./...`: four `PASS` lines ([E3](#e3-go-tests)). The pack loads against the Gungnir version `go.mod` requires. | — |
 | RR-09 | met | `PASS niflheim-local shared: not a realm` ([E2](#e2-local-repo-checks)). A runtime realm holds no shared check script, so the check has nothing to compare. | — |
 | RR-10 | met | The umbrella's `.gitmodules` (lines 25 to 27) and `go.work` (line 10) hold `niflheim-local` ([yggdrasil#102](https://github.com/ouroboric-dev/yggdrasil/pull/102), T34). `check-repos.sh` lists it in `LEAVES` (line 14; [ouroboric#79](https://github.com/ouroboric-dev/ouroboric/pull/79), T27). | — |
-| RR-11 | missing | Human item. The name follows `<realm>-<flavor>` (Niflheim, runtime; flavor local). No person has judged the name and its screening yet. The founder's answers to the change's questions (2026-10-23) chose the realm and its name. | — |
+| RR-11 | met | Name: `niflheim-local`, `<realm>-<flavor>` (Niflheim, infrastructure in the [realm-leaf-naming proposal](../changes/2026-10-17-realm-leaf-naming/proposal.md); flavor local, which leaves room for a cloud flavor). Screening: that proposal's web screening of 2026-10-17 found no collision that matters for Niflheim, and a web search for "niflheim-local" on 2026-10-23 found nothing (only mythology and game settings for "Niflheim"). The founder judged the name and its screening acceptable (2026-10-23). | — |
 | RR-13 | met | The pack pins both services by digest: Postgres `18.4-bookworm@sha256:882236b8…` and SeaweedFS `4.45@sha256:fc9f76fa…`. `check-repos.sh --check services` passes ([E4](#e4-services-check)). The age of each digest is checked in T11's evidence; no script checks it yet. | — |
 | RR-21 | n/a | The realm has no leaf, so no smoke run builds one. `ygg-smoke-runtime.sh` is RR-25's run. | — |
 | RR-25 | met | `go test -run ProductStart ./...` passes ([E3](#e3-go-tests)). `ygg-smoke-runtime.sh --image cgl:4.1.0` (the founder, real engine, merged realms, T30): every check `PASS`, first answer in 7 s, restart in 35 s. | — |

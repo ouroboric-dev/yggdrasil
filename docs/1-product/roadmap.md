@@ -11,8 +11,8 @@ style: direction
 This roadmap sets the order of work, not dates. Each step has its own design doc or change proposal.
 
 0. **Kickstart (tier 0):** charter, shape, brand seed, roadmap. Done retroactively on 2026-10-11.
-1. **v0:** core (Odin, Gleipnir, Jormungandr, Gungnir), the web realms (`midgard-react`, `helheim-go`),
-   metrics; builds client gallery
+1. **v0:** core (Odin, Gleipnir, Jormungandr, Gungnir), the web realms (`midgard-react`, `helheim-go`)
+   and the runtime realm (`niflheim-local`), metrics; builds client gallery
    lite and shows at least one measured self-improvement. Built by hand following the spec-driven
    development (SDD) process (self-hosting stage 0). Before the Phase 5c plan: the realm readiness
    checklist, with the existing realms assessed and their gaps fixed, and the Voluspa change proposal
