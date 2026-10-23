@@ -1,6 +1,6 @@
 ---
 title: Tasks for the gallery's product starting in the grader
-status: draft
+status: accepted
 date: 2026-10-22
 related: [proposal.md, delta.md, ../../plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md, ../../../3-using/operations/proof-runs.md, ../2026-10-18-repo-bootstrap/tasks.md, ../../realm-readiness.md]
 style: spec

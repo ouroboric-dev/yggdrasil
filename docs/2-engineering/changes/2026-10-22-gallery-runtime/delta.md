@@ -1,6 +1,6 @@
 ---
 title: Delta for the gallery's product starting in the grader
-status: draft
+status: accepted
 date: 2026-10-22
 related: [proposal.md, tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../realm-readiness.md]
 style: spec
