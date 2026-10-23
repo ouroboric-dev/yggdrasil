@@ -1346,6 +1346,19 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 
 Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), niflheim-local `8f21bf0` (B-160, B-161), gleipnir `6b6f83e` (B-167, B-168) and odin `9c44e89` (B-169).
 
+### B-170: the task reviewers never see the task's diff
+
+- **Where:** `voluspa/software/prompts/reviewer-spec.md`, `reviewer-simplicity.md:6` and `reviewer-quality.md:8`
+  point to `git diff $(git merge-base HEAD main) HEAD`. Read-only sessions have no shell
+  (`gleipnir/opencode/opencode.go:139-140`, `gleipnir/claudecode/claudecode.go:72-73`), and Odin's review prompt
+  holds no diff (`odin/internal/engine/loop.go:215-238`).
+- **Problem:** a reviewer reads the whole leaf to find the change. In run 1 (`20261023-205334-ce5329`), t001 changed
+  8 files (+314/-12). Its spec-compliance reviewer made 41 reads in its 20 turns, the template included, and ran out
+  before its verdict, twice. Its answers broke the report schema (`reviewer-unreadable`), and the run stopped.
+- **Fix:** the [reviewers-see-the-diff change](changes/2026-10-23-reviewers-see-the-diff/proposal.md): Odin puts the
+  task's diff, from the loop's base commit, in each task reviewer's prompt.
+- **Status:** proved (run 1's ledger and transcripts); the founder chose the fix on 2026-10-23.
+
 ## Done
 
 ### B-117: the web leaf's `run.sh` serves on loopback only
