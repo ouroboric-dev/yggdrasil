@@ -99,7 +99,9 @@ The pull requests, each from a branch `gallery-runtime` made from `main`:
    `helheim-go` whose `pack.yaml` names `needs`, or a leaves file that names `runtime`; and an `odin` that does not
    resolve needs would start a `helheim-go` leaf, or run its dependency policy, with no services.
 5. The repos that pin the new `gungnir`, and the others, in any order once their dependencies have merged:
-   `niflheim-local`, second pull request: T11, T12 (after `gungnir`; T11's workflow is pushed by the founder).
+   `niflheim-local`, second pull request: T11, T12 (after `gungnir`; T11's workflow is pushed by the founder). Like
+   every task, they work in a worktree of the repo; their local `check-repos.sh` runs read the top-level clone of T03
+   until T27 merges, and the submodule after.
    `helheim-go`: T13, T14, T15 (after `odin`'s first; T14 needs T11 merged too). `midgard-react`: T16, T17, T18 (no
    new `gungnir`). `voluspa`: T19, T20 (after `odin`'s first). `mimir`: T21, by the founder, after T11.
 6. `odin`, second pull request: T22, T23, T24, T25 (T25 after `helheim-go`'s and `niflheim-local`'s second merge).
@@ -107,7 +109,7 @@ The pull requests, each from a branch `gallery-runtime` made from `main`:
 8. T30, the founder's smoke, on the merged `main` of every repo.
 9. `yggdrasil`, second pull request: T31, T32, T33, after T30. It moves the pointers, `niflheim-local`'s among them.
 
-The umbrella's pointers do not move until T33. T30 checks out each repo at its merged `main` and builds `ygg` from
+The umbrella's pointers do not move until T33, except the new `niflheim-local` pointer that T34 adds. T30 checks out each repo at its merged `main` and builds `ygg` from
 that `odin`. Run 1 (v0-H20 of the Phase 6 plan) waits for T33.
 
 ---
@@ -1221,7 +1223,7 @@ it. This check keeps the copies equal (delta §11, RR-26).
 - [ ] `check-repos.sh` covers `niflheim-local` (RR-10's list).
 
 **Named test:** `ouroboric/scripts/tests/check-repos.test.sh` (the `services` cases).
-**Layer:** `ouroboric`. **Size:** M, about 200 lines. **Depends on:** T11, T14, T21 (their files' form; on the merged
+**Layer:** `ouroboric`. **Size:** M, about 200 lines. **Depends on:** T34 merged (the submodule path), T11, T14, T21 (their files' form; on the merged
 repos the check passes only once all three are merged).
 
 ### Task gallery-runtime-T28: the reviewer's reasoning effort in the proof config (F2)
