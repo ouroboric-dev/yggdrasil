@@ -869,8 +869,8 @@ benchmarks/<task-id>/
   stay green. The two kinds are reported separately. A whole-product brief like client gallery lite
   has mostly fail-to-pass tests. Feature-level tasks on an existing product use both.
 - **Grading is isolated:** graders MUST run in their own container, against the built app, after the
-  agent containers have stopped and after the release sandbox has stopped. Agents MUST NOT share a container, filesystem or network with the
-  grader, so they cannot observe the suite.
+  agent containers have stopped and after the release sandbox has stopped. Agents MUST NOT share a container,
+  filesystem or network with the grader, so they cannot observe the suite.
 - **The release at export:** when Odin exports `/app` (`ygg grade`, `ygg bridge`), it MUST build the release of each
   leaf that has a `release.sh`: in the project's acceptance sandbox, on a snapshot of the commits it exports, with no
   agent and no secret. It MUST place each release at `/app/.ygg/release/<leaf>/` and MUST NOT commit it. It MUST stop
