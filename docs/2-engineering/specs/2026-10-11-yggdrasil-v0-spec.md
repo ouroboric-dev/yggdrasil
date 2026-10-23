@@ -386,12 +386,12 @@ privacy: standard   # strict → only providers with no training and no retentio
   and of the realms of the leaves it consumes (§9.3, §9.4), via compose. The rule that two realms offering a service
   of the same name must offer it alike stays, for a pack that still names services.
 - Odin MUST start, beside a leaf's work container, the runtime realm's service for each need of the leaf's realm and
-  of the realms of the leaves it consumed; and, in the sandbox of a snapshot, for each need of the realms of the
-  project's leaves. A service keeps the name it has in the runtime realm's pack. A need that the project's runtime
-  realm does not provide, or a need in a project that pins no runtime realm, MUST stop the run before any leaf is
-  created or any leaf sandbox starts, with a message that names the need and the realm that has it. The node that
-  reads the leaves file before `init` (`ready` in the `software` graph) MUST check it too. The scratch sandboxes of
-  the design, spec and plan stages have run by then.
+  of the realms of the leaves it consumed; and, in the sandbox of a snapshot for an acceptance check, for each need of
+  the realms of the project's leaves (the release's sandbox at export starts none: §11). A service keeps the name it
+  has in the runtime realm's pack. A need that the project's runtime realm does not provide, or a need in a project
+  that pins no runtime realm, MUST stop the run before any leaf is created or any leaf sandbox starts, with a message
+  that names the need and the realm that has it. The node that reads the leaves file before `init` (`ready` in the
+  `software` graph) MUST check it too. The scratch sandboxes of the design, spec and plan stages have run by then.
 - **Two layers per image:** the realm's stack layer and the factory layer. The factory layer holds
   agent CLIs pinned to exact versions with auto-update off, `/etc/claude-code/managed-settings.json`,
   an egress firewall adapted from Anthropic's reference `init-firewall.sh`, and a non-root user.
@@ -605,11 +605,11 @@ Design rules:
 - Everything the browser loads MUST be served on port 3000, at the address the product was reached at. A presigned
   storage URL MUST use that address and the bucket's path (`/<S3_BUCKET>/<key>`).
 - The web leaf MUST forward a request whose path starts with `/<S3_BUCKET>/` to `S3_ENDPOINT` with its method, path,
-  query and body unchanged and its `Host` header kept. That forward MUST NOT add an `X-Forwarded-*` header
-  (SeaweedFS's signature check may read one before `Host`: to verify). It MUST forward a request whose path starts
-  with `/api/` to `API_URL` without the `/api` prefix, with `X-Forwarded-Host` and `X-Forwarded-Proto` set from the
-  request. It MUST answer any other path from the built bundle, with `index.html` for a path that names no file. The
-  API MUST NOT serve the web app.
+  query and body unchanged and its `Host` header kept. That forward MUST NOT carry an `X-Forwarded-*` or `Forwarded`
+  header, the client's included: SeaweedFS 4.45 checks `X-Forwarded-Host` before `Host`. It MUST forward a request
+  whose path starts with `/api/` to `API_URL` without the `/api` prefix, with `X-Forwarded-Host` and
+  `X-Forwarded-Proto` set from the request. It MUST answer any other path from the built bundle, with `index.html` for
+  a path that names no file. The API MUST NOT serve the web app.
 - The API MUST build a public address (a presigned URL, a client link) from `X-Forwarded-Host` and
   `X-Forwarded-Proto` when the web leaf sets them.
 - The API MUST make its bucket at start when it is missing, with object versioning on when the store supports it. In
@@ -873,12 +873,12 @@ benchmarks/<task-id>/
   filesystem or network with the grader, so they cannot observe the suite.
 - **The release at export:** when Odin exports `/app` (`ygg grade`, `ygg bridge`), it MUST build the release of each
   leaf that has a `release.sh`: in the project's acceptance sandbox, on a snapshot of the commits it exports, with no
-  agent and no secret. It MUST place each release at `/app/.ygg/release/<leaf>/` and MUST NOT commit it. It MUST stop
-  that sandbox before the grader starts. A release MUST have its own bound, named in the code, and MUST NOT be held
-  to the snapshot's limits for source (32 MiB per file, 256 MiB in all), which a static Go binary can come near. A
-  release that fails, times out, holds anything but regular files and folders, or passes its bound MUST fail the
-  grade (`GradeFailed`, no `score.json`, a resume grades again). It MUST NOT count as a score of 0. Odin MAY keep a
-  release in the run folder by the commits it was built from, and reuse it for an export of the same commits.
+  agent, no secret and no service. It MUST place each release at `/app/.ygg/release/<leaf>/` and MUST NOT commit it.
+  It MUST stop that sandbox before the grader starts. A release MUST have its own bound, named in the code, and MUST
+  NOT be held to the snapshot's limits for source (32 MiB per file, 256 MiB in all), which a static Go binary can come
+  near. A release that fails, times out, holds anything but regular files and folders, or passes its bound MUST fail
+  the grade (`GradeFailed`, no `score.json`, a resume grades again). It MUST NOT count as a score of 0. Odin MAY keep
+  a release in the run folder by the commits it was built from, and reuse it for an export of the same commits.
 - **The grader image's services:** a task version MAY add services to its image while its brief and brief hash stay
   the same. `score.json` already names the task version, which says which image graded the product. A task image
   that bakes in services MUST bake in the versions of the runtime realm the factory's projects pin: the same
