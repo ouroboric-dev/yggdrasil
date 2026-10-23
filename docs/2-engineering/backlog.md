@@ -1283,9 +1283,9 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 
 ### B-161: object versioning on SeaweedFS is off in the product
 
-- **Where:** `niflheim-local/templates/product/start.sh`, `helheim-go` (the API's bucket creation).
-- **Problem:** found by the founder's smoke (T30, 2026-10-23, proposal question 7). `start.sh` never enables bucket versioning and SeaweedFS buckets start unversioned. Spec §9.3 asks for versioning when the store supports it, and a deviation written in the run's report when it does not. Nothing yet writes that deviation, and nobody checked whether SeaweedFS 4.45 accepts the call.
-- **Fix:** try the S3 `PutBucketVersioning` call when the API makes its bucket; if SeaweedFS accepts it, turn versioning on; if not, make the report name the deviation. Test: a bucket made by the API reports its versioning status.
+- **Where:** `niflheim-local/templates/product/start.sh`, `helheim-go/prompts/implementer.md:54` and `helheim-go/templates/api/AGENTS.md:32` (they already tell the API to create its bucket "with versioning on when the store supports it").
+- **Problem:** found by the founder's smoke (T30, 2026-10-23, proposal question 7). `start.sh` never enables bucket versioning and the API owns the bucket (spec §9.3). Two points stay open: nobody checked whether SeaweedFS 4.45 accepts `PutBucketVersioning`, and nothing writes the deviation in the run's report when the store does not.
+- **Fix:** probe `PutBucketVersioning` on SeaweedFS 4.45; if it accepts the call, add a check that a bucket made by the API reports its versioning status; if not, make the report name the deviation. Test: a bucket made by the API reports its versioning status, or the report names the deviation.
 - **Status:** proved (T30 read `start.sh`).
 
 ### B-162: a cloud flavor of Niflheim
@@ -1298,9 +1298,9 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 ### B-163: the changes README's archive rule, which no change follows yet
 
 - **Where:** [changes/README.md](changes/README.md), every folder under `changes/`.
-- **Problem:** the README says a merged change moves to `archive/` after its delta is folded into `../system/`. No change did that: each folded its delta into the dated v0 spec and stayed in `changes/`, and neither `changes/archive/` nor `system/` exists. The README states a rule that nothing follows.
+- **Problem:** the README says a merged change moves to `archive/` after its delta is folded into `../system/`. No change did that: each folded its delta into the dated v0 spec and stayed in `changes/`, and `changes/archive/` does not exist, while `system/` holds only its README. The README states a rule that nothing follows.
 - **Fix:** either move every merged change to `archive/` and the living spec into `system/` (a piece of work of its own), or change the README to say what the changes do. Test: none; the docs check passes after the move.
-- **Status:** proved (the folder listing).
+- **Status:** proved (the folder listing, `system/README.md`).
 
 ### B-164: `ygg-smoke-real.sh` can die of SIGPIPE on a leaf with many odd files
 
@@ -1322,6 +1322,29 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 - **Problem:** the smoke defaults to the newest `localhost/ygg-stack-<realm>` image, which can be an old build: T30 found a Go 1.26.9 image after the 1.26.10 bump. The founder's `~/ygg-it/factory.yaml` has no `realms:`, so a rebuild needs a copy of it with `realms.dir`. Nothing says how the smoke learns that the stack is current.
 - **Fix:** have the smoke compare the image to the realm's stack (the realm's stack hash, or run `ygg sandbox build` first) and refuse a stale one, and say in the runbook which config the rebuild takes. Test: a stale image is refused with the message.
 - **Status:** proved (T30, 2026-10-23).
+
+### B-167: gleipnir's `Down` runs `pod rm` while a service container is still stopping
+
+- **Where:** `gleipnir/sandbox/driver.go` (`Down`: `rm -f -t 2 --depend` at `:365`, then `removePod`, `pod rm` at `:388`).
+- **Problem:** found by the T23 real-engine probe (3 of 3 runs). `Down` ran `pod rm` while the `postgres_1` service container was still stopping, so the pod removal raced the container's stop and could fail. The sandbox then leaves a pod or a container behind.
+- **Fix:** wait for the containers `rm` removed to be gone (or retry `pod rm` with `-f`) before removing the pod. Test: after `Down` of a sandbox with services, no container, pod or anonymous volume of the run is left.
+- **Status:** proved (the T23 real-engine probe, 3/3).
+
+### B-168: gleipnir's `Down` removes containers without `-v`, so anonymous volumes stay
+
+- **Where:** `gleipnir/sandbox/driver.go:365` (`rm -f -t 2 --depend`, no `-v`).
+- **Problem:** an image that declares a `VOLUME` (Postgres does) gets an anonymous volume per container, and `rm` without `-v` leaves it. Each sandbox with services leaves a volume behind. The volumes were removed by hand twice during the gallery-runtime change.
+- **Fix:** add `-v` to the `rm`. Test: after `Down` of a sandbox with a Postgres service, `podman volume ls` holds no volume of the run.
+- **Status:** proved (the T23 real-engine probe, 3/3; the volumes were removed by hand twice).
+
+### B-169: one release sandbox builds every leaf's release, so a `release.sh` can write into another leaf's folder
+
+- **Where:** `odin/internal/run/release.go` (`sandboxReleaser`); the cost is named in `odin/docs/architecture.md:129-131`.
+- **Problem:** Odin builds all the releases in one sandbox. A leaf's `release.sh` can write into another leaf's release folder, and the bounds and the file-type checks do not catch it.
+- **Fix:** build each leaf's release in a sandbox of its own realm, one per leaf. Test: a `release.sh` that writes into another leaf's `OUT` fails the grade.
+- **Status:** accepted for v0 (the T23 review recommended it for later); a per-leaf-realm release comes later.
+
+Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), niflheim-local `8f21bf0` (B-160, B-161), gleipnir `6b6f83e` (B-167, B-168) and odin `9c44e89` (B-169).
 
 ## Done
 
@@ -1357,7 +1380,7 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 - **Fix:** decide question 10 of the [Phase 6 plan](plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md) after v0-H19, which shows what the planner designs. A: bake Postgres and SeaweedFS into a new task version of the image and have the factory write a root `start.sh`. B: give the realms a single-machine flavor (SQLite and files on disk, one process). C: tell the planner by the brief only, and let the realms' docs yield.
 - **Status:** reasoned (read together; not run). B-116, B-117 and B-118 keep their second halves behind this question.
 - **Decided:** question 10 is answered: option A (the founder, 2026-10-22), in the [gallery-runtime change](changes/2026-10-22-gallery-runtime/), whose questions the founder answered on 2026-10-23. It is fixed: the change's tasks merged on 2026-10-23 (see Fixed below).
-- **Fixed:** 2026-10-23: option A, by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/). The runtime realm [niflheim-local#1](https://github.com/ouroboric-dev/niflheim-local/pull/1) and [niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2) (services, product start); needs and the runtime pin [gungnir#21](https://github.com/ouroboric-dev/gungnir/pull/21); the run joins the runtime realm and `init` writes the start [odin#38](https://github.com/ouroboric-dev/odin/pull/38); the release in the export [odin#39](https://github.com/ouroboric-dev/odin/pull/39) and the real-realm fixtures [odin#40](https://github.com/ouroboric-dev/odin/pull/40); the realms [helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14), [midgard-react#21](https://github.com/ouroboric-dev/midgard-react/pull/21) and the prompts [voluspa#3](https://github.com/ouroboric-dev/voluspa/pull/3); the 4.1.0 image [mimir#7](https://github.com/ouroboric-dev/mimir/pull/7); the smoke and the services check [ouroboric#79](https://github.com/ouroboric-dev/ouroboric/pull/79) ([ouroboric#80](https://github.com/ouroboric-dev/ouroboric/pull/80) fixed a SIGPIPE the smoke found). The founder's smoke on the real engine (T30, 2026-10-23) passed.
+- **Fixed:** 2026-10-23: option A, by the [gallery-runtime change](changes/2026-10-22-gallery-runtime/). The runtime realm [niflheim-local#1](https://github.com/ouroboric-dev/niflheim-local/pull/1) and [niflheim-local#2](https://github.com/ouroboric-dev/niflheim-local/pull/2) (services, product start); needs and the runtime pin [gungnir#21](https://github.com/ouroboric-dev/gungnir/pull/21); the run joins the runtime realm and `init` writes the start [odin#38](https://github.com/ouroboric-dev/odin/pull/38); the release in the export [odin#39](https://github.com/ouroboric-dev/odin/pull/39) and the real-realm fixtures [odin#40](https://github.com/ouroboric-dev/odin/pull/40); the realms [helheim-go#14](https://github.com/ouroboric-dev/helheim-go/pull/14), [midgard-react#21](https://github.com/ouroboric-dev/midgard-react/pull/21), [midgard-react#22](https://github.com/ouroboric-dev/midgard-react/pull/22) and the prompts [voluspa#3](https://github.com/ouroboric-dev/voluspa/pull/3); the 4.1.0 image [mimir#7](https://github.com/ouroboric-dev/mimir/pull/7); the smoke and the services check [ouroboric#79](https://github.com/ouroboric-dev/ouroboric/pull/79) ([ouroboric#80](https://github.com/ouroboric-dev/ouroboric/pull/80) fixed a SIGPIPE the smoke found). The founder's smoke on the real engine (T30, 2026-10-23) passed. Go 1.26.10 for GO-2026-6809, a founder-approved exception to RR-13's two weeks (2026-10-23; helheim-go#14, midgard-react#22).
 
 ### B-158: the realms pin the stack's services, and the grader image copies them
 

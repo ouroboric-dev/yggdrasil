@@ -8,9 +8,8 @@ related: [../realm-readiness.md, ../backlog.md, ../changes/2026-10-22-gallery-ru
 
 # Realm readiness: niflheim-local, 2026-10-23
 
-**Bottom line: nearly ready.** Of 15 items that apply to a runtime realm, 12 are met, 1 is partial, 1 is `missing` (a
-human item) and 1 is `n/a`. The partial item is RR-01: the ruleset of `niflheim-local` does not require `test` yet, and
-only a founder run of `setup-repo.sh` fixes that.
+**Bottom line: nearly ready.** Of the 15 rows, 13 are met, 1 is `missing` (RR-11, a human item) and
+1 is `n/a`. RR-01 was partial until the founder re-ran `setup-repo.sh` on 2026-10-23; it is met now.
 
 - **Realm:** [`niflheim-local`](https://github.com/ouroboric-dev/niflheim-local) at
   [`8f21bf0`](https://github.com/ouroboric-dev/niflheim-local/commit/8f21bf011db8c79afeeb7c868f94f3c28808acb9), a
@@ -26,8 +25,7 @@ only a founder run of `setup-repo.sh` fixes that.
 
 | Status | Count | Items |
 | --- | --- | --- |
-| met | 12 | RR-02 to RR-10, RR-13, RR-25, RR-26 |
-| partial | 1 | RR-01 |
+| met | 13 | RR-01 to RR-10, RR-13, RR-25, RR-26 |
 | missing | 1 | RR-11 (human) |
 | n/a | 1 | RR-21 |
 
@@ -35,7 +33,7 @@ only a founder run of `setup-repo.sh` fixes that.
 
 | ID | Status | Evidence | Backlog |
 | --- | --- | --- | --- |
-| RR-01 | partial | `PASS niflheim-local settings` and `security`; `FAIL niflheim-local ruleset`: the ruleset requires `lint` only, and `ci.yml` has a job `test` ([E1](#e1-github-settings-and-runs)). The fix is `setup-repo.sh` (a write action), which a founder runs. | — |
+| RR-01 | met | `PASS niflheim-local settings` and `security`. The ruleset required `lint` only at first, and `ci.yml` has a job `test`; the founder re-ran `setup-repo.sh` on 2026-10-23, and `PASS niflheim-local ruleset` now ([E1](#e1-github-settings-and-runs)). | — |
 | RR-02 | met | `PASS niflheim-local reuse` ([E2](#e2-local-repo-checks)). | — |
 | RR-03 | met | `.github/workflows/lint.yml` exists. Run [39936702141](https://github.com/ouroboric-dev/niflheim-local/actions/runs/39936702141) on `8f21bf0`: success ([E1](#e1-github-settings-and-runs)). | — |
 | RR-04 | met | `ci.yml` has the one job `test`: gofmt, vet, `go test` (the pack and the product start) and govulncheck. Run [39936702550](https://github.com/ouroboric-dev/niflheim-local/actions/runs/39936702550) on `8f21bf0`: success ([E1](#e1-github-settings-and-runs)). | — |
@@ -62,6 +60,8 @@ $ scripts/as-bot.sh --read all scripts/check-repos.sh --check settings --check s
 PASS niflheim-local settings
 PASS niflheim-local security
 FAIL niflheim-local ruleset: rules: deletion,non_fast_forward,pull_request:squash:1:stale-dismissed:last-push-approved,required_status_checks:lint@15368:strict (run setup-repo.sh)
+$ scripts/as-bot.sh --read all scripts/check-repos.sh --check ruleset niflheim-local   # 2026-10-23T20:39Z, after the founder's setup-repo.sh run
+PASS niflheim-local ruleset
 $ gh run list -R ouroboric-dev/niflheim-local --branch main
 success ci   8f21bf0 https://github.com/ouroboric-dev/niflheim-local/actions/runs/39936702550
 success lint 8f21bf0 https://github.com/ouroboric-dev/niflheim-local/actions/runs/39936702141
