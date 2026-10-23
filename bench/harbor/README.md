@@ -44,7 +44,7 @@ From the `yggdrasil` checkout:
 - `bash bench/harbor/tests/harbor-podman.test.sh` (add `YGG_TEST_ONLINE=1` to download the real
   Compose)
 - `uv run --project bench/harbor pytest bench/harbor/tests`
-- `bench/harbor/harbor-podman.sh exec bash bench/harbor/tests/selfcheck.test.sh localhost/client-gallery-lite:4.0.0`
+- `bench/harbor/harbor-podman.sh exec bash bench/harbor/tests/selfcheck.test.sh localhost/client-gallery-lite:4.1.0`
   (Podman)
 - `bench/harbor/tests/smoke.sh ../mimir/client-gallery-lite <brief sha256>` (Podman): prints
   `nop 0` and `yggdrasil 1`

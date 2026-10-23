@@ -1,6 +1,6 @@
 ---
 title: The gallery's product starts in the grader (option A)
-status: draft
+status: accepted
 date: 2026-10-22
 related: [delta.md, tasks.md, ../../backlog.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../plans/2026-10-22-yggdrasil-v0-phase-6/tasks.md, ../2026-10-21-leaf-run-contract/proposal.md, ../2026-10-18-realm-readiness/proposal.md, ../2026-10-17-realm-leaf-naming/proposal.md, ../2026-10-18-repo-bootstrap/tasks.md, ../../../3-using/operations/proof-runs.md]
 style: spec

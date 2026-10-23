@@ -1,6 +1,6 @@
 ---
 title: Delta for the gallery's product starting in the grader
-status: draft
+status: accepted
 date: 2026-10-22
 related: [proposal.md, tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../realm-readiness.md]
 style: spec
@@ -15,6 +15,9 @@ founder also confirmed, on 2026-10-23, the names `needs`, `provides` and `runtim
 the name `s3` for the store's service.
 
 ## Added
+
+- §6.1 and §11: the release's sandbox at export starts with no agent, no secret and no service (the founder's
+  decision, 2026-10-23; added to the spec after the delta was accepted).
 
 ### The runtime in the grader (§9.3)
 

@@ -21,6 +21,9 @@ those.
   refused. A project that still pins a realm at the top is refused, with the way to pin a graph.
 - Every leaf pins its own realm in `umbrella.yaml`, and the realm of a leaf comes from that pin alone. There is no
   lead realm and no `ygg run --realm`.
+- The runtime pin: a project pins one runtime realm, such as `niflheim-local`, with `runtime` and `runtime_version`
+  at the top of its `umbrella.yaml`. `init` records it from the leaves file, and the run starts the services for the
+  `needs` of the leaves' realms from it.
 - `--realm` is for `ygg sandbox build` only, which builds the stack of each realm it names (or `--all`).
 
 ### Run the content smoke run
