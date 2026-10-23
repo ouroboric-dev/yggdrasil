@@ -22,3 +22,6 @@
 [submodule "voluspa"]
 	path = voluspa
 	url = https://github.com/ouroboric-dev/voluspa.git
+[submodule "niflheim-local"]
+	path = niflheim-local
+	url = https://github.com/ouroboric-dev/niflheim-local.git
