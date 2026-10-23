@@ -1344,7 +1344,44 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 - **Fix:** build each leaf's release in a sandbox of its own realm, one per leaf. Test: a `release.sh` that writes into another leaf's `OUT` fails the grade.
 - **Status:** accepted for v0 (the T23 review recommended it for later); a per-leaf-realm release comes later.
 
-Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), niflheim-local `8f21bf0` (B-160, B-161), gleipnir `6b6f83e` (B-167, B-168) and odin `9c44e89` (B-169).
+Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), niflheim-local `8f21bf0` (B-160, B-161), gleipnir `6b6f83e` (B-167, B-168) and odin `9c44e89` (B-169). Those of B-171 to B-174 are at yggdrasil `96e7f35` (B-171) and odin `7f03ece` (B-172 to B-174).
+
+### B-172: `ygg doctor` shows 0 for "this run" when a run is continued
+
+- **Where:** `odin/internal/cli/doctor.go:281` passes an empty `gungnir.Usage{}` to `describeCaps` for the run.
+- **Problem:** on `ygg-proof-run.sh --continue`, the doctor's budget line says "this run 0 of … tokens, 0 of … turns"
+  while `ygg status` shows the run's real use (run 1: 20,093 tokens, 3 turns). The cap is enforced on the real
+  figures; only the doctor's line is wrong, and it misleads an operator deciding whether to continue.
+- **Fix:** with a run named, read its usage from the ledger as `ygg status` does. Test: a doctor on a stopped run
+  with use prints that use.
+- **Status:** seen in run 1.
+
+### B-173: a diff that keeps failing logs one event per reviewer per attempt
+
+- **Where:** `odin/internal/engine/change.go` (`changeBlock`, the `loop_attempt` "change not computed" event).
+- **Problem:** when the task's diff cannot be computed, each of the three reviewers logs the same event in each
+  attempt. It is only noise in the ledger.
+- **Fix:** log it once per attempt. Found by the scoped re-review of review-diff T01.
+- **Status:** minor; parked.
+
+### B-174: a large binary file early in a diff uses up the read budget
+
+- **Where:** `odin/internal/engine/change.go` (`maxPatchRead`, with `--text`).
+- **Problem:** with `--text`, a large binary file early in the patch counts against the 800 KB read bound, so later
+  files are named only through the stat (the section says so).
+- **Fix:** skip a binary piece's bytes without keeping them, or read the patch file by file. Found by the scoped
+  re-review of review-diff T01.
+- **Status:** minor; parked.
+
+## Done
+
+### B-171: the proof-runs runbook names the gate files wrongly
+
+- **Where:** `docs/3-using/operations/proof-runs.md:170` names `gates/design-1.md` and `spec-1.md`.
+- **Problem:** Odin writes `gates/design-gate-1.md`, `spec-gate-1.md` and so on (run 1, 2026-10-23).
+- **Fix:** name `<gate>-<n>.md` (`design-gate-1.md`, `spec-gate-1.md`).
+- **Status:** seen in run 1.
+- **Fixed:** 2026-10-24, in the review-diff change's fold (T03).
 
 ### B-170: the task reviewers never see the task's diff
 
@@ -1358,8 +1395,8 @@ Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), ni
 - **Fix:** the [reviewers-see-the-diff change](changes/2026-10-23-reviewers-see-the-diff/proposal.md): Odin puts the
   task's diff, from the loop's base commit, in each task reviewer's prompt.
 - **Status:** proved (run 1's ledger and transcripts); the founder chose the fix on 2026-10-23.
-
-## Done
+- **Fixed:** 2026-10-24, by the change: [odin#41](https://github.com/ouroboric-dev/odin/pull/41) (the loop's base and
+  "The change") and [voluspa#4](https://github.com/ouroboric-dev/voluspa/pull/4) (the prompts read it).
 
 ### B-117: the web leaf's `run.sh` serves on loopback only
 

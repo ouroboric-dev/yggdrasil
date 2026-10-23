@@ -159,8 +159,9 @@ project names leak through `.gitmodules`.
    ignore agent edits to that copy.
 3. **Agents MUST NOT commit.** Odin commits at checkpoints, from the host.
 4. **Leaf git data MUST be out of reach.** A leaf's git directory lives in its parent's
-   `.git/modules/<name>/`. If the git directory is mounted, it MUST be mounted read-only. Agents can
-   then read `git log` and `git diff`.
+   `.git/modules/<name>/`. If the git directory is mounted, it MUST be mounted read-only. An agent with
+   a shell can then read `git log` and `git diff`. A read-only role has no shell (§5): Odin gives it
+   what it needs to read, as §4.2 says for the task reviewers.
 5. **Host git MUST run with hooks disabled** (`-c core.hooksPath=/dev/null`). Host git MUST NOT run
    `submodule update --recursive` inside a leaf.
 6. **Path-only checkout:** Odin MUST initialise only the submodules on the path from the root to the
@@ -233,6 +234,15 @@ defines the stages and approval rules. This graph is the web realm's implementat
 - **implement ⇄ check ladder** (Jormungandr loop): each task gets one fresh agent session. The ladder
   (§9.5) runs as exec nodes plus three read-only reviewer agents. Failures go back into the next
   attempt. After N attempts (default 3), the loop escalates (§7.3).
+  - Odin MUST record the leaf's commit when a task's loop starts, before its first attempt, and MUST
+    keep it across a resume.
+  - Each task reviewer's prompt MUST hold a section "The change", with the diff from that commit to the
+    attempt's commit: the changed files with their line counts first, then the diff.
+  - Odin MUST compute the diff on the host with hooks, external diff drivers and text conversion turned
+    off, so nothing in the leaf runs.
+  - A diff over the cap (about 200 KB) MUST be cut at a file boundary, and the section MUST name the
+    files left out. Binary files are named, not shown.
+  - The conformance and reuse reviewers do not get the section.
 
 ### 4.3 Checkpoints and resume
 

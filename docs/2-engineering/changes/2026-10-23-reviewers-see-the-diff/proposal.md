@@ -1,6 +1,6 @@
 ---
 title: The task reviewers see the task's diff
-status: proposed
+status: accepted
 date: 2026-10-23
 related: [delta.md, tasks.md, ../../backlog.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../2026-10-22-gallery-runtime/proposal.md, ../../../3-using/operations/proof-runs.md]
 style: spec

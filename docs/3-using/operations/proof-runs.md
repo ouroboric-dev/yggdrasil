@@ -167,7 +167,7 @@ and you not approving `plan-gate`. In that mode the run stops at each gate with 
 planner's sessions and the two reviewers: cents to a dollar, an estimate and not a measure.
 
 1. Start it with the command in the table.
-2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-1.md`, then `spec-1.md`, and so on.
+2. At each stop, read the gate file, `PROJECT/.factory/runs/RUN/gates/design-gate-1.md`, then `spec-gate-1.md`, and so on.
    Approve the design and the spec gates, each with the `--continue` command that the script prints (see "Continue a
    stopped run"). Each approve is a separate `--continue` command, and each one has its own wall clock. Do not approve
    `plan-gate`: the run ends there. `report.txt` still holds the metrics and the report of the run. The rehearsal

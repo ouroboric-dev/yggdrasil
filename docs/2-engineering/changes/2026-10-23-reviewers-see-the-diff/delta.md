@@ -1,6 +1,6 @@
 ---
 title: Delta for the task reviewers seeing the task's diff
-status: proposed
+status: accepted
 date: 2026-10-23
 related: [proposal.md, tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md]
 style: spec
