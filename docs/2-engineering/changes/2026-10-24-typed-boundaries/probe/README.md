@@ -14,7 +14,7 @@ three questions of T07 for each CLI, in the current work image:
 - **Q1:** does the CLI start Odin's server (`ygg`, given the way T09 will give it) and let the model call `submit`?
 - **Q2:** does the CLI's stream carry the call's whole input? The probe compares the length and SHA-256 of what the
   server received with what the stream holds, at about 16 KB and about 300 KB.
-- **Q3:** with the managed settings allowing only `ygg`, does the CLI start `evil`, the server the leaf's own
+- **Q3:** with the managed settings allowing only Odin's server, by its command, does the CLI start `evil`, the server the leaf's own
   `.mcp.json` and `opencode.json` name? `evil` leaves `EVIL-STARTED` in the leaf if it runs.
 
 ## Files
@@ -24,7 +24,7 @@ three questions of T07 for each CLI, in the current work image:
 | `server.mjs` | The stdio MCP server: one tool, `submit`, which answers `ok` and logs the input's length and hash. As `evil`, it first writes the marker |
 | `stream.mjs` | Reads a stream and prints the length and hash of every `output.text` it holds |
 | `leaf/` | A leaf's `.mcp.json` and `opencode.json`, each naming `evil` |
-| `managed-settings.json` | The work image's managed settings with T08's one change: `allowedMcpServers` is `[{"serverName": "ygg"}]` |
+| `managed-settings.json` | The work image's managed settings with T08's one change, in the form ruling R22 chose: `allowedMcpServers` names the probe server by its command (`node /probe/server.mjs ygg`), not by name, as the real image names `/opt/ygg/bin/ygg-submit` |
 | `run.sh` | Runs the sessions and writes the answers |
 
 ## How to run it
