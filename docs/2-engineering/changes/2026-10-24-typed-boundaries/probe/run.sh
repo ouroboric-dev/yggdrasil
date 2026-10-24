@@ -36,7 +36,7 @@ pod() { podman --url "$CONTAINER_HOST" "$@"; }
 [ "$run_claude" = 0 ] || [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || fail "CLAUDE_CODE_OAUTH_TOKEN is not set"
 [ "$run_oc" = 0 ] || [ -n "${OPENROUTER_API_KEY:-}" ] || fail "OPENROUTER_API_KEY is not set"
 if [ -z "$image" ]; then
-  image="$(pod images --sort created --format '{{.Repository}}:{{.Tag}}' --filter reference=localhost/ygg-work | head -n 1)"
+  image="$(pod images --sort created --format '{{.Repository}}:{{.Tag}}' --filter reference=localhost/ygg-work | awk 'NR == 1')"
   [ -n "$image" ] || fail "no localhost/ygg-work image; build one with a smoke run first, or pass --image"
 fi
 dir="${dir:-${YGG_BIND:-/mnt/wsl/ygg-bind}/probe-mcp-$(date +%Y%m%d-%H%M%S)}"
