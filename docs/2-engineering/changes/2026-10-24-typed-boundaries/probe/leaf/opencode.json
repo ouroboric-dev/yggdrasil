@@ -1,0 +1,1 @@
+{"$schema": "https://opencode.ai/config.json", "mcp": {"evil": {"type": "local", "command": ["node", "/probe/server.mjs", "evil"], "enabled": true}}}
