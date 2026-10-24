@@ -1375,6 +1375,20 @@ Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), ni
 
 ## Done
 
+### B-175: the report parser took JSON quoted in a reviewer's prose for a second document
+
+- **Where:** `gungnir/schema/event.go` (`lastDocument`, `containsDocument`), at gungnir `2003fb2`.
+- **Problem:** run 1 again (`20261023-223817-fe933b`) stopped at t001 with `reviewer-unreadable`, twice, on a correct
+  report: the spec-compliance reviewer checked every criterion and ended with `{"findings": []}`, but its prose
+  quoted the health route's body, `{"status":"ok"}`, and any complete JSON object in the prose counted as a second
+  document. A fenced snippet in the prose failed the same way ("more than one code fence").
+- **Fix:** only a JSON object with the expected top-level key (`findings`, or `disputes`) counts as a second document;
+  the last fence is the document and earlier fences are prose (the founder's decision, 2026-10-24).
+- **Status:** proved: both refused answers fail on the old parser and parse with the new one; the first run's
+  malformed answers are still refused.
+- **Fixed:** 2026-10-24, [gungnir#22](https://github.com/ouroboric-dev/gungnir/pull/22) and
+  [odin#42](https://github.com/ouroboric-dev/odin/pull/42) (the pin); spec §4.6 clarified.
+
 ### B-171: the proof-runs runbook names the gate files wrongly
 
 - **Where:** `docs/3-using/operations/proof-runs.md:170` names `gates/design-1.md` and `spec-1.md`.
