@@ -63,7 +63,7 @@ session() {
   local cli="$1" size="$2" leaf="$dir/leaf-$1-$2" log="/probe-out/$1-$2.server.log"
   mkdir -p "$leaf"
   cp "$here/leaf/.mcp.json" "$here/leaf/opencode.json" "$leaf/"
-  local run=(pod run --rm -i -v "$leaf:/work" -w /work -v "$dir/probe:/probe:ro" -v "$out:/probe-out"
+  local run=(podman --url "$CONTAINER_HOST" run --rm -i -v "$leaf:/work" -w /work -v "$dir/probe:/probe:ro" -v "$out:/probe-out"
     -v "$dir/probe/managed-settings.json:/etc/claude-code/managed-settings.json:ro")
   if [ "$cli" = claude ]; then
     local mcp tools="Read,Grep,Glob,mcp__ygg__submit"
