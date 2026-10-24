@@ -36,7 +36,7 @@ belong to the runtime realm (`niflheim-local`), which this procedure does not ma
 
 ## 2. Create the repo (founder)
 
-In `~/brunogbv/ouroboric/ouroboric`, with the short-lived admin token (see the header of `scripts/new-repo.sh`):
+In your `ouroboric` clone, with the short-lived admin token (see the header of `scripts/new-repo.sh`):
 
 ```zsh
 GH_TOKEN=... scripts/new-repo.sh --org ouroboric-dev --ci reuse,markdown,shell,actions,yaml \
@@ -175,11 +175,12 @@ A project pins its graph's version. A project made before the bump is refused wi
 
 ## 9. Build it and run it (RR-21)
 
-Run every `ygg` command that touches a sandbox inside the engine environment:
+Run every `ygg` command that touches a sandbox inside the engine environment, from the folder that holds your
+`ouroboric` and `yggdrasil` clones side by side:
 
 ```zsh
-cd ~/brunogbv/ouroboric/yggdrasil/odin
-~/brunogbv/ouroboric/ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
+cd yggdrasil/odin
+../../ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
   go run ./cmd/ygg sandbox build --config ~/ygg-it/content/factory.yaml --realm <repo>
 ```
 

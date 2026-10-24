@@ -34,13 +34,14 @@ run on the real realms.
 - The first time, and whenever the images are gone, add `--build`: it builds the sandbox image of every realm.
 - An unattended content run stops at `version-t1-contract-gate` (B-072), with exit code 3. It needs `ygg approve`.
 - Approve and resume need the engine environment (`CONTAINER_HOST`, the devcontainer CLI on `PATH`, the empty
-  registry auth). Run them under `ygg-engine.sh`:
+  registry auth). Run them under `ygg-engine.sh`, from the folder that holds your `ouroboric` and `yggdrasil`
+  clones side by side:
 
 ```zsh
-cd ~/brunogbv/ouroboric/yggdrasil/odin
-~/brunogbv/ouroboric/ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
+cd yggdrasil/odin
+../../ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
   go run ./cmd/ygg approve <run-id> <gate> --project <project> --note "..."
-~/brunogbv/ouroboric/ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
+../../ouroboric/scripts/ygg-engine.sh run --folder ~/ygg-it/content -- \
   go run ./cmd/ygg resume <run-id> --project <project>
 ```
 

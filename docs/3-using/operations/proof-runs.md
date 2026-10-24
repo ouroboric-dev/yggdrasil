@@ -5,7 +5,7 @@ command of each, what to look at while a run goes, what stops a run and how to c
 afterwards. The same page serves the next operator.
 
 Every run is started by `ygg-proof-run.sh` (in `ouroboric/scripts`). It sets every run up the same way, so that
-`ygg metrics --compare` compares two factories and not two setups. Run it from `~/brunogbv/ouroboric/ouroboric`.
+`ygg metrics --compare` compares two factories and not two setups. Run it from your `ouroboric` clone.
 Commands here are written for zsh.
 
 Two rules hold for every run:
@@ -19,18 +19,19 @@ Two rules hold for every run:
 
 Nothing here costs money.
 
-Build `ygg` from the merged `main` and check the engine:
+Build `ygg` from the merged `main` and check the engine, from the folder that holds your `ouroboric` and
+`yggdrasil` clones side by side:
 
 ```zsh
-cd ~/brunogbv/ouroboric/yggdrasil/odin && go build -o ~/.local/bin/ygg ./cmd/ygg
-cd ~/brunogbv/ouroboric/ouroboric && scripts/ygg-engine.sh check
+(cd yggdrasil/odin && go build -o ~/.local/bin/ygg ./cmd/ygg)
+cd ouroboric && scripts/ygg-engine.sh check
 ```
 
 If the machine restarted since the last run, redo what a restart undoes, in a normal terminal tab (`sudo` needs one):
 
 ```zsh
-sudo mkdir -p /mnt/wsl/ygg-bind && sudo mount --bind /home/brunogbv/ygg-it /mnt/wsl/ygg-bind
-sudo mkdir -p /run/user/1000 && sudo chown 1000:1000 /run/user/1000 && sudo chmod 700 /run/user/1000
+sudo mkdir -p /mnt/wsl/ygg-bind && sudo mount --bind "$HOME/ygg-it" /mnt/wsl/ygg-bind
+sudo mkdir -p "/run/user/$(id -u)" && sudo chown "$(id -u):$(id -g)" "/run/user/$(id -u)" && sudo chmod 700 "/run/user/$(id -u)"
 ```
 
 In the OpenRouter dashboard, check that the key's limit is $25 a month and see what is left of it.
