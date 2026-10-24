@@ -15,7 +15,7 @@ three questions of T07 for each CLI, in the current work image:
 - **Q2:** does the CLI's stream carry the call's whole input? The probe compares the length and SHA-256 of what the
   server received with what the stream holds, at about 16 KB and about 300 KB.
 - **Q3:** with the managed settings allowing only Odin's server, by its command, does the CLI start `evil`, the server the leaf's own
-  `.mcp.json` and `opencode.json` name? `evil` leaves `EVIL-STARTED` in the leaf if it runs.
+  `.mcp.json` and `opencode.json` name? `evil` leaves `EVIL-STARTED` in the leaf if it runs. The leaf's `.mcp.json` also names a server `ygg` that runs `evil`, to show that the name alone admits nothing.
 
 ## Files
 
