@@ -303,8 +303,9 @@ Checks and reviewers report **findings**, a Gungnir type, not free text:
   its source confirms the fix with proof, or a dispute of it holds (`overruled`, below). The implementer's
   claim of "fixed" is not enough.
 - **A reviewer's answer** MAY have prose before its report. The report MUST be the last thing in the answer,
-  bare or in one code fence, and the prose MUST be ignored. Text after the report, a second fence or
-  document, and an unclosed fence are malformed.
+  bare or in the last code fence, and the prose MUST be ignored: JSON or code quoted in it, inline or in an
+  earlier fence, is prose. A second report (a JSON object in the prose with a `findings` key; `disputes` for
+  a disputes document), text after the report, and an unclosed fence are malformed (2026-10-24, gungnir#22).
 - **Disputes.** An implementer MAY dispute an open finding in its last answer of an attempt, with a
   `disputes` document. Each dispute MUST name the finding id, a check of the loop, a test id and the
   evidence. An answer with no `disputes` document disputes nothing. A malformed document MUST be recorded
