@@ -91,13 +91,19 @@ models:
 
 - `price.input` and `price.output` are required. `cache_read` and `cache_write` are optional and default to 0.
 - `args` MUST NOT hold `model`, `ctx-size`, `c`, `host`, `port` or `alias`. The preset writes those.
-- A path in `args` names the container's view, such as `/models/mtp.gguf`.
+- A path in `args` names the container's view, such as `/models/mtp.gguf`. The preset does not resolve a relative
+  path.
+- A flag with no value is given as `"true"` or `"false"`. Keys are long option names: `ParseModels` refuses a key
+  that starts with `-`, and an empty value.
 
 ### 3.3 The preset
 
 `ygg models preset FILE` writes llama-server's preset INI to stdout. Each model is a section named by the model's
 name, with `model = /models/<file>`, `ctx-size = <context>`, then the `args` keys in sorted order. The key format
-is confirmed by the spike (§9).
+is the spike's (§9): the file starts with `version = 1`; keys are llama-server's long option names without `--`,
+written `key = value`; a flag with no value is written `key = true` (`false` gives its `--no-` form). A key without
+`=`, or a key the pinned build does not know, stops the router at start, so `ygg-models.sh start` prints the end of
+the server's log when the container exits while starting.
 
 ### 3.4 The model server
 
@@ -109,6 +115,11 @@ is confirmed by the spike (§9).
   /etc/ygg-models/allowed`. When either process exits, the container exits.
 - `scripts/ygg-models.sh` starts it with the GPU (`--device nvidia.com/gpu=all`), the two read-only mounts,
   the network, and the published port on `127.0.0.1:<host_port>`.
+- The engine resolves the CDI device, so the NVIDIA container toolkit and its spec (`nvidia-ctk cdi generate
+  --output=/etc/cdi/nvidia.yaml`) are installed where the engine runs: on a Podman machine under WSL2, inside the
+  machine's distro (`podman-machine-default`), not in the distro that runs `ygg`. A driver update or a new machine
+  needs the spec generated again. When the engine answers `unresolvable CDI devices`, `start` says so and names
+  this step.
 
 ### 3.5 The model gate
 
@@ -118,7 +129,8 @@ The gate passes a request to `llama-server` only when all of these hold:
 2. The body is at most 32 MiB of JSON with a string `model`.
 3. `model` equals the trimmed content of the allow file.
 
-Otherwise it answers 403 (path or model), 413 (size), 400 (not JSON) or 503 (no allow file). It streams the
+A request with a query string is refused (403): the router reads `?autoload=` from it. Otherwise it answers 403
+(path or model), 413 (size), 400 (not JSON) or 503 (no allow file). It streams the
 response as `llama-server` writes it.
 
 ### 3.6 `gungnir.SandboxSpec.Models`
@@ -160,8 +172,13 @@ When `spec.Models` is set:
 - `run.Prepare` refuses a run whose graph's local roles name more than one model, or a model that is not in the
   list. It sets `SandboxSetup.Models` when a local role is in the graph.
 - `run.Start` and `run.OpenWith` call `models.Ready` before any sandbox starts. Ready checks that the server
-  answers on `http://127.0.0.1:<host_port>`, that its list holds the model, writes the allow file, asks the
-  server to load the model, and waits up to 300 seconds until it is loaded.
+  answers on `http://127.0.0.1:<host_port>` and that its list (`GET /models`, `data[].id`) holds the model, and
+  writes the allow file. It then asks the server to load the model (`POST /models/load` with
+  `{"model":"<name>"}`). The server answers 200 `{"success":true}` before the load is done, and 400 `model is
+  already running` when the model is loaded, which Ready takes as success. Ready polls `GET /models` until the
+  model's `status.value` is `loaded`, up to 300 seconds. A status with `"failed": true` ends the wait with an error
+  that names its `exit_code`. The list's body holds raw newlines in `status.preset`, which Go's `encoding/json`
+  refuses, so the client escapes control characters before it decodes the fields it needs.
 - Leaf and scratch sandboxes get `Models`. Snapshot, grader and `ygg deps` sandboxes never do.
 - `ygg doctor` reports, for each local role: the list holds the model; the server answers; the network is
   internal.
@@ -219,9 +236,9 @@ When `spec.Models` is set:
   chat requests for the allowed model only, so a work container cannot load, unload or read slots.
 - **The allow file** is written by Odin on the host and mounted read-only into the server. Nothing in a
   sandbox can write it.
-- **No route out.** The model network is internal, and Up checks it. Whether the server needs a second network
-  for the published host port is a spike result (§9); a second network gives the server, not the sandboxes, a
-  route.
+- **No route out.** The model network is internal, and Up checks it. The server sits on the internal network
+  alone: a container on an internal network publishes its port on `127.0.0.1` of the host and keeps no route out
+  (spike, item 2). Each model process the router starts listens on `127.0.0.1` of the server's container only.
 - **The GPU and the weights** are in the server container only.
 - **One run at a time on local models.** A second run with another model overwrites the allow file and loads its
   model. The operator runs one at a time (design §5.5).
@@ -251,22 +268,22 @@ does not rebuild the image.
 **Decided 2026-10-25:** `ygg` is the only reader of the model list. The scripts ask it for the server's settings and
 the preset.
 
-## 9. Spike: facts to confirm before the build
+## 9. Spike: facts confirmed before the build
 
-The first task confirms these on the founder's engine and records them in
-`docs/5-research/2026-10-25-local-models-spike.md`. A different answer changes the named section before its task
-starts.
+LM-T01 checked these on the founder's engine and recorded them in the
+[spike note](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/5-research/2026-10-25-local-models-spike.md)
+(2026-10-25). The sections named were amended to match.
 
-1. Rootless Podman under WSL2 runs a CUDA container with `--device nvidia.com/gpu=all` after `nvidia-ctk cdi
-   generate` (§3.4).
-2. A container on an internal network can publish a port on `127.0.0.1` of the host. If not, the server joins a
-   second, non-internal network for the published port (§6).
-3. The router's endpoints to list models with their status and to load one, and the preset's key format (§3.3,
-   §3.9).
-4. OpenCode, at the version gleipnir pins, uses `@ai-sdk/openai-compatible` in the sandbox without fetching it
-   from npm (§3.8).
+1. Rootless Podman under WSL2 runs a CUDA container with `--device nvidia.com/gpu=all` after the toolkit is
+   installed and `nvidia-ctk cdi generate` is run in the Podman machine's distro (§3.4). **Differed:** the spec
+   had been generated in the distro that runs `ygg`; pending the founder's step in the machine.
+2. A container on an internal network publishes a port on `127.0.0.1` of the host. **Confirmed** (§6).
+3. The router's endpoints to list models with their status and to load one, and the preset's key format (§3.2,
+   §3.3, §3.5, §3.9). **Confirmed, with details added.**
+4. OpenCode, at the version gleipnir pins (1.18.32), uses `@ai-sdk/openai-compatible` in the sandbox without
+   fetching it from npm (§3.8). **Confirmed.**
 5. A firewall sidecar that joins an external network resolves the server's name through the resolver of that
-   network (§3.7).
+   network (§3.7). **Confirmed**, also by LM-T06's integration test.
 
 ## 10. Deviations from the design doc
 
