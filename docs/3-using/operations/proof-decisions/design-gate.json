@@ -9,6 +9,18 @@
       "text": "Photographers can delete photos, galleries and their own account."
     },
     {
+      "id": "gallery-edits",
+      "text": "Photographers can rename a gallery and reset its client link. A reset gives the gallery a new secret link, and the old link then shows \"not found\"."
+    },
+    {
+      "id": "client-data",
+      "text": "Removing a client's stored email and activity on request is not in this version. It is future work."
+    },
+    {
+      "id": "image-formats",
+      "text": "Uploads accept PNG and WebP as well as JPEG, under the same limits of 50 MB and 100 megapixels. Thumbnails and web sizes carry no location data, whatever the format, and a download gives the file as uploaded."
+    },
+    {
       "id": "email-notice",
       "text": "The client's email step says that the photographer will see the email entered."
     },

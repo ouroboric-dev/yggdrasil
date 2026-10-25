@@ -118,8 +118,9 @@ Every proof run gives the same product decisions, word for word, so that the run
 the product. The runs use task `client-gallery-lite` 4.1.0, and question 10 is answered (option A).
 
 The decisions are one file, `docs/3-using/operations/proof-decisions/design-gate.json` in the `yggdrasil` clone. It
-holds five decisions under the ids `password-reset`, `deletion`, `email-notice`, `storage-cap` and
-`logout-on-change`. Its format is `ygg.decisions/v1`. Do not edit it between runs.
+holds eight decisions under the ids `password-reset`, `deletion`, `gallery-edits`, `client-data`,
+`image-formats`, `email-notice`, `storage-cap` and `logout-on-change`. Its format is `ygg.decisions/v1`. Do not
+edit it between runs. The three ids after `deletion` were added on 2026-10-25, before the first run that was scored.
 
 - At `design-gate`, approve with the file. The decisions reach every later stage as "The product owner's decisions",
   each under its id, and the spec has to cite each id.
