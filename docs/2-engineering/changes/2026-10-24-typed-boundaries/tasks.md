@@ -1,6 +1,6 @@
 ---
 title: Tasks for typed boundaries
-status: proposed
+status: accepted
 date: 2026-10-24
 related: [proposal.md, design.md, delta.md, inventory.md, ../../backlog.md, ../../../3-using/operations/proof-runs.md, ../2026-10-22-gallery-runtime/tasks.md]
 style: spec

@@ -287,7 +287,9 @@ left. The two reports are in the SDD workspace (`final-review/review.md` and `re
   - M-9 `engine/returns.go` logs `node_returned` before `run.json` is saved: save first, or tolerate the duplicate on resume.
   - M-10 `plan/expand.go`: an expanded id that clashes with a graph node id fails the foreach node instead of sending the plan back: check it in the tasks node.
   - M-11 (unverified) `cli/cli.go` (`blockedTasks`) prints a task's `Why` to the terminal as is: strip control characters.
-  - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task.
+  - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task. **Moot
+    (2026-10-25):** since the typed-boundaries change no odin code calls `ParseTasks`; Odin takes the tasks from the
+    plan's typed output (B-176).
   - N-2 `run.Unexpand` leaves state keyed by the old task node ids: a new plan that reuses a task id inherits it (for example, a node that spent its returns).
   - N-3 test gaps: the I-1 test would also pass if `main` were reset to the run's base; gleipnir's render passes every test if it stops calling `literalEnv`; no test covers an Odin failure on the pointer path or a Tidy failure not being sent back.
   - N-4 if a task's pointer has moved and a later loop of the same task gives up, `mainBack` moves `main` below the commit the umbrella points at (the current graph shapes cannot do it).
@@ -939,16 +941,7 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer experiments of 2026-10-20
 (gleipnir pull requests 14 to 16, odin pull requests 21 to 23, and the journal entry
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
-These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
-
-### B-112: the conformance reviewer's prompt still forbids prose before its JSON
-
-- **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
-- **Problem:** B-105 relaxed the framing of a reviewer's report. The design-conformance reviewer's answer is read by
-  `ParseConformance`, which is still strict, so the same model habit (a sentence before the JSON) would stop a run
-  there.
-- **Fix:** give `ParseConformance` the same framing as `ParseReport` and change the prompt. A change proposal first.
-- **Status:** reasoned.
+These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105. B-112 is now in [Done](#done).
 
 ### B-113: the operator cannot overrule a disputed finding
 
@@ -1329,6 +1322,9 @@ Code locations of B-140 to B-157 are pinned to gungnir `7497ecc` ([gungnir#20](h
 - **Problem:** found by the T23 real-engine probe (3 of 3 runs). `Down` ran `pod rm` while the `postgres_1` service container was still stopping, so the pod removal raced the container's stop and could fail. The sandbox then leaves a pod or a container behind.
 - **Fix:** wait for the containers `rm` removed to be gone (or retry `pod rm` with `-f`) before removing the pod. Test: after `Down` of a sandbox with services, no container, pod or anonymous volume of the run is left.
 - **Status:** proved (the T23 real-engine probe, 3/3).
+- **Seen again** in the typed-boundaries change (2026-10-25), at gleipnir `97f2aba` (the same lines): after run 1's t001
+  review (`podman pod rm`, exit 125) and at the teardown of both content smokes ("cannot remove container … as it is
+  running"). The pods were left empty (`Created`), and `ygg doctor` removed them; nothing failed.
 
 ### B-168: gleipnir's `Down` removes containers without `-v`, so anonymous volumes stay
 
@@ -1373,7 +1369,187 @@ Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), ni
   re-review of review-diff T01.
 - **Status:** minor; parked.
 
+Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a971`, gleipnir `97f2aba`, havamal
+`144be35`, voluspa `f5ece16`, ouroboric `d8495dc` and yggdrasil `0ecd047`. They were found while building the
+[typed-boundaries change](changes/2026-10-24-typed-boundaries/proposal.md).
+
+### B-177: a fresh project's first contract always stops at `contract-gate`
+
+- **Where:** `odin/internal/routing/contract.go:147` (`Escalate`, `Inferred`: "looks like a contract by its name only;
+  the index does not list it").
+- **Problem:** the impact index is written by the first pointer move, so the first task that adds `openapi.yaml`
+  meets an index that does not list it, and the gate escalates. Every content smoke of the change stopped there
+  once, at t001, and every proof run will.
+- **Fix:** decide with the founder whether a contract added by a task of the approved plan, in the leaf the plan
+  names, passes as `extracted`, or whether the stop stays and the runbook names it. Test: the chosen behaviour on a
+  fresh project's first contract.
+- **Status:** proved (every content smoke of the change, 2026-10-25).
+
+### B-179: change mode has no typed source of the product's current spec and plan
+
+- **Where:** `gungnir/schema/graph_types.go:13-24` (the built-in sources); `voluspa/software/graph.yaml` (the spec
+  and plan nodes' `input:`).
+- **Problem:** a session sees only its declared inputs, and none carries the product's current spec or plan. The
+  spec and plan prompts' change-mode lines ("if an earlier spec or plan is there, change only what is new") were
+  dropped, because they sent agents to look for files they cannot see. A change run re-plans from scratch. Run 1
+  builds a new product, so it is unaffected.
+- **Fix:** a built-in source (such as `current`) or the published outputs as inputs, typed; then the change-mode
+  lines come back. Test: a change run's spec session gets the current spec as an input.
+- **Status:** reasoned (the controller's ruling while building the planning prompts).
+
+### B-180: `ygg-check-result` needs Node in every realm's CI
+
+- **Where:** `gleipnir/sandbox/assets/ygg-check-result.mjs`; the CI of `gleipnir` and `helheim-go` installs Node
+  only for these tests ([gleipnir#23](https://github.com/ouroboric-dev/gleipnir/pull/23),
+  [helheim-go#16](https://github.com/ouroboric-dev/helheim-go/pull/16)).
+- **Problem:** the converter is a Node script, because the work image's tools stage has Node and no Go toolchain.
+  A Go realm's CI then needs Node only to test its check scripts.
+- **Fix:** possibly a Go converter. The founder decided on 2026-10-24 to keep Node for now. Test: the converter's
+  fixtures pass on both, or on the one that replaces the other.
+- **Status:** parked (the founder's decision).
+
+### B-181: no `ygg version` names odin's commit and its components' commits
+
+- **Where:** `odin/internal/version/version.go` (`Describe`); `ouroboric/scripts/ygg-smoke-real.sh:250` ("odin
+  commit unknown").
+- **Problem:** under `go.work`, the build's VCS stamp names the umbrella (`0ecd047`, `modified=true` in the T32
+  rebuild), not odin, and the components show as `local`. Nothing tells an operator which odin and which components
+  a `ygg` on `PATH` was built from.
+- **Fix:** a `ygg version` that prints odin's commit and each component's, from the build info and the workspace's
+  modules. Test: a build from a workspace prints each module's commit.
+- **Status:** proved (the T32 rebuild, 2026-10-25).
+
+### B-182: a run that fails before the retrospective gets none
+
+- **Where:** `voluspa/software/graph.yaml` (`grade`, then `retro`, the last nodes); the engine's walk of the graph.
+- **Problem:** the retrospective is an ordinary node after the grade, so a run that fails before it, the grade
+  included, gets no retrospective. Its `record.json` is still written. The failed runs are the ones a retrospective
+  could explain best.
+- **Fix:** a retrospective on failed runs, as a decision with the founder: a node kind that runs at a run's end
+  whatever happened, or a `ygg retro RUN`. Test: a run that fails at t001 still gets a retrospective.
+- **Status:** reasoned (the controller's ruling for the retro node, 2026-10-25).
+
+### B-183: the retrospective's copy of the ledger is not bounded
+
+- **Where:** `odin/internal/engine/scratch.go:169` (`copyLedger`).
+- **Problem:** the scratch retrospective gets a whole copy of the run's ledger. The transcripts' copy is bounded
+  (2,000 files, 64 MiB); the ledger's is bounded only by the run's own caps.
+- **Fix:** bound it if runs grow. Test: a ledger over the bound is copied up to it, and the prompt says so.
+- **Status:** minor; parked.
+
+### B-184: a private skill's `SKILL.md` is read twice, for its hash and for the prompt
+
+- **Where:** `odin/internal/run/fingerprint.go:111-135` (`LoadSkills`: `havamal.Select` hashes the skills, then
+  `libs.Load` reads them again for the prompt).
+- **Problem:** Odin hashes a private skill's `SKILL.md` and then reads the file again for the prompt. A write between
+  the two reads escapes the check that a session's skill did not change during the run (spec §4.4).
+- **Fix:** havamal returns the bytes it hashed, and the prompt uses them. Test: a skill changed between the reads
+  fails the session.
+- **Status:** reasoned (the T21 review); minor.
+
+### B-185: the scripted-agent tests never read their prompts
+
+- **Where:** `gleipnir/scripted/scripted.go` (the scripted adapter replays its answers whatever the prompt says);
+  `odin/internal/run/testpack_brief_test.go` (the guard over odin's test packs).
+- **Problem:** a test pack whose prompt promised "the brief below" while its node declared no `brief` passed every
+  scripted test, and a real smoke's implementer answered `blocked` ("no brief"). A prompt that names its inputs in
+  backticks is now checked at run start; one that names an input in prose, such as "the brief below", is caught only
+  in odin's test packs, by the guard test.
+- **Fix:** a scripted answer that can assert on its prompt (a section it needs), or a lint of prose references in
+  the packs. Test: a pack whose prompt names an input in prose that its node does not declare fails.
+- **Status:** proved (the T32 smoke 1, 2026-10-25).
+
+### B-187: a realm's prompts and a late skill are hashed at their first read, not at run start
+
+- **Where:** `odin/internal/run/fingerprint.go:13-16` (`ReadPrompt`: a realm's prompt is hashed when a task's loop
+  expands) and `:105-108` (`LoadSkills`: a skill the run did not hash at start is hashed on its first load).
+- **Problem:** the run start hashes the graph pack's prompts and the skills the graph names. A realm's implementer
+  prompt, and a skill first loaded later, get their hash only at their first read, so a change between run start and
+  that read is not caught: the run uses the changed file, and the record's setup describes it, not the files the run
+  started with.
+- **Fix:** hash the prompts of the realms a run can reach, and every skill a session can load, at run start. Test: a
+  realm prompt changed after run start and before its loop expands fails the session.
+- **Status:** reasoned (the T31 review).
+
 ## Done
+
+### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
+
+- **Where:** `docs/3-using/operations/proof-runs.md:26` (`go build -o ~/.local/bin/ygg`).
+- **Problem:** on the founder's machine `~/.local/bin` is not on `PATH`, so the T32 dry run, and once more a smoke,
+  ran a stale `ygg` from `~/go/bin`.
+- **Fix:** `scripts/ygg-build.sh` from [ouroboric#87](https://github.com/ouroboric-dev/ouroboric/pull/87) (merged
+  2026-10-25): it builds into the `ygg` on `PATH` and checks it, and the smoke and proof scripts refuse a stale `ygg`.
+  The runbook's build line now runs it (typed-T31). Test: the runbook's build line is the script's.
+- **Status:** done (typed-T31, 2026-10-25).
+
+### B-176: the task parser dropped the task's text and its contract
+
+- **Where:** `gungnir/schema/tasks.go` (the regex parser of `tasks.md`), at gungnir `31182c2`; odin's "Your task"
+  section, built from `features.json`.
+- **Problem:** run 1 (`20261024-000619-5b319d`) stopped at t002. The planner wrote each task's behaviour, routes,
+  fields and limits as prose under the task in `tasks.md`, and the OpenAPI text it adds in a fence. The parser kept
+  the title, the criteria, the named test, the layer, the size and the dependencies, and dropped the rest, so the
+  implementer got neither the text nor the contract. It said it lacked the contract, and still got three paid
+  attempts with their reviews. B-170 and B-175 were the same class: a boundary between two blocks whose shape
+  nothing checked.
+- **Fix:** the [typed-boundaries change](changes/2026-10-24-typed-boundaries/proposal.md): every data boundary of the
+  default graph is a contract (spec §2.2); the plan is `ygg.plan/v1`, and each task's `text` and `contract` reach the
+  implementer and the task reviewers whole; an implementer that answers `blocked` stops the loop after one attempt.
+- **Status:** proved (run 1's ledger and `tasks.md`). Run 1 stays stopped, as the evidence.
+- **Fixed:** 2026-10-25, by the change, and folded into the v0 spec:
+  - yggdrasil: [yggdrasil#109](https://github.com/ouroboric-dev/yggdrasil/pull/109),
+    [yggdrasil#111](https://github.com/ouroboric-dev/yggdrasil/pull/111),
+    [yggdrasil#112](https://github.com/ouroboric-dev/yggdrasil/pull/112),
+    [yggdrasil#113](https://github.com/ouroboric-dev/yggdrasil/pull/113);
+  - gungnir: [gungnir#24](https://github.com/ouroboric-dev/gungnir/pull/24),
+    [gungnir#25](https://github.com/ouroboric-dev/gungnir/pull/25),
+    [gungnir#26](https://github.com/ouroboric-dev/gungnir/pull/26),
+    [gungnir#27](https://github.com/ouroboric-dev/gungnir/pull/27),
+    [gungnir#28](https://github.com/ouroboric-dev/gungnir/pull/28);
+  - gleipnir: [gleipnir#22](https://github.com/ouroboric-dev/gleipnir/pull/22),
+    [gleipnir#23](https://github.com/ouroboric-dev/gleipnir/pull/23),
+    [gleipnir#24](https://github.com/ouroboric-dev/gleipnir/pull/24),
+    [gleipnir#25](https://github.com/ouroboric-dev/gleipnir/pull/25);
+  - jormungandr: [jormungandr#11](https://github.com/ouroboric-dev/jormungandr/pull/11),
+    [jormungandr#12](https://github.com/ouroboric-dev/jormungandr/pull/12);
+  - havamal: [havamal#7](https://github.com/ouroboric-dev/havamal/pull/7);
+  - helheim-go: [helheim-go#15](https://github.com/ouroboric-dev/helheim-go/pull/15),
+    [helheim-go#16](https://github.com/ouroboric-dev/helheim-go/pull/16);
+  - midgard-react: [midgard-react#23](https://github.com/ouroboric-dev/midgard-react/pull/23);
+  - odin: [odin#44](https://github.com/ouroboric-dev/odin/pull/44),
+    [odin#45](https://github.com/ouroboric-dev/odin/pull/45), [odin#46](https://github.com/ouroboric-dev/odin/pull/46);
+  - voluspa: [voluspa#5](https://github.com/ouroboric-dev/voluspa/pull/5),
+    [voluspa#6](https://github.com/ouroboric-dev/voluspa/pull/6),
+    [voluspa#7](https://github.com/ouroboric-dev/voluspa/pull/7) (#6 was stacked on #5 and reached `main` with it);
+  - ouroboric: [ouroboric#83](https://github.com/ouroboric-dev/ouroboric/pull/83),
+    [ouroboric#84](https://github.com/ouroboric-dev/ouroboric/pull/84),
+    [ouroboric#85](https://github.com/ouroboric-dev/ouroboric/pull/85),
+    [ouroboric#86](https://github.com/ouroboric-dev/ouroboric/pull/86).
+
+### B-178: task sizes were the planner's guess, and nothing measured them
+
+- **Where:** the plan's `size` (S, M, L), which the readiness check reads; nothing compared it with the work.
+- **Problem:** run 1's t001 was planned as "M" (100 to 400 changed lines) and changed 797 lines, 665 without the
+  generated code. A size that is never measured cannot be judged.
+- **Fix:** the experiment record (spec §10.2) holds each task's estimated size beside the lines it added, split into
+  hand-written, tests and generated.
+- **Status:** proved (run 1's t001).
+- **Fixed:** 2026-10-25, by the typed-boundaries change: [odin#45](https://github.com/ouroboric-dev/odin/pull/45).
+
+### B-112: the conformance reviewer's prompt still forbids prose before its JSON
+
+- **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
+- **Problem:** B-105 relaxed the framing of a reviewer's report. The design-conformance reviewer's answer is read by
+  `ParseConformance`, which is still strict, so the same model habit (a sentence before the JSON) would stop a run
+  there.
+- **Fix:** give `ParseConformance` the same framing as `ParseReport` and change the prompt. A change proposal first.
+- **Status:** reasoned.
+- **Closed:** 2026-10-25, by the typed-boundaries change (B-176): odin no longer calls `ParseConformance` (still in
+  gungnir `schema/event.go:68` at `973a971`). The conformance review returns `ygg.conformance/v1` through the output
+  channel (spec §5), with one repair round, so no framing of prose is read
+  ([voluspa#5](https://github.com/ouroboric-dev/voluspa/pull/5),
+  [odin#44](https://github.com/ouroboric-dev/odin/pull/44)).
 
 ### B-175: the report parser took JSON quoted in a reviewer's prose for a second document
 
@@ -1634,7 +1810,8 @@ Small, and worth doing soon: one word in each script, and one test per rung.
     escalate on a changed YAML or JSON under a listed contract's folder, and on a mode-120000 file there.
   - The graded app can overwrite `results.json`. **Decision:** the grader reads the scores from the suite's stdout,
     and the app has no path to forge it.
-  - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the founder asked for it).
+  - Treat every path variable as a resource id: done in [odin#18](https://github.com/ouroboric-dev/odin/pull/18) (the
+    founder asked for it).
 - **Next:** the first and the third change behavior the spec states, so each goes through a
   [change proposal](changes/README.md) before the code. The second changes the plan's decision 15 ("acceptance tests
   catch the rest"); say so in its proposal.
@@ -1840,10 +2017,16 @@ Small, and worth doing soon: one word in each script, and one test per rung.
 ### B-041, first part: file handling, engine environment and service egress (Phase 5a's final review)
 
 - **Fixed 2026-10-17** by the pre-5b cleanup, each with a test that failed first:
-  - M-1, M-2, M-3, M-4, M-7 and M-8 in [odin#13](https://github.com/ouroboric-dev/odin/pull/13): a large scratch input is refused before it is read in full; files are opened without following symlinks and must be the file the listing found; publish scans exactly the bytes it publishes; one checked read of the leaves file for `init` and the tasks node; no `.factory` or `.git` in a scratch workspace; symlinks (root included) are refused in a realm; init applies a realm's template only to a leaf it created.
+  - M-1, M-2, M-3, M-4, M-7 and M-8 in [odin#13](https://github.com/ouroboric-dev/odin/pull/13): a large scratch input
+    is refused before it is read in full; files are opened without following symlinks and must be the file the listing
+    found; publish scans exactly the bytes it publishes; one checked read of the leaves file for `init` and the tasks
+    node; no `.factory` or `.git` in a scratch workspace; symlinks (root included) are refused in a realm; init applies
+    a realm's template only to a leaf it created.
   - M-4 also in [gungnir#11](https://github.com/ouroboric-dev/gungnir/pull/11): `.` is refused as a scratch input.
-  - N-5 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): the engine tools keep proxy, podman config and CA variables, from an allow-list.
-  - N-1 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): `TestASandboxServiceHasNoRouteOut` passed on a real engine: the service has only its subnet route and no probe out succeeded.
+  - N-5 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): the engine tools keep proxy, podman config
+    and CA variables, from an allow-list.
+  - N-1 in [gleipnir#8](https://github.com/ouroboric-dev/gleipnir/pull/8): `TestASandboxServiceHasNoRouteOut` passed on
+    a real engine: the service has only its subnet route and no probe out succeeded.
 
 ### B-010: ledger gaps around landings
 

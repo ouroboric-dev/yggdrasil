@@ -1,6 +1,6 @@
 ---
 title: Typed boundaries between the factory's blocks
-status: proposed
+status: accepted
 date: 2026-10-24
 related: [design.md, inventory.md, delta.md, tasks.md, ../../backlog.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md, ../../../3-using/operations/proof-runs.md]
 style: spec
@@ -58,3 +58,8 @@ All are in the design, "The founder's decisions (2026-10-24)". The retrospective
 ## History
 
 - 2026-10-24: the inventory and the design were approved; this proposal, the delta and the tasks were planned.
+- 2026-10-25: built and merged (the pull requests are listed in
+  [B-176](../../backlog.md#b-176-the-task-parser-dropped-the-tasks-text-and-its-contract)). The delta is folded into
+  the v0 spec, with the rulings made while building: old runs stay readable and cannot be resumed; the record is
+  written at every run's end; a run uses one set of prompts; a grade runs only with a grader; a prompt backticks only
+  its session's inputs.

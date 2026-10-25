@@ -15,7 +15,7 @@ flowchart TB
   end
   subgraph FIN["4. Finish"]
     direction LR
-    H[Hidden acceptance suite] --> R[Living spec and report]
+    H[Grade: hidden acceptance suite] --> RT[Retrospective] --> R[Living spec and report]
   end
   DIRS --> PLAN --> LOOP --> FIN
   class GD gate
