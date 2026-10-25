@@ -53,7 +53,7 @@ umbrella** (L0, §3) that pins a Yggdrasil version and lists their projects.
 </picture>
 
 ```text
-                 ygg CLI  (run · resume · approve · reject · status · board · report · metrics · doctor)
+       ygg CLI  (run · resume · approve · reject · status · board · report · metrics · record · score · doctor)
                                    │
                          ┌─────────▼──────────┐
  realm (web, game…) ───► │  Odin graph engine │ ◄── factory.yaml (mode, caps, roles, privacy)
@@ -85,8 +85,9 @@ type Agent interface {
     Name() string
     Run(ctx context.Context, t Task) (Result, error)
 }
-// Task:   role, prompt, workdir, model, readOnly, maxTurns, timeout, envAllowlist
-// Result: status, summary, usage{inTok, outTok, cacheTok, turns, costUSD, costEstimated}, transcriptPath
+// Task:   role, prompt, workdir, model, readOnly, maxTurns, timeout, envAllowlist, output (a contract id)
+// Result: status, summary, usage{inTok, outTok, cacheTok, turns, costUSD, costEstimated}, transcriptPath,
+//         output (the final answer), submitted (the last output the submit tool accepted, §5)
 
 type Sandbox interface {
     Up(ctx context.Context, spec SandboxSpec) (Env, error)  // spec: leaf path, config path, services
@@ -100,6 +101,18 @@ type Tracker    interface { /* project issues/milestones/board from factory stat
 ```
 
 The implementation plan settles the exact method sets. This section sets only the boundaries.
+
+**Contracts.** Every block MUST hand another block data only through a contract: a versioned JSON Schema in
+Gungnir, with an id and a version (`ygg.plan/v1`), and a Go type, tested to agree on fixtures that both accept and
+both refuse. Instructions (a role's prompt, its skills, the brief) MAY be prose; data MUST NOT be. A contract MUST
+change compatibly within a version (new optional fields only); anything else is a new version, and Odin reads the
+versions it knows.
+
+- A schema fixes which fields exist, their types and which are required. A prose field is free text, bounded only
+  for safety, far above what a run has needed. No enum stands where judgement belongs.
+- The contracts are the design, the spec, the conformance review, the plan, the reuse review, a reviewer's report,
+  the implementer's answer, a check's result (§9.5), the retrospective, the operator's gate decisions (§7.2), the
+  operator's judgement and the run record (§10.2).
 
 ## 3. Repository topology and isolation
 
@@ -155,8 +168,7 @@ project names leak through `.gitmodules`.
    directory with the brief. Odin commits the planner's output into L1 after the `spec` approval
    point.
 2. **Odin MUST be the only writer** of umbrellas, `features.json`, the ledger, gate files and
-   reports. Agents get a read-only copy of `features.json`, refreshed before each session. Odin MUST
-   ignore agent edits to that copy.
+   reports. No agent reads `features.json`: Odin puts a session's task in its prompt (§4.4).
 3. **Agents MUST NOT commit.** Odin commits at checkpoints, from the host.
 4. **Leaf git data MUST be out of reach.** A leaf's git directory lives in its parent's
    `.git/modules/<name>/`. If the git directory is mounted, it MUST be mounted read-only. An agent with
@@ -192,7 +204,7 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 
 1. Resolve the project's L1 umbrella. If a leaf does not exist, create it from the realm templates.
 2. Write `run.json`: run id, realm and graph version, config hash, agent and model per role, graph
-   position.
+   position, and the sha256 of each prompt and each skill, from the bytes the run loads (§4.4).
 3. Bring up the sandboxes for each leaf (§6). Then start to walk the graph.
 
 ### 4.2 The web realm graph
@@ -210,30 +222,56 @@ agent                       agent    agent (read-only)                    agent 
      agent+exec               implement ⇄ check ladder  (loop, max N)
                               └─► checkpoint ─► [gate: feature] ─► merge gate ─► [gate: merge]
                               ─► pointer move ─► [gate: pointer | pointer-contract]
-  ─► final acceptance (hidden suite) ─► update living spec ─► report
+  ─► final acceptance (hidden suite) ─► retrospective ─► update living spec ─► report
 ```
 
 [spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md)
 defines the stages and approval rules. This graph is the web realm's implementation of them.
 
+**Typed nodes.** Every data boundary in the graph is a contract (§2.2):
+
+- Each agent node, each loop's implementer and each reviewer MUST declare its inputs (`input:`, a list of named
+  contracts) and exactly one output contract (`output:`). An input is an earlier node, which stands for its output,
+  or a built-in source: `brief`, `decisions` (§7.2), `task`, `change`, `open_findings`, `check_results` (§9.5),
+  `rejection`, `refusal`, `record` (§10.2) and `date`. No untyped output type exists. A node's inputs are its
+  declared contracts: no folder of earlier outputs is copied into its workspace.
+- A graph whose node declares an input that no earlier node or built-in source provides, or an output its consumer
+  does not accept, MUST NOT load. The error MUST name the node and the field.
+- **Views:** Odin MUST render every document people read (the design, the spec, `plan.md`, `tasks.md`, the reuse
+  review, the gate files) from the typed outputs, and MUST NOT read Markdown an agent wrote. A publish node writes
+  each output's JSON and its rendered view. Odin writes `leaves.yaml` from the spec's output.
+
+The stages:
+
 - **design** (agent, with the operator): turns the brief into a design doc (what, for whom, why,
-  scope, success criteria). By default, the `design` approval point stops for a human in every mode.
+  scope, success criteria). By default, the `design` approval point stops for a human in every mode. Its open
+  questions are a list, each with an id the design gives it (`q1`, `q2`, …), which a person MAY answer at the gate
+  (§7.2).
 - **spec** (agent): writes the engineering spec within the design doc. A read-only
   **design-conformance reviewer** checks the spec. If there is no deviation, the spec is
   auto-approved, unless `spec: stop` is set. If there is a deviation, the run MUST stop with the
   proposed amendment.
-- **plan + reuse review** (agent): writes `plan.md` and `tasks.md` in the canonical layout. The plan
-  MUST record decisions as `**Decided YYYY-MM-DD:** …` lines. A Ponytail reuse review flags new
-  dependencies or abstractions where the standard library or existing code already does the job.
-  Odin derives `features.json` from `tasks.md`.
+  - **Owner decisions:** the spec's output MUST cite every owner decision id (§7.2), in its decisions or its
+    deviations. Odin MUST check it before the conformance review. A spec that does not goes back to the spec stage
+    once, with the ids it misses. An open question that no person answered stays allowed: the spec decides it and
+    records the decision.
+- **plan + reuse review** (agent): returns the plan: its goal, decisions, risks and tasks. Each decision
+  MUST carry its date, and Odin renders it as a `**Decided YYYY-MM-DD:** …` line. Odin renders `plan.md` and
+  `tasks.md` in the canonical layout. A Ponytail reuse review flags new dependencies or abstractions where the
+  standard library or existing code already does the job; the `plan` gate shows its verdict.
+  Odin derives `features.json` from the plan's typed output. Each task carries its fields, its `text` and its
+  optional `contract`, whole; the readiness check bounds them and refuses an over-size task.
 - **DoR check** (exec): every task MUST have acceptance criteria, a named test, a `layer/*` (which
   leaf) and a size. The sizes are S (< 100 changed lines), M (100–400) and L. An L task MUST be
-  split, so it goes back to the planner. A task MUST NOT have an open blocker.
+  split, so it goes back to the planner. A task MUST NOT have an open blocker. A task's `contract`, when it has
+  one, MUST parse as an OpenAPI document.
 - **init** (agent + exec): scaffolds leaves from templates. It writes `init.sh` and a short
   `AGENTS.md` (about 100 lines, pointing into `docs/`). The node ends with the first commit.
 - **implement ⇄ check ladder** (Jormungandr loop): each task gets one fresh agent session. The ladder
   (§9.5) runs as exec nodes plus three read-only reviewer agents. Failures go back into the next
   attempt. After N attempts (default 3), the loop escalates (§7.3).
+  - An implementer answer that says `blocked` ends the attempt: no reviewer runs, and the loop MUST escalate as
+    `implementer-blocked` with the reason.
   - Odin MUST record the leaf's commit when a task's loop starts, before its first attempt, and MUST
     keep it across a resume.
   - Each task reviewer's prompt MUST hold a section "The change", with the diff from that commit to the
@@ -254,12 +292,27 @@ defines the stages and approval rules. This graph is the web realm's implementat
   vendors.
 - Odin MUST refuse to run on anything outside the instance tree, because a reset discards uncommitted
   work.
+- A run started before the typed boundaries (§2.2) stays readable: `ygg status`, `report`, `metrics` and `doctor`
+  MUST read its state, and `ygg doctor` warns that it cannot be resumed. `ygg resume` MUST refuse it with a message
+  that names the change, before it changes anything. A command MUST NOT rewrite such a run's state in the new shape.
 
 ### 4.4 Fresh context per session
 
-Every agent session MUST start clean. The session reads `AGENTS.md`, `progress.md`, the current task
-from its read-only `features.json`, and the routing summary (§8). Nothing depends on one vendor's
+Every agent session MUST start clean. The session reads `AGENTS.md`, `progress.md`, the routing summary (§8)
+and what its prompt holds: the role's prompt and its skills, as they are, then the node's declared inputs (§4.2), one
+section for each in the declared order, rendered by Odin from its typed value. Nothing depends on one vendor's
 session memory. This is what makes it possible to swap models mid-run.
+
+- A declared input with no value MUST fail the node before its session starts.
+- An input over the prompt's bound MUST go into the workspace as a file the prompt names. It MUST NOT be cut or
+  left out.
+- `date` comes from Odin, so a session does not read the clock for it.
+- A prompt MAY name in backticks only the inputs its session declares. Odin MUST refuse, at run start, at `init` for
+  the realms it pins and in `ygg doctor`, a prompt that backticks a built-in source or the id of a node of the same
+  graph with an output that its session does not declare. Other backticked words and prose are not checked, so an
+  example node id in a prompt is written without backticks.
+- A session whose prompt or skill differs from the sha256 recorded when the run started (§4.1) MUST fail before it
+  starts, with a message that names the file and says to start a new run: one run uses one set of instructions.
 
 ### 4.5 The merge gate
 
@@ -302,21 +355,22 @@ Checks and reviewers report **findings**, a Gungnir type, not free text:
 - Jormungandr feeds the open findings to the next implementer attempt. A finding MUST NOT close until
   its source confirms the fix with proof, or a dispute of it holds (`overruled`, below). The implementer's
   claim of "fixed" is not enough.
-- **A reviewer's answer** MAY have prose before its report. The report MUST be the last thing in the answer,
-  bare or in the last code fence, and the prose MUST be ignored: JSON or code quoted in it, inline or in an
-  earlier fence, is prose. A second report (a JSON object in the prose with a `findings` key; `disputes` for
-  a disputes document), text after the report, and an unclosed fence are malformed (2026-10-24, gungnir#22).
-- **Disputes.** An implementer MAY dispute an open finding in its last answer of an attempt, with a
-  `disputes` document. Each dispute MUST name the finding id, a check of the loop, a test id and the
-  evidence. An answer with no `disputes` document disputes nothing. A malformed document MUST be recorded
-  and ignored. Odin MUST decide a dispute after the loop's checks ran: it holds only when the named check
-  passed in this attempt and its output contains the test id. A dispute that holds MUST close the finding as
+- **A reviewer's report** MUST come through the output channel (§5), as one `ygg.review/v1` document: its
+  findings, with `blocked` and `notes`. No report is read out of prose.
+- **Every agent output** carries `blocked` (with a reason) and `notes`, always allowed and always recorded. A
+  `blocked` answer is seen by a person: it is never a pass.
+- **Disputes.** An implementer MAY dispute an open finding in its answer of an attempt (`ygg.implement/v1`,
+  through §5), beside its summary. Each dispute MUST name the finding id, a check of the loop, a test id and the
+  evidence. An answer with no disputes disputes nothing. A dispute that cannot be used MUST be recorded and
+  ignored. Odin MUST decide a dispute after the loop's checks ran: it holds only when the named check ran in
+  this attempt and its typed result (§9.5) lists the test id among the tests that passed, and not among those
+  that failed. A dispute that holds MUST close the finding as
   `overruled`, with a `finding_overruled` ledger event. A reviewer's repeat of the claim MUST NOT reopen it
   unless the report gives another location, or the check that overruled it failed in a later attempt. A
   dispute that does not hold leaves the finding open, and the next attempt MUST be told why. A check's own
   finding MUST NOT be disputed.
-- **Missing or malformed data MUST NOT be defaulted.** If a reviewer output does not parse, or a
-  finding has no location, it MUST be retried once as an agent failure. If it is still
+- **Missing or malformed data MUST NOT be defaulted.** If a reviewer output does not validate against its
+  contract, or a finding has no location, it MUST be retried once as an agent failure. If it is still
   malformed, the loop MUST stop and escalate. Malformed output MUST NOT count as a pass.
 - The ledger records findings per task, how many reopen, and how many attempts each finding took to
   close.
@@ -336,6 +390,21 @@ Adapters MUST use each tool's **native headless protocol** (`claude -p` stream-j
 screen-scraping route and was deprecated. The next planned adapters are `codex` (through
 `codex app-server`) and a generic **ACP** (Agent Client Protocol) adapter. With the ACP adapter, any
 ACP-speaking agent plugs in without custom code.
+
+**The output channel.** An agent session MUST return its output through the `submit` tool of `ygg-submit`, a stdio
+MCP server named `ygg` in the work image (§6.1). The server validates the output against the node's contract and
+writes nothing; it never talks to Odin, the host or the network.
+
+- Its `check` tool validates a draft under `out/` the same way, so a session can build a large output as a file
+  and name the file in `submit`.
+- Odin MUST read the last call that validates from the session's stream, and MUST validate it again: the tool
+  helps the model repair its output in the session, and Odin never trusts it.
+- An adapter without the tool MUST return its output as the whole final answer: exactly one JSON document, bare
+  or in one fence, and nothing else.
+- An output that does not validate MUST be asked for once more, in a new session given the errors. Then the node
+  fails as an agent failure.
+- Every adapter MUST pass one contract suite, so swapping one adapter for another cannot change what Odin
+  receives.
 
 Roles map to agents in `factory.yaml`:
 
@@ -375,8 +444,8 @@ privacy: standard   # strict → only providers with no training and no retentio
   eval. The eval MUST show that the skill measurably improves agent behaviour (same tasks with and
   without the skill).
   Havamal releases are tagged, because other operators may vendor our skills in turn. A check MUST
-  fail on drift. Updates MUST be reviewed pull requests. The skill set's hash MUST go into
-  `run.json`. Agents in sandboxes MUST NOT see host-installed skills.
+  fail on drift. Updates MUST be reviewed pull requests. The skill set's hash, and each skill's sha256 from the
+  bytes the run loads, MUST go into `run.json` (§4.1). Agents in sandboxes MUST NOT see host-installed skills.
 - Havamal MUST include only skills that have redistributable licences and are vendored from public
   upstreams. Organisation-internal skills MUST NOT be included. Operators MAY add private skills
   through their L0 instance configuration. `run.json` records these private skills.
@@ -405,7 +474,9 @@ privacy: standard   # strict → only providers with no training and no retentio
   `software` graph) MUST check it too. The scratch sandboxes of the design, spec and plan stages have run by then.
 - **Two layers per image:** the realm's stack layer and the factory layer. The factory layer holds
   agent CLIs pinned to exact versions with auto-update off, `/etc/claude-code/managed-settings.json`,
-  an egress firewall adapted from Anthropic's reference `init-firewall.sh`, and a non-root user.
+  an egress firewall adapted from Anthropic's reference `init-firewall.sh`, and a non-root user. It also holds
+  Odin's two tools, `ygg-submit` (§5) and `ygg-check-result` (§9.5). Each MUST name its interpreter by an absolute
+  path, so it runs whatever `PATH` a check or a CLI sets, and no realm needs the tools' folder on its `PATH`.
 - Each leaf also gets a clean `.devcontainer/` with only the stack, so a human can open it in an
   editor.
 
@@ -419,8 +490,10 @@ privacy: standard   # strict → only providers with no training and no retentio
   (§3.3). It MUST NOT mount the home directory, `~/.ssh`, `~/.aws` or the Podman socket.
 - **Egress:** the default MUST be deny. An allowlist opens only the model APIs and package registries
   that the realm needs.
-- **Repo-level agent config:** managed settings MUST block repo hooks and project MCP servers. (Open
-  item: whether `claude -p --bare` works with subscription auth, §16.)
+- **Repo-level agent config:** managed settings MUST block repo hooks. They MUST allow exactly one MCP server,
+  `ygg-submit` (§5), by its command. Sessions keep `--strict-mcp-config`, and Odin passes its own config only, so a
+  leaf can add no server. A security test MUST prove it for each adapter. (Open item: whether `claude -p --bare`
+  works with subscription auth, §16.)
 - **Shutdown:** a cancel MUST kill the exec's process group and stop the containers. `ygg doctor`
   finds leftovers.
 
@@ -461,24 +534,33 @@ integrity or the escape-attempt suite. It is active from self-hosting stage 1 (�
 
 - **Stop:** Odin writes `gates/<name>.md` (what happened, diff, check results, cost so far). Then it
   logs `gate_pending`, saves state and exits. Approvals can wait for days.
-- **Decide:** `ygg approve <run> <gate> [--note …]` continues the run. `ygg reject <run> <gate>
-  --reason …` sends the reason back into the previous node as input. The note of an approval reaches every later
-  stage as the product owner's decisions.
-- **Notes:** the note of an approval at a gate node MUST be kept in the run's state with the gate it was given at; a
-  note given when approving another stop (a loop that gave up, `policy-violation`, `shrink-guard`) MUST NOT be. A note
-  MUST be one line: Odin MUST refuse a note with a control character. Every agent session that starts after the
-  approval (an agent or scratch node, an implementer, a reviewer) MUST get every note kept so far in its prompt, after
-  the brief, under the heading "The product owner's decisions", in the order the approvals were given, each with its
-  gate. An approval with no note MUST add nothing to later prompts. A rejection that sends the run back to a node
-  before a gate MUST drop the notes of the gates between that node and the rejecting gate, because the run meets those
-  gates again. A resumed run MUST keep the notes.
+- **Decide:** `ygg approve <run> <gate> [--decisions FILE | --note TEXT]` continues the run. `ygg reject <run>
+  <gate> (--decisions FILE | --reason TEXT)` sends the reason back into the previous node as its `rejection` input.
+- **Decisions files** (`ygg.decisions/v1`): what a person gives at a gate is data.
+  - A file holds `decisions`, each with an id the operator chooses (`storage-cap`) and its text, and optional
+    `answers`, each with the id of one of this run's open questions (§4.2) and the answer. A rejection's file also
+    holds a `reason`; an approval's MUST NOT.
+  - The ids are stable across runs, so a proof run gives the same file, word for word, in every run, although each
+    run's design asks other questions under other ids.
+  - `--note TEXT` is shorthand for a file with one decision, under the next free id (`note-<gate>`, then
+    `note-<gate>-2`, …); `--reason TEXT` is shorthand for a file with only the reason. A shorthand MUST be one line:
+    Odin MUST refuse one with a control character.
+  - Odin MUST validate the file before it opens the run, and keep it with the gate's events.
+- **Owner decisions:** what a person gives at a gate node MUST be kept in the run's state with the gate it was
+  given at; what a person gives at another stop (a loop that gave up, a hard stop) MUST NOT be, and goes only to
+  that stage and the ledger. A session that declares the `decisions` input MUST get every decision and answer kept
+  so far, under the heading "The product owner's decisions", in the order given, each with its gate. Each answer
+  keeps the text of the question it answered, as it was asked. A decision id already kept MUST NOT be given again
+  with another text, and two answers to one question MUST be refused. A rejection at a gate that sends the run back
+  to a node before it MUST drop the decisions of the gates between that node and the rejecting gate, because the run
+  meets those gates again. A resumed run MUST keep the decisions.
 - **Auto-pass:** Odin MUST still write the gate file and log `gate_auto_passed`. This lets people
   audit unattended decisions.
 - **Config:** set `mode:` in `factory.yaml`, and override it per run with `--mode`. Per-gate
   overrides are also possible, such as `gates: { plan: stop }`. A config that tries to override a
   hard approval point MUST be rejected at startup. Mode switches MAY happen at any pause. A switch to
   a looser mode MUST be logged.
-- **Metrics:** rejections, approvals with notes and escalations count as interventions. Time spent
+- **Metrics:** rejections, approvals with decisions and escalations count as interventions. Time spent
   waiting at approval points is recorded separately. It is excluded from factory time.
 
 ### 7.3 Exhausted loops
@@ -488,6 +570,8 @@ A loop escalates with a reason. `attempts-exhausted` and `reviewer-unreadable` a
 settle (it names a check the loop does not run), or when the attempts run out with a blocking finding the
 implementer disputed and no check settled. Its record MUST carry the reviewer's claim and location and the
 implementer's evidence. The operator's `ygg approve` is the ruling for the implementer.
+`implementer-blocked` is raised when the implementer's answer says `blocked` (§4.2), and `reviewer-blocked` when a
+reviewer answers `blocked` twice in a row; each carries the reason.
 
 - step-by-step and key-points: stop and ask.
 - unattended: mark the task `blocked`. Continue with tasks that do not depend on it. List it first in
@@ -714,6 +798,21 @@ RR-25).
 
 The rungs run from fast to slow. Each rung's failure output goes back to the implementer.
 
+**Check results.** Every check MUST write a `ygg.check/v1` result through `ygg-check-result`, a tool in the work
+image that converts its tool's machine output (`go test -json`, the Vitest, Playwright and ESLint JSON reporters,
+SARIF) in tested factory code, not in each script. A result holds the check's name, `passed`, the exit code,
+`timed_out`, the duration, counts where the tool has them, the tests that passed, and the failures, each with a
+kind, the test id and a location (`file:line`) where the tool gives them, and the message. The log stays, for
+people.
+
+- The exit code decides pass or fail. Odin MUST create the result path fresh for every check run, and MUST refuse a
+  result that contradicts the exit code.
+- A failing check MUST raise one finding per failure, with the test id and the location where the tool gives them.
+- A check that writes no valid result is a failure of the realm, not of the task: its finding MUST say so and carry
+  the log's tail.
+- Each realm's own tests MUST prove that every check script writes a valid result on a passing and on a failing
+  fixture.
+
 1. **Static:** gofmt, golangci-lint, go vet; eslint, tsc; **docs** (front matter, naming, required
    sections per node type, broken links, Vale prose rules per writing style). The strict site build
    joins this rung once the Zensical integration lands in iteration 2. See the
@@ -740,14 +839,16 @@ The rungs run from fast to slow. Each rung's failure output goes back to the imp
    simplicity, then code quality. The spec-compliance reviewer uses doc↔code and `tasks.md`, and flags
    behaviour changes without a spec delta. The simplicity reviewer is Ponytail `ponytail-review`,
    vendored and invoked explicitly.
-7. **Final acceptance at L1:** Odin MUST run the hidden benchmark suite (§11) in a **separate grader
-   container started after the agent containers stop**. Results MUST go to the ledger only. Results
-   MUST NOT go to agents. The suite includes gallery ID enumeration attempts. Odin MUST take the scores from the
-   grader container's stdout, read outside the container and apart from its stderr, with a bound; a stdout over the
-   bound MUST fail the grade. Odin MUST NOT read any file the container could write as a score. Odin MUST give each
-   grading attempt a random key as the environment variable `YGG_SCORE_KEY`, a score line MUST carry it, and Odin
-   MUST ignore a line that does not. A grade MUST fail, with no score written, when the stdout holds no score line
-   with the key, or more than one. A grade that fails MUST NOT count as a score of 0.
+7. **Final acceptance at L1:** when `factory.yaml` has a `grader` section, Odin MUST run the hidden benchmark suite
+   (§11) in a **separate grader container started after the agent containers stop**. Without one, Odin MUST skip the
+   grade node with a ledger line, and the run goes on. A grade node needs `sandbox:` only when a grader is configured,
+   since it names the engine the grader runs on. Results MUST go to the ledger only. Results MUST NOT go to agents,
+   except the score totals that the retrospective sees (§10.2). The suite includes gallery ID enumeration attempts. Odin
+   MUST take the scores from the grader container's stdout, read outside the container and apart from its stderr, with a
+   bound; a stdout over the bound MUST fail the grade. Odin MUST NOT read any file the container could write as a score.
+   Odin MUST give each grading attempt a random key as the environment variable `YGG_SCORE_KEY`, a score line MUST carry
+   it, and Odin MUST ignore a line that does not. A grade MUST fail, with no score written, when the stdout holds no
+   score line with the key, or more than one. A grade that fails MUST NOT count as a score of 0.
 
 ### 9.6 Dependency policy (all realms)
 
@@ -795,6 +896,40 @@ The metrics are:
 between them (factory version, config hash, agents and models per role, realm version). This output is
 the "result" evidence for journal entries. Every run report MUST record the factory version and config
 hash. Any number quoted later can then be traced back to the exact setup that produced it.
+
+**The experiment record.** Every run has `record.json` (`ygg.run-record/v1`) in its run folder, so two runs can be
+compared by it. `ygg record RUN` rebuilds it from the ledger, the run state and the judgements, at any time. It
+holds:
+
+- the setup: each role's agent, model, CLI version and reasoning; the hashes of the graph, the prompts, the skills
+  and the realms, as `run.json` recorded them when the run started (§4.1), never read from the files again; the
+  task and its version; the factory build;
+- the objective numbers by task, loop and graph: the metrics above, and for each task its estimated size against
+  the lines it added (hand-written, tests and generated), its attempts, and its findings by source and severity,
+  raised and closed;
+- the harness's health: the outputs refused and repaired by role and model, the `blocked` answers, the notes, and
+  the open questions left to the spec;
+- the retrospective and the operator's judgements.
+
+Odin MUST write `record.json` whenever a run ends (done, failed or stopped), and before the retrospective runs.
+
+**The retrospective.** A `retro` node, role `retrospective`, runs after the grade and returns `ygg.retro/v1`: what
+went well, what went wrong (each with a category, a severity, its evidence and the block it targets) and
+suggestions. The operator sets its agent and model in `factory.yaml`, so the judge can stay fixed across compared
+runs.
+
+- It reads the record without the judgements and with the grade as score totals only. A scratch retrospective also
+  gets a copy of the ledger with no per-test data, and the run's transcripts, within a bound. Of the hidden suite it
+  sees nothing else.
+- It is an ordinary node. A run that fails before it, the grade included, gets no retrospective, and its record is
+  still written. A retrospective that fails fails the run, and the grade stays in the record.
+
+**Judgements.** `ygg score RUN --score N --well TEXT --wrong TEXT [--task ID]` records the operator's judgement
+(`ygg.judgement/v1`): a score from 0 to 10 with what went well and what went wrong, per run by default and per task
+with `--task`, at any time after the run. A new judgement of the same run or task replaces the last in
+`judgements.json`; the ledger keeps each, and `record.json` is rebuilt with them. `ygg score` MUST refuse a run that
+a live `ygg` process holds, since that process owns the ledger; a run stopped at a gate, paused or killed can be
+judged.
 
 ### 10.3 Progress views
 
@@ -1136,3 +1271,11 @@ Yggdrasil to publish their source. That would make the factory unusable for most
 | Contract-change stops (2026-10-12) | only `extracted` or `oasdiff` evidence triggers `pointer-contract`; acceptance tests on every pointer move catch the rest; a changed YAML or JSON file and a symlink under a listed contract's folder escalate (2026-10-21) | `inferred` edges also stop (alarm fatigue) |
 | Own-skill evals (2026-10-12) | an eval MUST show a measurable gain before a skill ships | eval required, result informational |
 | Dependency rollout (2026-10-12) | a bump that fails the canary suite MUST NOT roll out | canary runs without a pass requirement |
+| Data between blocks (2026-10-24, B-176) | typed contracts: a versioned JSON Schema in Gungnir with a Go type; one typed output per node, checked when the graph loads; Markdown only as a view; instructions stay prose | Markdown parsed by Odin; protobuf; an untyped output kind for legacy nodes |
+| Output channel (2026-10-24) | `ygg-submit`, a stdio MCP server inside the sandbox, read from the session's stream and validated again by Odin; one repair round; the strict whole answer for an adapter without it | the last JSON document in prose (retired); a result file the session writes; a server on the host |
+| Check results (2026-10-24) | `ygg.check/v1`, converted from the tools' machine output by tested factory code; the exit code stays the truth | each script writes its own result; the log text only |
+| Experiment record (2026-10-24) | `record.json` for every run, written at its end and before the retrospective; a `retro` node after the grade, with a judge held fixed (Claude Code, Opus); the operator's 0 to 10 judgement; no retrospective for a run that fails before it (ruling R59) | the metrics only; a comparison view first; a retro node that always runs |
+| Runs before typed boundaries (2026-10-24, ruling R49) | readable by every read-only command; `ygg resume` refuses them | migrate their state; read them only with the old binary |
+| One set of instructions per run (2026-10-24, rulings R55, R56) | the sha256 of each prompt and skill recorded at run start; a session whose prompt changed fails | hash the files when the record is written; allow a prompt fix mid-run |
+| Grade without a grader (2026-10-25, the founder; rulings R63, R65) | the grade node is skipped and logged when `factory.yaml` has no `grader`, and the run goes on; the `software` graph ends with the grade, then the retrospective | refuse a factory with no grader; grade in a separate `ygg grade` step |
+| Inputs a prompt names (2026-10-25, the founder; rulings R66, R67) | a prompt backticks only its session's declared inputs, checked at run start, at `init` and in `ygg doctor` | check nothing, and learn of a missing input from a blocked session |

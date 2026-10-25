@@ -1,6 +1,6 @@
 ---
 title: Delta for typed boundaries
-status: proposed
+status: accepted
 date: 2026-10-24
 related: [proposal.md, design.md, tasks.md, ../../specs/2026-10-11-yggdrasil-v0-spec.md]
 style: spec
