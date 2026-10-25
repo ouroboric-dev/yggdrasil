@@ -20,11 +20,13 @@ Two rules hold for every run:
 Nothing here costs money.
 
 Build `ygg` from the merged `main` and check the engine, from the folder that holds your `ouroboric` and
-`yggdrasil` clones side by side:
+`yggdrasil` clones side by side. `ygg-build.sh` refuses a checkout that is dirty or behind its `origin/main`, writes
+`ygg` where your `PATH` finds it, and records what it was built from; the proof and smoke scripts refuse a `ygg` that
+does not match odin's checkout:
 
 ```zsh
-(cd yggdrasil/odin && go build -o ~/.local/bin/ygg ./cmd/ygg)
-cd ouroboric && scripts/ygg-engine.sh check
+cd ouroboric && scripts/ygg-build.sh
+scripts/ygg-engine.sh check
 ```
 
 If the machine restarted since the last run, redo what a restart undoes, in a normal terminal tab (`sudo` needs one):

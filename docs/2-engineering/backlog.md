@@ -1459,16 +1459,6 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   the packs. Test: a pack whose prompt names an input in prose that its node does not declare fails.
 - **Status:** proved (the T32 smoke 1, 2026-10-25).
 
-### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
-
-- **Where:** `docs/3-using/operations/proof-runs.md:26` (`go build -o ~/.local/bin/ygg`).
-- **Problem:** on the founder's machine `~/.local/bin` is not on `PATH`, so the T32 dry run, and once more a smoke,
-  ran a stale `ygg` from `~/go/bin`.
-- **Fix:** `scripts/ygg-build.sh` from [ouroboric#87](https://github.com/ouroboric-dev/ouroboric/pull/87) (merged
-  2026-10-25): it builds into the `ygg` on `PATH` and checks it, and the smoke and proof scripts refuse a stale `ygg`.
-  The runbook's build line still has to name it. Test: the runbook's build line is the script's.
-- **Status:** proved (T32, 2026-10-25).
-
 ### B-187: a realm's prompts and a late skill are hashed at their first read, not at run start
 
 - **Where:** `odin/internal/run/fingerprint.go:13-16` (`ReadPrompt`: a realm's prompt is hashed when a task's loop
@@ -1482,6 +1472,16 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
 - **Status:** reasoned (the T31 review).
 
 ## Done
+
+### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
+
+- **Where:** `docs/3-using/operations/proof-runs.md:26` (`go build -o ~/.local/bin/ygg`).
+- **Problem:** on the founder's machine `~/.local/bin` is not on `PATH`, so the T32 dry run, and once more a smoke,
+  ran a stale `ygg` from `~/go/bin`.
+- **Fix:** `scripts/ygg-build.sh` from [ouroboric#87](https://github.com/ouroboric-dev/ouroboric/pull/87) (merged
+  2026-10-25): it builds into the `ygg` on `PATH` and checks it, and the smoke and proof scripts refuse a stale `ygg`.
+  The runbook's build line now runs it (typed-T31). Test: the runbook's build line is the script's.
+- **Status:** done (typed-T31, 2026-10-25).
 
 ### B-176: the task parser dropped the task's text and its contract
 
