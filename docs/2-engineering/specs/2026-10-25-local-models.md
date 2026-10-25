@@ -38,7 +38,7 @@ podman network <server.network>  (internal: no route out)
 
 | Component | Repo | Change |
 | --- | --- | --- |
-| Model references, `PaidAPI`, the `models` section of `factory.yaml` | `gungnir` | `schema/factory.go`, `factory.schema.json` |
+| Model references, `PaidModel`, the `models` section of `factory.yaml` | `gungnir` | `schema/factory.go`, `factory.schema.json` |
 | The model list and its preset | `gungnir` | new `schema/models.go`, `models.schema.json` |
 | `SandboxSpec.Models` | `gungnir` | `sandbox.go` |
 | The OpenCode adapter on a local model | `gleipnir` | `opencode/opencode.go` |
@@ -63,7 +63,7 @@ roles:
 - A model reference `local/<name>` is valid only for `agent: opencode`.
 - `<name>` MUST match `^[a-z0-9][a-z0-9._-]{0,63}$`.
 - A role that names a local model MUST NOT set `reasoning:`. The model list sets the effort for the model.
-- `models.file` MUST be an absolute path.
+- `models.file` MUST be a clean, absolute path, checked whenever the `models:` section is present.
 
 ### 3.2 The model list
 
@@ -90,11 +90,15 @@ models:
 ```
 
 - `price.input` and `price.output` are required. `cache_read` and `cache_write` are optional and default to 0.
-- `args` MUST NOT hold `model`, `ctx-size`, `c`, `host`, `port` or `alias`. The preset writes those.
+- `args` MUST NOT hold `model`, `m`, `ctx-size`, `c`, `host`, `port`, `alias` or `a`. The preset writes those (the
+  parser maps the short forms to the long ones).
+- `server.port` MUST NOT be 8080: llama-server listens on 8080 in the same container. `weights` and `state` MUST NOT
+  be `/`.
 - A path in `args` names the container's view, such as `/models/mtp.gguf`. The preset does not resolve a relative
   path.
 - A flag with no value is given as `"true"` or `"false"`. Keys are long option names: `ParseModels` refuses a key
-  that starts with `-`, and an empty value.
+  that does not match `^[a-z][a-z0-9-]*$`, and an empty value. Values with `#`, `;`, quotes, a line break, or
+  space at either end are refused: the pinned parser would end, trim or split them.
 
 ### 3.3 The preset
 
@@ -144,8 +148,11 @@ type ModelServer struct {
 }
 ```
 
-`SandboxSpec.Models *ModelServer`. `Validate` refuses a name or network that does not match
-`^[a-z0-9][a-z0-9_.-]{0,62}$`, and a port outside 1 to 65535.
+`SandboxSpec.Models *ModelServer`. `Validate` refuses a name that is not one DNS label
+(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`, `gungnir.ValidModelHost`), a network that does not match
+`^[a-z0-9][a-z0-9_.-]{0,62}$` (`gungnir.ValidModelNetwork`), and a port outside 1 to 65535. The name is one label
+because the firewall resolves it through every resolver it has: a dotted name such as `x.example.com` would open a
+public host. `ParseModels` applies the same checks to `server.name` and `server.network`.
 
 ### 3.7 Gleipnir's sandbox
 
@@ -168,7 +175,8 @@ When `spec.Models` is set:
 
 ### 3.9 Odin
 
-- `schema.PaidAPI(agent, model string) bool` is false for a local model.
+- `schema.PaidModel(agent, model string) bool` is false for a local model, and is what the dollar caps use.
+  `schema.PaidAPI(agent string)` stays as it was, so a leaf that has not moved to `PaidModel` still builds.
 - `run.Prepare` refuses a run whose graph's local roles name more than one model, or a model that is not in the
   list. It sets `SandboxSetup.Models` when a local role is in the graph.
 - `run.Start` and `run.OpenWith` call `models.Ready` before any sandbox starts. Ready checks that the server

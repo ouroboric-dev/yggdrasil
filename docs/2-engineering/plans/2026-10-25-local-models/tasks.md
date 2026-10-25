@@ -67,7 +67,7 @@ Test: `schema/factory_local_test.go` (new).
 
 - Produces: `schema.LocalModel(model string) (name string, ok bool)`: `ok` when `model` is `local/<name>` and the
   name matches `^[a-z0-9][a-z0-9._-]{0,63}$`.
-- Produces: `schema.PaidAPI(agent, model string) bool` (was `PaidAPI(agent)`): false for `claude-code`,
+- Produces: `schema.PaidModel(agent, model string) bool` beside an unchanged `PaidAPI(agent)` (review ruling): false for `claude-code`,
   `scripted`, and any local model. Every caller passes the role's model.
 - Produces: `schema.Factory.Models *Models` with `type Models struct{ File string \`yaml:"file"\` }`.
 - Produces: `(*Factory).LocalModels() []string`: the sorted distinct names the roles use.
@@ -275,12 +275,12 @@ the existing billing test in `internal/engine`.
 
 **Interfaces:**
 
-- Consumes: `schema.PaidAPI(agent, model)`, `opencode.Config.Local`, `schema.ModelList` (LM-T02, LM-T03, LM-T05).
+- Consumes: `schema.PaidModel(agent, model)`, `opencode.Config.Local`, `schema.ModelList` (LM-T02, LM-T03, LM-T05).
 - Changes: `agents.New(role schema.Role, configDir string, o Options)` with `Options.Models *schema.ModelList`:
   for a local role it fills `opencode.Config.Local` from the list (`BaseURL` `http://<name>:<port>/v1`) and
   `Price` from the role's `price`, else the list's.
 - Changes: `agents.Hosts(agent, model string) []string`: nil for a local model.
-- Changes: `billed(adapter, model string, u gungnir.Usage)` and `sessionUsage` call `PaidAPI` with the model.
+- Changes: `billed(adapter, model string, u gungnir.Usage)` and `sessionUsage` call `PaidModel` with the model.
 - Produces: `metrics.Usage.LocalSessions int` (JSON `local_sessions`), counted where the event's provider is
   `local`; `render` prints `N sessions on local models` when N > 0.
 
@@ -298,7 +298,7 @@ the existing billing test in `internal/engine`.
 
 - [ ] **Step 1:** write the tests; for metrics, a ledger fixture under `internal/metrics/testdata/local/`.
 - [ ] **Step 2:** run; expect FAIL. **Step 3:** implement; update every caller of `PaidAPI` and `Hosts`
-      (`git grep -n 'PaidAPI(\|agents.Hosts('`).
+      (`git grep -n 'PaidAPI(\|agents.Hosts('`; callers move to `PaidModel`).
 - [ ] **Step 4:** run `go test ./...`; expect PASS. **Step 5:** commit.
 
 ---
