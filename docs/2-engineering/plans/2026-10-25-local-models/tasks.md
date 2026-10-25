@@ -21,7 +21,7 @@ scripts), Podman with CDI, llama.cpp router mode, OpenCode's `@ai-sdk/openai-com
 Every task starts from its leaf's `origin/main`, on a branch, test first, and ends with a pull request opened by
 `scripts/pr-open.sh`.
 
----
+## Tasks
 
 ### Task LM-T01: the spike on the founder's engine
 
