@@ -287,7 +287,9 @@ left. The two reports are in the SDD workspace (`final-review/review.md` and `re
   - M-9 `engine/returns.go` logs `node_returned` before `run.json` is saved: save first, or tolerate the duplicate on resume.
   - M-10 `plan/expand.go`: an expanded id that clashes with a graph node id fails the foreach node instead of sending the plan back: check it in the tasks node.
   - M-11 (unverified) `cli/cli.go` (`blockedTasks`) prints a task's `Why` to the terminal as is: strip control characters.
-  - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task.
+  - M-12 `schema/tasks.go` recognises only backtick fences, so a heading inside a `~~~` fence reads as a task. **Moot
+    (2026-10-25):** since the typed-boundaries change no odin code calls `ParseTasks`; Odin takes the tasks from the
+    plan's typed output (B-176).
   - N-2 `run.Unexpand` leaves state keyed by the old task node ids: a new plan that reuses a task id inherits it (for example, a node that spent its returns).
   - N-3 test gaps: the I-1 test would also pass if `main` were reset to the run's base; gleipnir's render passes every test if it stops calling `literalEnv`; no test covers an Odin failure on the pointer path or a Tidy failure not being sent back.
   - N-4 if a task's pointer has moved and a later loop of the same task gives up, `mainBack` moves `main` below the commit the umbrella points at (the current graph shapes cannot do it).
@@ -939,16 +941,7 @@ its proposal's Backlog, the real runs H02 and H03, and the reviews of `odin`, `g
 Source of items B-104 to B-111: the real-agent smoke (v0-H17) and the reviewer experiments of 2026-10-20
 (gleipnir pull requests 14 to 16, odin pull requests 21 to 23, and the journal entry
 `2026-10-20-choosing-the-reviewer-model`). The smoke passed in the end (run 20261020-205528-86a693, reward 1.0).
-These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105.
-
-### B-112: the conformance reviewer's prompt still forbids prose before its JSON
-
-- **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
-- **Problem:** B-105 relaxed the framing of a reviewer's report. The design-conformance reviewer's answer is read by
-  `ParseConformance`, which is still strict, so the same model habit (a sentence before the JSON) would stop a run
-  there.
-- **Fix:** give `ParseConformance` the same framing as `ParseReport` and change the prompt. A change proposal first.
-- **Status:** reasoned.
+These are what it left; B-112 to B-115 came from the fixes of B-104 and B-105. B-112 is now in [Done](#done).
 
 ### B-113: the operator cannot overrule a disputed finding
 
@@ -1376,9 +1369,8 @@ Code locations of B-159 to B-169 are at ouroboric `9bdcb66` (B-164 to B-166), ni
   re-review of review-diff T01.
 - **Status:** minor; parked.
 
-Code locations of B-177 and B-179 to B-186 are at odin `c00e7ae`, gungnir `973a971`, gleipnir `97f2aba`, havamal
-`144be35`,
-voluspa `f5ece16` and yggdrasil `0ecd047`. They were found while building the
+Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a971`, gleipnir `97f2aba`, havamal
+`144be35`, voluspa `f5ece16`, ouroboric `d8495dc` and yggdrasil `0ecd047`. They were found while building the
 [typed-boundaries change](changes/2026-10-24-typed-boundaries/proposal.md).
 
 ### B-177: a fresh project's first contract always stops at `contract-gate`
@@ -1450,8 +1442,7 @@ voluspa `f5ece16` and yggdrasil `0ecd047`. They were found while building the
 - **Where:** `odin/internal/run/fingerprint.go:111-135` (`LoadSkills`: `havamal.Select` hashes the skills, then
   `libs.Load` reads them again for the prompt).
 - **Problem:** Odin hashes a private skill's `SKILL.md` and then reads the file again for the prompt. A write between
-  the two
-  reads escapes the check that a session's skill did not change during the run (spec §4.4).
+  the two reads escapes the check that a session's skill did not change during the run (spec §4.4).
 - **Fix:** havamal returns the bytes it hashed, and the prompt uses them. Test: a skill changed between the reads
   fails the session.
 - **Status:** reasoned (the T21 review); minor.
@@ -1473,9 +1464,22 @@ voluspa `f5ece16` and yggdrasil `0ecd047`. They were found while building the
 - **Where:** `docs/3-using/operations/proof-runs.md:26` (`go build -o ~/.local/bin/ygg`).
 - **Problem:** on the founder's machine `~/.local/bin` is not on `PATH`, so the T32 dry run, and once more a smoke,
   ran a stale `ygg` from `~/go/bin`.
-- **Fix:** the ouroboric build script (it builds into the `ygg` on `PATH` and checks it); the runbook names it once
-  it merges. Test: the runbook's build line is the script's.
+- **Fix:** `scripts/ygg-build.sh` from [ouroboric#87](https://github.com/ouroboric-dev/ouroboric/pull/87) (merged
+  2026-10-25): it builds into the `ygg` on `PATH` and checks it, and the smoke and proof scripts refuse a stale `ygg`.
+  The runbook's build line still has to name it. Test: the runbook's build line is the script's.
 - **Status:** proved (T32, 2026-10-25).
+
+### B-187: a realm's prompts and a late skill are hashed at their first read, not at run start
+
+- **Where:** `odin/internal/run/fingerprint.go:13-16` (`ReadPrompt`: a realm's prompt is hashed when a task's loop
+  expands) and `:105-108` (`LoadSkills`: a skill the run did not hash at start is hashed on its first load).
+- **Problem:** the run start hashes the graph pack's prompts and the skills the graph names. A realm's implementer
+  prompt, and a skill first loaded later, get their hash only at their first read, so a change between run start and
+  that read is not caught: the run uses the changed file, and the record's setup describes it, not the files the run
+  started with.
+- **Fix:** hash the prompts of the realms a run can reach, and every skill a session can load, at run start. Test: a
+  realm prompt changed after run start and before its loop expands fails the session.
+- **Status:** reasoned (the T31 review).
 
 ## Done
 
@@ -1532,6 +1536,20 @@ voluspa `f5ece16` and yggdrasil `0ecd047`. They were found while building the
   hand-written, tests and generated.
 - **Status:** proved (run 1's t001).
 - **Fixed:** 2026-10-25, by the typed-boundaries change: [odin#45](https://github.com/ouroboric-dev/odin/pull/45).
+
+### B-112: the conformance reviewer's prompt still forbids prose before its JSON
+
+- **Where:** `voluspa/software/prompts/conformance.md:41`, `gungnir/schema` (`ParseConformance`).
+- **Problem:** B-105 relaxed the framing of a reviewer's report. The design-conformance reviewer's answer is read by
+  `ParseConformance`, which is still strict, so the same model habit (a sentence before the JSON) would stop a run
+  there.
+- **Fix:** give `ParseConformance` the same framing as `ParseReport` and change the prompt. A change proposal first.
+- **Status:** reasoned.
+- **Closed:** 2026-10-25, by the typed-boundaries change (B-176): odin no longer calls `ParseConformance` (still in
+  gungnir `schema/event.go:68` at `973a971`). The conformance review returns `ygg.conformance/v1` through the output
+  channel (spec §5), with one repair round, so no framing of prose is read
+  ([voluspa#5](https://github.com/ouroboric-dev/voluspa/pull/5),
+  [odin#44](https://github.com/ouroboric-dev/odin/pull/44)).
 
 ### B-175: the report parser took JSON quoted in a reviewer's prose for a second document
 

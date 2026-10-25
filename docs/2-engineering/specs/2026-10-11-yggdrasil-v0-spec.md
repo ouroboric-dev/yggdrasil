@@ -204,7 +204,10 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 
 1. Resolve the project's L1 umbrella. If a leaf does not exist, create it from the realm templates.
 2. Write `run.json`: run id, realm and graph version, config hash, agent and model per role, graph
-   position, and the sha256 of each prompt and each skill, from the bytes the run loads (§4.4).
+   position, and the sha256 of the instructions, from the bytes the run loads (§4.4): every prompt the graph pack
+   gives a session (a node's own and every reviewer's) and every skill the graph names. A prompt a realm gives (a
+   leaf's implementer prompt) is hashed at its first read, as a task's loop expands, and a skill the run did not
+   hash at start is hashed when it is first loaded.
 3. Bring up the sandboxes for each leaf (§6). Then start to walk the graph.
 
 ### 4.2 The web realm graph
@@ -212,7 +215,7 @@ A pointer move in an umbrella means "this child, at this SHA, passed this level'
 <!-- diagram: assets/diagrams/software-graph.mmd -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/software-graph.dark.svg">
-  <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the hidden acceptance suite and the report" src="../../assets/diagrams/rendered/software-graph.svg">
+  <img alt="Web realm graph: design doc and human approval, spec with a conformance review that stops on deviation, plan and DoR check, init, then per task an implement and check-ladder loop, merge gate and pointer move, then the grade with the hidden acceptance suite, the retrospective, and the living spec and report" src="../../assets/diagrams/rendered/software-graph.svg">
 </picture>
 
 ```text
@@ -222,8 +225,12 @@ agent                       agent    agent (read-only)                    agent 
      agent+exec               implement ⇄ check ladder  (loop, max N)
                               └─► checkpoint ─► [gate: feature] ─► merge gate ─► [gate: merge]
                               ─► pointer move ─► [gate: pointer | pointer-contract]
-  ─► final acceptance (hidden suite) ─► retrospective ─► update living spec ─► report
+  ─► final acceptance (hidden suite) ─► retrospective
+  ─► after the graph, Odin's: update living spec ─► report
 ```
+
+The graph's last nodes are the grade (the final acceptance) and the retrospective. The living spec's update and the
+report are Odin's steps after the graph (`ygg report`), not nodes of it.
 
 [spec-driven development](https://github.com/ouroboric-dev/ouroboric/blob/main/docs/4-ways-of-working/spec-driven-development.md)
 defines the stages and approval rules. This graph is the web realm's implementation of them.
@@ -309,10 +316,12 @@ session memory. This is what makes it possible to swap models mid-run.
 - `date` comes from Odin, so a session does not read the clock for it.
 - A prompt MAY name in backticks only the inputs its session declares. Odin MUST refuse, at run start, at `init` for
   the realms it pins and in `ygg doctor`, a prompt that backticks a built-in source or the id of a node of the same
-  graph with an output that its session does not declare. Other backticked words and prose are not checked, so an
-  example node id in a prompt is written without backticks.
-- A session whose prompt or skill differs from the sha256 recorded when the run started (§4.1) MUST fail before it
-  starts, with a message that names the file and says to start a new run: one run uses one set of instructions.
+  graph with an output that its session does not declare; `ygg doctor` reports such a prompt as an error. Other
+  backticked words and prose are not checked. An example node id, or a node's own id, is prose: write it without
+  backticks.
+- A session whose prompt or skill differs from the sha256 the run recorded first for it, at run start or at its
+  first read (§4.1), MUST fail before it starts, with a message that names the file and says to start a new run: one
+  run uses one set of instructions.
 
 ### 4.5 The merge gate
 
@@ -445,7 +454,8 @@ privacy: standard   # strict → only providers with no training and no retentio
   without the skill).
   Havamal releases are tagged, because other operators may vendor our skills in turn. A check MUST
   fail on drift. Updates MUST be reviewed pull requests. The skill set's hash, and each skill's sha256 from the
-  bytes the run loads, MUST go into `run.json` (§4.1). Agents in sandboxes MUST NOT see host-installed skills.
+  bytes the run loads (at run start, or at its first load for a skill the run did not hash then), MUST go into
+  `run.json` (§4.1). Agents in sandboxes MUST NOT see host-installed skills.
 - Havamal MUST include only skills that have redistributable licences and are vendored from public
   upstreams. Organisation-internal skills MUST NOT be included. Operators MAY add private skills
   through their L0 instance configuration. `run.json` records these private skills.
@@ -793,7 +803,7 @@ RR-25).
 <!-- diagram: assets/diagrams/check-ladder.mmd -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../../assets/diagrams/rendered/check-ladder.dark.svg">
-  <img alt="Check ladder: seven rungs from static checks to the hidden suite; rungs 1 to 6 send typed findings back to the implementer; the hidden suite runs in a separate grader and sends only a score to the ledger" src="../../assets/diagrams/rendered/check-ladder.svg">
+  <img alt="Check ladder: seven rungs from static checks to the hidden suite; rungs 1 to 6 send typed findings back to the implementer; the hidden suite runs in a separate grader and sends its scores to the ledger, and the retrospective sees only their totals" src="../../assets/diagrams/rendered/check-ladder.svg">
 </picture>
 
 The rungs run from fast to slow. Each rung's failure output goes back to the implementer.
@@ -902,8 +912,8 @@ compared by it. `ygg record RUN` rebuilds it from the ledger, the run state and 
 holds:
 
 - the setup: each role's agent, model, CLI version and reasoning; the hashes of the graph, the prompts, the skills
-  and the realms, as `run.json` recorded them when the run started (§4.1), never read from the files again; the
-  task and its version; the factory build;
+  and the realms, as `run.json` recorded them at run start or at their first read (§4.1), never read from the files
+  again; the task and its version; the factory build;
 - the objective numbers by task, loop and graph: the metrics above, and for each task its estimated size against
   the lines it added (hand-written, tests and generated), its attempts, and its findings by source and severity,
   raised and closed;
@@ -1276,6 +1286,6 @@ Yggdrasil to publish their source. That would make the factory unusable for most
 | Check results (2026-10-24) | `ygg.check/v1`, converted from the tools' machine output by tested factory code; the exit code stays the truth | each script writes its own result; the log text only |
 | Experiment record (2026-10-24) | `record.json` for every run, written at its end and before the retrospective; a `retro` node after the grade, with a judge held fixed (Claude Code, Opus); the operator's 0 to 10 judgement; no retrospective for a run that fails before it (ruling R59) | the metrics only; a comparison view first; a retro node that always runs |
 | Runs before typed boundaries (2026-10-24, ruling R49) | readable by every read-only command; `ygg resume` refuses them | migrate their state; read them only with the old binary |
-| One set of instructions per run (2026-10-24, rulings R55, R56) | the sha256 of each prompt and skill recorded at run start; a session whose prompt changed fails | hash the files when the record is written; allow a prompt fix mid-run |
-| Grade without a grader (2026-10-25, the founder; rulings R63, R65) | the grade node is skipped and logged when `factory.yaml` has no `grader`, and the run goes on; the `software` graph ends with the grade, then the retrospective | refuse a factory with no grader; grade in a separate `ygg grade` step |
+| One set of instructions per run (2026-10-24, rulings R55, R56) | the sha256 of each prompt and skill recorded at run start, or at its first read for a realm's prompt or a skill loaded later (B-187); a session whose prompt changed since fails | hash the files when the record is written; allow a prompt fix mid-run |
+| Grade without a grader (2026-10-25, the founder; rulings R63, R65) | the grade node is skipped and logged when `factory.yaml` has no `grader`, and the run goes on; the `software` graph's last nodes are the grade, then the retrospective | refuse a factory with no grader; grade in a separate `ygg grade` step |
 | Inputs a prompt names (2026-10-25, the founder; rulings R66, R67) | a prompt backticks only its session's declared inputs, checked at run start, at `init` and in `ygg doctor` | check nothing, and learn of a missing input from a blocked session |
