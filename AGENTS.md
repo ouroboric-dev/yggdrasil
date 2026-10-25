@@ -14,7 +14,10 @@ A child `AGENTS.md` may add rules; it must not loosen these.
 
 1. Humans approve direction. Stop and ask when work would leave the approved spec or plan.
 2. Write the failing test first. A test that never failed proves nothing.
-3. Never merge a pull request, and never push to `main`. Humans merge.
+3. Never merge a pull request, and never push to `main`. Humans merge: an agent may arm auto-merge on a pull
+   request it opens (`scripts/pr-open.sh`), because the ruleset still requires a human's approval, and that approval
+   is the merge decision. Never approve a pull request, never use an admin bypass, and never arm auto-merge on a
+   repo whose ruleset does not require an approval.
 4. Never read or search for hidden or benchmark tests.
 5. Never read, print or store secrets, tokens or keys.
 6. Report findings with a location. A finding is fixed only when its source confirms it with proof.
