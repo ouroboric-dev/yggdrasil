@@ -1,0 +1,24 @@
+{
+  "decisions": [
+    {
+      "id": "password-reset",
+      "text": "Add a password reset: primarily by email, with security questions set at sign-up as the second way. The graded machine has no outside services and no network, so the email sender is configurable; with none configured, each reset email is written to a local outbox file under /app/.data/ that the operator can read."
+    },
+    {
+      "id": "deletion",
+      "text": "Photographers can delete photos, galleries and their own account."
+    },
+    {
+      "id": "email-notice",
+      "text": "The client's email step says that the photographer will see the email entered."
+    },
+    {
+      "id": "storage-cap",
+      "text": "Storage cap: 10 GB per photographer by default, configurable per photographer."
+    },
+    {
+      "id": "logout-on-change",
+      "text": "A change of a gallery password or PIN logs out the clients already in, and a photographer's password change logs out their other sessions."
+    }
+  ]
+}

@@ -86,8 +86,9 @@ The order is the table's order, with these gates between runs:
 | `--mode MODE` | `key-points` (the default), `unattended` or `step-by-step` | rehearsal, `r1u` |
 | `--implementer AGENT:MODEL` | the implementer; `AGENT` is `claude-code` or `opencode`, and an OpenCode `MODEL` is `openrouter/<model>` | `r2` |
 | `--baseline RUN_ID` | also prints `ygg metrics --compare RUN_ID <this run>`; the baseline may be in any earlier proof folder under `--folder` (exactly one must hold it, or the script refuses before it starts anything) | `r1b`, `r2`, `r3` |
-| `--continue RUN_ID` with `--approve GATE [--note TEXT]`, `--reject GATE --reason TEXT` or `--resume` | continues a stopped or paused run (see "Continue a stopped run") | after any stop |
+| `--continue RUN_ID` with `--approve GATE` (and `--note TEXT` or `--decisions FILE`), `--reject GATE` (with `--reason TEXT` or `--decisions FILE`) or `--resume` | continues a stopped or paused run (see "Continue a stopped run") | after any stop |
 | `--reviewer-reasoning LEVEL` | the reasoning effort of the reviewer role: `low`, `medium` (the default), `high` or `off`; a `claude-code` reviewer ignores it. `--continue` refuses it | none; the default holds |
+| `--retro-agent AGENT`, `--retro-model MODEL` | the retrospective role, the agent that writes the run's retrospective; the defaults are `claude-code` and `opus`. `--continue` refuses them | none; the defaults hold |
 | `--build` | builds the sandbox images first | rehearsal, `r1` |
 | `--clip` | copies the report to the Windows clipboard | every scored run |
 | `--dry-run` | stops after the plan, exit 0 | any |
@@ -114,52 +115,35 @@ looks in the current folder and does not find the run.
 Every proof run gives the same product decisions, word for word, so that the runs differ in the factory and not in
 the product. The runs use task `client-gallery-lite` 4.1.0, and question 10 is answered (option A).
 
-- At `design-gate`, approve with the first block as the note, passed through a variable (see "Pass a block" below).
-  The note reaches every later stage as "The product owner's decisions".
-- A note given when approving a gate node reaches every later stage. A note at a gate inside the task loop
-  (`feature-gate`, `merge-gate`, `pointer-gate`, `contract-gate`) or at `plan-gate` reaches every later task. A note at
-  an escalation or another hard stop is not kept for the later stages: it stays on the event. Give a note at another
-  gate only for a decision. A second approval with a blank note keeps the gate's earlier note; a note that is not
-  blank replaces it. A note is one line: no control characters (C1 ones too) and no line or paragraph separators.
-- If the spec at `spec-gate` still lacks a decision, reject it with the second block, passed the same way. A
-  rejection drops the notes of the gates it goes back past: a `spec-gate` rejection keeps the `design-gate` note, but
-  a rejection that goes back before `design-gate` does not.
+The decisions are one file, `docs/3-using/operations/proof-decisions/design-gate.json` in the `yggdrasil` clone. It
+holds five decisions under the ids `password-reset`, `deletion`, `email-notice`, `storage-cap` and
+`logout-on-change`. Its format is `ygg.decisions/v1`. Do not edit it between runs.
 
-The note for `design-gate`:
+- At `design-gate`, approve with the file. The decisions reach every later stage as "The product owner's decisions",
+  each under its id, and the spec has to cite each id.
+- In `key-points` mode, `spec-gate` stops only for a deviation from the design or for a decision id the spec does not
+  cite. Odin names which. The decisions file answers the first case at `design-gate`, so you do not reject the spec
+  for a missing decision: Odin checks the ids itself.
+- A decisions file given when approving a gate node reaches every later stage. One given at a gate inside the task
+  loop (`feature-gate`, `merge-gate`, `pointer-gate`, `contract-gate`) or at `plan-gate` reaches every later task. One
+  given at an escalation or another hard stop is not kept for the later stages: it stays on the event. Give one at
+  another gate only for a decision. A rejection drops the decisions of the gates it goes back past.
+- `--note TEXT` still works for a short one-line remark (no control characters, no line or paragraph separators). A
+  note and a decisions file are not given together.
 
-```text
-Product owner's answers (2026-10-22), for every run: 1. Add a password reset: primarily by email, with security questions set at sign-up as the second way. The graded machine has no outside services and no network, so the email sender is configurable; with none configured, each reset email is written to a local outbox file under /app/.data/ that the operator can read. 2. Photographers can delete photos, galleries and their own account. 3. The client's email step says that the photographer will see the email entered. 4. Storage cap: 10 GB per photographer by default, configurable per photographer. 5. A change of a gallery password or PIN logs out the clients already in, and a photographer's password change logs out their other sessions.
-```
-
-The reason for rejecting `spec-gate`:
-
-```text
-The product owner answered the design's open questions at the design gate (2026-10-22), and the answers apply to every run. The spec must include them, with routes, data model, acceptance criteria and tests, and list each one under "Deviations from the design doc" as the product owner's decision: 1. A password reset for photographers: primarily by email, with security questions set at sign-up as the second way. The graded machine has no outside services and no network, so the email sender is configurable; with none configured, each reset email is written to a local outbox file under /app/.data/ that the operator can read. 2. Photographers can delete photos, galleries and their own account. 3. The client's email step says that the photographer will see the email entered. 4. A storage cap of 10 GB per photographer by default, configurable per photographer. 5. A change of a gallery password or PIN logs out the clients already in, and a photographer's password change logs out their other sessions.
-```
-
-### Pass a block
-
-The second block holds double quotes and both blocks hold apostrophes, so never paste a block between quotes on the
-command line: zsh breaks the command without a word. Put the block in a variable with a quoted heredoc, then pass the
-variable. For the note at `design-gate`:
+Approve `design-gate` with the file. `RUN` is the run id the script printed; run it from your `ouroboric` clone, with
+the path of your `yggdrasil` clone in place of `../yggdrasil`:
 
 ```zsh
-N=$(cat <<'EOF'
-<paste the first block here>
-EOF
-)
-scripts/ygg-proof-run.sh --continue RUN --approve design-gate --note "$N"
+scripts/ygg-proof-run.sh --continue RUN --approve design-gate \
+  --decisions ../yggdrasil/docs/3-using/operations/proof-decisions/design-gate.json
 ```
 
-For the reason at `spec-gate`:
+The script passes the file to `ygg approve` as an absolute path, made from the folder you run it in. Never paste the
+decisions into the command line: use the file.
 
-```zsh
-R=$(cat <<'EOF'
-<paste the second block here>
-EOF
-)
-scripts/ygg-proof-run.sh --continue RUN --reject spec-gate --reason "$R"
-```
+To reject a gate, give a reason with `--reason TEXT`, or a decisions file whose `reason` field says why:
+`scripts/ygg-proof-run.sh --continue RUN --reject GATE --reason "..."`.
 
 ## The rehearsal
 
@@ -213,7 +197,10 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 
 ### Gates you will meet
 
-- The design gate stops in every mode. Read the gate file and approve with the command the script prints.
+- The design gate stops in every mode. Read the gate file and approve it with the decisions file (see "The product
+  owner's decisions").
+- If the spec gate stops in `key-points`, it is for a deviation from the design or a decision id the spec does not
+  cite, and Odin names which. Read the gate file and rule on it.
 - An `escalation` gate stops in every mode (exit 3). Read it and rule on it.
 - In `key-points`, the plan, feature, merge and pointer gates pass by themselves, except the contract case below.
 - In `key-points`, a contract change stops the run at a `pointer-contract` gate. Read it, then approve with
@@ -227,7 +214,7 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 | Stop | How it shows | What to do |
 | --- | --- | --- |
 | A cap (`budget-cap`) | exit 3 | a gate: read how far it got with `ygg metrics` and decide. To continue, raise the cap while the run is stopped (see "Caps"), then `--continue RUN --approve GATE` |
-| A gate | exit 3 | read the gate file; `scripts/ygg-proof-run.sh --continue RUN --approve GATE [--note "..."]`. To reject, `--continue RUN --reject GATE --reason "..."` |
+| A gate | exit 3 | read the gate file; `scripts/ygg-proof-run.sh --continue RUN --approve GATE`, with `--note "..."` or `--decisions FILE` if you give one. To reject, `--continue RUN --reject GATE --reason "..."` |
 | The provider's quota | exit 4 (paused) | wait for the quota, then `--continue RUN --resume` |
 | The wall clock (`--wall`) | exit 124 (the script's `timeout` interrupted the run) | see "After a wall clock stop" below; the script ran `ygg doctor` |
 | Ctrl-C, TERM, a closed terminal | exit 130, 143, 129 | the script stopped the run, ran `ygg doctor` and kept the report (`hangup.txt` for 129). Continue with `--continue RUN --resume` only if the run is unfinished |
@@ -255,15 +242,15 @@ After a pause, the last lines are the same, with `proof-run: the run paused (the
 continue it:` and the `--resume` command. The forms are:
 
 ```zsh
-scripts/ygg-proof-run.sh --continue RUN --approve GATE [--note "..."]
-scripts/ygg-proof-run.sh --continue RUN --reject GATE --reason "..."
+scripts/ygg-proof-run.sh --continue RUN --approve GATE [--note "..." | --decisions FILE]
+scripts/ygg-proof-run.sh --continue RUN --reject GATE (--reason "..." | --decisions FILE)
 scripts/ygg-proof-run.sh --continue RUN --resume
 ```
 
 Add `--clip` to copy the report, `--wall TIME` for another wall clock, and `--folder` and `--env` only if the first
 command used them. `--continue` refuses the setup flags (`--name`, `--mode`, the roles, `--reviewer-reasoning`, the
 caps, `--build`, `--tasks`, `--suites` and `--yggdrasil`): the run keeps its config and its mode. Add `--dry-run` to
-see what it would do. A note on `--approve` makes an intervention. A rejection takes `--reason` and no `--note`; it
+see what it would do. A note on `--approve` makes an intervention. A rejection takes `--reason` or `--decisions` and no `--note`; it
 advances the run at once, so it starts sessions as an approval does. A proof folder made before `--reviewer-reasoning`
 continues, and the plan shows "reasoning unset".
 
@@ -371,6 +358,20 @@ result. For any other pair it means the setup drifted. Do not use that pair.
 `ygg report` writes `report.md` into the run's folder: the tasks the run gave up first, the metrics, every intervention
 with its note, the loops that gave up, and each finding a dispute overruled with both sides. It names the ledger line it
 was read from, and the same run always gives the same bytes.
+
+### Score the run
+
+When a run ends 0 (done) or 5 (done, with some tasks given up), the script prints the path of `record.json` (the run's
+record, from `ygg record RUN`) and a line to fill in. `record.json` holds what the factory knows of the run. The score
+is yours. Fill the line in and run it:
+
+```zsh
+ygg score RUN --score N --well "..." --wrong "..." --project PROJECT
+```
+
+`N` is a whole number from 0 to 10. `--task ID` scores one task instead of the run. A new score for the same run or
+task replaces the old one. A stopped, paused or failed run prints neither the path nor the line, because it can still
+go on. You can also give `ygg score` by hand at any time after the run, as the README of `odin` says.
 
 ## Repeating a run
 
