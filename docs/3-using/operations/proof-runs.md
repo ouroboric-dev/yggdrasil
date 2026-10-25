@@ -197,8 +197,10 @@ when the run has stopped, and use `ygg status --watch` meanwhile.
 
 ### Gates you will meet
 
-- The design gate stops in every mode. Read the gate file and approve it with the decisions file (see "The product owner's decisions").
-- If the spec gate stops in `key-points`, it is for a deviation from the design or a decision id the spec does not cite, and Odin names which. Read the gate file and rule on it.
+- The design gate stops in every mode. Read the gate file and approve it with the decisions file (see "The product
+  owner's decisions").
+- If the spec gate stops in `key-points`, it is for a deviation from the design or a decision id the spec does not
+  cite, and Odin names which. Read the gate file and rule on it.
 - An `escalation` gate stops in every mode (exit 3). Read it and rule on it.
 - In `key-points`, the plan, feature, merge and pointer gates pass by themselves, except the contract case below.
 - In `key-points`, a contract change stops the run at a `pointer-contract` gate. Read it, then approve with
@@ -359,8 +361,9 @@ was read from, and the same run always gives the same bytes.
 
 ### Score the run
 
-When a run ends 0, the script prints the path of `record.json` (the run's record, from `ygg record RUN`) and a line to
-fill in. `record.json` holds what the factory knows of the run. The score is yours. Fill the line in and run it:
+When a run ends 0 (done) or 5 (done, with some tasks given up), the script prints the path of `record.json` (the run's
+record, from `ygg record RUN`) and a line to fill in. `record.json` holds what the factory knows of the run. The score
+is yours. Fill the line in and run it:
 
 ```zsh
 ygg score RUN --score N --well "..." --wrong "..." --project PROJECT
@@ -368,7 +371,7 @@ ygg score RUN --score N --well "..." --wrong "..." --project PROJECT
 
 `N` is a whole number from 0 to 10. `--task ID` scores one task instead of the run. A new score for the same run or
 task replaces the old one. A stopped, paused or failed run prints neither the path nor the line, because it can still
-go on.
+go on. You can also give `ygg score` by hand at any time after the run, as the README of `odin` says.
 
 ## Repeating a run
 
