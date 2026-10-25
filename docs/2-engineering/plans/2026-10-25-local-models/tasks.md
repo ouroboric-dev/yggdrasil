@@ -423,12 +423,44 @@ A `guardrail-change`: the founder approves this PR.
 
 **Named test:** `scripts/tests/ygg-models.test.sh`, `scripts/tests/qwen-opencode.test.sh`,
 `scripts/tests/qwen-claude.test.sh`, `scripts/tests/qwen-measure.test.sh`. **Layer:** `ouroboric`. **Size:** M.
-**Depends on:** LM-T11.
+**Depends on:** LM-T11, LM-T15. `start` runs `ygg-gpu.sh check` first (spec §3.10).
 
 - [ ] **Step 1:** write `ygg-models.test.sh` in the style of `qwen-local.test.sh` (fakes on `PATH`, a temp HOME).
 - [ ] **Step 2:** run; expect FAIL. **Step 3:** implement; port the header's style from `qwen-local.sh`.
 - [ ] **Step 4:** run all four tests and `shellcheck scripts/ygg-models.sh scripts/qwen-lib.sh`; expect PASS.
 - [ ] **Step 5:** commit.
+
+---
+
+### Task LM-T15: `ygg-gpu.sh`, so the GPU setup survives a driver update or a new machine
+
+Added 2026-10-25 at the founder's request, after the spike (item 1) found that the toolkit and the CDI spec must
+be in the Podman machine's distro, which has no systemd.
+
+**Files (in `ouroboric`):** Create `scripts/ygg-gpu.sh`, `scripts/tests/ygg-gpu.test.sh`. Modify `AGENTS.md` (the
+scripts table).
+
+**Interfaces:** `scripts/ygg-gpu.sh setup|check [--machine NAME]` (spec §3.10). NAME defaults to the machine
+`podman machine inspect` names as the default one. `check` exits 0 and prints `gpu: <name> <memory>`, exits 3 with
+`missing: toolkit|spec|stale spec` and the command that fixes it, or exits 2 when the engine does not answer.
+`setup` is idempotent and pins the toolkit to `1.20.1` and the CUDA image to
+`docker.io/nvidia/cuda@sha256:59436e8ac61921052d8f420be8b8cb8b117f1d7cc643397a289e37aaa0b83ea1`.
+
+**Acceptance criteria:**
+
+- [ ] With fake `wsl.exe`, `podman` and `ygg-engine.sh` on `PATH`: `check` reports each of the three missing
+      states, and `setup` installs only what is missing (no `dnf` call when the toolkit is there; no `cdi generate`
+      when the spec is current).
+- [ ] A spec that names a driver store folder that no longer exists is stale, and `setup` generates it again.
+- [ ] `setup` on an engine that is not a Podman machine on WSL2 refuses with a message, and changes nothing.
+- [ ] The script never runs `sudo`, and never starts, stops or re-creates the machine.
+- [ ] **Founder:** on the real machine, `scripts/ygg-gpu.sh check` prints the RTX 4090.
+
+**Named test:** `scripts/tests/ygg-gpu.test.sh`. **Layer:** `ouroboric`. **Size:** S. **Depends on:** none.
+
+- [ ] **Step 1:** write the test with the fakes, in the style of `scripts/tests/qwen-local.test.sh`.
+- [ ] **Step 2:** run; expect FAIL. **Step 3:** implement; the header follows the other scripts' style.
+- [ ] **Step 4:** run the test and `shellcheck scripts/ygg-gpu.sh`; expect PASS. **Step 5:** commit.
 
 ---
 

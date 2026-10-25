@@ -199,6 +199,15 @@ When `spec.Models` is set:
   server FILE` and `ygg models preset FILE`, and never parses YAML itself.
 - `qwen-lib.sh` finds the server through `ygg-models.sh status`, so `qwen-opencode.sh`, `qwen-claude.sh`,
   `qwen-compare.sh` and `qwen-measure.sh` use the shared server. `qwen-local.sh` is removed.
+- `scripts/ygg-gpu.sh setup|check` keeps the GPU usable by the engine, so no step is done by hand twice. `setup`
+  installs the NVIDIA container toolkit at a pinned version where the engine runs (on a Podman machine under
+  WSL2, inside the machine's distro, as root through `wsl.exe -d <machine> -u root`), generates the CDI spec, and
+  runs `check`. It changes nothing that is already in place. `check` runs a CUDA container pinned by digest with
+  `--device nvidia.com/gpu=all` through `ygg-engine.sh` and prints the GPU's name, or says which step is missing:
+  no toolkit, no spec, or a stale spec (a driver store folder the spec names is gone after a driver update). The
+  machine has no systemd, so the toolkit's own refresh units never run; `ygg-models.sh start` runs `check` first,
+  generates the spec again when it is stale, and names `setup` for anything else. A container image cannot carry
+  this: the engine resolves the CDI device before the container exists.
 - `ygg-proof-run.sh` and `ygg-smoke-real.sh` accept `opencode:local/<name>` with `--models FILE`. They ask for
   `OPENROUTER_API_KEY` and a `usd` line only when a role is on OpenRouter.
 
