@@ -27,7 +27,8 @@ LM-T02, LM-T05 ─► LM-T08 odin: agents, billing and metrics
 LM-T03 ─────────► LM-T09 odin: the model server client
 LM-T06, LM-T08, LM-T09 ─► LM-T10 odin: the run's checks and the sandboxes' model network
 LM-T07, LM-T09, LM-T10 ─► LM-T11 odin: ygg models and ygg doctor
-LM-T11 ─► LM-T12 ouroboric: ygg-models.sh and the qwen scripts
+LM-T15 ouroboric: ygg-gpu.sh setup|check                      (no dependency)
+LM-T11, LM-T15 ─► LM-T12 ouroboric: ygg-models.sh and the qwen scripts
 LM-T12 ─► LM-T13 ouroboric: local roles in the proof and smoke scripts
 LM-T13 ─► LM-T14 founder: the proof run, pointers and the living spec
 ```
