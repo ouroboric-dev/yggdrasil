@@ -15,8 +15,14 @@ style: spec
   else.
 - §3.9: `ygg models sources FILE` prints `<model> <repo> <revision> <path>` for each file of each `download`, with
   `main` when no revision is set.
-- §3.10: `ygg-models.sh setup` and `ygg-models.sh clean`, as the proposal describes. `clean` MUST NOT delete a
-  file that the list's `download` does not name.
+- §3.10: `ygg-models.sh setup` and `ygg-models.sh clean`, as the proposal describes.
+  - `clean --weights` MUST NOT delete a file that the list's `download` does not name, except
+    `<weights>/.cache/huggingface` (the download's state). It MUST refuse, deleting nothing, when
+    `<weights>/.cache` or `<weights>/.cache/huggingface` is a symlink.
+  - `clean --state` removes `preset.ini`, `allowed` and their temporary files. It MUST NOT remove the state folder.
+  - `clean` MUST refuse, changing nothing, while a container other than the server is on the model network.
+  - `setup` MUST NOT stop the server while a container other than the server is on the model network. When a
+    step would stop it (making the chat template), `setup` refuses and changes nothing.
 
 ## Modified
 
