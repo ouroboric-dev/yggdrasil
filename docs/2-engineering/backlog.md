@@ -1522,6 +1522,61 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   script's file name. Test: a failing web check's finding carries its verdict, under the check's name.
 - **Status:** proved (proof run 1, T020, 2026-10-26).
 
+### B-191: a landing stays on the leaf's main when its pointer move is refused
+
+- **Where:** `voluspa/software/graph.yaml` (each task's `land`, then `move` with `back_to: implement`);
+  `midgard-react/devcontainer/checks/web-tdd.sh` (`base="$(git merge-base HEAD refs/heads/main)"`).
+- **Problem:** in proof run 1 T020 landed three times (its work merged into the web leaf's `main`) and each pointer
+  move was then refused. The refusal sends the task back to implement, but its landings stay on `main`. The TDD
+  check then takes `main`, which already holds the task's own earlier attempts, as "the commit the task started
+  from", so every test of that work "tests nothing new", and the next landing is refused for it.
+- **Fix:** a refused move undoes the task's landing on the leaf's `main` (back to the commit before the task), or the
+  TDD base is the commit the task started from (the leaf's pointer before the task), kept in the run's state. Test:
+  a task whose move is refused once and whose tests are unchanged passes the TDD check on its next landing.
+- **Status:** proved (proof run 1, T020, 2026-10-26).
+
+### B-192: the reviewers' grep and glob were broken for a whole run
+
+- **Where:** the reviewer's sandbox (opencode in gleipnir's work image): its grep and glob tools call ripgrep.
+- **Problem:** in proof run 1 (`20261025-113131-8e9cb7`) "ripgrep execution failed" appears 952 times in 185
+  transcripts, from T001 to the retrospective, under OpenRouter's reviewer and the local one alike. Reviewers fell
+  back to listing and reading whole folders. Reviews took more turns, and from T013 the local reviewer often ran out
+  of its 20 turns before submitting (`output_refused` after exactly 20 turns, an escalation at T017). The run's
+  retrospective found it; the operator's journal had blamed the turn cap and the reasoning effort.
+- **Fix:** a working `rg` in the reviewer's sandbox, and a smoke check at sandbox start that fails loudly when a
+  tool the agent is given cannot run. Test: a reviewer session's grep finds a known string in the leaf.
+- **Status:** proved (proof run 1's retrospective and transcripts, 2026-10-26).
+
+### B-193: the web template strips `/api`, but nothing tells the API leaf
+
+- **Where:** `midgard-react/templates/web/serve.mjs:143-148` (forwards `/api/...` to `API_URL` without the `/api`
+  prefix); `helheim-go/templates/api/internal/httpapi/server.go:24-25` (the template serves `/healthz` at the root);
+  `helheim-go/prompts/implementer.md` (says nothing about the prefix).
+- **Problem:** in proof run 1 the plan's contract put every API path under `/api` (the brief: "every API call goes
+  to /api/..."), and the API leaf registered its routes with the prefix (`POST /api/auth/signup`). The web server
+  strips it, so through port 3000 every API call reached the API as `/auth/...` and answered 404; only `/api/healthz`
+  worked, as `/healthz`. Sign-up, and so the whole product, failed in the browser, though every leaf's checks passed:
+  the web leaf's tests mock the API, and nothing ran the two leaves together. Very likely why the run's grade was 0
+  (0 of 29); proved by hand on the graded build: `/api/api/auth/security-questions` answers, and a one-line change
+  to `serve.mjs` that keeps the prefix makes sign-up work.
+- **Fix:** one rule for the prefix, stated where both realms read it: either the web server forwards the path
+  unchanged, or the Go realm's prompt and template say routes are served without `/api` and the plan's contract
+  paths are written that way. Test: the runtime smoke (`ygg-smoke-runtime.sh`) makes a request to a template route
+  under `/api` through port 3000.
+- **Status:** proved (proof run 1's product, by hand, 2026-10-26).
+
+### B-194: no gate runs the product as a whole before the grade
+
+- **Where:** `voluspa/software/graph.yaml` (each task's checks run per leaf; the next whole-product step is `grade`).
+- **Problem:** in proof run 1 every task landed and moved with every check passing, and the release scored 0: the
+  leaves did not work together (B-193). Nothing between the per-leaf checks and the hidden grade brings both leaves
+  up the way `start.sh` does. The run's retrospective proposes the gate.
+- **Fix:** a product-level check, as a decision with the founder: bring the product up from `start.sh` (as the
+  runtime smoke does) and run the spec's acceptance scenarios against it, after each pointer move or at least before
+  the release; record why the grade node fails when it does. Test: a product whose web server and API disagree on a
+  path fails the gate before the grade.
+- **Status:** proved (proof run 1, 2026-10-26).
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
