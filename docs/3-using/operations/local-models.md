@@ -82,7 +82,7 @@ Build `ygg`, so that the `ygg` on your `PATH` has `ygg models`:
 2. Update each module:
 
    ```zsh
-   for m in $(sed -n 's#^\t\./##p' ../yggdrasil/go.work); do git -C ../yggdrasil/$m pull --ff-only; done
+   for m in $(sed -n 's#^\t\./##p' ../yggdrasil/go.work); do git -C ../yggdrasil/$m fetch -q origin main && git -C ../yggdrasil/$m checkout -q origin/main; done
    ```
 
 3. Build `ygg`:
@@ -175,8 +175,8 @@ What the setup made:
 
 `--price`, `--weights` and `--state` count for a new list only. When the list exists, `setup` uses it as it is.
 
-When `setup` must make the chat template, it restarts the server. Then it refuses before any step while another
-container is on the model network. If a run joins the network during the setup, the setup stops before the restart
+When `setup` must make the chat template, it restarts the server. In that case only, it first checks the model
+network: while another container is on it, `setup` refuses before any step. If a run joins the network during the setup, the setup stops before the restart
 and says that the server runs without the template.
 
 ## Start, stop and status
