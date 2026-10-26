@@ -1522,6 +1522,19 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   script's file name. Test: a failing web check's finding carries its verdict, under the check's name.
 - **Status:** proved (proof run 1, T020, 2026-10-26).
 
+### B-191: a landing stays on the leaf's main when its pointer move is refused
+
+- **Where:** `voluspa/software/graph.yaml` (each task's `land`, then `move` with `back_to: implement`);
+  `midgard-react/devcontainer/checks/web-tdd.sh` (`base="$(git merge-base HEAD refs/heads/main)"`).
+- **Problem:** in proof run 1 T020 landed three times (its work merged into the web leaf's `main`) and each pointer
+  move was then refused. The refusal sends the task back to implement, but its landings stay on `main`. The TDD
+  check then takes `main`, which already holds the task's own earlier attempts, as "the commit the task started
+  from", so every test of that work "tests nothing new", and the next landing is refused for it.
+- **Fix:** a refused move undoes the task's landing on the leaf's `main` (back to the commit before the task), or the
+  TDD base is the commit the task started from (the leaf's pointer before the task), kept in the run's state. Test:
+  a task whose move is refused once and whose tests are unchanged passes the TDD check on its next landing.
+- **Status:** proved (proof run 1, T020, 2026-10-26).
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
