@@ -21,8 +21,10 @@ style: spec
     `<weights>/.cache` or `<weights>/.cache/huggingface` is a symlink.
   - `clean --state` removes `preset.ini`, `allowed` and their temporary files. It MUST NOT remove the state folder.
   - `clean` MUST refuse, changing nothing, while a container other than the server is on the model network.
-  - `setup` MUST NOT stop the server while a container other than the server is on the model network. When a
-    step would stop it (making the chat template), `setup` refuses and changes nothing.
+  - `setup` MUST NOT stop the server while a container other than the server is on the model network. When it
+    must make the chat template (which restarts the server), it MUST refuse before any step while such a
+    container is there. If one joins during the setup, `setup` MUST stop before the restart and say that the
+    server runs without the template.
 
 ## Modified
 

@@ -32,8 +32,10 @@ block of commands. The founder chose: setup downloads the weights, and the guide
   `ygg-gpu.sh setup` when needed); the model list from the example when it is missing, with `--weights`,
   `--state` and `--price IN:OUT[:CACHE_READ]`; the download of the missing files (`hf download`, through `uvx`
   when `hf` is not installed); the image when it is missing; start; load; and the chat template when the list
-  names one that is missing. Making the template stops and starts the server, so `setup` refuses, and changes
-  nothing, while another container is on the model network: it never stops the server under a run.
+  names one that is missing. Making the template stops and starts the server, so `setup` never stops it under a
+  run: when it must make the template, it refuses before any step while another container is on the model
+  network; if a run joins during the setup, it stops before the restart and says that the server runs without
+  the template.
 - `scripts/ygg-models.sh clean` stops and removes the container, then the network and the image. It decides
   first: while another container is on the model network, it refuses and changes nothing. `--state` also removes
   the state files (`preset.ini`, `allowed` and their temporary files), not the folder. `--weights` also deletes the
