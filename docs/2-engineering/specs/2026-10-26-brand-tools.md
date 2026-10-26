@@ -1,6 +1,6 @@
 ---
 title: Brand tools spec
-status: draft
+status: accepted
 date: 2026-10-26
 related: [../../1-product/design/2026-10-17-asgard-v0-design.md, 2026-10-11-yggdrasil-v0-spec.md]
 style: spec
@@ -21,16 +21,18 @@ There are four tools:
 - **The font licence check** reads the licence file and the metadata of each font the company ships. It passes a
   font only on evidence of a known open licence and flags everything else for a person.
 - **Logo processing** traces the founder's PNG into SVG with **VTracer 0.6.15 (MIT)**, recolours it with the palette
-  tokens, derives the missing mode, exports the favicon and app icons, and checks that the trace is faithful. A trace
-  that is not faithful is recorded as a gap and shown on the board.
-- **The brand board** is a generated page in the company's docs. It shows the palettes with their contrast, the
-  fonts, her PNG beside the SVGs, the icons, sample images and every open gap.
+  tokens, derives the missing mode, exports the favicon and app icons (from an optional square mark when she brings
+  one), and checks that the trace is faithful. A trace that is not faithful is recorded as a gap and shown on the
+  board.
+- **The brand board** is a generated page in the company's docs, in plain Markdown with generated images, so it reads
+  the same in GitHub's file view as in the rendered pages. It shows the palettes with their contrast, the fonts, her
+  PNG beside the SVGs, the icons, sample images and every open gap.
 
 The two checks are company checks: the company's CI runs them on every pull request. Logo processing and the board
 are Asgard scripts that the agent runs. Every tool works offline after a one-time setup, and nothing it writes into
 the company's repository names Ouroboric or any of its parts.
 
-Section 10 lists the open questions for the founder.
+The founder answered the open questions on 2026-10-27; §9 records the answers and §12 the deviations they make.
 
 The tools build on what Asgard already holds:
 
@@ -58,10 +60,12 @@ a company repository (from templates/company, MIT)
     ├── tokens.json             the source: palettes and fonts (written by the agent from her choices)
     ├── tokens.css, fonts.css   generated from tokens.json and the font files
     ├── fonts/<family>/         font files as published, with the licence file they came with
-    ├── board.md                generated: the brand board
+    ../imagery/                 up to six sample images she chooses, and imagery.md's record for each (§4.4)
+    ├── board.md                generated: the brand board, plain Markdown
+    ├── board/                  generated: the board's images (palette panels, logo on each background, type specimens)
     └── logo/
-        ├── source/             her PNG: logo.png (for light backgrounds), logo-dark.png (for dark), or both
-        ├── logo.svg, logo-dark.svg, favicon.svg, favicon.ico, icon-192.png, icon-512.png
+        ├── source/             her PNGs, committed: logo.png (light backgrounds), logo-dark.png (dark), mark.png (optional square mark)
+        ├── logo.svg, logo-dark.svg, mark.svg, mark-dark.svg (with a mark), favicon.svg, favicon.ico, icon-192.png, icon-512.png
         ├── trace-light.png, trace-dark.png   generated: where the trace differs from her PNG
         └── trace.json          generated: the faithfulness result, the colour mapping and the gaps
 ```
@@ -122,9 +126,15 @@ brand.sh board [--check] DIR write DIR/docs/7-branding/identity/board.md; --chec
 1. The agent writes her palette and font choices into `tokens.json`. It copies each font's folder, unchanged, from
    its publisher into `fonts/<family>/`.
 2. The agent runs `brand.py tokens --write`, then `brand.py check`, and resolves each finding with her.
-3. The agent saves her PNG in `logo/source/` and runs `brand.sh logo`.
-4. The agent runs `brand.sh board`, then `run.sh`, and opens the pull request for the `brand` stop.
-5. She reviews the rendered board and approves by merging (design §6.2).
+3. The agent saves her PNGs in `logo/source/` and runs `brand.sh logo`. When `trace.json` proposes brand tokens
+   (§5.3), the agent adds the ones she accepts to `tokens.json` and runs `brand.sh logo` again.
+4. The agent copies the sample images she chooses into `docs/7-branding/imagery/` and records each one in
+   `imagery.md` (§4.4).
+5. The agent runs `brand.sh board`, then `run.sh`, and opens the pull request for the `brand` stop.
+6. The agent asks her to merge only when `run.sh` passes. While it fails, the agent resolves the findings with her
+   first.
+7. She opens `board.md` from the pull request in GitHub's file view, which the agent links, and approves by merging
+   (design §6.2).
 
 Each tool writes only its generated files and never edits a document a person wrote. Running a step again gives the
 same files from the same inputs.
@@ -135,6 +145,9 @@ same files from the same inputs.
 
 The colour keys stay as the template has them: `bg`, `surface`, `border`, `text`, `muted`, `accent`, `accent-text`,
 `on-accent`, `ok`, `warn`, `crit`, in `light` and in `dark`. Each value is `#RRGGBB` (opaque) or `null` before step 6.
+
+A palette MAY add brand tokens, `brand-1`, `brand-2` and so on, for logo colours that no other token holds (§5.3).
+A brand token MUST have a value in both `light` and `dark`. Brand tokens are for the logo only.
 
 Each font role gains the evidence the font check reads. `type.licence` is removed.
 
@@ -153,7 +166,8 @@ Each font role gains the evidence the font check reads. `type.licence` is remove
   supplies it).
 - `licence` is an SPDX id. `source` is where the folder came from, for the person who reads a flag.
 - `licence_review: {"by": "<name>", "date": "YYYY-MM-DD"}` is optional. It records that a person read a licence the
-  check flagged (§5.2).
+  check flagged (§5.2). The person is the founder, or someone she names. The tools record the name; they cannot
+  check who it is.
 
 ### 4.2 `trace.json` (generated)
 
@@ -166,6 +180,7 @@ Each font role gains the evidence the font check reads. `type.licence` is remove
               "colours": [{"traced": "#1B1B1B", "token": "text", "value": "#1A1A1A", "delta": 0.003}]},
     "dark": {"from": "derived", "colours": [{"token": "text", "value": "#EDEFF3"}]}
   },
+  "proposed_brand_tokens": [{"traced": "#C2185B", "light": "#C2185B", "dark": "#F06292"}],
   "gaps": [{"what": "a detail of the logo is lost", "where": "trace-light.png"}],
   "faithful": false
 }
@@ -180,6 +195,22 @@ The readiness check script reads `faithful` and `gaps` as evidence for RB-21. Th
 - `fonts.css` holds one `@font-face` for each shipped font file, with `font-display: swap`. Each `url()` is relative to
   `fonts.css`, so the browser resolves it on any page and on any host.
 - Each file opens with a comment that says it is generated from `tokens.json` and must not be edited.
+
+### 4.4 Sample images in `imagery.md`
+
+`imagery.md` gains a table, written by the agent with her:
+
+```markdown
+## Sample images
+
+| File | Shows a person | Consent |
+| --- | --- | --- |
+| wedding-rings.jpg | no | |
+| portrait-ana.jpg | yes | confirmed by the founder, 2026-11-02 |
+```
+
+`File` names an image in `docs/7-branding/imagery/`. `Shows a person` is `yes` or `no`, as she says. `Consent` is
+filled when a person appears. The tools read the table; they never judge whether a person appears in an image.
 
 ## 5. Features and acceptance criteria
 
@@ -199,6 +230,9 @@ is 0.04045). It compares the ratio with the minimum unrounded, as the
 | `accent` | `bg`, `surface` | shape | 3:1 | [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast) |
 | `border` | `bg`, `surface` | decorative | none: reported only | — |
 
+Brand tokens are reported against `bg` in each mode, for information only: text that is part of a logo has no
+contrast requirement (SC 1.4.3, "Logotypes"). §5.3 records a gap when the logo itself would be hard to see.
+
 Status colours carry messages, such as an error, so they are checked as text. Text pairs also report whether they
 meet the enhanced level, 7:1 ([SC 1.4.6](https://www.w3.org/TR/WCAG22/#contrast-enhanced)), for information.
 
@@ -212,6 +246,7 @@ meet the enhanced level, 7:1 ([SC 1.4.6](https://www.w3.org/TR/WCAG22/#contrast-
 8. When all colour values are `null`, the check MUST pass and say that the palette is not set.
 9. When only some colour values are `null`, the check MUST fail and name each missing token.
 10. `#767676` text on a `#FFFFFF` background MUST pass (4.54:1). `#777777` MUST fail (4.47:1).
+11. A brand token MUST NOT fail the check by its contrast. A brand token with a value in one mode only MUST fail it.
 
 ### 5.2 The font licence check
 
@@ -240,20 +275,25 @@ A font with `files: null` is reported as not shipped and needs no licence eviden
 1. The check MUST give each font with a `family` exactly one result from the table.
 2. Missing evidence MUST fail the check.
 3. "Needs a person" MUST fail the check while the font has no `licence_review`.
-4. A font with a `licence_review` MUST be reported as "read by a person", with the name and the date.
-5. The check MUST NOT report a reviewed font as a known open licence.
-6. Every report MUST end with this sentence: "This check compares licence files and font data. It is not legal advice."
-7. The check MUST NOT use the words "legal", "allowed" or "permitted" about a font.
-8. The tools MUST NOT change a font file.
+4. A font with a `licence_review` MUST be reported as "read by `<name>` on `<date>`: this is their reading".
+5. When `fsType` restricts use or `name` ID 13 or 14 names a limit, the report MUST suggest that a qualified
+   person reads the licence. A recorded review still clears the check.
+6. The check MUST NOT report a reviewed font as a known open licence.
+7. Every report MUST end with this sentence: "This check compares licence files and font data. It is not legal advice."
+8. The check MUST NOT use the words "legal", "allowed" or "permitted" about a font.
+9. The tools MUST NOT change a font file.
 
 ### 5.3 Logo processing
 
-**Inputs.** She brings one PNG or one per mode (design §8). `logo/source/logo.png` is for light backgrounds;
-`logo/source/logo-dark.png` is for dark backgrounds. `logo` refuses an input, with a sentence the agent can relay,
+**Inputs.** She brings one PNG or one per mode (design §8), and MAY add a square mark. `logo/source/logo.png` is for
+light backgrounds; `logo/source/logo-dark.png` is for dark backgrounds; `logo/source/mark.png` is an optional square
+mark for the favicon and the app icons, used in both modes. Her PNGs are committed: they are inputs she made, not
+generated rasters, and re-runs and the faithfulness check need them. `logo` refuses an input, with a sentence the agent can relay,
 when it:
 
 - is not a PNG (checked by its first bytes, not its name);
 - is larger than 8192 pixels on a side, or smaller than 512 pixels on its short side;
+- is `mark.png` and is not roughly square: its width divided by its height is under 0.8 or over 1.25;
 - has no transparent background: fewer than 20% of the pixels on its outer rows are transparent. VTracer takes
   transparency out of the trace at the same 20% rule
   ([`converter.rs`](https://github.com/visioncortex/vtracer/blob/0.6.15/cmdapp/src/converter.rs), `KEYING_THRESHOLD`).
@@ -267,7 +307,8 @@ fixed settings: `colormode="color"`, `hierarchical="stacked"`, `mode="spline"`, 
 `splice_threshold=45`, `path_precision=3`. The stacked mode layers the colour regions, so no gap opens between two
 colours.
 
-**Faithfulness.** resvg renders the traced SVG, before recolouring, at the PNG's size. Then:
+**Faithfulness.** For each given PNG, the mark included, resvg renders the traced SVG, before recolouring, at the
+PNG's size. Then:
 
 - **shape:** the pixels whose opaque or transparent state differs, divided by the PNG's opaque pixels, MUST be 1% or
   less;
@@ -285,60 +326,75 @@ differing pixels in `crit` over a faded copy of her PNG, and the board shows bot
 - With one PNG, the other mode uses the dark (or light) value of the same tokens. A white shape inside a dark mark
   maps to `bg`, so it follows the background in the other mode.
 - With two PNGs, each is traced and mapped in its own mode. Nothing is derived.
-- A traced colour farther than 0.05 from every token is kept unchanged in both modes and recorded. When a kept colour
-  is under 3:1 against `bg` of a mode, that is a gap: "the logo may be hard to see on dark backgrounds".
+- A traced colour farther than 0.05 from every token, brand tokens included, becomes a proposed brand token in
+  `trace.json`: its light value is the traced colour, and its dark value keeps the hue and chroma and takes the
+  nearest OKLab lightness that reaches 3:1 against the dark `bg` (the other way round for a dark PNG). The agent adds
+  each proposal she accepts to `tokens.json`, and the next run maps the colour to it.
+- Until then, the colour is kept unchanged in both modes and recorded. When a kept colour is under 3:1 against `bg`
+  of a mode, that is a gap: "the logo may be hard to see on dark backgrounds".
 
 **Exports.**
 
 | File | Content |
 | --- | --- |
 | `logo.svg`, `logo-dark.svg` | the recoloured traces for light and dark backgrounds |
-| `favicon.svg` | the logo fitted into a square, light colours, with a `prefers-color-scheme: dark` style that switches to the dark colours |
+| `mark.svg`, `mark-dark.svg` | with `mark.png`: the recoloured mark for light and dark backgrounds |
+| `favicon.svg` | the mark, or else the logo, fitted into a square, light colours, with a `prefers-color-scheme: dark` style that switches to the dark colours |
 | `favicon.ico` | 16, 32 and 48 pixels, each rendered by resvg at its own size, transparent background |
 | `icon-192.png`, `icon-512.png` | the light logo on the light `bg`, opaque, inside the maskable safe zone: a centred circle with a radius of 40% of the icon ([Web App Manifest §2.3](https://www.w3.org/TR/appmanifest/#icon-masks)) |
 
-A logo wider than 1.5 times its height gives a hard-to-read favicon: that is a gap.
+The favicon and the icons come from the mark when she brings one, and from the logo otherwise. Without a mark, a logo
+wider than 1.5 times its height gives a hard-to-read favicon: that is a gap.
 
 1. `logo` MUST refuse each input that §5.3 lists, with exit code 2 and a plain sentence.
 2. `logo` MUST trace with VTracer 0.6.15 and the fixed settings in §5.3.
-3. `logo` MUST compute the shape, detail and colour results for each given PNG.
+3. `logo` MUST compute the shape, detail and colour results for each given PNG, the mark included.
 4. A failed limit MUST be a gap in `trace.json` and on the board.
 5. `logo` MUST NOT change or remove a gap to make the trace look faithful.
 6. With one PNG, `logo` MUST derive the other mode from the same tokens.
 7. With two PNGs, `logo` MUST NOT derive a mode.
-8. Each SVG MUST hold only the elements `svg` and `path`. `favicon.svg` MAY also hold one `style` element.
-9. Each SVG MUST hold a `viewBox` and no comment, script, link or external reference.
-10. `favicon.ico` MUST hold the sizes 16, 32 and 48.
-11. Each PNG icon MUST be opaque, and its logo MUST be inside the safe-zone circle.
-12. Two runs on the same inputs MUST write byte-identical files.
-13. `logo` MUST NOT write outside `docs/7-branding/identity/logo/`.
+8. With `mark.png`, the favicons and the icons MUST come from the mark, and the wide-logo gap MUST NOT apply.
+9. A traced colour with no token within 0.05 MUST be proposed as a brand token in `trace.json`.
+10. `logo` MUST NOT write `tokens.json`.
+11. Each SVG MUST hold only the elements `svg` and `path`. `favicon.svg` MAY also hold one `style` element.
+12. Each SVG MUST hold a `viewBox` and no comment, script, link or external reference.
+13. `favicon.ico` MUST hold the sizes 16, 32 and 48.
+14. Each PNG icon MUST be opaque, and its logo MUST be inside the safe-zone circle.
+15. Two runs on the same inputs MUST write byte-identical files.
+16. `logo` MUST NOT write outside `docs/7-branding/identity/logo/`.
 
 VTracer writes a comment that names itself (`<!-- Generator: visioncortex VTracer ... -->`,
 [`svg.rs`](https://github.com/visioncortex/vtracer/blob/0.6.15/cmdapp/src/svg.rs)) and sets no `viewBox`. Criteria 8
-and 9 remove and add these.
+and 12 remove and add these.
 
 ### 5.4 The brand board
 
 `brand.sh board` writes `docs/7-branding/identity/board.md`, a page of the company's docs. It shows, in order:
 
-1. **Palette:** a light panel on light `bg` and a dark panel on dark `bg`, side by side in either site theme.
-   Each token is a swatch with its name and value. Under each panel, the contrast table: each pair, its ratio, its
-   minimum and "passes" or "fails" in words, never by colour alone.
-2. **Type:** each role in its own font and weights, from `fonts.css`, with its licence result in words.
-3. **Logo:** her PNG, `logo.svg` on light `bg` and `logo-dark.svg` on dark `bg`, side by side. Then the colour
-   mapping, the favicon at 16, 32 and 48 pixels, and the icons inside a circle mask. Then "Faithful", or each gap with
-   its numbers and `trace-<mode>.png`.
-4. **Sample images:** the images in `docs/7-branding/imagery/`, if any, beside a strip of the palette (see §10).
-5. **Open items:** every gap and every font that needs a person, in plain words.
+1. **Palette:** `board/palette-light.svg` and `board/palette-dark.svg`, each a panel on its mode's `bg` with one
+   swatch per token, its name and its value. Under each panel, the contrast table: each pair, its ratio, its minimum
+   and "passes" or "fails" in words, never by colour alone.
+2. **Type:** for each role, `board/type-<role>.png`, a specimen that resvg renders from the shipped font files in
+   each weight, and the licence result in words. A role with no shipped files shows its family and fallback in words.
+3. **Logo:** her PNG, then `board/logo-on-light.svg` and `board/logo-on-dark.svg` (each SVG on its mode's `bg`), and
+   the mark the same way when she brought one. Then the colour mapping and any proposed brand token, the favicon at
+   16, 32 and 48 pixels, and the icons inside a circle mask. Then "Faithful", or each gap with its numbers and
+   `trace-<mode>.png`.
+4. **Sample images:** up to six images from `docs/7-branding/imagery/`, each with its record from `imagery.md`, and
+   `board/palette-strip.svg` under them.
+5. **Open items:** every gap, every font that needs a person, every proposed brand token not yet in `tokens.json`,
+   and every sample image with no record or with a person and no consent, in plain words.
 
-**Rendering.** The board is Markdown with HTML blocks (`md_in_html` and `attr_list`, both on in the template's
-`mkdocs.yml`). Images use Markdown image syntax, so the strict build checks each link. The page uses relative links
-only, no script and no external URL. So it renders the same through `company-site.sh` on 127.0.0.1 today, and on any
-static host later, under any path. Hosting a private preview is not in this spec.
+**Rendering.** The founder reviews the board in GitHub's own file view, from the pull request, until a private
+preview exists. So the board is plain Markdown: headings, paragraphs, lists, tables and images in Markdown image
+syntax, with no HTML. Everything that needs colour or a font is a generated image in `board/`, because GitHub's file
+view shows images but no styles or web fonts. The strict build checks each image link. The page uses relative links
+only, no script and no external URL, so it reads the same in GitHub's file view, through `company-site.sh` on
+127.0.0.1, and on any static host later. Hosting a private preview is not in this spec.
 
 **No tool names.** The board's fixed text is plain English with no tool names. It opens with a comment that says it is
-generated and must not be edited, a `markdownlint-disable MD033` comment (its swatches need inline HTML), and a
-SHA-256 of its inputs: `tokens.json`, `fonts.css`, the font files, the files in `logo/`, and the sample images.
+generated and must not be edited, and a SHA-256 of its inputs: `tokens.json`, `fonts.css`, the font files, the files
+in `logo/`, the sample images and `imagery.md`.
 
 1. `board` MUST show the five parts in the order of §5.4.
 2. The board MUST show the light and the dark palette at the same time.
@@ -348,6 +404,10 @@ SHA-256 of its inputs: `tokens.json`, `fonts.css`, the font files, the files in 
 6. `names-check.sh` MUST pass on a company after `logo` and `board` run.
 7. `board --check` and `brand.py board-fresh` MUST fail when an input changed after `board` ran.
 8. `brand.py board-fresh` MUST pass on the template's placeholder board, which has no input hash.
+9. `board.md` MUST hold no HTML element.
+10. Each image in `board/` MUST be an SVG of the elements of §5.3 plus `rect`, `g` and `text`, or a PNG.
+11. `board` MUST refuse, with exit code 2 and a plain sentence, more than six sample images or one longer than 1600
+    pixels on its long side.
 
 ### 5.5 Where they run
 
@@ -362,14 +422,17 @@ SHA-256 of its inputs: `tokens.json`, `fonts.css`, the font files, the files in 
 1. `run.sh` MUST run `brand.py check` as one step.
 2. A fresh scaffold MUST pass `run.sh`.
 3. `brand.sh logo` and `brand.sh board` MUST NOT open a network connection.
+4. A file the tools write under `.ouroboric/` MUST NOT name an internal part of the factory (Asgard, Yggdrasil, a
+   component, a realm or a script by its path), except in a setting that is for that part.
 
 ## 6. Template changes
 
 - `tokens.json`: `files`, `licence` and `source` per font; `type.licence` removed (§4.1).
 - `tokens.css`, `fonts.css`: placeholder comments, replaced by `brand.py tokens --write`.
+- `imagery.md`: the sample images table (§4.4), empty.
 - `identity/board.md`: a placeholder page ("The brand board appears here once the palette, the fonts and the logo
   are in."), linked from `identity/README.md`.
-- `logo/README.md`: the source files and the generated files of §2.
+- `logo/README.md`: the source files (her PNGs, committed, and the optional square mark) and the generated files of §2.
 - `.ouroboric/mkdocs.yml`: `extra_css: [7-branding/identity/fonts.css]`.
 - `.ouroboric/checks/brand.py`, the `run.sh` step, and the `checks.yml` install line.
 
@@ -396,8 +459,8 @@ Test first, in bash, like the existing `scripts/tests/*.test.sh`. Each test scaf
   case needs, and writes short licence files. No font file is committed.
 - `brand.test.sh` covers §5.3 and §5.4. It draws its PNG fixtures with Pillow: a two-colour mark that traces
   faithfully, a mark with a 3-pixel dot that `filter_speckle` drops (a gap), a wide wordmark, an opaque background,
-  and an image that is too small. It checks the files, `trace.json`, the strict build, `names-check.sh`, byte-identical
-  re-runs, and `board --check` after a token changes.
+  an image that is too small, a square mark, a mark that is not square, and a logo colour far from every token. It checks the files, `trace.json` and its proposed brand tokens, the strict build, `names-check.sh`,
+  that `board.md` holds no HTML, byte-identical re-runs, and `board --check` after a token changes.
 - Criterion 5.5.3 is checked in two ways: `brand.py`, `logo.py` and `board.py` import no network module (`socket`,
   `urllib`, `http`), and resvg does not fetch external resources
   ([resvg README](https://github.com/linebender/resvg/blob/main/README.md): no `a` or `script` elements).
@@ -435,29 +498,34 @@ decides at the `brand` stop.
 
 **Decided 2026-10-26:** The board is a page of the company's docs, so every host of the docs shows it.
 
+The founder answered the spec's open questions on 2026-10-27:
+
+**Decided 2026-10-27:** Her source PNGs are committed in `logo/source/`. They are inputs she made, not generated
+rasters, so the docs standard's rule on raw sources does not cover them.
+
+**Decided 2026-10-27:** Sample images: up to six she chooses, at most 1600 pixels on the long side, in
+`docs/7-branding/imagery/`. `imagery.md` records for each whether it shows a person and, if so, the consent. The tools
+ask and record; they never judge.
+
+**Decided 2026-10-27:** The tools accept an optional square mark, `mark.png`, for the favicon and the app icons.
+
+**Decided 2026-10-27:** A logo colour that no token holds becomes a proposed brand token, with a light and a dark
+value, which she accepts into the palette. The dark version of the logo can then be derived.
+
+**Decided 2026-10-27:** The founder, or a person she names, records the reading of a flagged font licence. The check
+suggests a qualified person when the licence restricts use.
+
+**Decided 2026-10-27:** Until a private preview exists, she reviews the board in GitHub's file view, so the board is
+plain Markdown with generated images.
+
+**Decided 2026-10-27:** The agent asks her to merge at the `brand` stop only when `run.sh` passes.
+
+**Decided 2026-10-27:** Files under `.ouroboric/` use generic wording. They name an internal part of the factory only
+in a setting that is for that part.
+
 ## 10. Open questions for the founder
 
-The operator answers these as the Ouroboric founder who approves this spec. Questions marked (company founder) need
-the answer of the founder whose company is set up, through her helper. Until an answer, the spec uses the default given.
-
-1. **Her PNG in the repository.** The docs standard keeps raw sources out of the repository and commits only final
-   vectors and exports. Re-runs, the board and the faithfulness check need her PNG. Default: commit it in
-   `logo/source/`.
-2. **Sample images (company founder).** The design puts sample images on the board; the template's `imagery.md` links images
-   and does not copy them. Default: up to six images she chooses, copied at 1600 pixels or less into
-   `docs/7-branding/imagery/`. A photo that shows a client needs that client's consent, which the tools flag for a
-   person and do not judge.
-3. **A square mark for the favicon.** A wordmark gives a favicon nobody can read at 16 pixels. The design takes one
-   PNG or one per mode. Default: the favicon comes from the logo, with a gap when the logo is wide. Alternative: accept
-   a third, optional PNG, a square mark.
-4. **Logo colours outside the palette.** The design recolours the logo with the palette tokens. Default: a logo colour
-   with no near token is kept unchanged and flagged. Alternative: add a `brand` token to both palettes for it.
-5. **Who may record a font review.** "Asgard is not a lawyer" makes the check flag non-open licences. Default: the
-   founder, or a person she names, records the reading. Is a font licence a legal item that needs a qualified person?
-6. **How the company founder sees the board.** She cannot open 127.0.0.1, and GitHub's Free plan serves no pages
-   for private repositories. Until a private preview exists, does she review the board on her helper's screen?
-7. **Red checks at the `brand` stop.** On the Free plan, a failed check does not block a merge.
-   Default: the agent does not ask her to merge while `run.sh` fails, and the board lists every open item.
+None. The founder answered seven on 2026-10-27 (§9).
 
 ## 11. Not in this spec
 
@@ -472,12 +540,22 @@ the answer of the founder whose company is set up, through her helper. Until an 
 
 ## 12. Deviations from the design doc
 
-None.
+The founder approved each on 2026-10-27.
+
+- **A square mark** (design §8 takes one PNG or one per mode): an optional third PNG for the favicon and the icons.
+- **Brand tokens** (design §8 recolours with the palette tokens): a logo colour that no token holds becomes a brand
+  token with a light and a dark value, so the palette grows to hold it.
+- **The board is plain Markdown** (design §6.2 says she reviews rendered pages): GitHub's file view is the rendered
+  page until a private preview exists.
 
 ## 13. Not verified
+
+- resvg's text rendering for the type specimens (`--use-font-file`), and which font formats it loads: TTF and OTF are
+  expected; a WOFF or WOFF2-only font may need its specimen in words.
+- That GitHub's file view shows the board's SVG and PNG images from a private repository as intended.
 
 - The resvg binaries' SHA-256 values: the plan's first task records them in `resvg.lock` when it downloads them.
 - resvg's output on the fixtures: this spec relies on its documentation; it was not run while writing.
 - VTracer was run once on a generated two-colour PNG while writing: the transparent background was left out, the
   output was byte-identical across two runs, and the paths kept the two colours. The faithfulness limits are not yet
-  measured. The 0.6.15 wheel writes "0.6.12" in its generator comment, which criterion 5.3.9 removes in any case.
+  measured. The 0.6.15 wheel writes "0.6.12" in its generator comment, which criterion 5.3.12 removes in any case.
