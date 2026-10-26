@@ -61,6 +61,7 @@ merged.
 
 - [ ] The guide covers first-time setup, start/stop/status, switching or adding a model, runs and the proof
       scripts, OpenCode and Claude Code, a driver update, cleanup and troubleshooting, in procedure style.
-- [ ] Every command in it was run once on the founder's machine, or is marked as not run.
+- [ ] Every command in it matches the scripts' usage text; the outputs it quotes are the founder's real ones. (Ruling:
+      no script was run while proof run 1 used the server.)
 
 **Named test:** markdownlint. **Layer:** `yggdrasil`. **Size:** M. **Depends on:** LS-T3.
