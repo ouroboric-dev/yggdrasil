@@ -1471,6 +1471,44 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   realm prompt changed after run start and before its loop expands fails the session.
 - **Status:** reasoned (the T31 review).
 
+### B-188: a refusal carries only the failing check's log path, and a run whose returns are used up fails
+
+- **Where:** `odin/internal/engine/returns.go` (`sendBack`: the refusal the target gets is the failure's first line,
+  `check accept failed: exit status 1 (output: <log path>)`, and `s.Returns[n.ID] >= n.Returns` fails the node);
+  `odin/internal/engine/gates.go` (`runAgainFrom`, which resets the returns, is reached only from a pending gate).
+- **Problem:** in proof run 1 (`20261025-113131-8e9cb7`) T020's pointer move failed its acceptance check three times
+  with the same error: the web leaf's copy of the API contract lacked an enum the API has. The check's log said
+  exactly what to do (copy `repos/api/openapi.yaml` to `repos/web/contracts/api.openapi.yaml`, run `npm run gen:api`,
+  fix what it breaks), but the implementer got only the log's path, which it cannot read, so attempts 5 and 6
+  changed tests only. After two returns the third refusal failed the run. No factory path was left: a resume re-runs
+  the move on the same work, a rejection needs a pending gate, and a leaf edited by hand is discarded by a resume.
+  The operator edited `run.json` back to the contract gate to reject it (the run's stops journal, entry 19). T001
+  hit the same blind spot (entry 5).
+- **Fix:** the refusal carries the failing check's message (the log's tail, bounded), not only its path; and a node
+  whose returns are used up stops at a gate that offers a rejection (which resets the returns) instead of failing
+  the run. Test: a move whose acceptance check fails sends its message to the implementer; a third failure stops at
+  a rejectable gate.
+- **Status:** proved (proof run 1, T020, 2026-10-26).
+
+### B-189: the web leaf keeps its own copy of the API contract, so the two drift
+
+- **Where:** `midgard-react` (the web template's `contracts/api.openapi.yaml` and `npm run gen:api`); the `accept`
+  check that compares that copy with `repos/api/openapi.yaml`.
+- **Problem:** the contract is defined in the API leaf, but the web leaf holds a copy that an agent writes. In proof
+  run 1 T020 wrote its own copy by hand instead of copying the API's, the copy lacked the API's
+  `security_question_id` enum, and the run failed at the move (B-188). The acceptance check detects the drift only
+  at the pointer move, after a task's whole loop has run. With more consumers, or contracts between other leaves,
+  each copy is a place to drift. And the consumer cannot even re-sync by hand: the check's advice says to copy
+  `repos/api/openapi.yaml`, but the web leaf's sandbox has no `repos/api`, so the implementer (rightly, as it may not
+  leave its leaf) answered blocked (stops journal, entry 20).
+- **Fix:** one source for each contract, which consumers depend on instead of copying: as a decision with the
+  founder. Candidates: the factory (not the agent) syncs the producer's contract into the consumer at the pointer it
+  depends on, and the generated client is never edited by hand; or the producer publishes a versioned contract
+  package the consumer pins; or a schema language with dependency management (protobuf with buf, TypeSpec). The
+  breaking-change check stays at the producer. Test: a web task cannot change its copy of the contract; the copy is
+  always the API's at the pinned pointer.
+- **Status:** proved (proof run 1, T020, 2026-10-26); the founder asked for it.
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
