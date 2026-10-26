@@ -1601,6 +1601,21 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   the design, accessibility) next to B-194's product gate.
 - **Status:** the founder's review of proof run 1's product, 2026-10-26.
 
+### B-196: the factory writes its own names and files into the products it builds
+
+- **Where:** Odin's init and pointer moves (`umbrella.yaml`, `REPOS.md`, `docs/leaves.yaml` and `.ygg/` at the top
+  of a product's repos), the realm templates and prompts (realm names in `AGENTS.md`, code comments, scripts), and
+  the graph's documents (the spec and plan name `ygg`, realms and checks).
+- **Problem:** the founder's rule (2026-10-26): for an end user, no Ouroboric name (Ouroboric, Yggdrasil, Asgard,
+  the components, the realms) may appear in the user's files; configuration the tools need lives in `.ouroboric/`
+  at the repository's root, and only there. Proof run 1's client gallery, pushed to its owner's organisation,
+  breaks it in 12 of 18 files of the umbrella, 36 of 94 of the API and 14 of 74 of the web app.
+- **Fix:** Odin writes its files under `.ouroboric/` (the instance tree, the leaves, the impact index, the release
+  folder); realm templates and prompts name no factory part in what they write; a leak check (the names outside
+  `.ouroboric/`) in every product's check ladder. Asgard's company template already follows the rule and tests it
+  (ouroboric-dev/asgard#12). Test: a run's product repos hold no factory name outside `.ouroboric/`.
+- **Status:** proved (proof run 1's product, counted 2026-10-26); the founder's rule.
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
