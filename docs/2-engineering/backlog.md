@@ -1586,7 +1586,7 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   something I would consider as a final version" (2/10 for the product). Nothing in the graph decides what the
   screens look like or how a user moves through them: each web task builds its page from the criteria and the
   template's plain components, and no reviewer or check looks at the result as a user would.
-- **Fix:** as a design decision with the founder (his idea: a part of the graph only UI realms need, starting at the
+- **Fix:** as a design decision with the founder (their idea: a part of the graph only UI realms need, starting at the
   spec phase). Candidates: a UI design stage after the spec (screens, flows, layout, a design system or tokens) whose
   output the web tasks and a UI reviewer read; a realm-level design system in `midgard-react`'s template; visual
   checks (screenshots against the design, accessibility) next to the end-to-end gate of B-194.
