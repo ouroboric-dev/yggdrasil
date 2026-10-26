@@ -76,7 +76,7 @@ server:
   network: ygg-models     # an internal podman network
   port: 8089              # the gate's port on that network
   host_port: 8088         # llama-server on 127.0.0.1 of the host
-  weights: /abs/dir       # mounted read-only at /models
+  weights: /abs/dir       # mounted read-only at /models; under a folder of factory.yaml's sandbox.mounts
   state: /abs/dir         # the preset and the allow file; mounted read-only at /etc/ygg-models
 models:
   qwen3.8-27b:
@@ -118,7 +118,14 @@ the server's log when the container exits while starting.
   --port 8080`, and `ygg-modelgate -listen :<port> -upstream http://127.0.0.1:8080 -allow
   /etc/ygg-models/allowed`. When either process exits, the container exits.
 - `scripts/ygg-models.sh` starts it with the GPU (`--device nvidia.com/gpu=all`), the two read-only mounts,
-  the network, and the published port on `127.0.0.1:<host_port>`.
+  the network, and the published port on `127.0.0.1:<host_port>`, with `--cap-drop=ALL` and
+  `--security-opt=no-new-privileges`.
+- The engine sees host files only through factory.yaml's `sandbox.mounts` (on the founder's setup, host
+  `~/ygg-it` is engine `/mnt/wsl/ygg-bind`). So `weights` and `state` MUST be under a folder of `sandbox.mounts`.
+  The container mounts their engine-side paths; Odin writes the allow file to the host path, which the engine
+  sees through the same mount. `ygg models server --config FACTORY FILE` prints the six lines of §3.10, then
+  `ENGINE_WEIGHTS=` and `ENGINE_STATE=`, mapped through `sandbox.mounts`, and refuses a folder that no mount
+  covers.
 - The engine resolves the CDI device, so the NVIDIA container toolkit and its spec (`nvidia-ctk cdi generate
   --output=/etc/cdi/nvidia.yaml`) are installed where the engine runs: on a Podman machine under WSL2, inside the
   machine's distro (`podman-machine-default`), not in the distro that runs `ygg`. A driver update or a new machine
@@ -196,10 +203,16 @@ When `spec.Models` is set:
 
 - `scripts/ygg-models.sh --models FILE start|stop|status|load NAME`. FILE defaults to
   `$XDG_CONFIG_HOME/ygg/models.yaml` (`~/.config/ygg/models.yaml`). It reads the list through `ygg models
-  server FILE` and `ygg models preset FILE`, and never parses YAML itself.
+  server --config DIR/factory.yaml FILE` and `ygg models preset FILE`, and never parses YAML itself. It reads the
+  `KEY=value` lines with `read`, never with `eval` or `source`; `ygg` refuses a weights or state path outside
+  `^/[A-Za-z0-9._/@+-]*$`. `--folder DIR` (default `~/ygg-it`) names the factory folder, as for `ygg-engine.sh`.
+- `ygg-models.sh template NAME` saves the loaded model's chat template, with the fix Claude Code needs (a system
+  message after the first is rendered, not refused), as `<weights>/chat-template.jinja`; the list's
+  `chat-template-file: /models/chat-template.jinja` then uses it.
 - `qwen-lib.sh` finds the server through `ygg-models.sh status`, so `qwen-opencode.sh`, `qwen-claude.sh`,
   `qwen-compare.sh` and `qwen-measure.sh` use the shared server. `qwen-local.sh` is removed.
-- `scripts/ygg-gpu.sh setup|check` keeps the GPU usable by the engine, so no step is done by hand twice. `setup`
+- `scripts/ygg-gpu.sh setup|check` keeps the GPU usable by the engine, so no step is done by hand twice. Both
+  check the engine first, so a stopped machine is never booted by a `wsl.exe -d` call. `setup`
   installs the NVIDIA container toolkit at a pinned version where the engine runs (on a Podman machine under
   WSL2, inside the machine's distro, as root through `wsl.exe -d <machine> -u root`), generates the CDI spec, and
   runs `check`. It changes nothing that is already in place. `check` runs a CUDA container pinned by digest with
