@@ -1616,6 +1616,93 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   (ouroboric-dev/asgard#12). Test: a run's product repos hold no factory name outside `.ouroboric/`.
 - **Status:** proved (proof run 1's product, counted 2026-10-26); the founder's rule.
 
+Source of items B-197 to B-205: the first real company kickstart, with Asgard done by hand (the Asgard v0 design's
+acceptance run, §9), 2026-10-26 and 2026-10-27. The company is not named here: its findings reach Ouroboric
+anonymised. Each item is graded **Minor**. What the run already built is in asgard#12 to #17 and #19.
+
+### B-197: the journey relies on GitHub features that the Free plan lacks for private repos
+
+- **Where:** the Asgard v0 design §6.2 (approval by merging a pull request on a protected `main`, push protection
+  for secrets), the company template's CI.
+- **Problem:** on GitHub's Free plan, a private repository in an organisation has no branch protection, no rulesets,
+  no secret scanning or push protection, and no Pages. Approval by merge is then a convention, not enforced, and the
+  company's `checks` report on a pull request but can't block its merge.
+- **Fix:** a script that reads an organisation's plan and settings and says what the journey loses without each
+  feature; the journey states what each plan allows; a short guide for creating the organisation, which GitHub's
+  API can't do.
+- **Status:** proved (HTTP 403 on branch protection and rulesets, empty `security_and_analysis`, 2026-10-26).
+
+### B-198: step 4's name screening checks the domain, not the GitHub handle's rules
+
+- **Where:** the Asgard v0 design §6.1 (step 4, Name), the journey's name checks.
+- **Problem:** a GitHub organisation's name can't hold a dot, so a company named after its domain (`name.tld`)
+  gets a different handle (`name-tld`). The run created the organisation before step 1, because the name was known.
+- **Fix:** the name checks include the GitHub handle's rules and availability; the journey allows the organisation
+  to come first when the founder already has the name.
+- **Status:** proved (the run's organisation, 2026-10-26).
+
+### B-199: a product built before its company has no way into the company
+
+- **Where:** the Asgard v0 design's order (company kickstart, then product kickstart, then build).
+- **Problem:** the run's product was built first, from a brief, with no company charter or brand. The company
+  kickstart has no step to take it in.
+- **Fix:** an import step that writes the product's charter from its design doc, checks it against the new
+  company charter, and records the product in the company's portfolio.
+- **Status:** proved (the run's order, 2026-10-26).
+
+### B-200: publishing a factory-built product to a company's organisation is done by hand
+
+- **Where:** a product's umbrella and leaves after a run; `umbrella.yaml` and `.gitmodules`.
+- **Problem:** the operator created the repositories, rewrote the umbrella's owner and submodule URLs, scanned the
+  histories for secrets, pushed, and checked a recursive clone, all by hand.
+- **Fix:** a script that does those steps with the organisation's settings and fails on a leak or a broken clone.
+- **Status:** proved (done by hand, 2026-10-26).
+
+### B-201: creating a company's repository around `new-company.sh` is done by hand
+
+- **Where:** `asgard/scripts/new-company.sh`.
+- **Problem:** the script scaffolds a folder and stops. Creating the private repository in the founder's
+  organisation, the first commit, the secret scan and the push were done by hand.
+- **Fix:** a step that does them in the founder's organisation, as her account, with no Ouroboric identity.
+- **Status:** proved (done by hand, 2026-10-26).
+
+### B-202: the founder can't see the pages she reviews
+
+- **Where:** `asgard/scripts/company-site.sh`, the Asgard v0 design §6.2.
+- **Problem:** the company's docs render as pages on 127.0.0.1 only. The founder never runs a command, so she can't
+  open them, and the brand board (step 6) has the same problem. A private repository on the Free plan gets no Pages,
+  and Pages on paid plans below Enterprise Cloud are public.
+- **Fix:** a private preview per pull request, with access control, on an account the founder owns, chosen with its
+  cost in view; the pull request links the rendered page.
+- **Status:** reasoned (the operator chose localhost for now, 2026-10-26).
+
+### B-203: bringing template changes into an existing company is done by hand
+
+- **Where:** `asgard/scripts/new-company.sh`, a company's `.ouroboric/company.yaml` (`template:`).
+- **Problem:** each template change was brought in by scaffolding afresh beside the repository, comparing, copying,
+  and updating the pin. Twice the pin named a pull request's commit, which needed a second change after the merge.
+- **Fix:** a script that compares a company with a fresh scaffold, applies what the founder hasn't changed, flags
+  what she has, and records a merged commit as the pin.
+- **Status:** proved (done by hand three times, 2026-10-26).
+
+### B-204: the company template keeps its own copy of the base CI's lint pieces
+
+- **Where:** `asgard/templates/company/core/.pre-commit-config.yaml`, `.markdownlint.yaml`, `.yamllint.yaml`;
+  `ouroboric/scripts/templates/ci/`.
+- **Problem:** a bump of a base CI piece needs a second change in the template. `company-checks.test.sh` catches the
+  drift, but doesn't fix it.
+- **Fix:** the template takes the pieces from the base CI when it scaffolds, or `add-ci.sh` can write them without
+  its own workflow and comments.
+- **Status:** reasoned.
+
+### B-205: the company's docs rung leaves out prose rules and required sections
+
+- **Where:** `asgard/templates/company/core/.ouroboric/checks/docs-check.py`; the docs standard §6.
+- **Problem:** the docs standard's docs rung checks prose per writing style (Vale) and the required sections per
+  document. The company's check does neither.
+- **Fix:** add both, with the styles' rules, test first.
+- **Status:** reasoned.
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
