@@ -1509,6 +1509,19 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   always the API's at the pinned pointer.
 - **Status:** proved (proof run 1, T020, 2026-10-26); the founder asked for it.
 
+### B-190: the web realm's checks name their typed results after their scripts, not their checks
+
+- **Where:** `midgard-react/devcontainer/checks/lib/result.sh:101` (`--check "$(basename "$0" .sh)"`, so `web-tdd`,
+  `web-contract`); `midgard-react/pack.yaml:12-13` (the checks are `tdd`, `contract`).
+- **Problem:** Odin refuses a result whose name is not its check's: "the check's result contradicts its name (check
+  tdd, the result says web-tdd)". So a web check that fails is reported as "the check wrote no valid result (a fault
+  of the realm, not of the task)", and the implementer never sees the check's verdict. In proof run 1, T020 lost two
+  attempts to it (`check-contract-result`, `check-tdd-result`) while the logs held real verdicts ("the new tests
+  pass on the commit the task started from").
+- **Fix:** the result takes the check's name from `pack.yaml` (or Odin passes it, as `YGG_CHECK_NAME`), not the
+  script's file name. Test: a failing web check's finding carries its verdict, under the check's name.
+- **Status:** proved (proof run 1, T020, 2026-10-26).
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
