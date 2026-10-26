@@ -1586,10 +1586,19 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   something I would consider as a final version" (2/10 for the product). Nothing in the graph decides what the
   screens look like or how a user moves through them: each web task builds its page from the criteria and the
   template's plain components, and no reviewer or check looks at the result as a user would.
-- **Fix:** as a design decision with the founder (their idea: a part of the graph only UI realms need, starting at the
-  spec phase). Candidates: a UI design stage after the spec (screens, flows, layout, a design system or tokens) whose
-  output the web tasks and a UI reviewer read; a realm-level design system in `midgard-react`'s template; visual
-  checks (screenshots against the design, accessibility) next to the end-to-end gate of B-194.
+- **Fix:** as a design decision with the founder. **The main way: the company's own design language from Asgard.**
+  The founder's vision: a company is set up first with its business records (charter, brand, design language, and
+  so on, Asgard's kickstart), and every product's design is fed from them, so all the products of one company share
+  a consistent, familiar look and feel. Asgard v0's design already plans the files: the company umbrella holds the
+  brand as design tokens (JSON and CSS) with light and dark palettes, SVG logos with a favicon, a voice guide and
+  imagery guidelines, "ready for the web realm", which reads the brand from the umbrella
+  ([Asgard v0 design](../1-product/design/2026-10-17-asgard-v0-design.md), §3.4 item 4 and §5.1). **Optional:
+  the user gives the same inputs ad hoc** for a product with no Asgard company behind it (a brief's own palette,
+  fonts, references), in the same shape, so the rest of the graph does not care where they came from. Then a part
+  of the graph only UI realms need (the founder's idea), starting at the spec phase: a UI design stage (screens,
+  flows, layout, built from the design language) whose output the web tasks and a UI reviewer read; the design
+  language applied through `midgard-react`'s template (tokens, base components); visual checks (screenshots against
+  the design, accessibility) next to B-194's product gate.
 - **Status:** the founder's review of proof run 1's product, 2026-10-26.
 
 ## Done
