@@ -96,7 +96,7 @@ Level 1 (ready to build), replacing RB-21:
 | ID | Question | Check |
 | --- | --- | --- |
 | RB-21 | Is the identity defined: logo and mark in light and dark, a palette whose pairs pass WCAG 2.2 AA in both modes? | auto + human |
-| RB-22 | Is the typography chosen with its reason, under a licence that allows web use, covering every glyph of the clients' languages? | auto + human |
+| RB-22 | Is the typography chosen for every role, the wordmark included, with its reason, under a licence that allows web use, covering every glyph of the clients' languages? | auto + human |
 | RB-23 | Are the foundations set as tokens: type scale with a minimum body size, spacing, radius, elevation, motion, breakpoints? | auto |
 | RB-24 | Are interaction states defined, with a focus indicator that reaches 3:1, and is reduced motion honoured? | auto + human |
 | RB-25 (product) | Does the product's theme come from the company's tokens, through the token contract? | auto |
