@@ -12,7 +12,7 @@ style: spec
 Each task starts from Asgard's `origin/main`, test first, and ends with a pull request. The design doc and the spec
 are amended in yggdrasil with the delta once this proposal is approved.
 
-- [ ] **DS-T01 The kickstart guide.** Asgard `docs/`: the nine steps as a procedure, step 6 in its six sub-steps.
+- [ ] **DS-T01 The kickstart guide.** Asgard `docs/`: the nine steps as a procedure, step 6 in its seven sub-steps.
 - [ ] **DS-T02 Readiness checklist.** Asgard `templates/readiness/checklist.md`: RB-21 to RB-25 and RL-06 as the
       delta gives them, with an "applies to" column (company or product) and no tool names in what a company copies.
 - [ ] **DS-T03 Foundations in the template.** `tokens.json` schema, generated CSS, the identity page's sections, a
