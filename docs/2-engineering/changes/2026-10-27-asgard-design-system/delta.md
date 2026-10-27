@@ -11,7 +11,7 @@ style: spec
 
 ## Design §6.1, step 6 (modified)
 
-Step 6, **Brand: look**, runs as six sub-steps. In each, the agent builds two to four options by the stated method,
+Step 6, **Brand: look**, runs as seven sub-steps. In each, the agent builds two to four options by the stated method,
 checks them, and shows them side by side, in both modes, with the company's own name and words; the founder reacts
 and chooses. A choice records its reason in the decision log.
 
@@ -23,8 +23,15 @@ and chooses. A choice records its reason in the decision log.
 | 6d Imagery | The guidelines (what images look like, never look like, how they are used), and up to six sample images with their consent records. | imagery guidelines, sample images |
 | 6e Foundations | Proposed from the typeface and the voice, for the founder to react to: a type scale (sizes and line heights per role, a minimum body size), spacing, corner radius, elevation, motion (with reduced motion), breakpoints, and interaction states (focus, hover, active, disabled). | `tokens.json` foundations |
 | 6f Board and applications | The brand board, plus the first applications: a square social profile picture from the mark, a link preview image, an email signature. | the board, the applications |
+| 6g Playground | An interactive prototype of the whole design system on fake content: a few page sections (a hero, a grid of images, an about block, service cards, a contact block, navigation and footer), every component (buttons, links, fields, cards, messages, focus states), the type scale and the foundations, in light and dark. Everything is adjustable except the logo (the wordmark included): each palette token; the typeface of each role, mixed and matched from the 6b candidates; the type scale; spacing, radius, elevation and motion. The company's checks run live: a pair under its contrast minimum, a focus indicator under 3:1, a body size under the minimum, or a typeface without the weights or italics its role needs shows a visible warning next to what it affects, and in a list of every open check. The founder's final settings export as a token file that the agent applies; the company's own checks then decide. It is a prototype for looking, not a website. | the playground, and the tokens it exports |
 
-The `brand` stop approves the board, which shows all six.
+The `brand` stop approves the board, which shows all seven, and the founder has looked at the system in the
+playground. The playground's checks and the company's checks share one rule set, so they cannot disagree.
+
+Typography (6b) also follows four lessons from an earlier typeface choice: think in roles (a quiet face for what is
+read all day, a bolder one for what is seen rarely, such as the wordmark or a title); check that the body face has
+bold and italic; check where a style's label comes from before using it; and show each candidate in the real places
+people meet the brand, not only in a specimen.
 
 ## Design §7, the template (modified)
 
@@ -65,6 +72,11 @@ brand's applications?
   message) in both modes, the logo's clear space and minimum size, and the applications.
 - §5.5 the token contract: the names and meanings a product theme maps from `tokens.json`, written for the product
   realms to read.
+- §5.6 `brand.sh playground DIR`: writes the playground as one self-contained HTML file in the company's brand folder
+  (no network at view time: the candidate typefaces are embedded, subset), generated from `tokens.json`, the 6b
+  candidates and the company's check rules, so its live checks are the same rules as `brand.py`. Its export is a
+  token file `brand.py` validates before anything is applied. The founder opens it from a link: GitHub's file view
+  does not run it, so until a private preview exists (backlog B-202) the agent shares it privately for viewing.
 
 ## Kickstart guide (added)
 

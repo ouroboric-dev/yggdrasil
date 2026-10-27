@@ -23,5 +23,8 @@ are amended in yggdrasil with the delta once this proposal is approved.
 - [ ] **DS-T07 Logo preparation.** `brand.sh logo-prep`: cut out, flat background removed, resolution raised.
 - [ ] **DS-T08 Web fonts.** WOFF2, subset to the clients' languages, in `fonts.css`.
 - [ ] **DS-T09 The board.** Type scale, component sheet, logo usage, applications.
+- [ ] **DS-T11 The playground.** `brand.sh playground`: the self-contained prototype, every token adjustable except
+      the logo, typefaces mixed per role from the candidates, live checks from the shared rule set, the export
+      validated by `brand.py`. Its rules are generated from `brand.py`, so a test proves the two agree.
 - [ ] **DS-T10 The token contract.** Written in the brand tools spec for the product realms; the realm side is
       backlog B-217.

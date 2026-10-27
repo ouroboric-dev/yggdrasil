@@ -36,9 +36,12 @@ was improvised in that run, or missing.
 
 ## What changes
 
-- **The journey (design §6).** Step 6 becomes six sub-steps, each with its selection method: palette, typography,
-  logo, imagery, foundations, and the board with the brand's first applications. The founder still decides by
-  reacting to options; the agent now builds the options by a stated method and checks them before showing them.
+- **The journey (design §6).** Step 6 becomes seven sub-steps, each with its selection method: palette, typography,
+  logo, imagery, foundations, the board with the brand's first applications, and a **playground**: an interactive
+  prototype of the whole system on fake content, where everything except the logo can be adjusted (typefaces mixed
+  per role from the candidates) and the company's checks run live, with a visible warning where a choice breaks a
+  rule. The founder still decides by reacting to options; the agent now builds the options by a stated method and
+  checks them before showing them.
 - **The template (design §7).** The identity gains foundations: a type scale, spacing, radius, elevation, motion,
   breakpoints and interaction states, as tokens and as identity sections.
 - **Readiness (design §8).** RB-21 becomes four level 1 items: the identity, the typography, the foundations, and
