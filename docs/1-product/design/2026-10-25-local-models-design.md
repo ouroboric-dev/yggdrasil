@@ -1,6 +1,6 @@
 ---
 title: Local models design doc
-status: accepted
+status: implemented
 date: 2026-10-25
 related: [../charter.md, 2026-10-11-yggdrasil-v0-design.md, ../../2-engineering/specs/2026-10-11-yggdrasil-v0-spec.md, ../../2-engineering/changes/2026-10-20-role-reasoning/proposal.md, https://github.com/ouroboric-dev/ouroboric/blob/main/docs/5-research/2026-10-19-local-qwen-design.md]
 style: direction

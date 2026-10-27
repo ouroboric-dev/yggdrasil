@@ -1,6 +1,6 @@
 ---
 title: Local models spec
-status: draft
+status: implemented
 date: 2026-10-25
 related: [../../1-product/design/2026-10-25-local-models-design.md, 2026-10-11-yggdrasil-v0-spec.md, ../plans/2026-10-25-local-models/plan.md]
 style: spec
