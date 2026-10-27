@@ -351,8 +351,8 @@ To go back, copy the two `.before-local` files over the changed ones while the r
 ### In OpenCode and Claude Code
 
 `qwen-claude.sh init` needs a personal Claude Code config folder, `QWEN_PERSONAL_DIR` (default `~/.claude-personal`).
-That folder must hold `skills/` and `hooks/merge-requires-green.sh`. Without them, the skills link points to nothing
-and the hook command is missing. This is a known gap of `qwen-claude.sh`.
+`init` links `QWEN_PERSONAL_DIR/skills` and wires the hook `hooks/merge-requires-green.sh` only when the folder has
+them. It says what it left out, and drops a stale skills link when you run it again.
 
 For OpenCode:
 
@@ -397,8 +397,9 @@ What `qwen-claude.sh init` does:
 - It writes the config folder `~/.claude-qwen` (`QWEN_CLAUDE_DIR`).
 - It installs the plugins `superpowers`, `gopls-lsp` and `skill-creator` from the `claude-plugins-official`
   marketplace. This uses `claude` and the network.
-- It links `skills` to `QWEN_PERSONAL_DIR/skills`.
-- It writes a `PreToolUse` hook that runs `QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh`.
+- It links `skills` to `QWEN_PERSONAL_DIR/skills` when that folder exists, and says so when it does not.
+- It writes a `PreToolUse` hook that runs `QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh` when that file exists, and
+  says so when it does not.
 - It reads no plugins from the personal folder, and never writes to it.
 
 Both scripts find the server through `ygg-models.sh status`, and remove the cloud credentials from the session. Set

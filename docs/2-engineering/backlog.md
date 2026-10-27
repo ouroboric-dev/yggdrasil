@@ -1709,18 +1709,6 @@ their task and whole-branch reviews and from proof run 1 (`20261025-113131-8e9cb
 model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `abf44b9`, `voluspa` `fc84ff0` and
 `ouroboric` `bfeae79`.
 
-### B-206: `Down` fails for a sandbox with a running service container
-
-- **Where:** `gleipnir/sandbox/driver.go` `Down` (`podman rm -f -t 2 --depend` at :385, then `podman pod rm` at :408).
-- **Problem:** `rm --depend` reports the service container removed but leaves it running, so `pod rm` exits 125 with
-  "cannot remove container … as it is running". The network removal cleans up later, but `Down` returns an error.
-  In proof run 1 this happened on nearly every leaf and snapshot sandbox, and it failed the `grade` node once
-  ("grading failed: stopping the sandbox of repos/web"), until a resume got through. It is on main before the local
-  models work.
-- **Fix:** remove the sandbox's own pod with `pod rm -f`, or `rm -f` each of its containers by name, test first with
-  the real engine (`integration_services_test.go`, which today only logs this error).
-- **Status:** proved (run 1's `report.txt`; LM-T06's integration test).
-
 ### B-207: a reviewer at its turn cap is logged as an invalid answer
 
 - **Where:** `voluspa/software/graph.yaml` (the loop reviewers' `max_turns: 20`); the reviewer prompts; Odin's
@@ -1733,17 +1721,6 @@ model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `ab
   "turn cap reached" instead of an invalid answer; then revisit the cap with the bench.
 - **Status:** proved (run 1 transcripts, 2026-10-26).
 
-### B-208: a local session reports no reasoning tokens
-
-- **Where:** `gleipnir/opencode` (`parse` reads `step_finish.tokens.reasoning`); OpenCode's
-  `@ai-sdk/openai-compatible` provider.
-- **Problem:** llama-server returns the model's thinking in `reasoning_content`. OpenCode neither shows it as a
-  reasoning part nor counts it, so a local session reports `reasoning: 0`; the tokens land in `output` instead. T012's
-  first review step reported 1,823 output tokens for about 70 visible ones. The caps and the notional cost still count
-  them; `ygg metrics` can't tell thinking from answering.
-- **Fix:** find an OpenCode setting that surfaces `reasoning_content`, or take the count from llama-server's own usage.
-- **Status:** proved (the T012 transcript).
-
 ### B-209: the firewall takes the first nameserver as its resolver
 
 - **Where:** `gleipnir/sandbox/assets/egress.sh` (`ns=` from the first `nameserver` line).
@@ -1755,14 +1732,6 @@ model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `ab
   `TestIntegrationModelNetwork` already runs.
 - **Status:** proved for today's behavior (LM-T06's integration test); the failure case is reasoned.
 
-### B-210: a NaN or infinite price passes the price checks
-
-- **Where:** `gungnir/schema/models.go` (the price check), `gleipnir/opencode` `newLocal`.
-- **Problem:** both test `<= 0`, so `.nan` or `.inf` in the model list passes; a NaN cost makes every cap
-  comparison false.
-- **Fix:** refuse anything that is not a finite number above 0.
-- **Status:** reasoned. The list is the operator's own file.
-
 ### B-211: quotes are refused anywhere in a preset value
 
 - **Where:** `gungnir/schema/models.go` (`plainValue`).
@@ -1771,15 +1740,6 @@ model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `ab
 - **Fix:** allow quotes inside a value; keep refusing `#`, `;`, line breaks and edge space.
 - **Status:** reasoned (checked against llama.cpp `4c3c581`'s `common/preset.cpp`).
 
-### B-212: `qwen-claude.sh` needs a personal Claude config folder
-
-- **Where:** `ouroboric/scripts/qwen-claude.sh` (`init`).
-- **Problem:** `init` links `$QWEN_PERSONAL_DIR/skills` and writes a hook that runs
-  `$QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh` (default `~/.claude-personal`). Without that folder the link
-  dangles and every Bash call runs a missing hook.
-- **Fix:** make the skills link and the hook optional, and say so when the folder is missing.
-- **Status:** reasoned (the guide documents it as a known gap).
-
 ### B-213: no runbook sets up the engine on a new machine
 
 - **Where:** `docs/3-using/operations/`.
@@ -1787,15 +1747,6 @@ model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `ab
   devcontainer CLI and the `XDG_RUNTIME_DIR` fix are set up by hand. The local models guide names this gap.
 - **Fix:** an install runbook, or a script beside `ygg-gpu.sh` that checks and sets them up.
 - **Status:** proved (each was hit on the founder's machine, 2026-10-25 to 27).
-
-### B-214: a `ygg` built outside `ygg-build.sh` records "odin unknown"
-
-- **Where:** `ouroboric/scripts/ygg-build.sh`, `ygg-proof-run.sh` (`YGG_CMD` skips the stale-binary guard).
-- **Problem:** run 1's `ygg` for the local reviewer was built with `go build`, so its events record `odin unknown`.
-  There is no supported way to build a second `ygg` beside the one on PATH, and `YGG_CMD` takes any binary.
-- **Fix:** let `ygg-build.sh --out FILE` build a binary that is not first on PATH, and have the guard check a
-  `YGG_CMD` binary's build facts too.
-- **Status:** proved (run 1's `run_resumed` event).
 
 ### B-215: the model server image and gate have small gaps
 
@@ -1834,7 +1785,102 @@ Source of item B-216: the change proposal for B-209 (`changes/2026-10-27-firewal
   palette and its typefaces.
 - **Status:** proved (the template, read 2026-10-27); readiness item RB-25 in the change.
 
+Source of items B-218 to B-220: the reviews of gleipnir#28 and ouroboric#92, pinned to `gleipnir` `acdc891` and
+`ouroboric` `a2573b3`.
+
+### B-218: `removePod` reads any failure of `podman pod exists` as "no pod"
+
+- **Where:** `gleipnir/sandbox/driver.go` `removePod`; doctor's `RemovePod` in `leftover.go`.
+- **Problem:** a transient engine error from `podman pod exists` counts as "no pod". A sandbox with a service down then
+  takes the `rm --depend` path that B-206 avoids. `network rm -f` and `ygg doctor` catch what is left.
+- **Fix:** treat only exit 1 as "no pod", test first.
+- **Status:** reasoned (the whole-branch review of gleipnir#28).
+
+### B-219: the libpod `rm --depend` bug behind B-206 is not reported upstream
+
+- **Where:** podman (libpod 5.7.1), `rm --depend`.
+- **Problem:** `rm --depend` mishandles the dependency diamond a service makes. gleipnir works around it, and the
+  bug stays open for every other user.
+- **Fix:** report it with the reproduction. The founder decides; it is an outside action.
+- **Status:** proved (B-206's reproduction).
+
+### B-220: a single-word `YGG_CMD` that resolves to nothing says it is used unchecked
+
+- **Where:** `ouroboric/scripts/ygg-build-facts.sh` (`ygg_guard`).
+- **Problem:** the message is "is not one executable file: it is used without checking", not "not found". Callers
+  fail later, so nothing runs unchecked, but the message misleads.
+- **Fix:** say "not found".
+- **Status:** reasoned (the whole-branch review of ouroboric#92).
+
 ## Done
+
+### B-206: `Down` fails for a sandbox with a running service container
+
+- **Where:** `gleipnir/sandbox/driver.go` `Down` (`podman rm -f -t 2 --depend` at :385, then `podman pod rm` at :408).
+- **Problem:** `rm --depend` reports the service container removed but leaves it running, so `pod rm` exits 125 with
+  "cannot remove container … as it is running". The network removal cleans up later, but `Down` returns an error.
+  In proof run 1 this happened on nearly every leaf and snapshot sandbox, and it failed the `grade` node once
+  ("grading failed: stopping the sandbox of repos/web"), until a resume got through. It is on main before the local
+  models work.
+- **Fix:** [gleipnir#28](https://github.com/ouroboric-dev/gleipnir/pull/28) and
+  [odin#50](https://github.com/ouroboric-dev/odin/pull/50). The cause is a podman bug: `rm --depend` (libpod 5.7.1)
+  mishandles the dependency diamond a service makes (fw and work depend on svc, work on fw): it removes fw, which takes
+  work, then stops before svc and reports it removed. `Down` now removes the sandbox's pod first with `pod rm -f -t 2`
+  (pod removal orders the pod's own graph), then the containers by label, then the networks; `RemovePod` (doctor) stays
+  unforced. Test: the real-engine services and model-network tests fail on a `Down` error.
+- **Status:** done (proved: reproduced with plain podman; both real-engine tests failed before and pass after).
+- **Fixed:** 2026-10-27.
+
+### B-208: a local session reports no reasoning tokens
+
+- **Where:** `gleipnir/opencode` (`parse` reads `step_finish.tokens.reasoning`); OpenCode's
+  `@ai-sdk/openai-compatible` provider.
+- **Problem:** llama-server returns the model's thinking in `reasoning_content`. OpenCode neither shows it as a
+  reasoning part nor counts it, so a local session reports `reasoning: 0`; the tokens land in `output` instead. T012's
+  first review step reported 1,823 output tokens for about 70 visible ones. The caps and the notional cost still count
+  them; `ygg metrics` can't tell thinking from answering.
+- **Fix:** option B, [gleipnir#30](https://github.com/ouroboric-dev/gleipnir/pull/30): `opencode run` gets `--thinking`
+  for a local model, so the thinking is in the transcript as `reasoning` events. The count stays 0: llama-server sends
+  no thinking-token count (its usage has none at `4c3c581`), and OpenCode's provider already reads one when it is sent.
+  The caps and the notional cost count thinking inside `output`. It reaches runs with odin's next bump of gleipnir.
+- **Status:** done (decided by the founder; the investigation's options A-D: do nothing, `--thinking`, an estimate
+  from the text, the gate counting deltas).
+- **Fixed:** 2026-10-27.
+
+### B-210: a NaN or infinite price passes the price checks
+
+- **Where:** `gungnir/schema/models.go` (the price check), `gleipnir/opencode` `newLocal`.
+- **Problem:** both test `<= 0`, so `.nan` or `.inf` in the model list passes; a NaN cost makes every cap
+  comparison false.
+- **Fix:** [gungnir#33](https://github.com/ouroboric-dev/gungnir/pull/33) and
+  [gleipnir#29](https://github.com/ouroboric-dev/gleipnir/pull/29),
+  [odin#50](https://github.com/ouroboric-dev/odin/pull/50). YAML decoding already refused `.nan` and `.inf`, with a
+  message that named no field; the message now names the field, and `Price.check` (gungnir) and `checkPrice` (gleipnir)
+  refuse a non-finite price in a value built in Go.
+- **Status:** done.
+- **Fixed:** 2026-10-27.
+
+### B-212: `qwen-claude.sh` needs a personal Claude config folder
+
+- **Where:** `ouroboric/scripts/qwen-claude.sh` (`init`).
+- **Problem:** `init` links `$QWEN_PERSONAL_DIR/skills` and writes a hook that runs
+  `$QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh` (default `~/.claude-personal`). Without that folder the link
+  dangles and every Bash call runs a missing hook.
+- **Fix:** [ouroboric#92](https://github.com/ouroboric-dev/ouroboric/pull/92): `init` links the skills and wires the
+  merge hook only when the personal folder has them, says what it left out, and drops a stale skills link on re-init.
+- **Status:** done.
+- **Fixed:** 2026-10-27.
+
+### B-214: a `ygg` built outside `ygg-build.sh` records "odin unknown"
+
+- **Where:** `ouroboric/scripts/ygg-build.sh`, `ygg-proof-run.sh` (`YGG_CMD` skips the stale-binary guard).
+- **Problem:** run 1's `ygg` for the local reviewer was built with `go build`, so its events record `odin unknown`.
+  There is no supported way to build a second `ygg` beside the one on PATH, and `YGG_CMD` takes any binary.
+- **Fix:** [ouroboric#92](https://github.com/ouroboric-dev/ouroboric/pull/92): `ygg-build.sh --out FILE --beside-path`
+  builds a second `ygg` and prints `YGG_CMD=FILE`; the stale-binary guard checks a `YGG_CMD` that is one executable
+  file, and its hint rebuilds that file.
+- **Status:** done.
+- **Fixed:** 2026-10-27.
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
 
