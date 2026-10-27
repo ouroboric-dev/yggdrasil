@@ -1599,7 +1599,8 @@ Code locations of B-177 and B-179 to B-187 are at odin `c00e7ae`, gungnir `973a9
   flows, layout, built from the design language) whose output the web tasks and a UI reviewer read; the design
   language applied through `midgard-react`'s template (tokens, base components); visual checks (screenshots against
   the design, accessibility) next to B-194's product gate.
-- **Status:** the founder's review of proof run 1's product, 2026-10-26.
+- **Status:** the founder's review of proof run 1's product, 2026-10-26. Proposed fix: change
+  2026-10-27-product-ui-from-design-system.
 
 ### B-196: the factory writes its own names and files into the products it builds
 
