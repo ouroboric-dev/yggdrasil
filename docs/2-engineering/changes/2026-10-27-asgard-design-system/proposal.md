@@ -52,6 +52,9 @@ was improvised in that run, or missing.
   brand's applications. A product item names the token contract.
 - **The brand tools (spec).** New tools for typeface candidates and specimens, palette rounds, logo preparation and
   the foundations; new checks; a fuller board. The delta lists them.
+- **A reference for products.** Step 6 also writes the design system as products will build it: a component
+  stylesheet, the final playground and its screenshots, all generated from the tokens. The product side (the web
+  realm's theme, a UI step per product, a fidelity check) is a separate Yggdrasil change proposal.
 - **A kickstart guide** in the Asgard leaf (design §5.2: it holds the journey): the nine steps as a procedure, each
   with its questions, outputs, checks and stop.
 

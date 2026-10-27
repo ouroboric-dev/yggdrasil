@@ -35,5 +35,7 @@ are amended in yggdrasil with the delta once this proposal is approved.
 - [ ] **DS-T12 Choice pages save choices.** The rules of spec §5.7 for every choice page, with a test each: the choice
       and reason saved where the agent reads them, candidate facts read at build time, every face loads, every option
       visibly changes the page.
-- [ ] **DS-T10 The token contract.** Written in the brand tools spec for the product realms; the realm side is
-      backlog B-217.
+- [ ] **DS-T10 The token contract.** Written in the brand tools spec for the product realms, component recipes
+      included; the realm side is the product UI change proposal (extending backlog B-217).
+- [ ] **DS-T13 The reference.** `brand.sh reference`: `components.css`, the self-contained playground and the
+      screenshots, from `tokens.json`; the stale check in `brand.py`; a test that the stylesheet uses only tokens.

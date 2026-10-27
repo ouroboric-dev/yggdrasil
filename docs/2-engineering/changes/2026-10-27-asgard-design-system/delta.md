@@ -108,6 +108,14 @@ email signature). The board shows logo usage too: clear space (the mark's width 
 around its mark), the minimum sizes of the logo and of the mark, and the misuses; and the kept exceptions with their
 reasons.
 
+6g also writes the **reference**: the design system as products will build it, so a product starts from the
+founder's look and a check can prove it stayed there. In `identity/reference/`, generated from the saved settings
+and never edited by hand: a component stylesheet (each component variant she chose, built from the tokens, with its
+states); the final playground as one self-contained page, without saving; and screenshots of that page in light and
+dark at phone, tablet and desktop widths. The stylesheet and the tokens are what products and checks read; the
+screenshots are for people reviewing and for agents that read images, and are made again whenever the settings
+change.
+
 The `brand` stop approves the board, after the founder has settled the system in the playground.
 
 ## Design §7, the template (modified)
@@ -127,7 +135,7 @@ Level 1 (ready to build), replacing RB-21:
 | RB-22 | Is the typography chosen for every role, the wordmark included, with its reason, under a licence that allows web use, covering every glyph of the clients' languages? | auto + human |
 | RB-23 | Are the foundations set as tokens: type scale with a minimum body size, spacing, radius, elevation, motion, breakpoints? | auto |
 | RB-24 | Are interaction states defined, with a focus indicator that reaches 3:1, and is reduced motion honoured? | auto + human |
-| RB-25 (product) | Does the product's theme come from the company's tokens, through the token contract? | auto |
+| RB-25 (product) | Does the product's theme come from the company's tokens, through the token contract, and does its styleguide match the company's reference? | auto |
 
 Level 2, RL-06 (modified): is the full visual identity done: the component baseline (buttons, links, fields, cards,
 messages) in both modes, an icon set with its licence, logo usage rules (clear space, minimum size, misuse), and the
@@ -155,7 +163,11 @@ brand's applications?
 - §5.4 the board adds: each role in its typeface at its scale, a component sheet (button, link, field, card,
   message) in both modes, the logo's clear space and minimum size, and the applications.
 - §5.5 the token contract: the names and meanings a product theme maps from `tokens.json`, written for the product
-  realms to read.
+  realms to read: the colours, the type roles and scale, the foundations, and the component recipes (for each
+  component and variant, which tokens it uses for each part and state, as the reference stylesheet builds it).
+- §5.8 `brand.sh reference DIR`: writes `identity/reference/` from `tokens.json`: `components.css`, `playground.html`
+  (self-contained, without saving) and the screenshots (light and dark; 390, 820 and 1280 pixels wide), rendered by a
+  pinned headless browser; `brand.py` reports the reference as stale when its inputs change, as it does the board.
 - §5.6 `brand.sh playground DIR`: writes the playground as one self-contained HTML file in the company's brand folder
   (no network at view time: the candidate typefaces are embedded, subset), generated from `tokens.json`, a candidates
   file (palette presets and per-role values, typography looks and per-role faces, the wordmark included, foundation
