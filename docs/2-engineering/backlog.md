@@ -1703,6 +1703,108 @@ anonymised. Each item is graded **Minor**. What the run already built is in asga
 - **Fix:** add both, with the styles' rules, test first.
 - **Status:** reasoned.
 
+Source of items B-206 to B-215: the local models plan (`plans/2026-10-25-local-models/`) and its setup change, from
+their task and whole-branch reviews and from proof run 1 (`20261025-113131-8e9cb7`), whose reviewer ran on the local
+model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `abf44b9`, `voluspa` `fc84ff0` and
+`ouroboric` `bfeae79`.
+
+### B-206: `Down` fails for a sandbox with a running service container
+
+- **Where:** `gleipnir/sandbox/driver.go` `Down` (`podman rm -f -t 2 --depend` at :385, then `podman pod rm` at :408).
+- **Problem:** `rm --depend` reports the service container removed but leaves it running, so `pod rm` exits 125 with
+  "cannot remove container … as it is running". The network removal cleans up later, but `Down` returns an error.
+  In proof run 1 this happened on nearly every leaf and snapshot sandbox, and it failed the `grade` node once
+  ("grading failed: stopping the sandbox of repos/web"), until a resume got through. It is on main before the local
+  models work.
+- **Fix:** remove the sandbox's own pod with `pod rm -f`, or `rm -f` each of its containers by name, test first with
+  the real engine (`integration_services_test.go`, which today only logs this error).
+- **Status:** proved (run 1's `report.txt`; LM-T06's integration test).
+
+### B-207: a reviewer at its turn cap is logged as an invalid answer
+
+- **Where:** `voluspa/software/graph.yaml` (the loop reviewers' `max_turns: 20`); the reviewer prompts; Odin's
+  repair of an `output_refused` session.
+- **Problem:** at medium effort the local reviewer used exactly 20 turns three times in run 1 (T013 quality, T014
+  simplicity, T014 quality), still reading files, and never called `ygg_submit`. Odin logged each as
+  `output_refused` ("not a valid ygg.review/v1"), and the repair got a valid answer in 1-3 turns. OpenRouter's copy
+  took p90 17 turns.
+- **Fix:** tell the reviewer its turn budget and to submit before it ends, or keep the last turn for the submit; log
+  "turn cap reached" instead of an invalid answer; then revisit the cap with the bench.
+- **Status:** proved (run 1 transcripts, 2026-10-26).
+
+### B-208: a local session reports no reasoning tokens
+
+- **Where:** `gleipnir/opencode` (`parse` reads `step_finish.tokens.reasoning`); OpenCode's
+  `@ai-sdk/openai-compatible` provider.
+- **Problem:** llama-server returns the model's thinking in `reasoning_content`. OpenCode neither shows it as a
+  reasoning part nor counts it, so a local session reports `reasoning: 0`; the tokens land in `output` instead. T012's
+  first review step reported 1,823 output tokens for about 70 visible ones. The caps and the notional cost still count
+  them; `ygg metrics` can't tell thinking from answering.
+- **Fix:** find an OpenCode setting that surfaces `reasoning_content`, or take the count from llama-server's own usage.
+- **Status:** proved (the T012 transcript).
+
+### B-209: the firewall takes the first nameserver as its resolver
+
+- **Where:** `gleipnir/sandbox/assets/egress.sh` (`ns=` from the first `nameserver` line).
+- **Problem:** with the model network joined, the first nameserver is often the internal network's. Refreshes work
+  only because aardvark-dns forwards outside names on an internal network. If a later netavark stops doing that,
+  refreshes fail closed ("keeping the earlier addresses"). The same forwarding gives containers on an internal
+  network a DNS-only channel out.
+- **Fix:** take the resolver of the network that carries the default route, test first with the probe
+  `TestIntegrationModelNetwork` already runs.
+- **Status:** proved for today's behavior (LM-T06's integration test); the failure case is reasoned.
+
+### B-210: a NaN or infinite price passes the price checks
+
+- **Where:** `gungnir/schema/models.go` (the price check), `gleipnir/opencode` `newLocal`.
+- **Problem:** both test `<= 0`, so `.nan` or `.inf` in the model list passes; a NaN cost makes every cap
+  comparison false.
+- **Fix:** refuse anything that is not a finite number above 0.
+- **Status:** reasoned. The list is the operator's own file.
+
+### B-211: quotes are refused anywhere in a preset value
+
+- **Where:** `gungnir/schema/models.go` (`plainValue`).
+- **Problem:** the pinned llama.cpp parser treats quotes as plain characters, so the refusal is stricter than needed.
+  It blocks a JSON value such as `chat-template-kwargs`.
+- **Fix:** allow quotes inside a value; keep refusing `#`, `;`, line breaks and edge space.
+- **Status:** reasoned (checked against llama.cpp `4c3c581`'s `common/preset.cpp`).
+
+### B-212: `qwen-claude.sh` needs a personal Claude config folder
+
+- **Where:** `ouroboric/scripts/qwen-claude.sh` (`init`).
+- **Problem:** `init` links `$QWEN_PERSONAL_DIR/skills` and writes a hook that runs
+  `$QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh` (default `~/.claude-personal`). Without that folder the link
+  dangles and every Bash call runs a missing hook.
+- **Fix:** make the skills link and the hook optional, and say so when the folder is missing.
+- **Status:** reasoned (the guide documents it as a known gap).
+
+### B-213: no runbook sets up the engine on a new machine
+
+- **Where:** `docs/3-using/operations/`.
+- **Problem:** the Podman machine, the WSL bind mount (`/mnt/wsl/ygg-bind`, gone after a WSL restart), the
+  devcontainer CLI and the `XDG_RUNTIME_DIR` fix are set up by hand. The local models guide names this gap.
+- **Fix:** an install runbook, or a script beside `ygg-gpu.sh` that checks and sets them up.
+- **Status:** proved (each was hit on the founder's machine, 2026-10-25 to 27).
+
+### B-214: a `ygg` built outside `ygg-build.sh` records "odin unknown"
+
+- **Where:** `ouroboric/scripts/ygg-build.sh`, `ygg-proof-run.sh` (`YGG_CMD` skips the stale-binary guard).
+- **Problem:** run 1's `ygg` for the local reviewer was built with `go build`, so its events record `odin unknown`.
+  There is no supported way to build a second `ygg` beside the one on PATH, and `YGG_CMD` takes any binary.
+- **Fix:** let `ygg-build.sh --out FILE` build a binary that is not first on PATH, and have the guard check a
+  `YGG_CMD` binary's build facts too.
+- **Status:** proved (run 1's `run_resumed` event).
+
+### B-215: the model server image and gate have small gaps
+
+- **Where:** `gleipnir/sandbox/models.go`, `assets/modelgate/main.go`, `assets/models-entrypoint.sh`.
+- **Problem:** the image tag ignores `CUDA_ARCH`, so a build for another architecture reuses the tag; the gate has
+  no cap on concurrent requests or body read time (32 MiB each); the container runs as root; the entrypoint sets its
+  signal trap after starting both programs.
+- **Fix:** each in turn, with a test.
+- **Status:** reasoned (LM-T07's review).
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
