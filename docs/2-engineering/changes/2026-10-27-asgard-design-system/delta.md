@@ -78,7 +78,10 @@ images with their consent records.
 **6e Foundations.** Each foundation offered as a few valid candidates for the founder to react to, proposed from the
 typefaces and the voice: the type scale (base size and ratio, line heights per role, a minimum body size), spacing,
 corner radius, elevation, motion (with reduced motion), breakpoints, and interaction states (focus, hover, active,
-disabled).
+disabled). Every candidate is shown, not described: a foundation that cannot be seen on a still page gets a
+view that shows it, such as motion played side by side on a loop (and still where the device asks for reduced
+motion), or breakpoints as a ruler of screen widths with the layout in each range, the usual devices marked and a
+width slider.
 
 **6f Playground.** An interactive prototype of the whole design system on fake content, where the founder sees and
 adjusts everything together before it is final. It is a prototype for looking, not a website.
