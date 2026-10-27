@@ -1819,6 +1819,20 @@ Source of item B-216: the change proposal for B-209 (`changes/2026-10-27-firewal
   network's own names still resolve, and prove it on the real engine; else state the residual risk in the spec.
 - **Status:** reasoned (B-209's integration test proves the forwarding, not its use as a channel).
 
+### B-217: a product's theme does not come from its company's design tokens
+
+- **Where:** `midgard-react/templates/web/src/index.css` (only `@import "tailwindcss"`) and `components.json`
+  (shadcn/ui with `baseColor: neutral`); the company's `docs/7-branding/identity/tokens.json`.
+- **Problem:** a company sets its palette, typefaces and foundations at the kickstart's brand stop, and the docs
+  standard says the identity is an input to the build, but a new web product starts on stock Tailwind and a neutral
+  theme. Nothing maps the company's tokens to the product's theme variables, and no check notices a product that
+  ignores them. It is part of why products look generic (B-195).
+- **Fix:** read the token contract (change 2026-10-27-asgard-design-system, brand tools spec §5.5): generate the
+  product's theme (Tailwind theme and shadcn/ui variables) from the company's `tokens.json` and `fonts.css`, and add a
+  check that the theme matches the tokens. Test: a product scaffolded for a company with a set palette shows that
+  palette and its typefaces.
+- **Status:** proved (the template, read 2026-10-27); readiness item RB-25 in the change.
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
