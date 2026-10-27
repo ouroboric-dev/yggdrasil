@@ -20,11 +20,15 @@ are amended in yggdrasil with the delta once this proposal is approved.
 - [ ] **DS-T04 New checks.** `brand.py`: glyph coverage, minimum body size, focus contrast, foundations present.
 - [ ] **DS-T05 Typography tool.** `brand.sh fonts`: candidates with licences, specimens in the company's words.
 - [ ] **DS-T06 Palette rounds.** `brand.sh palette`: a round from JSON, checked and rendered with the logo.
-- [ ] **DS-T07 Logo preparation.** `brand.sh logo-prep`: cut out, flat background removed, resolution raised.
+- [ ] **DS-T07 Logo design.** `brand.sh logo-prep` (cut out, flat background removed, resolution raised) and
+      `brand.sh logo-proposals` (the concept and the alternatives as a review page; the chosen design written for the
+      palette to recolour).
 - [ ] **DS-T08 Web fonts.** WOFF2, subset to the clients' languages, in `fonts.css`.
 - [ ] **DS-T09 The board.** Type scale, component sheet, logo usage, applications.
-- [ ] **DS-T11 The playground.** `brand.sh playground`: the self-contained prototype, every token adjustable except
-      the logo, typefaces mixed per role from the candidates, live checks from the shared rule set, the export
-      validated by `brand.py`. Its rules are generated from `brand.py`, so a test proves the two agree.
+- [ ] **DS-T11 The playground.** `brand.sh playground`: the self-contained prototype from a candidates file; every
+      palette role, typography role (the wordmark included), foundation and component variant mixed and matched;
+      the logo's design fixed, recoloured live, its lettering in the live wordmark face; live checks from the shared
+      rule set; the export validated by `brand.py`. Its rules are generated from `brand.py`, so a test proves the two
+      agree.
 - [ ] **DS-T10 The token contract.** Written in the brand tools spec for the product realms; the realm side is
       backlog B-217.
