@@ -102,7 +102,7 @@ adjusts everything together before it is final. It is a prototype for looking, n
 - **Export:** the founder's final settings are saved where the agent reads them, as every choice page saves its
   choice: a token file with the checks still open. The agent applies it, and the company's own checks then decide.
 
-**6g Board and applications.** Generated from the final tokens: the brand board, and the first applications (a
+**6g Board and applications.** Generated only from the playground's saved settings, nothing chosen by hand: the brand board, and the first applications (a
 square social profile picture from the mark, a link preview image, an email signature).
 
 The `brand` stop approves the board, after the founder has settled the system in the playground.
@@ -162,7 +162,7 @@ brand's applications?
   token file `brand.py` validates before anything is applied. The founder opens it from a link: GitHub's file view
   does not run it, so until a private preview exists (backlog B-202) the agent shares it privately for viewing.
 - §5.7 The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share three rules, each with a test:
-  the page saves the founder's confirmed choice and reason where the agent reads it; every candidate's facts are
+  the page saves the founder's confirmed choice and reason where the agent reads it, and reopens on it; every candidate's facts are
   read from the source at build time (a font's weights and italics from the font or its library, never typed by
   hand); every candidate face the page offers is shown to load before the page is shared; and every option the page
   offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths), so no choice is blind.

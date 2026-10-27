@@ -61,3 +61,22 @@ was improvised in that run, or missing.
   prices. The process is generic; a trade's specifics stay in that company's documents.
 - The token contract's implementation in the web realm (a Yggdrasil backlog item, B-217).
 - Changing any company's design system: companies take the new template and tools through their own update.
+
+## Rehearsal
+
+Before approval, the proposed step 6 was rehearsed on the first company's case, with the operator as the founder's
+proxy and the founder joining for her choices (pages built by hand as stand-ins for the tools). It changed the
+delta in these ways:
+
+- Proposals and candidates sit in separate panels, side by side; the mark is shown in its own light and dark rows.
+- A logo whose mark and name are one piece needs a lettering picker in 6a (serious and stylised typefaces); its pick
+  seeds the wordmark role, and a pairing that does not work is flagged on its panel, not hidden.
+- Pages that offer a choice must save it where the agent reads it: the founder asked "can you see what I chose?" and
+  had to paste an export. Once saved, both later steps were read back without asking.
+- Facts about candidates are read from the source (italics, weights), and exports carry their open checks: an export
+  claimed an italic its face did not have.
+- Checks support the founder's decision: she kept a body face without italics, with her reason, as an accepted
+  exception.
+- Every option must be visible: shown motion and breakpoints, the founder changed both choices she had made blind;
+  a navigation option that did nothing led to a test that every option changes the page.
+- Imagery (6d) was not rehearsed: it is the trade's own, and the first run had done it.
