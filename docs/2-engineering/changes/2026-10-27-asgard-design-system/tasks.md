@@ -17,7 +17,8 @@ are amended in yggdrasil with the delta once this proposal is approved.
       delta gives them, with an "applies to" column (company or product) and no tool names in what a company copies.
 - [ ] **DS-T03 Foundations in the template.** `tokens.json` schema, generated CSS, the identity page's sections, a
       starting set of foundation values that pass the new checks.
-- [ ] **DS-T04 New checks.** `brand.py`: glyph coverage, minimum body size, focus contrast, foundations present.
+- [ ] **DS-T04 New checks.** `brand.py`: glyph coverage, minimum body size, focus contrast, foundations present,
+      the body face's italic; and accepted exceptions (reported as accepted, stale when the value changes).
 - [ ] **DS-T05 Typography tool.** `brand.sh fonts`: candidates with licences, specimens in the company's words.
 - [ ] **DS-T06 Palette rounds.** `brand.sh palette`: a round from JSON, checked and rendered with the logo.
 - [ ] **DS-T07 Logo design.** `brand.sh logo-prep` (cut out, flat background removed, resolution raised) and

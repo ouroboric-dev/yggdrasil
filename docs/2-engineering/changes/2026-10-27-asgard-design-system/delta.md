@@ -20,6 +20,12 @@ one, and the agent reads it from there; a choice that lives only in her browser,
 a defect. Facts shown about a candidate (a typeface's weights and italics, its licence, the languages it covers) come
 from the source when the page is built, not from the agent's memory. An export carries the checks still open, so a
 choice that fails a check cannot travel as if it passed.
+
+Checks support the founder's decision; they do not make it. It is her company. When a choice fails a check, the page
+says so plainly, with what it costs; she may keep it. A kept failure becomes an **accepted exception**: the check, her
+reason and the date, in the decision log and in `tokens.json` (`accepted`). The company's check then reports it as
+accepted, not as a failure, and does not stop the build; readiness lists every accepted exception, so a reviewer sees
+it. An exception names one check on one value: changing the value reopens the check.
 The methods of the pages Ouroboric used for its own typeface and logo choices are the starting point, not the limit.
 
 **6a Logo design (first).** The founder brings an initial concept: her own logo in any format and any quality, a
@@ -134,6 +140,8 @@ brand's applications?
   stylised, each with its licence and a poor-fit note per alternative where one applies), and writes the chosen
   design as `logo/source/` PNGs in neutral colours for the palette to recolour, with the chosen typeface recorded
   for the wordmark role.
+- §3.1 `brand.py` reads `accepted` in `tokens.json` (check, value, reason, date) and reports a matching failure as
+  accepted; an entry whose value no longer matches is reported as stale.
 - §3.1 `brand.py` checks: glyph coverage of every shipped font for the clients' languages; the minimum body size in
   the type scale; the focus colour at 3:1 against `bg` and `surface`; the foundation tokens present.
 - §4.3 `fonts.css` serves WOFF2 (converted from the shipped font, subset to the clients' languages); the original
