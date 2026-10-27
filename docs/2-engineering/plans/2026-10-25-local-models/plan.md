@@ -1,6 +1,6 @@
 ---
 title: Local models plan
-status: proposed
+status: implemented
 date: 2026-10-25
 related: [tasks.md, ../../specs/2026-10-25-local-models.md, ../../../1-product/design/2026-10-25-local-models-design.md]
 style: spec
@@ -61,3 +61,38 @@ tasks land after the `gleipnir` tasks they consume, and bump it.
 3. A model list edited between runs, so that a run's model is gone: the resume refuses with the model's name.
 4. A streamed chat response through the gate arrives in pieces, not all at the end.
 5. A run with no local role is unchanged: no model network, no check of the server, no `models` section needed.
+
+## Result
+
+**Implemented 2026-10-27.** All 15 tasks are merged: gungnir #29, #30; gleipnir #26; odin #48; ouroboric #88
+(the spike), #89; the spec amendments yggdrasil #118 to #121. The one-command setup and its guide followed as the
+change [2026-10-26-local-models-setup](../../changes/2026-10-26-local-models-setup/proposal.md): gungnir #32,
+odin #49, ouroboric #90, #91, yggdrasil #123. CI moved to Go 1.26.10 for GO-2026-6809: gungnir #31, gleipnir #27,
+odin #47.
+
+LM-T14, on the founder's machine:
+
+- **Proof run 1** (`20261025-113131-8e9cb7`, `client-gallery-lite`) switched its reviewer to `local/qwen3.8-27b` at
+  a pause from T012, at effort low, then medium from T013. It ended `done`.
+  - 139 local reviewer sessions.
+  - Their notional cost is $8.95, at the list's OpenRouter price.
+  - $7.99 was billed, all of it by the 84 OpenRouter reviewer sessions of T001 to T011.
+  - The local sessions counted toward the token and turn caps and not toward the dollar caps.
+- **Interactive use:** with no run going, `qwen-opencode.sh run "Say OK."` and `qwen-claude.sh -p "Say OK."`
+  answered through the same server.
+- **A second model:** a second list entry was loaded and the server swapped back, with no code or image change.
+  The second entry had the same weights under another name. A whole run on a second model was not done.
+- **The living spec:** `docs/2-engineering/system/` stays empty until v0 lands (its README). Until then this spec
+  and the change's delta describe local models.
+
+Follow-ups found on the way (backlog):
+
+- At medium effort the reviewer hit the reviewer nodes' 20-turn cap 3 times, while still reading. Tell the reviewer
+  its budget or keep a last turn for the submit, and log "turn cap reached" rather than `output_refused`.
+- OpenCode's openai-compatible provider neither shows nor counts llama-server's `reasoning_content`, so a local
+  session reports `reasoning: 0`.
+- A sandbox with a running service container fails `Down` (`pod rm` refuses), on main before this work. In run 1
+  it failed the grade once.
+- The firewall takes the first nameserver as its resolver. It works because aardvark-dns forwards outside names on
+  an internal network.
+- A `ygg` built by hand stamps `odin unknown`; build with `scripts/ygg-build.sh`.

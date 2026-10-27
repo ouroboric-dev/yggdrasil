@@ -1,6 +1,6 @@
 ---
 title: Local models tasks
-status: proposed
+status: implemented
 date: 2026-10-25
 related: [plan.md, ../../specs/2026-10-25-local-models.md, ../../../1-product/design/2026-10-25-local-models-design.md]
 style: spec

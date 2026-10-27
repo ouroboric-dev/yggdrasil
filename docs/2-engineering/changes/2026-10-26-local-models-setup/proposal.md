@@ -1,6 +1,6 @@
 ---
 title: Local models setup in one command, and its guide
-status: draft
+status: implemented
 date: 2026-10-26
 related: [delta.md, tasks.md, ../../specs/2026-10-25-local-models.md, ../../../1-product/design/2026-10-25-local-models-design.md]
 style: spec

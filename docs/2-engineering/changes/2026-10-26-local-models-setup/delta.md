@@ -1,6 +1,6 @@
 ---
 title: Delta for the local models setup
-status: draft
+status: implemented
 date: 2026-10-26
 related: [proposal.md, tasks.md, ../../specs/2026-10-25-local-models.md]
 style: spec

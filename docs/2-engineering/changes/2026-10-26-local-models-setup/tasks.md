@@ -1,6 +1,6 @@
 ---
 title: Local models setup tasks
-status: proposed
+status: implemented
 date: 2026-10-26
 related: [proposal.md, delta.md]
 style: spec
