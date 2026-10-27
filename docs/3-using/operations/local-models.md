@@ -295,6 +295,8 @@ has two reviewers in its record.
 
 Build `ygg` with `scripts/ygg-build.sh` only. A `ygg` built by hand has no build facts: the proof script refuses it,
 and the run records the factory version as `odin unknown`.
+To build a second `ygg` beside the one on `PATH`, run `scripts/ygg-build.sh --out FILE --beside-path`. It prints the
+`YGG_CMD=FILE` line to use.
 
 1. Make sure that the run is stopped or paused (exit 3 or 4), not running.
 2. Make sure that the server runs: `scripts/ygg-models.sh status`.
@@ -350,9 +352,10 @@ To go back, copy the two `.before-local` files over the changed ones while the r
 
 ### In OpenCode and Claude Code
 
-`qwen-claude.sh init` needs a personal Claude Code config folder, `QWEN_PERSONAL_DIR` (default `~/.claude-personal`).
-That folder must hold `skills/` and `hooks/merge-requires-green.sh`. Without them, the skills link points to nothing
-and the hook command is missing. This is a known gap of `qwen-claude.sh`.
+`qwen-claude.sh init` uses a personal Claude Code config folder, `QWEN_PERSONAL_DIR` (default `~/.claude-personal`),
+when there is one.
+`init` links `QWEN_PERSONAL_DIR/skills` and wires the hook `hooks/merge-requires-green.sh` only when the folder has
+them. It says what it left out, and drops a stale skills link when you run it again.
 
 For OpenCode:
 
@@ -397,8 +400,9 @@ What `qwen-claude.sh init` does:
 - It writes the config folder `~/.claude-qwen` (`QWEN_CLAUDE_DIR`).
 - It installs the plugins `superpowers`, `gopls-lsp` and `skill-creator` from the `claude-plugins-official`
   marketplace. This uses `claude` and the network.
-- It links `skills` to `QWEN_PERSONAL_DIR/skills`.
-- It writes a `PreToolUse` hook that runs `QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh`.
+- It links `skills` to `QWEN_PERSONAL_DIR/skills` when that folder exists, and says so when it does not.
+- It writes a `PreToolUse` hook that runs `QWEN_PERSONAL_DIR/hooks/merge-requires-green.sh` when that file exists, and
+  says so when it does not.
 - It reads no plugins from the personal folder, and never writes to it.
 
 Both scripts find the server through `ygg-models.sh status`, and remove the cloud credentials from the session. Set
