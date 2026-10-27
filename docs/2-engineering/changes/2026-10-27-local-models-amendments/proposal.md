@@ -1,14 +1,14 @@
 ---
-title: Two corrections to the local models spec
+title: Three changes to the local models spec
 status: draft
 date: 2026-10-27
 related: [delta.md, tasks.md, ../../backlog.md, ../../specs/2026-10-25-local-models.md]
 style: spec
 ---
 
-# Two corrections to the local models spec
+# Three changes to the local models spec
 
-**Proposed 2026-10-27.** It fixes backlog [B-211](../../backlog.md) and the image tag part of
+**Proposed 2026-10-27.** It fixes backlog [B-211](../../backlog.md), and the image tag and gate parts of
 [B-215](../../backlog.md). The shape below is a proposal; the founder has not decided it.
 
 ## Why
@@ -22,6 +22,10 @@ style: spec
   the gate's source. `ygg models build --cuda-arch 86` builds for another architecture under the same tag, so the
   next `ygg models image` names an image built for a GPU the operator may not have, and `ygg-models.sh start`
   finds the tag and does not build.
+- **The gate's limits.** §3.5 lists what the gate refuses. It holds each request's body in memory, up to 32 MiB,
+  with no cap on requests at once and no time limit on reading a body (only on the headers, 30 seconds). A client
+  on the model network can hold memory and connections open. The cap and the deadline add two answers to §3.5's
+  list.
 
 ## What changes
 
@@ -30,6 +34,9 @@ style: spec
 2. The tag hashes the CUDA architecture too, when it is not the Containerfile's default (`89`). The default build
    keeps today's tag, so the image on the founder's engine stays valid and needs no rebuild. `ygg models image`
    takes `--cuda-arch` as `ygg models build` does, and both print the same tag for the same value.
+3. The gate passes at most 8 requests at once and answers 503 to another while 8 are in flight, so its bodies hold
+   at most 256 MiB. It reads a body within 60 seconds of the headers and answers 408 otherwise. A 503 is a
+   transient failure to the adapters, so the session retries with backoff.
 
 ## Not in this change
 
@@ -41,8 +48,9 @@ style: spec
 
 ## Impact
 
-- **Repos:** `gungnir` (`plainValue` for `args`), `gleipnir` (`ModelsImage` takes the architecture), `odin`
-  (`ygg models image --cuda-arch`), `yggdrasil` (spec, backlog, pointers).
+- **Repos:** `gungnir` (`plainValue` for `args`), `gleipnir` (`ModelsImage` takes the architecture; the gate),
+  `odin` (`ygg models image --cuda-arch`), `yggdrasil` (spec, backlog, pointers).
 - **Approval points:** none.
 - **Risk:** none for the default build. A value with a quote reaches llama-server as written, as any other value
-  does.
+  does. More than 8 sessions on one server at once would see 503s and retry; today a run's sessions on one model
+  are far fewer.
