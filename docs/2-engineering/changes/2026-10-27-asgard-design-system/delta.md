@@ -58,19 +58,19 @@ role, or freely; changing any role turns the preset into "Custom". The logo is s
 three rounds without a choice, the agent asks what is missing instead of offering more. The message colours are toned
 to the palette and kept off the brand board.
 
-**6c Typography, the wordmark included.** (The wordmark role starts at the typeface picked in 6a.) Criteria, in order: the voice's personality words; legibility at interface
-sizes; every glyph of the clients' languages; the weights and italics each role needs; an open licence that allows web
-use and self-hosting. Candidates come from an open library as named presets ("looks": a pairing with a one-line
-character), each a starting point; every role has its own picker among valid candidates, and changing any role turns
-the look into "Custom". Roles come in two groups, each with its job, where it appears and how often it is seen:
-*character* faces (the **wordmark**, display, initial) and *system* faces (heading, body, interface), with mono and
-ornament where the company needs them; the rarer the role, the more character it can afford. The wordmark role sets
-the company's name in the logo wherever the logo has lettering. An "In use" view shows the look in light and dark
-with a fact card per role (family, weights, licence), and a "Contexts" view shows it where people meet the company
-(its social profile and posts, a link preview in a chat app, an email, a page of its website), noting where its own
-fonts cannot reach. A five-second test flashes each look without its label and reveals the labels at the end. Four
-lessons from Ouroboric's own choice apply: think in roles; check that the body face has bold and italic; check where
-a style's label comes from; show candidates where people meet the brand, not only in a specimen.
+**6c Typography, the wordmark included.** (The wordmark role starts at the typeface picked in 6a.) Criteria, in order:
+the voice's personality words; legibility at interface sizes; every glyph of the clients' languages; the weights and
+italics each role needs; an open licence that allows web use and self-hosting. Candidates come from an open library as
+named presets ("looks": a pairing with a one-line character), each a starting point; every role has its own picker among
+valid candidates, and changing any role turns the look into "Custom". Roles come in two groups, each with its job, where
+it appears and how often it is seen: *character* faces (the **wordmark**, display, initial) and *system* faces (heading,
+body, interface), with mono and ornament where the company needs them; the rarer the role, the more character it can
+afford. The wordmark role sets the company's name in the logo wherever the logo has lettering. An "In use" view shows
+the look in light and dark with a fact card per role (family, weights, licence), and a "Contexts" view shows it where
+people meet the company (its social profile and posts, a link preview in a chat app, an email, a page of its website),
+noting where its own fonts cannot reach. A five-second test flashes each look without its label and reveals the labels
+at the end. Four lessons from Ouroboric's own choice apply: think in roles; check that the body face has bold and
+italic; check where a style's label comes from; show candidates where people meet the brand, not only in a specimen.
 
 **6d Imagery.** The guidelines (what images look like, never look like, how they are used), and up to six sample
 images with their consent records.
@@ -164,13 +164,12 @@ brand's applications?
   the live wordmark face. Its export is a
   token file `brand.py` validates before anything is applied. The founder opens it from a link: GitHub's file view
   does not run it, so until a private preview exists (backlog B-202) the agent shares it privately for viewing.
-- §5.7 The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share four rules, each with a test:
-  the page saves the founder's confirmed choice and reason where the agent reads it, and reopens on it; every
-  candidate's facts are read from the source at build time (a font's weights and italics from the font or its library, never typed by
-  hand); every candidate face the page offers is shown to load before the page is shared; and every option the page
-  offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths), so no choice is blind.
-  An option whose effect depends on another (a shadow that only a raised card shows) gets something that always
-  shows it.
+- §5.7 The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share four rules, each with a test: the
+  page saves the founder's confirmed choice and reason where the agent reads it, and reopens on it; every candidate's
+  facts are read from the source at build time (a font's weights and italics from the font or its library, never typed
+  by hand); every candidate face the page offers is shown to load before the page is shared; and every option the page
+  offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths), so no choice is blind. An
+  option whose effect depends on another (a shadow that only a raised card shows) gets something that always shows it.
 
 ## Kickstart guide (added)
 
