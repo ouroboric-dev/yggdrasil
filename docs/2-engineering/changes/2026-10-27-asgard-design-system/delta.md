@@ -33,6 +33,24 @@ read all day, a bolder one for what is seen rarely, such as the wordmark or a ti
 bold and italic; check where a style's label comes from before using it; and show each candidate in the real places
 people meet the brand, not only in a specimen.
 
+The methods of the two pages Ouroboric used for its own typeface and logo choices are the model:
+
+- **Typography (6b, and the playground's type controls).** Candidates arrive as named presets ("looks": a pairing
+  with a one-line character, such as "calm and modern" or "warm and handmade"), each a starting point. Every role has
+  its own picker, and changing any role turns the look into "Custom". Roles come in two groups, each with its job,
+  where it appears, and how often it is seen: *character* faces (wordmark, display, initial) and *system* faces
+  (heading, body, interface), with mono and ornament where the company needs them. The rule of thumb is printed with
+  them: the rarer the role, the more character it can afford. An "In use" view shows the look in light and dark with
+  a fact card per role (family, weights, licence), and a "Contexts" view shows it where people meet the company (its
+  social profile and posts, a link preview in a chat app, an email, a page of its website), noting where the company's
+  own fonts cannot reach. A five-second test flashes each look without its label, for the founder (and anyone she
+  asks) to say what it brings to mind, and reveals the labels at the end.
+- **Logo (6c).** Proposals sit in identical blocks, in the same order, each with a plain Strength and Risk (with the
+  size at which it fails, if it does). Each is shown at 16, 24, 32 and 48 pixels in a light and a dark row; the
+  favicon at 16, 32 and 64 pixels with an enlarged 16, where favicons usually fail. A "Chosen" label marks the choice,
+  and a short checklist says what happens after it: the files exported, the usage rules written, the rejected
+  concepts kept.
+
 ## Design §7, the template (modified)
 
 - Brand, identity: palette, typography (with its reason), logo, foundations (type scale, spacing, radius, elevation,
