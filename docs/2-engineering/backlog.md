@@ -1805,6 +1805,20 @@ model from T012. Pinned to `gungnir` `5935d57`, `gleipnir` `d1a5eb7`, `odin` `ab
 - **Fix:** each in turn, with a test.
 - **Status:** reasoned (LM-T07's review).
 
+Source of item B-216: the change proposal for B-209 (`changes/2026-10-27-firewall-resolvers/`), pinned to
+`gleipnir` `d1a5eb7`.
+
+### B-216: a container on an internal network has a DNS-only channel out
+
+- **Where:** the sandbox's `services` network and the model server's network (internal, `gleipnir/sandbox/config.go`);
+  aardvark-dns, which serves each network's names.
+- **Problem:** on an internal network, aardvark-dns still forwards names it does not own to the host's resolver. A
+  service container, or the model server, has no route out but can send data out in DNS queries, and read answers.
+  The work container is not affected: its DNS goes to the firewall's dnsmasq, which answers only the allowed names.
+- **Fix:** find a netavark or aardvark-dns setting that stops forwarding on an internal network while the
+  network's own names still resolve, and prove it on the real engine; else state the residual risk in the spec.
+- **Status:** reasoned (B-209's integration test proves the forwarding, not its use as a channel).
+
 ## Done
 
 ### B-186: the runbook's build line writes `ygg` to a folder that may not be on `PATH`
