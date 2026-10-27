@@ -295,6 +295,8 @@ has two reviewers in its record.
 
 Build `ygg` with `scripts/ygg-build.sh` only. A `ygg` built by hand has no build facts: the proof script refuses it,
 and the run records the factory version as `odin unknown`.
+To build a second `ygg` beside the one on `PATH`, run `scripts/ygg-build.sh --out FILE --beside-path`. It prints the
+`YGG_CMD=FILE` line to use.
 
 1. Make sure that the run is stopped or paused (exit 3 or 4), not running.
 2. Make sure that the server runs: `scripts/ygg-models.sh status`.
@@ -350,7 +352,8 @@ To go back, copy the two `.before-local` files over the changed ones while the r
 
 ### In OpenCode and Claude Code
 
-`qwen-claude.sh init` needs a personal Claude Code config folder, `QWEN_PERSONAL_DIR` (default `~/.claude-personal`).
+`qwen-claude.sh init` uses a personal Claude Code config folder, `QWEN_PERSONAL_DIR` (default `~/.claude-personal`),
+when there is one.
 `init` links `QWEN_PERSONAL_DIR/skills` and wires the hook `hooks/merge-requires-green.sh` only when the folder has
 them. It says what it left out, and drops a stale skills link when you run it again.
 

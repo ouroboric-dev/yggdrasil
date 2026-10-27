@@ -1854,9 +1854,9 @@ Source of items B-218 to B-220: the reviews of gleipnir#28 and ouroboric#92, pin
   comparison false.
 - **Fix:** [gungnir#33](https://github.com/ouroboric-dev/gungnir/pull/33) and
   [gleipnir#29](https://github.com/ouroboric-dev/gleipnir/pull/29),
-  [odin#50](https://github.com/ouroboric-dev/odin/pull/50). YAML decoding already refused `.nan` and `.inf`, with a
-  message that named no field; the message now names the field, and `Price.check` (gungnir) and `checkPrice` (gleipnir)
-  refuse a non-finite price in a value built in Go.
+  [odin#50](https://github.com/ouroboric-dev/odin/pull/50). The premise was half wrong: YAML decoding already
+  refused `.nan` and `.inf`, with a message that named no field. The message now names the field, and
+  `Price.check` (gungnir) and `checkPrice` (gleipnir) refuse a non-finite price in a value built in Go.
 - **Status:** done.
 - **Fixed:** 2026-10-27.
 
