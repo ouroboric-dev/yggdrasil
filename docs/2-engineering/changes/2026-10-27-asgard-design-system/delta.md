@@ -164,7 +164,10 @@ brand's applications?
 - §5.7 The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share three rules, each with a test:
   the page saves the founder's confirmed choice and reason where the agent reads it; every candidate's facts are
   read from the source at build time (a font's weights and italics from the font or its library, never typed by
-  hand); and every candidate face the page offers is shown to load before the page is shared.
+  hand); every candidate face the page offers is shown to load before the page is shared; and every option the page
+  offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths), so no choice is blind.
+  An option whose effect depends on another (a shadow that only a raised card shows) gets something that always
+  shows it.
 
 ## Kickstart guide (added)
 
