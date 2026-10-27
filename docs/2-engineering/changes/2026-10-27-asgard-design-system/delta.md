@@ -20,13 +20,24 @@ The methods of the pages Ouroboric used for its own typeface and logo choices ar
 **6a Logo design (first).** The founder brings an initial concept: her own logo in any format and any quality, a
 sketch, or an image from a generator. The agent prepares it (cut out, flat background removed, resolution raised),
 then critiques it plainly: legibility at small sizes, how it reads in light and dark, distinctiveness in her trade,
-irregular geometry, and lettering that is not a real typeface. It offers two to four alternatives: the concept as
-drawn and cleaned, a refined version, and one or two variations that explore the idea further. They are shown as
-Ouroboric's logo page shows them: identical blocks in the same order, each with a plain Strength and Risk (with the
-size at which it fails, if it does), at 16, 24, 32 and 48 pixels in a light and a dark row, the favicon at 16, 32 and
-64 pixels with an enlarged 16. The founder chooses one. What she chooses is the logo's **design**: its shapes and
-their composition. Its colours come from the palette (6b) and change with it; its lettering, if it has any, is the
-wordmark, set by the typography's wordmark role (6c), not fixed here.
+irregular geometry, and lettering that is not a real typeface. The critique names the **mark**: the part that stands
+alone as the favicon and icon, which may be only a piece of the concept (a symbol inside the name). It offers two to
+four alternatives: the concept as drawn and cleaned, a refined version, and one or two variations that explore the
+idea further. They are shown as Ouroboric's logo page shows them: each proposal in its own panel, panels side by side
+where the screen allows, identical in order and parts, each with a plain Strength and Risk (with the size at which it
+fails, if it does); the logo at 16, 24, 32 and 48 pixels in a light and a dark row; the mark at 16, 32 and 64 pixels
+with an enlarged 16, also in a light and a dark row.
+
+When the concept has lettering, the lettering is part of the logo's look, most of all where the mark and the name are
+one piece. The page then has a **lettering picker**: candidate typefaces chosen for the voice's personality words,
+with open licences, in two groups, *serious* (calm and clear, they hold up at any size) and *stylised* (more
+character, more care at small sizes); picking one redraws every alternative in it. The agent checks every pairing of
+alternative and typeface before showing it, and a pairing that does not work (a symbol that does not fit the face's
+letters, a join it breaks, a detail lost at small sizes) carries a visible note on its panel instead of being hidden.
+
+The founder chooses one alternative and one typeface. What she chooses is the logo's **design**: its shapes and their
+composition. Its colours come from the palette (6b) and change with it. Its lettering is the wordmark: the typeface
+picked here becomes the starting face of the typography's wordmark role (6c), where it can still change.
 
 **6b Palette.** Presets first: two to four named palettes seeded from the founder's mood words (step 5), the colours
 of her logo concept, a colour she already uses, and her references, each with light and dark versions and checked
@@ -112,9 +123,12 @@ brand's applications?
 - §3.2 `brand.sh palette DIR ROUND.json`: renders a palette round (light and dark, the logo applied), each palette
   checked with the company's contrast rules before it is shown.
 - §3.2 `brand.sh logo-prep DIR IMAGE`: cuts out the founder's concept, removes a flat background and raises the
-  resolution; `brand.sh logo-proposals DIR`: renders the concept and the agent's alternatives as a review page
-  (identical blocks with Strength and Risk, size ladders in light and dark, the favicon at 16, 32 and 64), and writes
-  the chosen design as `logo/source/` PNGs in neutral colours for the palette to recolour.
+  resolution; `brand.sh logo-proposals DIR CANDIDATES.json`: renders the concept and the agent's alternatives as a
+  review page (a panel per alternative with Strength and Risk, size ladders and the mark at 16, 32 and 64 in light
+  and dark), each alternative set in every candidate typeface from the candidates file (grouped serious and
+  stylised, each with its licence and a poor-fit note per alternative where one applies), and writes the chosen
+  design as `logo/source/` PNGs in neutral colours for the palette to recolour, with the chosen typeface recorded
+  for the wordmark role.
 - §3.1 `brand.py` checks: glyph coverage of every shipped font for the clients' languages; the minimum body size in
   the type scale; the focus colour at 3:1 against `bg` and `surface`; the foundation tokens present.
 - §4.3 `fonts.css` serves WOFF2 (converted from the shipped font, subset to the clients' languages); the original

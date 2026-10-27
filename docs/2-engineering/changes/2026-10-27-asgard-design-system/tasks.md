@@ -21,8 +21,9 @@ are amended in yggdrasil with the delta once this proposal is approved.
 - [ ] **DS-T05 Typography tool.** `brand.sh fonts`: candidates with licences, specimens in the company's words.
 - [ ] **DS-T06 Palette rounds.** `brand.sh palette`: a round from JSON, checked and rendered with the logo.
 - [ ] **DS-T07 Logo design.** `brand.sh logo-prep` (cut out, flat background removed, resolution raised) and
-      `brand.sh logo-proposals` (the concept and the alternatives as a review page; the chosen design written for the
-      palette to recolour).
+      `brand.sh logo-proposals` (the concept and the alternatives as a review page, panels per alternative, the
+      lettering picker over candidate typefaces with poor-fit notes; the chosen design written for the palette to
+      recolour, the chosen typeface seeding the wordmark role).
 - [ ] **DS-T08 Web fonts.** WOFF2, subset to the clients' languages, in `fonts.css`.
 - [ ] **DS-T09 The board.** Type scale, component sheet, logo usage, applications.
 - [ ] **DS-T11 The playground.** `brand.sh playground`: the self-contained prototype from a candidates file; every
