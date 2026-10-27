@@ -31,5 +31,7 @@ are amended in yggdrasil with the delta once this proposal is approved.
       the logo's design fixed, recoloured live, its lettering in the live wordmark face; live checks from the shared
       rule set; the export validated by `brand.py`. Its rules are generated from `brand.py`, so a test proves the two
       agree.
+- [ ] **DS-T12 Choice pages save choices.** The rules of spec §5.7 for every choice page, with a test each: the
+      choice and reason saved where the agent reads them, candidate facts read at build time, every face loads.
 - [ ] **DS-T10 The token contract.** Written in the brand tools spec for the product realms; the realm side is
       backlog B-217.

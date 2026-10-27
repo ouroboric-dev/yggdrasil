@@ -15,6 +15,11 @@ Step 6, **Brand: look**, runs as seven sub-steps, in this order. The logo's desi
 of the system is built around it. Every sub-step works the same way: the agent proposes valid candidates by a stated
 method, checks them before showing them, and shows them side by side in light and dark with the company's own name
 and words; the founder reacts and chooses, and may mix and match; each choice records its reason in the decision log.
+Every page that offers a choice **saves** it: the founder confirms her choice on the page, with a reason if she has
+one, and the agent reads it from there; a choice that lives only in her browser, or that she must copy and paste, is
+a defect. Facts shown about a candidate (a typeface's weights and italics, its licence, the languages it covers) come
+from the source when the page is built, not from the agent's memory. An export carries the checks still open, so a
+choice that fails a check cannot travel as if it passed.
 The methods of the pages Ouroboric used for its own typeface and logo choices are the starting point, not the limit.
 
 **6a Logo design (first).** The founder brings an initial concept: her own logo in any format and any quality, a
@@ -47,7 +52,7 @@ role, or freely; changing any role turns the preset into "Custom". The logo is s
 three rounds without a choice, the agent asks what is missing instead of offering more. The message colours are toned
 to the palette and kept off the brand board.
 
-**6c Typography, the wordmark included.** Criteria, in order: the voice's personality words; legibility at interface
+**6c Typography, the wordmark included.** (The wordmark role starts at the typeface picked in 6a.) Criteria, in order: the voice's personality words; legibility at interface
 sizes; every glyph of the clients' languages; the weights and italics each role needs; an open licence that allows web
 use and self-hosting. Candidates come from an open library as named presets ("looks": a pairing with a one-line
 character), each a starting point; every role has its own picker among valid candidates, and changing any role turns
@@ -85,8 +90,8 @@ adjusts everything together before it is final. It is a prototype for looking, n
   indicator under 3:1, a body size under the minimum, or a typeface without the weights or italics its role needs
   shows a visible warning next to what it affects, and in a list of every open check. The playground and the
   company's checks share one rule set, so they cannot disagree.
-- **Export:** the founder's final settings export as a token file; the agent applies it, and the company's own
-  checks then decide.
+- **Export:** the founder's final settings are saved where the agent reads them, as every choice page saves its
+  choice: a token file with the checks still open. The agent applies it, and the company's own checks then decide.
 
 **6g Board and applications.** Generated from the final tokens: the brand board, and the first applications (a
 square social profile picture from the mark, a link preview image, an email signature).
@@ -145,6 +150,10 @@ brand's applications?
   the live wordmark face. Its export is a
   token file `brand.py` validates before anything is applied. The founder opens it from a link: GitHub's file view
   does not run it, so until a private preview exists (backlog B-202) the agent shares it privately for viewing.
+- §5.7 The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share three rules, each with a test:
+  the page saves the founder's confirmed choice and reason where the agent reads it; every candidate's facts are
+  read from the source at build time (a font's weights and italics from the font or its library, never typed by
+  hand); and every candidate face the page offers is shown to load before the page is shared.
 
 ## Kickstart guide (added)
 
