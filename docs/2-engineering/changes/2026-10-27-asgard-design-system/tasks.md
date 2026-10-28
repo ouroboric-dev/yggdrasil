@@ -33,13 +33,13 @@ DS-T10 (with DS-T03)
 
 ## Asgard
 
-- [ ] **DS-T03 Foundations in the template.** `templates/company/core/docs/7-branding/identity/tokens.json`: the new
+- [x] **DS-T03 Foundations in the template.** `templates/company/core/docs/7-branding/identity/tokens.json`: the new
       keys of the token contract with a starting set that passes the checks; the type roles `wordmark` and `display`
       beside `heading`, `body`, `ui`; the identity page's sections (foundations, components, accepted exceptions,
       applications). `brand.py tokens` generates `tokens.css` with the foundation variables (`--space-1`…,
       `--radius-*`, `--shadow-*`, `--motion-*`, `--focus-*`, `--font-<role>` for the five roles). Test first in
       `scripts/tests/brand-checks.test.sh`: a fixture company's generated CSS carries every foundation variable.
-- [ ] **DS-T04 New checks.** `templates/company/core/.ouroboric/checks/brand.py`: glyph coverage of each shipped
+- [x] **DS-T04 New checks.** `templates/company/core/.ouroboric/checks/brand.py`: glyph coverage of each shipped
       font for the clients' languages (the languages read from `tokens.json`); the minimum body size (16 px); body line
       height at least 1.5; the focus colour at 3:1 against `bg` and `surface` in both modes, at least 2 px; the touch
       target at least 24 px; the foundations present; the body face's italic and the roles' weights read from the font
@@ -47,10 +47,10 @@ DS-T10 (with DS-T03)
       value, reason, by, date) whose value matches turns a failure into "accepted"; one whose value changed is
       reported stale and the check fails. Tests first: one fixture per rule that fails, and one accepted exception
       that passes and then goes stale when its value changes.
-- [ ] **DS-T08 Web fonts.** `fonts.css` serves WOFF2 converted from the shipped font and subset to the clients'
+- [x] **DS-T08 Web fonts.** `fonts.css` serves WOFF2 converted from the shipped font and subset to the clients'
       languages (fontTools with the Brotli module); the original stays as the licence's evidence. Test: the WOFF2 holds
       every glyph of the languages.
-- [ ] **DS-T09 The board.** `scripts/brand/board.py`: each type role at its scale size, the foundations, a component
+- [x] **DS-T09 The board.** `scripts/brand/board.py`: each type role at its scale size, the foundations, a component
       sheet in both modes from the recipes, logo usage (clear space as the mark's width, minimum sizes, misuses), the
       kept exceptions with their reasons, and the applications. Message colours stay off the board. Test: a fixture's
       board lists every role, every recipe and every accepted exception.

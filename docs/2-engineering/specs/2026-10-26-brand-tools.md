@@ -428,13 +428,20 @@ and 12 remove and add these.
 5. **Open items:** every gap, every font that needs a person, every proposed brand token not yet in `tokens.json`,
    and every sample image with no record or with a person and no consent, in plain words.
 
-The design system process adds to the board, after the parts above: each role in its typeface at its scale size; the
-foundations; a component sheet (button, link, field, card, message) in both modes, built from the component recipes of
-§5.5, with the message colours kept off the board; logo usage (clear space as the mark's width on every side, the
-minimum sizes of the logo and of the mark, and the misuses, each misuse on its own tile); the kept exceptions with
-their reasons; and the applications (a square profile picture from the mark, a link preview image of 1200 × 630
-pixels, an email signature with a double-resolution logo). A hard-edged shadow is blurred in print. The board is
-generated only from the playground's saved settings (§5.6).
+The design system process changes the board in four ways, and the five parts above keep their order:
+
+- **Type** shows every role (wordmark, display, heading, body and interface) in its typeface at its scale size and
+  line height.
+- **Logo** gains logo usage: the clear space (the mark's width on every side, or half the logo's height when the logo
+  has no mark), the minimum sizes of the logo and of the mark, and the misuses, each on its own tile.
+- **Four parts follow the sample images and come before the open items:** the foundations; a component sheet, with
+  each component (button, link, field, card, message, navigation, image, icon) in the chosen variant in both modes,
+  built from the component recipes of §5.5, and a table of the recipes; the applications (a square profile picture
+  from the mark, a link preview image of 1200 × 630 pixels, an email signature with a double-resolution logo); and
+  the kept exceptions with their reasons.
+- **The message colours stay off the board.** The component sheet draws the message component in the accent colour.
+
+A hard-edged shadow is blurred in print. The board is generated only from the playground's saved settings (§5.6).
 
 **Rendering.** The founder reviews the board in GitHub's own file view, from the pull request, until a private
 preview exists. So the board is plain Markdown: headings, paragraphs, lists, tables and images in Markdown image
