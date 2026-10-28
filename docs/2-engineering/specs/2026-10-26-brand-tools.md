@@ -477,16 +477,16 @@ and the dark value under `prefers-color-scheme: dark` and `:root[data-theme="dar
 
 | Key | Property | Meaning |
 | --- | --- | --- |
-| `bg` | `--bg` | the page background |
-| `surface` | `--surface` | a raised or inset area on `bg`: cards, fields, the footer |
-| `border` | `--border` | rules and outlines of surfaces |
-| `text` | `--text` | body text, on `bg` and `surface` |
-| `muted` | `--muted` | secondary text, on `bg` and `surface` |
-| `accent` | `--accent` | the brand colour for fills and shapes: buttons, focus, selected state |
-| `accent-text` | `--accent-text` | the brand colour as text on `bg` and `surface`: links, outlined buttons |
-| `on-accent` | `--on-accent` | text on an `accent` fill |
-| `ok`, `warn`, `crit` | `--ok`, `--warn`, `--crit` | message colours, as text on `bg` and `surface` |
-| `brand-1`, `brand-2`, … | `--brand-1`, … | logo colours that no other token holds; for the logo only |
+| `bg` | `--color-bg` | the page background |
+| `surface` | `--color-surface` | a raised or inset area on `bg`: cards, fields, the footer |
+| `border` | `--color-border` | rules and outlines of surfaces |
+| `text` | `--color-text` | body text, on `bg` and `surface` |
+| `muted` | `--color-muted` | secondary text, on `bg` and `surface` |
+| `accent` | `--color-accent` | the brand colour for fills and shapes: buttons, focus, selected state |
+| `accent-text` | `--color-accent-text` | the brand colour as text on `bg` and `surface`: links, outlined buttons |
+| `on-accent` | `--color-on-accent` | text on an `accent` fill |
+| `ok`, `warn`, `crit` | `--color-ok`, `--color-warn`, `--color-crit` | message colours, as text on `bg` and `surface` |
+| `brand-1`, `brand-2`, … | `--color-brand-1`, … | logo colours that no other token holds; for the logo only |
 
 #### Type roles and scale
 
@@ -530,28 +530,28 @@ not at all where `motion.reduced` is `none` and the device asks for reduced moti
 
 #### button
 
-Variants `filled`, `outlined`, `soft`. Parts: the box has a border of 1.5 px in `--accent`, `--radius-button`, height
+Variants `filled`, `outlined`, `soft`. Parts: the box has a border of 1.5 px in `--color-accent`, `--radius-button`, height
 at least `--target`, horizontal padding `--space-4`, and its label in `--font-ui` at `--text-small`, weight 600.
 
 | Variant | Background | Label | Border |
 | --- | --- | --- | --- |
-| `filled` | `--accent` | `--on-accent` | `--accent` |
-| `outlined` | none | `--accent-text` | `--accent` |
-| `soft` | `--accent` mixed 16% into `--bg` | `--accent-text` | the background's colour |
+| `filled` | `--color-accent` | `--color-on-accent` | `--color-accent` |
+| `outlined` | none | `--color-accent-text` | `--color-accent` |
+| `soft` | `--color-accent` mixed 16% into `--color-bg` | `--color-accent-text` | the background's colour |
 
 The secondary button is `outlined` whatever the primary variant.
 
 #### link
 
-Variants `underlined`, `colour`. The text is `--accent-text`. `underlined` always has an underline, offset 3 px;
+Variants `underlined`, `colour`. The text is `--color-accent-text`. `underlined` always has an underline, offset 3 px;
 `colour` has none and gains it on hover.
 
 #### field
 
-One variant. The label is above the control, in `--font-ui` at `--text-small`, weight 500, `--text`. The control is
-at least `--target` high, with horizontal padding `--space-3`, background `--surface`, a 1 px border in `--border`,
-`--radius-md`, its value in `--font-body` and `--text`, and its placeholder in `--muted`. On focus-visible the
-control gets the focus outline. In error the border is `--crit` and the message beneath is `--crit`, weight 500.
+One variant. The label is above the control, in `--font-ui` at `--text-small`, weight 500, `--color-text`. The control is
+at least `--target` high, with horizontal padding `--space-3`, background `--color-surface`, a 1 px border in `--color-border`,
+`--radius-md`, its value in `--font-body` and `--color-text`, and its placeholder in `--color-muted`. On focus-visible the
+control gets the focus outline. In error the border is `--color-crit` and the message beneath is `--color-crit`, weight 500.
 
 #### card
 
@@ -560,35 +560,35 @@ Variants `bordered`, `surface`, `raised`. Padding `--space-3`, `--radius-lg`, th
 
 | Variant | Background | Border | Shadow |
 | --- | --- | --- | --- |
-| `bordered` | `--bg` | 1 px `--border` | none |
-| `surface` | `--surface` | none | none |
-| `raised` | `--surface` | 1 px `--border` | `--shadow-card` |
+| `bordered` | `--color-bg` | 1 px `--color-border` | none |
+| `surface` | `--color-surface` | none | none |
+| `raised` | `--color-surface` | 1 px `--color-border` | `--shadow-card` |
 
 #### message
 
-Variants `tint`, `bar`; the colour `--c` is `--ok`, `--warn` or `--crit`. Padding `--space-2` and `--space-3`,
+Variants `tint`, `bar`; the colour `--c` is `--color-ok`, `--color-warn` or `--color-crit`. Padding `--space-2` and `--space-3`,
 `--radius-md`, text at `--text-small`.
 
 | Variant | Background | Text | Edge |
 | --- | --- | --- | --- |
-| `tint` | `--c` mixed 10% into `--bg` | `--c` | none |
-| `bar` | `--surface` | `--c` | 3 px left border in `--c`, square on the left |
+| `tint` | `--c` mixed 10% into `--color-bg` | `--c` | none |
+| `bar` | `--color-surface` | `--c` | 3 px left border in `--c`, square on the left |
 
 #### navigation
 
 Variants `left` (the logo at the start, the links at the end) and `centre` (the logo centred, the links beneath).
-Padding `--space-3` and `--space-4`, a 1 px bottom border in `--border`, links in `--font-ui` at `--text-small`,
-weight 500, in `--text`; the current page's link in `--accent-text`. Each link is at least `--target` high.
+Padding `--space-3` and `--space-4`, a 1 px bottom border in `--color-border`, links in `--font-ui` at `--text-small`,
+weight 500, in `--color-text`; the current page's link in `--color-accent-text`. Each link is at least `--target` high.
 
 #### image
 
 Variants `borderless`, `rounded`, `framed`. `borderless` shows the image alone. `rounded` adds `--radius-md`.
-`framed` adds a `--space-1` border in `--bg` (a print's margin) and a 1 px shadow, 3 px blur, of `--text` mixed 18%
+`framed` adds a `--space-1` border in `--color-bg` (a print's margin) and a 1 px shadow, 3 px blur, of `--color-text` mixed 18%
 into transparent, so the frame shows in both modes.
 
 #### icon
 
-Variants `outline`, `filled`. Size 22 px, colour `--accent-text`; an icon that stands alone is at least `--target`
+Variants `outline`, `filled`. Size 22 px, colour `--color-accent-text`; an icon that stands alone is at least `--target`
 square, with the icon centred. The icon set and its licence are RL-06 (design §8).
 
 #### Exceptions
