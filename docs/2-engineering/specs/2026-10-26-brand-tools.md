@@ -128,36 +128,51 @@ per pair or font, with its result, for the board.
 ### 3.2 `brand.sh` (Asgard script)
 
 ```text
-brand.sh setup               install the pinned tools into the cache; the only command that uses the network
+brand.sh setup               install the pinned tools into the cache; uses the network
+brand.sh fonts DIR CANDIDATES.json            fetch candidate typefaces and their licences, write their facts
+brand.sh palette DIR ROUND.json               check every preset of a palette round with the company's rules
+brand.sh logo-prep [--mark] DIR IMAGE         cut out, flatten and enlarge the founder's concept
+brand.sh logo-proposals DIR CANDIDATES.json [--choose ALT[:FACE]]   the logo review page; the chosen design as source PNGs
 brand.sh logo DIR            trace, recolour, derive, export and check the logo of the company in DIR
 brand.sh board [--check] DIR write DIR/docs/7-branding/identity/board.md; --check fails when it is stale
-brand.sh fonts DIR CANDIDATES.json            fetch candidate typefaces and write the facts the typography page shows
-brand.sh palette DIR ROUND.json               render a palette round, each palette checked before it is shown
-brand.sh logo-prep DIR IMAGE                  cut out, flatten and enlarge the founder's concept
-brand.sh logo-proposals DIR CANDIDATES.json   the logo review page; writes the chosen design to logo/source/
 brand.sh playground DIR                       the playground as one self-contained page (§5.6)
 brand.sh reference DIR                        write identity/reference/ (§5.8)
 ```
 
+The choice tools (`fonts`, `palette`, `logo-prep`, `logo-proposals`) write only in the company's
+`.ouroboric/choices/` folder, except `logo-proposals --choose`, which also writes `logo/source/`. That folder is where
+the choice pages save the founder's confirmed choice (§5.7).
+
 - `setup` creates a virtual environment under `${XDG_CACHE_HOME:-$HOME/.cache}/asgard/brand/<key>`, where `<key>` is
   a hash of `requirements.txt` and `resvg.lock`. It runs `pip install --require-hashes --only-binary :all:`. It
   downloads the resvg binary for the platform and refuses it when its SHA-256 differs from `resvg.lock`.
-- `brand.sh fonts DIR`: fetches three to five candidate typefaces from an open library (each with its licence
-  file, from the Google Fonts repository's `ofl/<family>/`), reads each face's facts from the file (family name,
-  weights from `fvar`, italic from a sibling italic file or an `ital` axis, glyph coverage), and renders a specimen of
-  each with the company's name, tagline and about text, in its languages. A face without an italic is reported
-  without one, whatever the candidates file says.
-- `brand.sh palette DIR ROUND.json`: renders a palette round (light and dark, the logo applied). It checks every
-  preset with `brand.py`'s rules before it is shown, and refuses a failing preset with the failing pairs named.
-- `brand.sh logo-prep DIR IMAGE`: cuts out the founder's concept, removes a flat background, flattens anti-aliased
-  edges to the logo's flat colours, and raises the resolution so that the short side is at least 1000 px and a mark
-  at least 2400 px.
-- `brand.sh logo-proposals DIR CANDIDATES.json`: renders the concept and the agent's alternatives as a review page (a
-  panel per alternative with Strength and Risk, the logo at 16, 24, 32 and 48 px and the mark at 16, 32 and 64 px
-  with an enlarged 16, each in its own light and dark row), each alternative set in every candidate typeface of the
-  candidates file (grouped serious and stylised, each with its licence and a poor-fit note per alternative where one
-  applies), and writes the chosen design as `logo/source/` PNGs in neutral colours for the palette to recolour, with
-  the chosen typeface recorded for the wordmark role.
+- `brand.sh fonts DIR CANDIDATES.json`: fetches each candidate typeface's files and its licence file from an open
+  library (the Google Fonts repository's `ofl/<family>/`; `ASGARD_FONTS_BASE` changes the library, which is https or a
+  local folder), keeps the downloads (`ASGARD_FONTS_DIR`) and uses them again without the network, and reads each
+  face's facts from the files: family name, weights (`fvar` or `OS/2`), italic (a sibling italic file or an `ital`
+  axis, and which file), glyph coverage of the clients' languages, the licence's SPDX id and a SHA-256 for each file. A
+  face without an italic is reported without one, whatever the candidates file says. It writes
+  `.ouroboric/choices/fonts-facts.json`. It is, with `setup`, a command that uses the network; `logo`, `board` and the
+  other choice tools open no connection.
+- `brand.sh palette DIR ROUND.json`: a round of up to four presets, each with a light and a dark palette. It checks
+  every preset with `brand.py`'s rules (the same pairs, through `palette_rows`) before it is shown, and refuses a
+  failing preset with the failing pairs named, so nothing is written. A passing round is written to
+  `.ouroboric/choices/palette-round-<n>.json` with each preset's contrast rows. A fourth round is refused: the agent
+  asks the founder what is missing instead.
+- `brand.sh logo-prep [--mark] DIR IMAGE`: takes a PNG or a JPEG, cuts out a flat background, flattens anti-aliased
+  edges and compression noise to the logo's flat colours (binary alpha), and enlarges the image to the target exactly:
+  at least 1000 px on the short side, and 2400 px for a mark. It writes `.ouroboric/choices/logo-prep/<name>.png`
+  and `.json`.
+- `brand.sh logo-proposals DIR CANDIDATES.json`: writes the review page, one self-contained HTML file with no network
+  address: a panel per alternative with Strength, Risk and the size at which it fails, the logo at 16, 24, 32 and 48
+  px and the mark at 16, 32 and 64 px with an enlarged 16, each in its own light and dark row, and a lettering picker
+  of the candidate typefaces (from the fonts' facts, grouped serious and stylised, each with its licence) that redraws
+  every lettered alternative in the picked face. Every pairing is checked before it is shown; a pairing that does not
+  work carries a visible note (characters the face lacks, a counter too narrow for the symbol, a joined script whose
+  letter is replaced, and the agent's own note). With `--choose ALT[:FACE]` it also writes the chosen design as
+  `logo/source/` PNGs (`logo.png`, `logo-dark.png`, `mark.png`) in the palette's text and accent colours, or a neutral
+  palette when none is set, and records the choice and the face for the wordmark role in
+  `.ouroboric/choices/logo.json`.
 - `logo` and `board` refuse to run when the environment for the current `<key>` is missing, and name `setup`.
 - Exit codes follow `company-site.sh`: 0 done, 2 refused (usage, missing setup, an input refused). A gap is not a
   failure: `logo` prints it, records it in `trace.json`, and exits 0.
