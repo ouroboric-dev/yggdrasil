@@ -106,7 +106,11 @@ carries none of their code: the one mark a tool leaves, VTracer's generator comm
 ```text
 .ouroboric/checks/brand.py contrast [--json]    the palette pairs (§5.1)
 .ouroboric/checks/brand.py fonts [--json]       the font licence evidence (§5.2)
-.ouroboric/checks/brand.py tokens [--write]     tokens.css and fonts.css from tokens.json; without --write, fail when stale
+.ouroboric/checks/brand.py foundations          the foundations are set and reach their minimums
+.ouroboric/checks/brand.py type                 the shipped fonts: glyphs, weights and the body face's italic
+.ouroboric/checks/brand.py components           what the chosen component variants need from the palette
+.ouroboric/checks/brand.py accepted             the accepted exceptions are complete
+.ouroboric/checks/brand.py tokens [--write]     tokens.css, fonts.css and the web fonts from tokens.json; without --write, fail when stale
 .ouroboric/checks/brand.py board-fresh          board.md matches its inputs (§5.4)
 .ouroboric/checks/brand.py reference-fresh      identity/reference/ matches its inputs (§5.8)
 .ouroboric/checks/brand.py check                all of them; run.sh runs this
@@ -119,6 +123,11 @@ Added by the design system process (the checks are in the task list as DS-T04):
   against `bg` and `surface` in both modes, at least 2 px thick; the touch target at least 24 px; and the foundation
   tokens present. The body face's italic and each role's weights are read from the font files (`fvar`, `OS/2`), never
   from `tokens.json`.
+- `brand.py components` checks, in both modes, what a chosen variant needs from the palette beyond its pairs: a soft
+  button's accent text on its tint (4.5:1), an outlined button's accent text on the background (4.5:1), a link
+  without an underline against the text (3:1, WCAG 2.2 SC 1.4.1) and a tinted message's colour on its tint (4.5:1).
+  Their ids are `components:button:soft:<mode>`, `components:button:outlined:<mode>`, `components:link:<mode>` and
+  `components:message:<tone>:<mode>`.
 - `brand.py` reads `accepted` in `tokens.json`: entries of check id, value, reason, by and date. A failure whose check
   id and value match an entry is reported as **accepted**, not as a failure, and does not stop the build. An entry
   whose value no longer matches is reported as **stale**, and the check fails again. An exception names one check on
@@ -137,13 +146,14 @@ brand.sh palette DIR ROUND.json               check every preset of a palette ro
 brand.sh logo-prep [--mark] DIR IMAGE         cut out, flatten and enlarge the founder's concept
 brand.sh logo-proposals DIR CANDIDATES.json [--choose ALT[:FACE]]   the logo review page; the chosen design as source PNGs
 brand.sh palette-page DIR                     the page of step 6b, from the latest checked round (§5.7)
-brand.sh type-page DIR CANDIDATES.json        the page of step 6c (§5.7)
-brand.sh foundations-page DIR CANDIDATES.json the page of step 6e (§5.7)
+brand.sh type-page DIR CANDIDATES.json [--stage taste|depth|roles]   the pages of step 6c (§5.7)
+brand.sh foundations-page DIR [CANDIDATES.json]   the page of step 6e (§5.7)
 brand.sh serve DIR [--port N]                 serve the pages on 127.0.0.1 and save the founder's choices into DIR
 brand.sh check-page DIR PAGE.html             prove a page in a headless browser (§5.7)
 brand.sh logo DIR            trace, recolour, derive, export and check the logo of the company in DIR
 brand.sh board [--check] DIR write DIR/docs/7-branding/identity/board.md; --check fails when it is stale
-brand.sh playground DIR                       the playground as one self-contained page (§5.6)
+brand.sh playground DIR [CANDIDATES.json]     the playground as one self-contained page (§5.6)
+brand.sh playground-apply DIR --by NAME       validate the saved export with brand.py, then write tokens.json (§5.6)
 brand.sh reference DIR                        write identity/reference/ (§5.8)
 ```
 
@@ -629,19 +639,38 @@ when an entry applies or is stale.
 
 ### 5.6 The playground
 
-`brand.sh playground DIR` writes the playground as one self-contained HTML file in the company's brand folder. It
-needs no network at view time: the candidate typefaces are embedded, subset. It is generated from `tokens.json`, a
-candidates file (palette presets and per-role values, typography looks and per-role faces, the wordmark included,
-foundation candidates, component variants) and the company's check rules, so its live checks are the same rules as
-`brand.py`. The page has tabs for palette, type, foundations, components and checks, and a sample site painted only
-from tokens, in light and dark, at phone, tablet and desktop widths, with motion played. The logo is drawn from its
-traced design, recoloured from the live palette, with its lettering set in the live wordmark face (per-face masks). A
-failing check can be kept with a reason, which becomes an accepted exception. Its export is a token file that
-`brand.py` validates before anything is applied, and it carries the checks still open. The founder opens it from a
-link: GitHub's file view does not run it, so until a private preview exists (backlog B-202) the agent shares it
-privately for viewing. It opens on the founder's saved choices (`logo.json`, `palette.json`, `type.json`,
-`foundations.json`), so that she revisits all of them together one last time, and it saves and reopens as every choice
-page does (§5.7).
+`brand.sh playground DIR` writes `choices/playground.html`, one self-contained HTML file with no network at view
+time: the faces she chose and her favourites are embedded, subset to the words shown. It opens on what the founder
+saved on the guided pages (`palette.json`, `type.json`, `foundations.json`) and on `tokens.json`, and lets her change
+any of it once more, so that she revisits all of it together one last time:
+
+- the palette: her own, the presets of the latest round, a colour at a time from the round's candidates, or her own
+  `light | dark` value;
+- the typeface of each role, from her favourites;
+- each foundation (the candidates of the foundations page, with the company's own value first when it matches none);
+- a variant of each component (`scripts/brand/components.json`: buttons, links, cards, messages, navigation, images,
+  icons).
+
+A sample site, painted only from tokens (no colour is written in it), shows a navigation with the logo recoloured and
+the name in the wordmark face, a hero, a grid of images, an about block, service cards, a contact block with messages
+and an overlay, and a footer, in light and dark, at phone, tablet and desktop widths, with motion played. The logo is
+recoloured from its source's flat colours; redrawing its own lettering in the live wordmark face is not built.
+
+The **Checks** tab lists every rule with its stable id: the palette pairs, the foundations minimums, what each role needs
+from its face (weights, italic, glyphs) and the component rules (§3.1), by the same pairs and minimums as `brand.py`
+(a test proves the page's contrast rows equal `brand.py`'s for every pair). A failure she keeps, with a reason, becomes
+an accepted exception, one for each failing value.
+
+The export is a token file, saved and reopened as every choice page is (§5.7). `brand.sh playground-apply DIR --by NAME`
+validates it first: it copies the checks, the fonts and the new tokens to a throwaway folder and runs `brand.py`
+(`contrast`, `fonts`, `foundations`, `type`, `components`, `accepted`) there. A failure she did not keep refuses the
+apply, with code 1 and the failing pairs named, and writes nothing. When the export passes, the apply writes
+`tokens.json`, copies the shipped font files and their licence files into `identity/fonts/`, makes `tokens.css`,
+`fonts.css` and the web fonts again, and records for each exception who accepted it (`--by`) and the date; an exception
+that was already in `tokens.json` for the same check and value keeps its own.
+
+The founder opens the page from a link: GitHub's file view does not run it, so until a private preview exists (backlog
+B-202) the agent shares it privately for viewing.
 
 ### 5.7 The choice pages
 
@@ -652,6 +681,32 @@ its explanation in plain words: what the thing is for, what each option costs (w
 in words), and where the founder will meet it. A guided page is a sequence of cards, each a question with its options,
 a progress mark, and at the end a summary with her reason. The logo page stays a side-by-side review (§3.2), since a
 logo is judged against its alternatives.
+
+**The palette page** (`palette-page`) is built from a checked round (`brand.sh palette`): a card for the choice of a preset
+(each shown alone, with the logo recoloured, its mood and its checks in words), a card for each colour role (what it is
+for, candidate values one at a time, or her own value), and a summary of what fails, with a box to keep it. It applies
+the company's pairs live, and saves her choice and the final palette.
+
+**The typography pages** (`type-page`) come in three stages, each built from what the one before saved, because a static
+page cannot fetch fonts. *Taste*: one card for each of 16 style directions (geometric sans, humanist, rounded, neutral,
+characterful, elegant light, old-style serif, editorial serif, high-contrast serif, soft serif, slab, formal script,
+casual script, handwriting, condensed display, mono), each showing the two faces that start it in her own words; she
+says which she likes, one, both or neither. *Depth*: only the directions she liked, with the faces held back there, next
+to the ones she liked; she picks one that goes further, if any. *Roles*: a card for each role (wordmark, display,
+heading, body, interface) with its job, where it appears and how often it is seen, offering her favourites that suit it,
+and saying so when none does. The stage is the next one after the last saved, or `--stage`. The faces are Asgard's
+curated list, `faces.json`: 75 open faces (OFL 1.1), 32 to start with and 43 held back, each file pinned by its SHA-256
+at one commit of the Google Fonts repository; `faces-source.json` is the hand-edited source (the directions, their voice
+words, the roles each suits, a note for each face) and `pin_faces.py` makes the list and prints a review table of weights,
+italics and glyph coverage. A file that does not match its hash is refused and deleted. A face the agent fetched with
+`brand.sh fonts` can be offered too.
+
+**The foundations page** (`foundations-page`) has a card for each of ten foundations (body size, type scale, line height,
+spacing, corners, depth, motion, focus, touch size, breakpoints), each with two or three candidates and a card of looks
+that set them all. One live sample shows every choice together, including motion played on a loop and a ruler of screen
+widths with a width slider; the minimums are checked as she chooses, and the focus colour against her saved palette. The
+defaults are `foundations.json`; a candidates file can replace any foundation's options. The result has the keys of the
+token contract (§5.5).
 
 Every page is built by one shared module, `choicepage.py`, and keeps four rules, each with a test:
 
@@ -676,10 +731,19 @@ A company may use its own browser for `check-page`: `.ouroboric/browser.json`, `
 
 ### 5.8 The reference
 
-`brand.sh reference DIR` writes `identity/reference/` from `tokens.json`: `components.css` (every recipe and variant,
-only `var(--…)` from `tokens.css`), `playground.html` (self-contained, without saving) and the screenshots (light and
-dark; 390, 820 and 1280 pixels wide), rendered by a pinned headless browser. `brand.py` reports the reference as stale
-when its inputs change, as it does the board.
+`brand.sh reference DIR` writes `identity/reference/` from `tokens.json`; nothing in it is edited by hand:
+
+- `components.css`: every recipe and variant of §5.5 and their states (hover, active, focus-visible, disabled), built only
+  from the variables of `tokens.css` (a test proves it holds no literal colour or font name, no size but the recipes'
+  own constants, and no variable `tokens.css` does not define). A product reads it with the tokens.
+- `playground.html`: one self-contained page with the tokens, the fonts embedded and every variant of every component,
+  light and dark by the reader's setting. It cannot save anything: the choice is made.
+- `screenshots/`: that page in light and dark at 390, 820 and 1280 pixels, from the headless browser (§5.7), for people
+  reviewing and for agents that read images.
+
+`brand.py reference-fresh` reports the reference stale when its inputs change (`tokens.json`, the generated CSS, the font
+files, the logo's SVGs), as it does the board, and `check` runs it. The stylesheet is generated from one table of recipes;
+the playground keeps its own copy of the same rules, so the two could drift (a follow-up unifies them).
 
 ### 5.9 Where they run
 
@@ -690,6 +754,8 @@ when its inputs change, as it does the board.
 | generated files fresh | `brand.py tokens --write` | yes | same |
 | logo processing | `brand.sh logo` | no: it writes files | through `brand.test.sh` |
 | brand board | `brand.sh board` | freshness only (`board-fresh`) | through `brand.test.sh` |
+| component rules | `brand.py components` | yes, in `brand.py check` | through `brand-checks.test.sh` |
+| guided pages, playground, reference | `brand.sh *-page`, `playground`, `reference` | freshness only (`reference-fresh`) | through `brand.test.sh`, in a real browser |
 
 1. `run.sh` MUST run `brand.py check` as one step.
 2. A fresh scaffold MUST pass `run.sh`.
