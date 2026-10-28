@@ -34,6 +34,12 @@ the company's repository names Ouroboric or any of its parts.
 
 The founder answered the open questions on 2026-10-27; §9 records the answers and §12 the deviations they make.
 
+**Amended 2026-10-28** by the change proposal
+[Asgard's design system process](https://github.com/ouroboric-dev/yggdrasil/blob/main/docs/2-engineering/changes/2026-10-27-asgard-design-system/proposal.md):
+step 6 runs as seven sub-steps (design §6.1), so the tools gain typeface candidates, palette rounds, logo preparation
+and proposals, a playground and a reference; `brand.py` gains checks and accepted exceptions (§3.1); the board shows
+more (§5.4); and §5.5 to §5.8 are new. "Where they run" is now §5.9.
+
 The tools build on what Asgard already holds:
 
 - [`templates/company/core/docs/7-branding/identity/README.md`](https://github.com/ouroboric-dev/asgard/blob/main/templates/company/core/docs/7-branding/identity/README.md)
@@ -99,8 +105,21 @@ carries none of their code: the one mark a tool leaves, VTracer's generator comm
 .ouroboric/checks/brand.py fonts [--json]       the font licence evidence (§5.2)
 .ouroboric/checks/brand.py tokens [--write]     tokens.css and fonts.css from tokens.json; without --write, fail when stale
 .ouroboric/checks/brand.py board-fresh          board.md matches its inputs (§5.4)
-.ouroboric/checks/brand.py check                all four; run.sh runs this
+.ouroboric/checks/brand.py reference-fresh      identity/reference/ matches its inputs (§5.8)
+.ouroboric/checks/brand.py check                all of them; run.sh runs this
 ```
+
+Added by the design system process (the checks are in the task list as DS-T04):
+
+- `brand.py` checks the **glyph coverage** of every shipped font for the clients' languages (read from `tokens.json`);
+  the minimum body size in the type scale (16 px) and a body line height of at least 1.5; the focus colour at 3:1
+  against `bg` and `surface` in both modes, at least 2 px thick; the touch target at least 24 px; and the foundation
+  tokens present. The body face's italic and each role's weights are read from the font files (`fvar`, `OS/2`), never
+  from `tokens.json`.
+- `brand.py` reads `accepted` in `tokens.json`: entries of check id, value, reason, by and date. A failure whose check
+  id and value match an entry is reported as **accepted**, not as a failure, and does not stop the build. An entry
+  whose value no longer matches is reported as **stale**, and the check fails again. An exception names one check on
+  one value.
 
 Each finding prints as `path: what is wrong`, like `docs-check.py`. Exit codes: 0 when every check passes, 1 when a
 check has a finding, 2 when it cannot run (for example, `tokens.json` is not valid JSON). `--json` prints one object
@@ -112,11 +131,33 @@ per pair or font, with its result, for the board.
 brand.sh setup               install the pinned tools into the cache; the only command that uses the network
 brand.sh logo DIR            trace, recolour, derive, export and check the logo of the company in DIR
 brand.sh board [--check] DIR write DIR/docs/7-branding/identity/board.md; --check fails when it is stale
+brand.sh fonts DIR CANDIDATES.json            fetch candidate typefaces and write the facts the typography page shows
+brand.sh palette DIR ROUND.json               render a palette round, each palette checked before it is shown
+brand.sh logo-prep DIR IMAGE                  cut out, flatten and enlarge the founder's concept
+brand.sh logo-proposals DIR CANDIDATES.json   the logo review page; writes the chosen design to logo/source/
+brand.sh playground DIR                       the playground as one self-contained page (§5.6)
+brand.sh reference DIR                        write identity/reference/ (§5.8)
 ```
 
 - `setup` creates a virtual environment under `${XDG_CACHE_HOME:-$HOME/.cache}/asgard/brand/<key>`, where `<key>` is
   a hash of `requirements.txt` and `resvg.lock`. It runs `pip install --require-hashes --only-binary :all:`. It
   downloads the resvg binary for the platform and refuses it when its SHA-256 differs from `resvg.lock`.
+- `brand.sh fonts DIR`: fetches three to five candidate typefaces from an open library (each with its licence
+  file, from the Google Fonts repository's `ofl/<family>/`), reads each face's facts from the file (family name,
+  weights from `fvar`, italic from a sibling italic file or an `ital` axis, glyph coverage), and renders a specimen of
+  each with the company's name, tagline and about text, in its languages. A face without an italic is reported
+  without one, whatever the candidates file says.
+- `brand.sh palette DIR ROUND.json`: renders a palette round (light and dark, the logo applied). It checks every
+  preset with `brand.py`'s rules before it is shown, and refuses a failing preset with the failing pairs named.
+- `brand.sh logo-prep DIR IMAGE`: cuts out the founder's concept, removes a flat background, flattens anti-aliased
+  edges to the logo's flat colours, and raises the resolution so that the short side is at least 1000 px and a mark
+  at least 2400 px.
+- `brand.sh logo-proposals DIR CANDIDATES.json`: renders the concept and the agent's alternatives as a review page (a
+  panel per alternative with Strength and Risk, the logo at 16, 24, 32 and 48 px and the mark at 16, 32 and 64 px
+  with an enlarged 16, each in its own light and dark row), each alternative set in every candidate typeface of the
+  candidates file (grouped serious and stylised, each with its licence and a poor-fit note per alternative where one
+  applies), and writes the chosen design as `logo/source/` PNGs in neutral colours for the palette to recolour, with
+  the chosen typeface recorded for the wordmark role.
 - `logo` and `board` refuse to run when the environment for the current `<key>` is missing, and name `setup`.
 - Exit codes follow `company-site.sh`: 0 done, 2 refused (usage, missing setup, an input refused). A gap is not a
   failure: `logo` prints it, records it in `trace.json`, and exits 0.
@@ -191,9 +232,11 @@ The readiness check script reads `faithful` and `gaps` as evidence for RB-21. Th
 ### 4.3 `tokens.css` and `fonts.css` (generated)
 
 - `tokens.css` holds the light values in `:root`, the dark values in `@media (prefers-color-scheme: dark)` and in
-  `:root[data-theme="dark"]`, and one `--font-<role>` stack for each role.
+  `:root[data-theme="dark"]`, and one `--font-<role>` stack for each role, and the foundation variables (`--space-*`, `--radius-*`, `--shadow-*`, `--motion-*`, `--focus-*`).
 - `fonts.css` holds one `@font-face` for each shipped font file, with `font-display: swap`. Each `url()` is relative to
-  `fonts.css`, so the browser resolves it on any page and on any host.
+  `fonts.css`, so the browser resolves it on any page and on any host. It serves WOFF2, converted from the shipped
+  font and subset to the clients' languages (fontTools with the Brotli module); the original file stays as the
+  licence's evidence.
 - Each file opens with a comment that says it is generated from `tokens.json` and must not be edited.
 
 ### 4.4 Sample images in `imagery.md`
@@ -385,6 +428,14 @@ and 12 remove and add these.
 5. **Open items:** every gap, every font that needs a person, every proposed brand token not yet in `tokens.json`,
    and every sample image with no record or with a person and no consent, in plain words.
 
+The design system process adds to the board, after the parts above: each role in its typeface at its scale size; the
+foundations; a component sheet (button, link, field, card, message) in both modes, built from the component recipes of
+§5.5, with the message colours kept off the board; logo usage (clear space as the mark's width on every side, the
+minimum sizes of the logo and of the mark, and the misuses, each misuse on its own tile); the kept exceptions with
+their reasons; and the applications (a square profile picture from the mark, a link preview image of 1200 × 630
+pixels, an email signature with a double-resolution logo). A hard-edged shadow is blurred in print. The board is
+generated only from the playground's saved settings (§5.6).
+
 **Rendering.** The founder reviews the board in GitHub's own file view, from the pull request, until a private
 preview exists. So the board is plain Markdown: headings, paragraphs, lists, tables and images in Markdown image
 syntax, with no HTML. Everything that needs colour or a font is a generated image in `board/`, because GitHub's file
@@ -409,7 +460,58 @@ in `logo/`, the sample images and `imagery.md`.
 11. `board` MUST refuse, with exit code 2 and a plain sentence, more than six sample images or one longer than 1600
     pixels on its long side.
 
-### 5.5 Where they run
+### 5.5 The token contract
+
+The names and meanings a product theme maps from `tokens.json`, written for the product realms to read. It lists:
+
+- the colours (`bg`, `surface`, `border`, `text`, `muted`, `accent`, `accent-text`, `on-accent`, `ok`, `warn`, `crit`,
+  in `light` and `dark`);
+- the type roles (`wordmark`, `display`, `heading`, `body`, `ui`) and the type scale;
+- the foundations: `space`, `radius`, `elevation`, `motion`, `focus`, `target` and `breakpoints`;
+- the component recipes (`components`): for each component (button, link, field, card, message, navigation, image,
+  icon) and variant, which tokens each part and state uses, as the reference stylesheet builds it;
+- `accepted`: the exceptions of §3.1.
+
+For every key the contract gives its type, its unit and its meaning. The task DS-T10 writes it in full. The realm
+side is the change proposal 2026-10-27-product-ui-from-design-system.
+
+### 5.6 The playground
+
+`brand.sh playground DIR` writes the playground as one self-contained HTML file in the company's brand folder. It
+needs no network at view time: the candidate typefaces are embedded, subset. It is generated from `tokens.json`, a
+candidates file (palette presets and per-role values, typography looks and per-role faces, the wordmark included,
+foundation candidates, component variants) and the company's check rules, so its live checks are the same rules as
+`brand.py`. The page has tabs for palette, type, foundations, components and checks, and a sample site painted only
+from tokens, in light and dark, at phone, tablet and desktop widths, with motion played. The logo is drawn from its
+traced design, recoloured from the live palette, with its lettering set in the live wordmark face (per-face masks). A
+failing check can be kept with a reason, which becomes an accepted exception. Its export is a token file that
+`brand.py` validates before anything is applied, and it carries the checks still open. The founder opens it from a
+link: GitHub's file view does not run it, so until a private preview exists (backlog B-202) the agent shares it
+privately for viewing. It saves and reopens as every choice page does (§5.7).
+
+### 5.7 The choice pages
+
+The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share four rules, one shared module and a test
+for each:
+
+1. The page saves the founder's confirmed choice and reason where the agent reads it, and reopens on it.
+2. Every candidate's facts are read from the source at build time (a font's weights and italics from the font or its
+   library, never typed by hand).
+3. Every candidate face the page offers is shown to load before the page is shared (a headless browser lists
+   `document.fonts` as loaded for each family). Font names in inline `style` attributes are single-quoted.
+4. Every option the page offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths),
+   so no choice is blind: the test fingerprints the preview's computed styles per option, and two options with the
+   same fingerprint fail. An option whose effect depends on another (a shadow that only a raised card shows) gets
+   something that always shows it.
+
+### 5.8 The reference
+
+`brand.sh reference DIR` writes `identity/reference/` from `tokens.json`: `components.css` (every recipe and variant,
+only `var(--…)` from `tokens.css`), `playground.html` (self-contained, without saving) and the screenshots (light and
+dark; 390, 820 and 1280 pixels wide), rendered by a pinned headless browser. `brand.py` reports the reference as stale
+when its inputs change, as it does the board.
+
+### 5.9 Where they run
 
 | Tool | Agent, at step 6 | Company CI (`run.sh`) | Asgard CI (`ci.yml`) |
 | --- | --- | --- | --- |
@@ -461,7 +563,7 @@ Test first, in bash, like the existing `scripts/tests/*.test.sh`. Each test scaf
   faithfully, a mark with a 3-pixel dot that `filter_speckle` drops (a gap), a wide wordmark, an opaque background,
   an image that is too small, a square mark, a mark that is not square, and a logo colour far from every token. It checks the files, `trace.json` and its proposed brand tokens, the strict build, `names-check.sh`,
   that `board.md` holds no HTML, byte-identical re-runs, and `board --check` after a token changes.
-- Criterion 5.5.3 is checked in two ways: `brand.py`, `logo.py` and `board.py` import no network module (`socket`,
+- Criterion 5.9.3 is checked in two ways: `brand.py`, `logo.py` and `board.py` import no network module (`socket`,
   `urllib`, `http`), and resvg does not fetch external resources
   ([resvg README](https://github.com/linebender/resvg/blob/main/README.md): no `a` or `script` elements).
 - Asgard's `ci.yml` runs `brand.sh setup` before the tests. The pr-bot cannot change workflows, so the operator

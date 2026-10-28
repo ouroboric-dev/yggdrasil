@@ -193,7 +193,7 @@ is understood.
 | 3 | **Charter** | edits the agent's draft from steps 1–2 | vision, mission, principles, products, north star, boundaries | **`charter`** |
 | 4 | **Name** | the name | domain, handle and trademark screening; the placeholder replaced everywhere; her GitHub organisation created | — |
 | 5 | **Brand: words** | personality, how she sounds | positioning line, tagline, short pitch, about text, voice guide | — |
-| 6 | **Brand: look** | taste: reactions to a moodboard, choices between options | imagery guidelines, light and dark palettes with checked contrast, fonts with checked licences, her logo turned into light and dark SVGs, design tokens | **`brand`** |
+| 6 | **Brand: look** | taste: her logo concept, then reactions and choices between options, in seven sub-steps (below) | logo design, light and dark palettes with checked contrast, typography by role with checked licences and glyph coverage, imagery guidelines, foundations, a playground she settles the system in, design tokens, the board, the first applications and the reference | **`brand`** |
 | 7 | **Business basics** | facts only she knows | founders' agreement (two founders only), admin checklist, accounts inventory, budget, client terms, client data; legal items flagged for a qualified person | — |
 | 8 | **Roadmap** | which product comes first | the company roadmap | approved at the `brand` stop |
 | 9 | **Readiness** | judges the human items | a level 1 assessment: the script checks the auto items | **readiness** |
@@ -220,6 +220,117 @@ is understood.
 The `brand` stop is new. Spec-driven development today approves the brand seed together with the
 charter. For a company whose look is half the business, taste deserves its own stop after the
 business is settled. Spec-driven development §3.1 changes to match.
+
+#### Step 6 in seven sub-steps
+
+*Amended 2026-10-28 by the change proposal [Asgard's design system process](../../2-engineering/changes/2026-10-27-asgard-design-system/proposal.md).*
+
+Step 6, **Brand: look**, runs as seven sub-steps, in this order. The logo's design is settled first, because the rest
+of the system is built around it. Every sub-step works the same way: the agent proposes valid candidates by a stated
+method, checks them before showing them, and shows them side by side in light and dark with the company's own name
+and words; the founder reacts and chooses, and may mix and match; each choice records its reason in the decision log.
+Every page that offers a choice **saves** it: the founder confirms her choice on the page, with a reason if she has
+one, and the agent reads it from there; a choice that lives only in her browser, or that she must copy and paste, is
+a defect. Facts shown about a candidate (a typeface's weights and italics, its licence, the languages it covers) come
+from the source when the page is built, not from the agent's memory. An export carries the checks still open, so a
+choice that fails a check cannot travel as if it passed.
+
+Checks support the founder's decision; they do not make it. It is her company. When a choice fails a check, the page
+says so plainly, with what it costs; she may keep it. A kept failure becomes an **accepted exception**: the check, her
+reason and the date, in the decision log and in `tokens.json` (`accepted`). The company's check then reports it as
+accepted, not as a failure, and does not stop the build; readiness lists every accepted exception, so a reviewer sees
+it. An exception names one check on one value: changing the value reopens the check.
+The methods of the pages Ouroboric used for its own typeface and logo choices are the starting point, not the limit.
+
+**6a Logo design (first).** The founder brings an initial concept: her own logo in any format and any quality, a
+sketch, or an image from a generator. The agent prepares it (cut out, flat background removed, resolution raised),
+then critiques it plainly: legibility at small sizes, how it reads in light and dark, distinctiveness in her trade,
+irregular geometry, and lettering that is not a real typeface. The critique names the **mark**: the part that stands
+alone as the favicon and icon, which may be only a piece of the concept (a symbol inside the name). It offers two to
+four alternatives: the concept as drawn and cleaned, a refined version, and one or two variations that explore the
+idea further. They are shown as Ouroboric's logo page shows them: each proposal in its own panel, panels side by side
+where the screen allows, identical in order and parts, each with a plain Strength and Risk (with the size at which it
+fails, if it does); the logo at 16, 24, 32 and 48 pixels in a light and a dark row; the mark at 16, 32 and 64 pixels
+with an enlarged 16, also in a light and a dark row.
+
+When the concept has lettering, the lettering is part of the logo's look, most of all where the mark and the name are
+one piece. The page then has a **lettering picker**: candidate typefaces chosen for the voice's personality words,
+with open licences, in two groups, *serious* (calm and clear, they hold up at any size) and *stylised* (more
+character, more care at small sizes); picking one redraws every alternative in it. The agent checks every pairing of
+alternative and typeface before showing it, and a pairing that does not work (a symbol that does not fit the face's
+letters, a join it breaks, a detail lost at small sizes) carries a visible note on its panel instead of being hidden.
+
+The founder chooses one alternative and one typeface. What she chooses is the logo's **design**: its shapes and their
+composition. Its colours come from the palette (6b) and change with it. Its lettering is the wordmark: the typeface
+picked here becomes the starting face of the typography's wordmark role (6c), where it can still change.
+
+**6b Palette.** Presets first: two to four named palettes seeded from the founder's mood words (step 5), the colours
+of her logo concept, a colour she already uses, and her references, each with light and dark versions and checked
+before it is shown. Then per role: every colour token (background, surface, border, text, muted, accent, the text on
+the accent, and the message colours) can be changed on its own, from candidate values the agent proposes for that
+role, or freely; changing any role turns the preset into "Custom". The logo is shown recoloured throughout. After
+three rounds without a choice, the agent asks what is missing instead of offering more. The message colours are toned
+to the palette and kept off the brand board.
+
+**6c Typography, the wordmark included.** (The wordmark role starts at the typeface picked in 6a.) Criteria, in order:
+the voice's personality words; legibility at interface sizes; every glyph of the clients' languages; the weights and
+italics each role needs; an open licence that allows web use and self-hosting. Candidates come from an open library as
+named presets ("looks": a pairing with a one-line character), each a starting point; every role has its own picker among
+valid candidates, and changing any role turns the look into "Custom". Roles come in two groups, each with its job, where
+it appears and how often it is seen: *character* faces (the **wordmark**, display, initial) and *system* faces (heading,
+body, interface), with mono and ornament where the company needs them; the rarer the role, the more character it can
+afford. The wordmark role sets the company's name in the logo wherever the logo has lettering. An "In use" view shows
+the look in light and dark with a fact card per role (family, weights, licence), and a "Contexts" view shows it where
+people meet the company (its social profile and posts, a link preview in a chat app, an email, a page of its website),
+noting where its own fonts cannot reach. A five-second test flashes each look without its label and reveals the labels
+at the end. Four lessons from Ouroboric's own choice apply: think in roles; check that the body face has bold and
+italic; check where a style's label comes from; show candidates where people meet the brand, not only in a specimen.
+
+**6d Imagery.** The guidelines (what images look like, never look like, how they are used), and up to six sample
+images with their consent records.
+
+**6e Foundations.** Each foundation offered as a few valid candidates for the founder to react to, proposed from the
+typefaces and the voice: the type scale (base size and ratio, line heights per role, a minimum body size), spacing,
+corner radius, elevation, motion (with reduced motion), breakpoints, and interaction states (focus, hover, active,
+disabled). Every candidate is shown, not described: a foundation that cannot be seen on a still page gets a
+view that shows it, such as motion played side by side on a loop (and still where the device asks for reduced
+motion), or breakpoints as a ruler of screen widths with the layout in each range, the usual devices marked and a
+width slider.
+
+**6f Playground.** An interactive prototype of the whole design system on fake content, where the founder sees and
+adjusts everything together before it is final. It is a prototype for looking, not a website.
+
+- **Content:** a few page sections (navigation, a hero, a grid of images, an about block, service cards, a contact
+  block, a footer) and every component of the system: buttons, links, fields, cards, messages, navigation, image
+  treatments, icons, and the focus, hover, active and disabled states; the type scale and the foundations; light and
+  dark.
+- **Adjustable, by mixing and matching valid candidates the agent proposes:** every palette role (presets and per
+  role, as 6b); every typography role, the wordmark included (as 6c); every foundation (as 6e); and each component's
+  variants (for example a filled, outlined or soft button; a flat or raised card; a framed or borderless image).
+  New candidates can be added to the playground when the founder asks for something none of them gives.
+- **Fixed:** the logo's design (6a). It follows the palette live, and its lettering follows the wordmark role.
+- **Live checks:** the company's checks run as she changes anything. A pair under its contrast minimum, a focus
+  indicator under 3:1, a body size under the minimum, or a typeface without the weights or italics its role needs
+  shows a visible warning next to what it affects, and in a list of every open check. The playground and the
+  company's checks share one rule set, so they cannot disagree.
+- **Export:** the founder's final settings are saved where the agent reads them, as every choice page saves its
+  choice: a token file with the checks still open. The agent applies it, and the company's own checks then decide.
+
+**6g Board and applications.** Generated only from the playground's saved settings, nothing chosen by hand: the
+brand board, and the first applications (a square social profile picture from the mark, a link preview image, an
+email signature). The board shows logo usage too: clear space (the mark's width on every side, for a logo built
+around its mark), the minimum sizes of the logo and of the mark, and the misuses; and the kept exceptions with their
+reasons.
+
+6g also writes the **reference**: the design system as products will build it, so a product starts from the
+founder's look and a check can prove it stayed there. In `identity/reference/`, generated from the saved settings
+and never edited by hand: a component stylesheet (each component variant she chose, built from the tokens, with its
+states); the final playground as one self-contained page, without saving; and screenshots of that page in light and
+dark at phone, tablet and desktop widths. The stylesheet and the tokens are what products and checks read; the
+screenshots are for people reviewing and for agents that read images, and are made again whenever the settings
+change.
+
+The `brand` stop approves the board, after the founder has settled the system in the playground.
 
 ### 6.2 For a founder who has never used a terminal
 
@@ -256,9 +367,14 @@ company needs. It has a **core** that every company gets and **add-ons**.
 | Admin | entity and admin checklist (legal form, tax, bank, invoicing, bookkeeping, insurance), budget | budget | checklist |
 | Legal | client terms (service agreement, usage licence, model release), client data (what, where, how long) | — | yes |
 | Assets | accounts inventory: each account, its owner and where its recovery details are kept (never the details themselves) | — | yes |
-| Brand | story, messaging, voice guide, imagery guidelines, identity (palette, type, logo, tokens) | story, identity | messaging, imagery; voice filled, not empty |
+| Brand | story, messaging, voice guide, imagery guidelines, identity (palette, typography with its reason, logo, foundations, tokens, applications) | story, identity | messaging, imagery, foundations, applications; voice filled, not empty |
 | Record | journal, readiness assessments | yes | — |
 | Agents | `AGENTS.md` with invariants from the charter's principles | yes | — |
+
+The identity's foundations are a type scale, spacing, radius, elevation, motion, breakpoints and interaction states,
+as tokens and as sections of the identity page. `tokens.json` gains `type.scale` (filled), `space`, `radius`,
+`elevation`, `motion`, `breakpoints` and `focus`, and the clients' languages that the glyph check reads. It also
+holds the `accepted` exceptions of step 6.
 
 **Add-ons:**
 
@@ -291,8 +407,23 @@ The founder's helper can turn add-ons on or off at step 1; the photographer gets
   reports links to other repositories as present but not verified. It writes the assessment's
   table; a person judges the human items. Its first fixture is Ouroboric, run against the checklist
   version Ouroboric's assessment used (success criterion 6).
-- **Brand checks** run as scripts: contrast between palette pairs in both light and dark mode, and
-  font licences.
+- **Brand checks** run as scripts: contrast between palette pairs in both light and dark mode, font
+  licences, glyph coverage of every shipped font for the clients' languages, the minimum body size, the
+  focus indicator's contrast and the presence of the foundations. A failure the founder keeps becomes an
+  accepted exception, listed in readiness (§6.1, step 6).
+- **The design system's items** replace RB-21 at level 1:
+
+  | ID | Question | Check |
+  | --- | --- | --- |
+  | RB-21 | Is the identity defined: logo and mark in light and dark, a palette whose pairs pass WCAG 2.2 AA in both modes? | auto + human |
+  | RB-22 | Is the typography chosen for every role, the wordmark included, with its reason, under a licence that allows web use, covering every glyph of the clients' languages? | auto + human |
+  | RB-23 | Are the foundations set as tokens: type scale with a minimum body size, spacing, radius, elevation, motion, breakpoints? | auto |
+  | RB-24 | Are interaction states defined, with a focus indicator that reaches 3:1, and is reduced motion honoured? | auto + human |
+  | RB-25 (product) | Does the product's theme come from the company's tokens, through the token contract, and does its styleguide match the company's reference? | auto |
+
+  RL-06 (level 2) grows to the full visual identity: the component baseline (buttons, links, fields, cards,
+  messages) in both modes, an icon set with its licence, logo usage rules (clear space, minimum size, misuse)
+  and the brand's applications.
 - **Logo processing.** She brings her logo as PNG, made outside Asgard; one file, or one per mode.
   The journey asks for flat colours on a transparent background at high resolution, because tracing
   works best on those.
