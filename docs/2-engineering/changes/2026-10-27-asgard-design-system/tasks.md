@@ -54,11 +54,11 @@ DS-T10 (with DS-T03)
       sheet in both modes from the recipes, logo usage (clear space as the mark's width, minimum sizes, misuses), the
       kept exceptions with their reasons, and the applications. Message colours stay off the board. Test: a fixture's
       board lists every role, every recipe and every accepted exception.
-- [ ] **DS-T05 Typography tool.** `brand.sh fonts DIR CANDIDATES.json`: fetches the candidate faces with their licence
+- [x] **DS-T05 Typography tool.** `brand.sh fonts DIR CANDIDATES.json`: fetches the candidate faces with their licence
       files from the Google Fonts repository (`ofl/<family>/`), reads each face's facts from the file (family name,
       weights from fvar, italic from a sibling italic file, glyph coverage), and writes the facts the typography page
       shows. Test: a fixture face without italic is reported without italic, whatever the candidates file says.
-- [ ] **DS-T06 Palette rounds.** `brand.sh palette DIR ROUND.json`: checks every preset with `brand.py`'s rules before
+- [x] **DS-T06 Palette rounds.** `brand.sh palette DIR ROUND.json`: checks every preset with `brand.py`'s rules before
       it is shown and refuses a failing preset with the failing pairs named. Test: a round with one failing preset.
 - [ ] **DS-T07 Logo design.** `brand.sh logo-prep DIR IMAGE`: cuts out a flat background, flattens anti-aliased edges
       to the logo's flat colours, and raises the resolution so the short side is at least 1000 px and a mark is at
