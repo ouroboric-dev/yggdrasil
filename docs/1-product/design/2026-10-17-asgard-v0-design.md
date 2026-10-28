@@ -226,7 +226,9 @@ business is settled. Spec-driven development §3.1 changes to match.
 *Amended 2026-10-28 by the change proposal [Asgard's design system process](../../2-engineering/changes/2026-10-27-asgard-design-system/proposal.md).*
 
 Step 6, **Brand: look**, runs as seven sub-steps, in this order. The logo's design is settled first, because the rest
-of the system is built around it. Every sub-step works the same way: the agent proposes valid candidates by a stated
+of the system is built around it. Each decision has its own page, which shows one option at a time with its
+explanation, so she meets one thing at a time; the playground (6f) is where she looks at everything together one last
+time. Every sub-step works the same way: the agent proposes valid candidates by a stated
 method, checks them before showing them, and shows them side by side in light and dark with the company's own name
 and words; the founder reacts and chooses, and may mix and match; each choice records its reason in the decision log.
 Every page that offers a choice **saves** it: the founder confirms her choice on the page, with a reason if she has
