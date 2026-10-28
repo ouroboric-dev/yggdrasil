@@ -89,10 +89,13 @@ their results with `brand.py contrast --json` and `brand.py fonts --json`, so ea
 | [fontTools](https://github.com/fonttools/fonttools) | 4.66.1 (2026-09-29) | MIT | font `name` and `OS/2` tables | same; also in the company's `checks.yml` |
 | [Brotli](https://github.com/google/brotli) | 1.2.0 (2025-11-05) | MIT | WOFF2 reading for fontTools | same |
 | [resvg](https://github.com/linebender/resvg) CLI | 0.48.1 (2026-08-02) | [Apache-2.0 OR MIT](https://github.com/linebender/resvg/blob/main/Cargo.toml) | SVG to PNG, for the faithfulness check and the icons | release binary (`linux-x86_64`, `macos-aarch64`, `macos-x86_64`), SHA-256 in `resvg.lock` |
+| [Playwright](https://playwright.dev/python/) (PyPI `playwright`, with `greenlet`, `pyee`, `typing_extensions`) | 1.64.0 (2026-10-13) | Apache-2.0 | the headless Chromium that proves the choice pages (§5.7) | `requirements.txt`, exact versions and `--hash`; `setup` downloads the Chromium build this release pins |
 | MkDocs, Material for MkDocs | 1.5.3, 9.2.7 | BSD, MIT (PyPI classifiers) | renders the board with the other pages | unchanged from the template |
 
 Every version is a release at least two weeks old, as the template's lint pins are. Newer releases exist (Pillow
-13.0.0, fontTools 4.67.0, Brotli 1.2.1) but are younger than two weeks today. Every licence in the table is
+13.0.0, fontTools 4.67.0, Brotli 1.2.1, Playwright 1.64.1) but are younger than two weeks today. Playwright downloads
+its Chromium from its own CDN, so that one download cannot be checked against a hash as the packages and resvg are; a
+company may set its own browser instead in `.ouroboric/browser.json` (`executable` or `channel`). Every licence in the table is
 permissive, so Asgard's AGPL-3.0 scripts can call each tool. The tools run on the founder's files, and their output
 carries none of their code: the one mark a tool leaves, VTracer's generator comment, is removed (§5.3).
 
@@ -133,14 +136,19 @@ brand.sh fonts DIR CANDIDATES.json            fetch candidate typefaces and thei
 brand.sh palette DIR ROUND.json               check every preset of a palette round with the company's rules
 brand.sh logo-prep [--mark] DIR IMAGE         cut out, flatten and enlarge the founder's concept
 brand.sh logo-proposals DIR CANDIDATES.json [--choose ALT[:FACE]]   the logo review page; the chosen design as source PNGs
+brand.sh palette-page DIR                     the page of step 6b, from the latest checked round (§5.7)
+brand.sh type-page DIR CANDIDATES.json        the page of step 6c (§5.7)
+brand.sh foundations-page DIR CANDIDATES.json the page of step 6e (§5.7)
+brand.sh serve DIR [--port N]                 serve the pages on 127.0.0.1 and save the founder's choices into DIR
+brand.sh check-page DIR PAGE.html             prove a page in a headless browser (§5.7)
 brand.sh logo DIR            trace, recolour, derive, export and check the logo of the company in DIR
 brand.sh board [--check] DIR write DIR/docs/7-branding/identity/board.md; --check fails when it is stale
 brand.sh playground DIR                       the playground as one self-contained page (§5.6)
 brand.sh reference DIR                        write identity/reference/ (§5.8)
 ```
 
-The choice tools (`fonts`, `palette`, `logo-prep`, `logo-proposals`) write only in the company's
-`.ouroboric/choices/` folder, except `logo-proposals --choose`, which also writes `logo/source/`. That folder is where
+The choice tools (`fonts`, `palette`, `logo-prep`, `logo-proposals` and the pages) write only in the company's
+`docs/7-branding/identity/choices/` folder, except `logo-proposals --choose`, which also writes `logo/source/`. That folder is where
 the choice pages save the founder's confirmed choice (§5.7).
 
 - `setup` creates a virtual environment under `${XDG_CACHE_HOME:-$HOME/.cache}/asgard/brand/<key>`, where `<key>` is
@@ -152,16 +160,16 @@ the choice pages save the founder's confirmed choice (§5.7).
   face's facts from the files: family name, weights (`fvar` or `OS/2`), italic (a sibling italic file or an `ital`
   axis, and which file), glyph coverage of the clients' languages, the licence's SPDX id and a SHA-256 for each file. A
   face without an italic is reported without one, whatever the candidates file says. It writes
-  `.ouroboric/choices/fonts-facts.json`. It is, with `setup`, a command that uses the network; `logo`, `board` and the
+  `docs/7-branding/identity/choices/fonts-facts.json`. It is, with `setup`, a command that uses the network; `logo`, `board` and the
   other choice tools open no connection.
 - `brand.sh palette DIR ROUND.json`: a round of up to four presets, each with a light and a dark palette. It checks
   every preset with `brand.py`'s rules (the same pairs, through `palette_rows`) before it is shown, and refuses a
   failing preset with the failing pairs named, so nothing is written. A passing round is written to
-  `.ouroboric/choices/palette-round-<n>.json` with each preset's contrast rows. A fourth round is refused: the agent
+  `docs/7-branding/identity/choices/palette-round-<n>.json` with each preset's contrast rows. A fourth round is refused: the agent
   asks the founder what is missing instead.
 - `brand.sh logo-prep [--mark] DIR IMAGE`: takes a PNG or a JPEG, cuts out a flat background, flattens anti-aliased
   edges and compression noise to the logo's flat colours (binary alpha), and enlarges the image to the target exactly:
-  at least 1000 px on the short side, and 2400 px for a mark. It writes `.ouroboric/choices/logo-prep/<name>.png`
+  at least 1000 px on the short side, and 2400 px for a mark. It writes `docs/7-branding/identity/choices/logo-prep/<name>.png`
   and `.json`.
 - `brand.sh logo-proposals DIR CANDIDATES.json`: writes the review page, one self-contained HTML file with no network
   address: a panel per alternative with Strength, Risk and the size at which it fails, the logo at 16, 24, 32 and 48
@@ -172,7 +180,7 @@ the choice pages save the founder's confirmed choice (§5.7).
   letter is replaced, and the agent's own note). With `--choose ALT[:FACE]` it also writes the chosen design as
   `logo/source/` PNGs (`logo.png`, `logo-dark.png`, `mark.png`) in the palette's text and accent colours, or a neutral
   palette when none is set, and records the choice and the face for the wordmark role in
-  `.ouroboric/choices/logo.json`.
+  `docs/7-branding/identity/choices/logo.json`.
 - `logo` and `board` refuse to run when the environment for the current `<key>` is missing, and name `setup`.
 - Exit codes follow `company-site.sh`: 0 done, 2 refused (usage, missing setup, an input refused). A gap is not a
   failure: `logo` prints it, records it in `trace.json`, and exits 0.
@@ -631,22 +639,40 @@ traced design, recoloured from the live palette, with its lettering set in the l
 failing check can be kept with a reason, which becomes an accepted exception. Its export is a token file that
 `brand.py` validates before anything is applied, and it carries the checks still open. The founder opens it from a
 link: GitHub's file view does not run it, so until a private preview exists (backlog B-202) the agent shares it
-privately for viewing. It saves and reopens as every choice page does (§5.7).
+privately for viewing. It opens on the founder's saved choices (`logo.json`, `palette.json`, `type.json`,
+`foundations.json`), so that she revisits all of them together one last time, and it saves and reopens as every choice
+page does (§5.7).
 
 ### 5.7 The choice pages
 
-The choice pages (`logo-proposals`, `palette`, `fonts`, `playground`) share four rules, one shared module and a test
-for each:
+Each decision of step 6 has its own page: `logo-proposals` (6a), `palette-page` (6b), `type-page` (6c),
+`foundations-page` (6e), and, at the end, the playground (6f), where she looks at everything together one last time.
+A page keeps to one decision at a time. From the palette page on, the guided pages show **one option at a time**, with
+its explanation in plain words: what the thing is for, what each option costs (what the company's checks say about it,
+in words), and where the founder will meet it. A guided page is a sequence of cards, each a question with its options,
+a progress mark, and at the end a summary with her reason. The logo page stays a side-by-side review (§3.2), since a
+logo is judged against its alternatives.
 
-1. The page saves the founder's confirmed choice and reason where the agent reads it, and reopens on it.
-2. Every candidate's facts are read from the source at build time (a font's weights and italics from the font or its
-   library, never typed by hand).
-3. Every candidate face the page offers is shown to load before the page is shared (a headless browser lists
-   `document.fonts` as loaded for each family). Font names in inline `style` attributes are single-quoted.
-4. Every option the page offers visibly changes what it shows (in both modes, at phone, tablet and desktop widths),
-   so no choice is blind: the test fingerprints the preview's computed styles per option, and two options with the
-   same fingerprint fail. An option whose effect depends on another (a shadow that only a raised card shows) gets
-   something that always shows it.
+Every page is built by one shared module, `choicepage.py`, and keeps four rules, each with a test:
+
+1. **Saved and reopened.** The page saves the founder's confirmed choice and reason in the company's
+   `docs/7-branding/identity/choices/<step>.json`, where the agent reads them, and reopens on it. `brand.sh serve DIR`
+   serves the pages on 127.0.0.1 and writes the file; it refuses a save without the token it put in the page, a body
+   that is not JSON or is over 64 KB, a step that is not one of the design's, and a request for any other host name. A
+   founder who views the page on another device downloads her choice and gives the file to her helper. The generated
+   pages (large, regenerable) are ignored by git; the `.json` choices are committed and reviewed with the rest.
+2. **Facts from the source.** Every candidate's facts are read from the source at build time (a font's weights and
+   italics from the font file, never typed by hand, and refused when the file changed since its facts were read).
+3. **Faces load.** Every candidate face the page offers is shown to load before the page is shared: `brand.sh
+   check-page` opens the page in Playwright's Chromium and lists `document.fonts` as loaded for each family, and every
+   image as decoded. Font names in inline `style` attributes are single-quoted.
+4. **Every option changes the page.** Every option the page offers visibly changes what it shows, so no choice is
+   blind: `check-page` fingerprints the preview's computed styles per option, in light and dark at 390, 820 and 1280
+   pixels, and two options with the same fingerprint fail. An option whose effect depends on another (a shadow that
+   only a raised card shows) gets something that always shows it.
+
+A company may use its own browser for `check-page`: `.ouroboric/browser.json`, `{"executable": "/path"}` or
+`{"channel": "chrome"}`.
 
 ### 5.8 The reference
 
@@ -690,7 +716,10 @@ when its inputs change, as it does the board.
   or a product can inline them.
 - **Supply chain.** Python packages install from wheels only, with hashes. The resvg binary is checked against its
   SHA-256. Nothing installs globally. Updates arrive as pull requests that change `requirements.txt` or `resvg.lock`.
-- **Offline.** After `setup`, no tool uses the network. The checks read only the repository's files.
+- **Offline.** After `setup`, only `fonts` uses the network, and only for files it has not downloaded. The checks read
+  only the repository's files. `setup` downloads Playwright's Chromium from its CDN, which no hash covers.
+- **The local server.** `serve` listens on 127.0.0.1 only. A save needs a per-run token that only the pages it serves
+  carry, so another page open in the browser cannot save for the founder; it writes only the choices folder.
 - **Privacy.** Her logo and sample images stay in her private repository and on the machine that runs the tools.
   `company-site.sh` serves the board on 127.0.0.1 only.
 - **No secrets.** No tool reads or needs a token.
