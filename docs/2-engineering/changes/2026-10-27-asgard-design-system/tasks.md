@@ -23,9 +23,9 @@ DS-T10 (with DS-T03)
 
 ## Yggdrasil
 
-- [ ] **DS-T00 Fold the delta.** Once approved: amend the Asgard v0 design (§6.1 step 6, §7, §8) and the brand tools
+- [x] **DS-T00 Fold the delta.** Once approved: amend the Asgard v0 design (§6.1 step 6, §7, §8) and the brand tools
       spec (§3.1, §3.2, §4.3, §5.4 to §5.8) with the delta. Docs only.
-- [ ] **DS-T10 The token contract.** Brand tools spec §5.5: every key of `tokens.json` a product reads (colours, type
+- [x] **DS-T10 The token contract.** Brand tools spec §5.5: every key of `tokens.json` a product reads (colours, type
       roles and scale, `space`, `radius`, `elevation`, `motion`, `focus`, `target`, `breakpoints`, `components`,
       `accepted`), its type, unit and meaning, and the component recipes: for each component (button, link, field,
       card, message, navigation, image, icon) and variant, the tokens each part and state uses. Written for the

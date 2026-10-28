@@ -462,18 +462,140 @@ in `logo/`, the sample images and `imagery.md`.
 
 ### 5.5 The token contract
 
-The names and meanings a product theme maps from `tokens.json`, written for the product realms to read. It lists:
+The names and meanings a product theme maps from `tokens.json`, written for the product realms to read. Every key
+below is in `tokens.json`; `brand.py tokens --write` turns each into the CSS custom property named beside it in
+`tokens.css`, and the reference stylesheet (§5.8) reads only those properties. A product maps its theme from the
+properties, not from the JSON. The realm side is the change proposal 2026-10-27-product-ui-from-design-system.
 
-- the colours (`bg`, `surface`, `border`, `text`, `muted`, `accent`, `accent-text`, `on-accent`, `ok`, `warn`, `crit`,
-  in `light` and `dark`);
-- the type roles (`wordmark`, `display`, `heading`, `body`, `ui`) and the type scale;
-- the foundations: `space`, `radius`, `elevation`, `motion`, `focus`, `target` and `breakpoints`;
-- the component recipes (`components`): for each component (button, link, field, card, message, navigation, image,
-  icon) and variant, which tokens each part and state uses, as the reference stylesheet builds it;
-- `accepted`: the exceptions of §3.1.
+A key MAY be `null` before step 6 sets it; a key that is set MUST have the type and unit below. A missing foundation
+is a finding of `brand.py` (§3.1).
 
-For every key the contract gives its type, its unit and its meaning. The task DS-T10 writes it in full. The realm
-side is the change proposal 2026-10-27-product-ui-from-design-system.
+#### Colours
+
+`light` and `dark` each hold the same keys, every value `#RRGGBB`. The property carries the light value in `:root`
+and the dark value under `prefers-color-scheme: dark` and `:root[data-theme="dark"]` (§4.3).
+
+| Key | Property | Meaning |
+| --- | --- | --- |
+| `bg` | `--bg` | the page background |
+| `surface` | `--surface` | a raised or inset area on `bg`: cards, fields, the footer |
+| `border` | `--border` | rules and outlines of surfaces |
+| `text` | `--text` | body text, on `bg` and `surface` |
+| `muted` | `--muted` | secondary text, on `bg` and `surface` |
+| `accent` | `--accent` | the brand colour for fills and shapes: buttons, focus, selected state |
+| `accent-text` | `--accent-text` | the brand colour as text on `bg` and `surface`: links, outlined buttons |
+| `on-accent` | `--on-accent` | text on an `accent` fill |
+| `ok`, `warn`, `crit` | `--ok`, `--warn`, `--crit` | message colours, as text on `bg` and `surface` |
+| `brand-1`, `brand-2`, … | `--brand-1`, … | logo colours that no other token holds; for the logo only |
+
+#### Type roles and scale
+
+`type.fonts` holds one entry for each role: `wordmark` (the logo's lettering), `display` (the largest headline),
+`heading`, `body` and `ui` (labels, buttons, fields, navigation). A role has the keys of §4.1 plus `weights`
+(array of integers, the weights shipped) and, for `body`, `italic` and `emphasis` (`bold` or `italic`: how the
+face marks emphasis). The property `--font-<role>` holds the family and its fallback as one stack.
+
+`type.scale` sets the sizes:
+
+| Key | Type and unit | Meaning |
+| --- | --- | --- |
+| `base` | number, px | the body size |
+| `ratio` | number | the step between sizes |
+| `minimum` | number, px | the smallest body size the company allows; at least 16 |
+| `sizes` | object, px | `small`, `body`, `h3`, `h2`, `h1`, `display`; property `--text-<name>`, for example `--text-body` |
+| `lineHeight` | object, unitless | `body`, `heading`, `display`; property `--leading-<name>`; `body` at least 1.5 |
+
+#### Foundations
+
+| Key | Type and unit | Property | Meaning |
+| --- | --- | --- | --- |
+| `space` | array of numbers, px, ascending | `--space-1` … `--space-n` | the spacing scale; every gap and padding is one step |
+| `radius` | object, px | `--radius-sm`, `-md`, `-lg`, `-button` | corner radii: `sm` and `md` for fields and small parts, `lg` for cards, `button` for buttons |
+| `elevation` | object of CSS `box-shadow` values | `--shadow-card`, `--shadow-overlay` | `card` for a raised card, `overlay` for what floats over the page |
+| `motion` | object | `--motion-distance`, `--motion-duration`, `--motion-easing` | `distance` (px) and `duration` (ms) of an entrance, `easing` (a CSS timing function); `reduced` is `none` or `fade`: what a device that asks for reduced motion gets |
+| `focus` | object | `--focus-color`, `--focus-width`, `--focus-offset` | `role` (a colour key, normally `accent`), `width` (px, at least 2) and `offset` (px) of the focus ring |
+| `target` | number, px | `--target` | the smallest height of a thing a finger or pointer presses; at least 24 |
+| `breakpoints` | array of numbers, px, ascending | `--bp-1` … `--bp-n` | the widths where the layout changes; a media query cannot read a property, so the reference stylesheet writes each value out and the contract names the order |
+
+#### Components
+
+`components` maps each component to the variant the founder chose. The recipes below say which tokens each part and
+state of each variant uses. They are what the reference stylesheet (§5.8) builds, so a product that follows them
+looks the same as the reference. A recipe names tokens, never a literal value. A state not listed is the base state.
+
+States for every pressable part. **hover** lowers the part's brightness by 7%; **active** scales it to 0.97;
+**focus-visible** draws an outline of `--focus-width` in `--focus-color` at `--focus-offset`; **disabled** sets 45%
+opacity and the `not-allowed` cursor. Hover and active animate over `--motion-duration` with `--motion-easing`, and
+not at all where `motion.reduced` is `none` and the device asks for reduced motion.
+
+#### button
+
+Variants `filled`, `outlined`, `soft`. Parts: the box has a border of 1.5 px in `--accent`, `--radius-button`, height
+at least `--target`, horizontal padding `--space-4`, and its label in `--font-ui` at `--text-small`, weight 600.
+
+| Variant | Background | Label | Border |
+| --- | --- | --- | --- |
+| `filled` | `--accent` | `--on-accent` | `--accent` |
+| `outlined` | none | `--accent-text` | `--accent` |
+| `soft` | `--accent` mixed 16% into `--bg` | `--accent-text` | the background's colour |
+
+The secondary button is `outlined` whatever the primary variant.
+
+#### link
+
+Variants `underlined`, `colour`. The text is `--accent-text`. `underlined` always has an underline, offset 3 px;
+`colour` has none and gains it on hover.
+
+#### field
+
+One variant. The label is above the control, in `--font-ui` at `--text-small`, weight 500, `--text`. The control is
+at least `--target` high, with horizontal padding `--space-3`, background `--surface`, a 1 px border in `--border`,
+`--radius-md`, its value in `--font-body` and `--text`, and its placeholder in `--muted`. On focus-visible the
+control gets the focus outline. In error the border is `--crit` and the message beneath is `--crit`, weight 500.
+
+#### card
+
+Variants `bordered`, `surface`, `raised`. Padding `--space-3`, `--radius-lg`, the heading in `--font-heading` at
+`--text-h3`, the body in `--font-body`.
+
+| Variant | Background | Border | Shadow |
+| --- | --- | --- | --- |
+| `bordered` | `--bg` | 1 px `--border` | none |
+| `surface` | `--surface` | none | none |
+| `raised` | `--surface` | 1 px `--border` | `--shadow-card` |
+
+#### message
+
+Variants `tint`, `bar`; the colour `--c` is `--ok`, `--warn` or `--crit`. Padding `--space-2` and `--space-3`,
+`--radius-md`, text at `--text-small`.
+
+| Variant | Background | Text | Edge |
+| --- | --- | --- | --- |
+| `tint` | `--c` mixed 10% into `--bg` | `--c` | none |
+| `bar` | `--surface` | `--c` | 3 px left border in `--c`, square on the left |
+
+#### navigation
+
+Variants `left` (the logo at the start, the links at the end) and `centre` (the logo centred, the links beneath).
+Padding `--space-3` and `--space-4`, a 1 px bottom border in `--border`, links in `--font-ui` at `--text-small`,
+weight 500, in `--text`; the current page's link in `--accent-text`. Each link is at least `--target` high.
+
+#### image
+
+Variants `borderless`, `rounded`, `framed`. `borderless` shows the image alone. `rounded` adds `--radius-md`.
+`framed` adds a `--space-1` border in `--bg` (a print's margin) and a 1 px shadow, 3 px blur, of `--text` mixed 18%
+into transparent, so the frame shows in both modes.
+
+#### icon
+
+Variants `outline`, `filled`. Size 22 px, colour `--accent-text`; an icon that stands alone is at least `--target`
+square, with the icon centred. The icon set and its licence are RL-06 (design §8).
+
+#### Exceptions
+
+`accepted` is an array of objects: `check` (the check's id), `value` (the value that failed), `reason` (the founder's
+words), `by` and `date`. A product reads it only to show a reviewer what the founder kept; the checks of §3.1 decide
+when an entry applies or is stale.
 
 ### 5.6 The playground
 
