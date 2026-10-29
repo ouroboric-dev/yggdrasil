@@ -118,7 +118,7 @@ DS-T10 (with DS-T03)
 - [x] **DS-T02 Readiness checklist.** `templates/readiness/checklist.md`: RB-21 to RB-25 and RL-06 as the delta gives
       them, with an "applies to" column (company or product) and no tool names in what a company copies; accepted
       exceptions listed under their item.
-- [ ] **DS-T01 The kickstart guide.** Asgard `docs/`: the nine steps of design §6 as a procedure, step 6 in its seven
+- [x] **DS-T01 The kickstart guide.** Asgard `docs/`: the nine steps of design §6 as a procedure, step 6 in its seven
       sub-steps, each with what to ask, in what order, what to write where, which tool and check to run, what the
       founder approves and how the choice is saved. Written from the first real run's log, without any company's
       particulars. Last, so it describes the tools as built.
