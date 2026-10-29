@@ -38,7 +38,7 @@ the founder has not decided it.
    weight sets both to it. The reference and the playground read the properties and show them.
 5. **Existing companies.** A `tokens.json` without the keys gets today's values when the tools read it: `weight` 400
    and `strong` 600 for `heading`, `body`, `display` and `wordmark`; `weight` 500 and `strong` 600 for `ui`, each
-   lowered to the nearest weight the files have. Nothing changes on the page until a company sets them. `brand.py
+   lowered to the nearest of the role's `weights`. Nothing changes on the page until a company sets them. `brand.py
    tokens --write` writes them out.
 
 ## Options

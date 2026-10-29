@@ -539,7 +539,7 @@ and the dark value under `prefers-color-scheme: dark` and `:root[data-theme="dar
 set in, and its weight for emphasis, above `weight` or equal to it when the face has one weight) and, for `body`, `italic` and `emphasis` (`bold` or `italic`: how the
 face marks emphasis). The property `--font-<role>` holds the family and its fallback as one stack; `--weight-<role>` and
 `--weight-<role>-strong` hold the two weights. A `tokens.json` without them reads as `weight` 400 and `strong` 600
-(`weight` 500 for `ui`), each lowered to the nearest weight the files have.
+(`weight` 500 for `ui`), each lowered to the nearest of the role's `weights`.
 
 `type.scale` sets the sizes:
 
