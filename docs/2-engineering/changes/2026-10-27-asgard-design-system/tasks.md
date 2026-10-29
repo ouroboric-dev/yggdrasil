@@ -99,7 +99,7 @@ DS-T10 (with DS-T03)
       states), each with a few candidates shown, not described: motion played side by side and still where the
       device asks for reduced motion, breakpoints as a ruler with a width slider, depth on a card that shows it.
       Saves `choices/foundations.json`. Tests: the four rules; every foundation has its card.
-- [ ] **DS-T11 The playground.** `brand.sh playground DIR [CANDIDATES.json]`: one self-contained page that opens on the
+- [x] **DS-T11 The playground.** `brand.sh playground DIR [CANDIDATES.json]`: one self-contained page that opens on the
       founder's saved choices (DS-T14 to DS-T16, DS-T07) and on `tokens.json`, so she revisits everything together one
       last time: tabs for the palette (her own, the presets, a colour at a time, her own value), the type (a face for each
       role from her favourites), the foundations, the components (a variant of each) and the checks; a sample site painted
@@ -110,7 +110,7 @@ DS-T10 (with DS-T03)
       tinted message) and `brand.sh playground-apply DIR --by NAME`, which validates the export with `brand.py` in a
       throwaway copy before it writes `tokens.json`, copies the shipped fonts and makes the CSS again. Depends on DS-T03 to
       DS-T07, DS-T12 and the guided pages DS-T14 to DS-T16.
-- [ ] **DS-T13 The reference.** `brand.sh reference DIR`: `identity/reference/components.css` (every recipe and
+- [x] **DS-T13 The reference.** `brand.sh reference DIR`: `identity/reference/components.css` (every recipe and
       variant, only `var(--…)` from `tokens.css`), `playground.html` (self-contained, saving removed) and the
       screenshots (light and dark at 390, 820 and 1280 px) from a pinned headless browser; `brand.py` reports the
       reference stale when its inputs change. Tests: the stylesheet holds no literal colour, font or size; the stale
@@ -122,6 +122,13 @@ DS-T10 (with DS-T03)
       sub-steps, each with what to ask, in what order, what to write where, which tool and check to run, what the
       founder approves and how the choice is saved. Written from the first real run's log, without any company's
       particulars. Last, so it describes the tools as built.
+
+## Follow-ups from the build
+
+- The reference and the playground each hold a copy of the component recipes (`components.json` feeds the reference; the
+  playground carries its own): one source for both.
+- The logo's lettering is drawn once from the chosen face and is not redrawn when the wordmark face changes later.
+- Type roles share one weight token; a weight for each role is a change to the token contract.
 
 ## After the tasks
 
