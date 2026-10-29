@@ -122,7 +122,8 @@ Added by the design system process (the checks are in the task list as DS-T04):
   the minimum body size in the type scale (16 px) and a body line height of at least 1.5; the focus colour at 3:1
   against `bg` and `surface` in both modes, at least 2 px thick; the touch target at least 24 px; and the foundation
   tokens present. The body face's italic and each role's weights are read from the font files (`fvar`, `OS/2`), never
-  from `tokens.json`.
+  from `tokens.json`. `type:<role>:weight` and `type:<role>:strong` fail a role whose `weight` or `strong` is not
+  in its shipped files.
 - `brand.py components` checks, in both modes, what a chosen variant needs from the palette beyond its pairs: a soft
   button's accent text on its tint (4.5:1), an outlined button's accent text on the background (4.5:1), a link
   without an underline against the text (3:1, WCAG 2.2 SC 1.4.1) and a tinted message's colour on its tint (4.5:1).
@@ -459,7 +460,9 @@ and 12 remove and add these.
 4. **Sample images:** up to six images from `docs/7-branding/imagery/`, each with its record from `imagery.md`, and
    `board/palette-strip.svg` under them.
 5. **Open items:** every gap, every font that needs a person, every proposed brand token not yet in `tokens.json`,
-   and every sample image with no record or with a person and no consent, in plain words.
+   every sample image with no record or with a person and no consent, and a logo whose lettering was drawn in a face
+   other than the `wordmark` role's now, with the command that draws it again (`logo-proposals CANDIDATES --choose
+   ALTERNATIVE:FACE`), in plain words.
 
 The design system process changes the board in four ways, and the five parts above keep their order:
 
@@ -532,8 +535,11 @@ and the dark value under `prefers-color-scheme: dark` and `:root[data-theme="dar
 
 `type.fonts` holds one entry for each role: `wordmark` (the logo's lettering), `display` (the largest headline),
 `heading`, `body` and `ui` (labels, buttons, fields, navigation). A role has the keys of §4.1 plus `weights`
-(array of integers, the weights shipped) and, for `body`, `italic` and `emphasis` (`bold` or `italic`: how the
-face marks emphasis). The property `--font-<role>` holds the family and its fallback as one stack.
+(array of integers, the weights shipped), `weight` and `strong` (integers, both in `weights`: the weight the role is
+set in, and its weight for emphasis, above `weight` or equal to it when the face has one weight) and, for `body`, `italic` and `emphasis` (`bold` or `italic`: how the
+face marks emphasis). The property `--font-<role>` holds the family and its fallback as one stack; `--weight-<role>` and
+`--weight-<role>-strong` hold the two weights. A `tokens.json` without them reads as `weight` 400 and `strong` 600
+(`weight` 500 for `ui`), each lowered to the nearest weight the files have.
 
 `type.scale` sets the sizes:
 
@@ -571,7 +577,7 @@ not at all where `motion.reduced` is `none` and the device asks for reduced moti
 #### button
 
 Variants `filled`, `outlined`, `soft`. Parts: the box has a border of 1.5 px in `--color-accent`, `--radius-button`, height
-at least `--target`, horizontal padding `--space-4`, and its label in `--font-ui` at `--text-small`, weight 600.
+at least `--target`, horizontal padding `--space-4`, and its label in `--font-ui` at `--text-small`, weight `--weight-ui-strong`.
 
 | Variant | Background | Label | Border |
 | --- | --- | --- | --- |
@@ -588,10 +594,10 @@ Variants `underlined`, `colour`. The text is `--color-accent-text`. `underlined`
 
 #### field
 
-One variant. The label is above the control, in `--font-ui` at `--text-small`, weight 500, `--color-text`. The control is
+One variant. The label is above the control, in `--font-ui` at `--text-small`, weight `--weight-ui`, `--color-text`. The control is
 at least `--target` high, with horizontal padding `--space-3`, background `--color-surface`, a 1 px border in `--color-border`,
 `--radius-md`, its value in `--font-body` and `--color-text`, and its placeholder in `--color-muted`. On focus-visible the
-control gets the focus outline. In error the border is `--color-crit` and the message beneath is `--color-crit`, weight 500.
+control gets the focus outline. In error the border is `--color-crit` and the message beneath is `--color-crit`, weight `--weight-ui`.
 
 #### card
 
@@ -654,7 +660,8 @@ any of it once more, so that she revisits all of it together one last time:
 A sample site, painted only from tokens (no colour is written in it), shows a navigation with the logo recoloured and
 the name in the wordmark face, a hero, a grid of images, an about block, service cards, a contact block with messages
 and an overlay, and a footer, in light and dark, at phone, tablet and desktop widths, with motion played. The logo is
-recoloured from its source's flat colours; redrawing its own lettering in the live wordmark face is not built.
+recoloured from its source's flat colours. Its own lettering is not redrawn when the wordmark face changes: the board lists
+the difference as an open item (§5.4), and `choices/logo.json` is an input of the board's hash.
 
 The **Checks** tab lists every rule with its stable id: the palette pairs, the foundations minimums, what each role needs
 from its face (weights, italic, glyphs) and the component rules (§3.1), by the same pairs and minimums as `brand.py`
