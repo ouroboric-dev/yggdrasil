@@ -6,9 +6,9 @@ related: [proposal.md, tasks.md, ../../specs/2026-10-26-brand-tools.md]
 style: spec
 ---
 
-# Delta: the brand tools spec, if option A is chosen
+# Delta: the brand tools spec
 
-Edits to `docs/2-engineering/specs/2026-10-26-brand-tools.md`. Nothing here applies until the founder chooses A.
+Edits to `docs/2-engineering/specs/2026-10-26-brand-tools.md`. The founder chose A on 2026-10-29; these edits are applied.
 
 - **Type roles and scale.** After "A role has the keys of §4.1 plus `weights` (array of integers, the weights shipped)",
   add: "and `weight` and `strong` (integers: the role's regular weight and its weight for emphasis, both in `weights`;

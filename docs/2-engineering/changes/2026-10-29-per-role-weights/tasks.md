@@ -8,9 +8,9 @@ style: spec
 
 # Tasks: per-role weights (option A)
 
-Each task is one branch and one pull request, with its failing test first. Nothing starts before the founder chooses A.
+Each task is one branch and one pull request, with its failing test first. The founder chose A on 2026-10-29; PW-T01 is applied with the proposal.
 
-- [ ] **PW-T01 Spec and contract.** Apply `delta.md` to the brand tools spec. Test: the spec lists the keys, the
+- [x] **PW-T01 Spec and contract.** Apply `delta.md` to the brand tools spec. Test: the spec lists the keys, the
       properties and the check ids.
 - [ ] **PW-T02 Check and defaults.** `brand.py type` reads `weight` and `strong`; `tokens --write` writes
       `--weight-<role>` and `--weight-<role>-strong`; a `tokens.json` without the keys gets the defaults of the

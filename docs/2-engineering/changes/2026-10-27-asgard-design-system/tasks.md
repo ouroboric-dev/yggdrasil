@@ -127,8 +127,10 @@ DS-T10 (with DS-T03)
 
 - The reference and the playground each hold a copy of the component recipes (`components.json` feeds the reference; the
   playground carries its own): one source for both.
-- The logo's lettering is drawn once from the chosen face and is not redrawn when the wordmark face changes later.
-- Type roles share one weight token; a weight for each role is a change to the token contract.
+- The logo's lettering is drawn once from the chosen face and is not redrawn when the wordmark face changes later:
+  decided 2026-10-29 that the board lists the difference as an open item (spec §5.4), with the command to redraw it.
+- Type roles share one weight token: decided 2026-10-29, each role gets `weight` and `strong`
+  (`../2026-10-29-per-role-weights/`).
 
 ## After the tasks
 

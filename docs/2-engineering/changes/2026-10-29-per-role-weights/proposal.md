@@ -1,6 +1,6 @@
 ---
 title: Each type role has its own weights in the token contract
-status: draft
+status: accepted
 date: 2026-10-29
 related: [delta.md, tasks.md, ../2026-10-27-asgard-design-system/proposal.md, ../../specs/2026-10-26-brand-tools.md]
 style: spec
@@ -49,7 +49,7 @@ the founder has not decided it.
 | B. One `weight` for each role | `--weight-<role>` only; emphasis is `weight` + 200 | a button label and a field label cannot differ, and a face with 400 and 700 gets 600 |
 | C. Keep shared numbers in the recipes | no change | the faux-weight case stays invisible to the check |
 
-## Decision needed
+## Decision
 
-Option A, B or C. Under A, the token contract (§4.2), the button, field and link recipes and the `brand.py type`
-check change; the tasks are in `tasks.md`. Under C nothing changes and this proposal is closed.
+Option A, chosen by the founder on 2026-10-29. It changes the token contract (§4.2), the button, field and link recipes and the `brand.py type`
+check; the spec edits are applied with it and the other tasks are in `tasks.md`.
